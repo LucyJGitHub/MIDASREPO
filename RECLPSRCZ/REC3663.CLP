@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD052530           Date 18Mar19              */
-/*       Prev Amend No. MD052255           Date 21Jan19              */
+/*       Last Amend No. MD053393           Date 15Jul19              */
+/*       Prev Amend No. MD052530           Date 18Mar19              */
+/*                      MD052255           Date 21Jan19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD043389           Date 10Jan17              */
 /*                      AR1096378          Date 20Mar13              */
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD053393 - Incorrect error handling in REC3663              */
 /*       MD052530 - CoB run takes too long due to the resequencing of*/
 /*                  the REHISPD file on REC660001                    */
 /*                  Use LF for copying back records to REHISPD       */
@@ -114,6 +116,11 @@
              DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)                                  /*241159*/
 /*/COPY WNCPYSRC,REC3663009                                          */
 /**/
+/*  Global Monitor Message                                                              /*MD053393*/
+                                                                                        /*MD053393*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                                                /*MD053393*/
+                                                                                        /*MD053393*/
              SNDPGMMSG  MSG('REC3663 - Drop out-of-date history +
                           processing') TOMSGQ(MRUNQ)
 /**/
@@ -141,7 +148,8 @@
              ELSE       CMD(DO)                                                           /*241159*/
                SNDPGMMSG  MSG('Database Error in File SDSVALPD, Key +
                           DelCpyOfREHst') TOMSGQ(MRUNQ)                                   /*241159*/
-               GOTO       CMDLBL(ENDPGM)                                                  /*241159*/
+/**********    GOTO       CMDLBL(ENDPGM)                                         /*241159 MD053393*/
+               GOTO       CMDLBL(ABNOR)                                                 /*MD053393*/
              ENDDO                                                                        /*241159*/
                                                                                           /*241159*/
 /**********  DLTF       FILE(XREHISPD) */                                               /*CRE083AH*/
@@ -256,7 +264,7 @@ STEP8:
 /**/
 /**********  DLTF       FILE(REHIOPD) */                                                /*MD052530*/
              CLRPFM     FILE(REHIOPD)                                                   /*MD052530*/
-             MONMSG     MSGID(CPF0000)
+/**********  MONMSG     MSGID(CPF0000)                                                  /*MD053393*/
              DLTF       FILE(REHIOPS)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(REHIOPM)
@@ -287,7 +295,8 @@ STEP14:
                           EXEC(DO)
              SNDPGMMSG  MSG('Error in CRTDUPOBJ of file : REHIOPS by +
                           PGM : REC3663 (STEP14)') TOMSGQ(MRUNQ)
-             GOTO       CMDLBL(ENDPGM)
+/**********  GOTO       CMDLBL(ENDPGM)                                                  /*MD052530*/
+             GOTO       CMDLBL(ABNOR)                                          /*MD052530 MD053393*/
              ENDDO
 /*/COPY WNCPYSRC,REC3663004                                          */
 STEP15:
@@ -300,15 +309,19 @@ STEP15:
                           EXEC(DO)
              SNDPGMMSG  MSG('Error in CRTDUPOBJ of file : REHIOPM by +
                           PGM : REC3663 (STEP15)') TOMSGQ(MRUNQ)
-             GOTO       CMDLBL(ENDPGM)
+/**********  GOTO       CMDLBL(ENDPGM)                                                  /*MD052530*/
+             GOTO       CMDLBL(ABNOR)                                          /*MD052530 MD053393*/
              ENDDO
 /**/
              CALL PGM(RE3663)
 /**/
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              CLRPFM FILE(REHISPD)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(EXIT7))                         /*MD053393*/
              CLRPFM FILE(REHISPS)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(EXIT7))                         /*MD053393*/
              CLRPFM FILE(REHISPM)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(EXIT7))                         /*MD053393*/
 /*/COPY WNCPYSRC,REC3663006                                          */
 /**/
 /*********** CPYF       FROMFILE(REHIOPD) TOFILE(REHISPD) + */                          /*MD052530*/
@@ -508,16 +521,28 @@ EXIT0:
 /**/                                                                                    /*CRE083AH*/
                    IF         COND((&START *NE 0) *AND +
                               (&FINISH *NE 0)) THEN(DO)                                 /*CRE083AH*/
-                      RMVJRNCHG    JRN(ICJRN) FILE((REHISPD) +
+/**********           RMVJRNCHG    JRN(ICJRN) FILE((REHISPD) +
                                    (REHISPS) (REHISPM) (REHPOSPP) +
                                    (REHPOSPM) (REHPOSR1) +
                                    (REHPOSR2) (REHPOSR3) +
                                    (REHIOPD) (REHIOPS) (REHIOPM)) +
                                    FROMENT(&START) TOENT(&FINISH) +
-                                   RCVRNG(&SJRNRCVR &FJRNRCVR)                          /*CRE083AH*/
+                                   RCVRNG(&SJRNRCVR &FJRNRCVR)                 /*CRE083AH MD053393*/
+                      RMVJRNCHG    JRN(ICJRN) FILE((REHISPD) +
+                                   (REHISPS) (REHISPM) (REHPOSPP) +
+                                   (REHPOSPM) (REHPOSR1) +
+                                   (REHPOSR2) (REHPOSR3)) +
+                                   FROMENT(&START) TOENT(&FINISH) +
+                                   RCVRNG(&SJRNRCVR &FJRNRCVR)                          /*MD053393*/
                       MONMSG       MSGID(CPF7049 CPF7042 CPF9801 +
                                    CPF7041)                                             /*CRE083AH*/
                    ENDDO                                                                /*CRE083AH*/
+ABNOR:       SNDPGMMSG  MSG('Program REC3663 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD053393*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD053393*/
+             CHGJOB     SWS(XXXXXX11)                                                   /*MD053393*/
+             DMPCLPGM                                                                   /*MD053393*/
+
 ENDPGM:                                                                                 /*CRE083AH*/
 /**/                                                                                    /*CRE083AH*/
 /* Write current journal sequence number to file SCJSEQPD */                            /*CRE083AH*/

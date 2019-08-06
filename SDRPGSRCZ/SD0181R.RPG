@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. 247341             Date 24May19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
       *                 CTI006             Date 31Mar14               *
       *                 MD027804           Date 30Jun14               *
       *                 MD027093           Date 30May14               *
@@ -76,6 +77,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  247341 - Do not validate if the country code is ISO standard *
+      *           during deletion. Applied for MD031175               *
+      *         - Applied for MD053397.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *             (Recompile)                                       *
@@ -204,6 +208,14 @@
      F                                              KINFSR *PSSR                              239141
       * RTV : Customer Codes                                                                  239141
       *                                                                                       239141
+     FCLINTL1 IF  E           K        DISK                           UC                      247341
+     F                                              KINFSR *PSSR                              247341
+      * RTV : Customer Master Details                                                         247341
+      *                                                                                       247341
+     FSDCNLML1IF  E           K        DISK                           UC                      247341
+     F                                              KINFSR *PSSR                              247341
+      * RTV : Country Limits                                                                  247341
+      *                                                                                       247341
      FGPICTYL0IF  E           K        DISK                           UC                      CGP001
      F                                              KINFSR *PSSR                              CGP001
      F            GPICTRYD0                         KRENAMEGPICTYD0                           CGP001
@@ -938,6 +950,7 @@
       ** code in ISO country code file                                                        CGP001
       *                                                                                       CGP001
      C           CGP001    IFEQ 'Y'                                                           CGP001
+     C           P2ANCD    ANDNE'D'                                                           247341
      C                     EXSR SRVICT                                                        CGP001
      C                     ENDIF                                                              CGP001
       *                                                                                       CGP001
@@ -2793,6 +2806,32 @@
      C                     EXSR ZASNMS                                                        239141
      C                     GOTO SDEXIT                                                        239141
      C                     ENDIF                                                              239141
+      *                                                                                       247341
+      * Check if a Customer Master Details is linked to the country code for                  247341
+      * deletion                                                                              247341
+     C           KLDLSD    CHAINCLINTL1              90                                       247341
+     C           *IN90     IFEQ '0'                                                           247341
+      * Customer with this country code still exists                                          247341
+     C                     MOVEL'Y2U0072' W0RTN   7                                           247341
+      * Send message '*Record cannot be deleted'                                              247341
+     C                     MOVEL'Y2U0072' ZAMSID                                              247341
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              247341
+     C                     EXSR ZASNMS                                                        247341
+     C                     GOTO SDEXIT                                                        247341
+     C                     ENDIF                                                              247341
+      *                                                                                       247341
+      * Check if a Country Limits record still exist before deletion                          247341
+      *                                                                                       247341
+     C           KLDLSD    CHAINSDCNLML1             90                                       247341
+     C           *IN90     IFEQ '0'                                                           247341
+      * Country Limits with this country code still exists                                    247341
+     C                     MOVEL'Y2U0073' W0RTN   7                                           247341
+      * Send message '*Record cannot be deleted'                                              247341
+     C                     MOVEL'Y2U0073' ZAMSID                                              247341
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              247341
+     C                     EXSR ZASNMS                                                        247341
+     C                     GOTO SDEXIT                                                        247341
+     C                     ENDIF                                                              247341
       *................................................................
      C           CSD046    IFEQ 'Y'                                                           CSD031
      C           *INU1     ANDEQ*ON                                                           CSD031
@@ -4013,6 +4052,8 @@
      C**********           OPEN SDCTRYL0                                                      CSD031
      C                     OPEN SDFCTLL0
      C                     OPEN SDCUSTLJ                                                      239141
+     C                     OPEN CLINTL1                                                       247341
+     C                     OPEN SDCNLML1                                                      247341
      C                     MOVEL'N'       W0PMT   1
      C                     MOVEL'CHG'     W0PMD   3
      C                     MOVEL*BLANK    W0GRP   1

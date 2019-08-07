@@ -295,8 +295,8 @@ STEP14:
                           EXEC(DO)
              SNDPGMMSG  MSG('Error in CRTDUPOBJ of file : REHIOPS by +
                           PGM : REC3663 (STEP14)') TOMSGQ(MRUNQ)
-/**********  GOTO       CMDLBL(ENDPGM)                                                  /*MD052530*/
-             GOTO       CMDLBL(ABNOR)                                          /*MD052530 MD053393*/
+/**********  GOTO       CMDLBL(ENDPGM)                                                  /*MD053393*/
+             GOTO       CMDLBL(ABNOR)                                                   /*MD053393*/
              ENDDO
 /*/COPY WNCPYSRC,REC3663004                                          */
 STEP15:
@@ -309,8 +309,8 @@ STEP15:
                           EXEC(DO)
              SNDPGMMSG  MSG('Error in CRTDUPOBJ of file : REHIOPM by +
                           PGM : REC3663 (STEP15)') TOMSGQ(MRUNQ)
-/**********  GOTO       CMDLBL(ENDPGM)                                                  /*MD052530*/
-             GOTO       CMDLBL(ABNOR)                                          /*MD052530 MD053393*/
+/**********  GOTO       CMDLBL(ENDPGM)                                                  /*MD053393*/
+             GOTO       CMDLBL(ABNOR)                                                   /*MD053393*/
              ENDDO
 /**/
              CALL PGM(RE3663)

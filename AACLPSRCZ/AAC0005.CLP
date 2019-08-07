@@ -9,9 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-             /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-             TEST       /* Bank Fusion Midas 1.4 Base +
-                          ---------------------------------------*/
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -29,31 +27,31 @@
 /*********************************************************************/
 PGM
 /*/COPY WNCPYSRC,AAC0005001                                          */
-
+ 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
-
+ 
              OVRDBF     FILE(AAACPT) TOFILE(GLPOSTL) SHARE(*YES)
-
+ 
              CLRPFM     FILE(AAPSTC)
 /*/COPY WNCPYSRC,AAC0005002                                          */
-
+ 
              OPNQRYF    FILE((GLPOSTL *FIRST APOSTPDF)) +
                           FORMAT(AAACPT) QRYSLT('OTTP *NE +
                           "          " *AND OTST *NE "          "') +
                           KEYFLD((BRCA) (CCY) (CNUM) (ACOD) (ACSQ) +
                           (SPOS) (OTTP) (OTST) (OTRF) (DRCR))
-
+ 
              CALL AA0005A
 /*/COPY WNCPYSRC,AAC0005003                                          */
-
+ 
              CLOF GLPOSTL
              DLTOVR AAACPT
-
+ 
              CALL AA0005B
-
+ 
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
-
+ 
 ENDPGM

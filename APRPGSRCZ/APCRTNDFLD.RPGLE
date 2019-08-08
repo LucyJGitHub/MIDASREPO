@@ -14,15 +14,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046657           Date 12Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP084  *CREATE    Date 26Jul03               *
+      *                 CAP084  *CREATE    Date 26Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046657 - Possibility to change non-amendable fields to be  *
+      *             amendable and able to complete transaction        *
+      *             (Recompile).                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *

@@ -1054,16 +1054,10 @@
 1810 OGL0420P4  E    64 84                    01                                S01117
      O         AND  N79                                                         LUC108
      O                       FICHE               16                             S01146
-     OGL0420P4  E    64 84 KP                 16                                LUC133
-     O                  36   @WCNA1              62                             LUC133
-1817 O*********         35                       74 'DEMAND STATEMENT'          LUC133
-1817 O                  35                       86 'DEMAND STATEMENT'          LUC133
-     O                       ANAM               117                             LUC133
      O/COPY WNCPYSRC,GL0420O076
      O********E** 03   64                                          S01146 S01117
      O          E    64 84                    03                                S01117
-     O******** AND  N79                                                         LUC108 LUC133
-     O         AND  N79NKP                                                             LUC133
+     O         AND  N79                                                         LUC108
 1811 O*****                              31 '-   -    -'                  S01117
 1812 O*****                    CNUM      21                               S01117
 1813 O*****                    CCY       25                               S01117
@@ -1089,62 +1083,29 @@
 1818 O*       H   04   65                                                 S01091
 1818 O********E** 04   65                                       S01091    S01117
 1818 O          E    65 84                    04                                S01117
-     O******** AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                                    LUC108
 1819 O***********            36CNA1      50                               S01194
 1819 O***********            36BCCNA1    50                         S01194BHF093
 1819 O                     36@WCNA1              50                             BHF093
-     O          E    65 84                    17                                           LUC133
-     O         AND  N79 KP                                                                 LUC133
-1819 O                     36@WCNA2              62                                        LUC133
 1820 O*       H   05   65                                                 S01091
 1820 O********E** 05   65                                       S01091    S01117
 1820 O          E    65 84                    05                                S01117
-     O******** AND  N79                                                                    LUC108
-     O         AND  N79NKP                                                          LUC108 LUC133
+     O         AND  N79                                                                    LUC108
 1821 O***********            36CNA2      50                               S01194
 1821 O***********            36BCCNA2    50                         S01194BHF093
 1821 O                     36@WCNA2              50                             BHF093
-     O          E    65 84                    05                                           LUC133
-     O         AND  N79 KP                                                                 LUC133
-     O                     36@WCNA2              62                                        LUC133
      O/COPY WNCPYSRC,GL0420O098
 1822 O*       H   06   65                                                 S01091
 1822 O********E** 06   65                                       S01091    S01117
 1822 O          E    65 84                    06                                S01117
-     O*********AND  N79                                                            LUC108  LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                           LUC108
 1823 O***********            36CNA3      50                               S01194
 1823 O***********            36BCCNA3    50                         S01194BHF093
 1823 O                     36@WCNA3              50                             BHF093
-1822 O          E    65 84                    19                                  LUC133
-     O         AND  N79 KP                                                        LUC133
-     O                     36@WCNA4              62                               LUC133
-     O                       CCY                 87                               LUC133
-     O                     27BRCA                97                               LUC133
-     O                     27                    98 '-'                           LUC133
-     O                     27CCY                101                               LUC133
-     O                     27                   102 '-'                           LUC133
-     O                     27CNUM               108                               LUC133
-     O                     27                   109 '-'                           LUC133
-     O                     27ACOD               113                               LUC133
-     O                     27                   114 '-'                           LUC133
-     O                     27ACSQ               116                               LUC133
-     O                    N27ACNO               110                               LUC133
-     O          E    65 84                       23                               LUC133
-     O         AND  N79 KP                                                        LUC133
-     O                       LSTDN              104                               LUC133
-     O                                          106 '-'                           LUC133
-     O                       RUNA               116                               LUC133
-     O          E    65 84                       25                               LUC133
-     O         AND  N79 KP                                                        LUC133
-     O                       STPA          3     85                               LUC133
-     O                       STPP          3    110                               LUC133
 1824 O*       H   07   65                                                 S01091
 1824 O********E** 07   65                                       S01091    S01117
 1824 O          E    65 84                    07                                S01117
-     O*******  AND  N79                                                           LUC108 LUC133
-     O         AND  N79NKP                                                               LUC133
+     O         AND  N79                                                         LUC108
 1825 O***********            36CNA4      50                               S01194
 1825 O***********            36BCCNA4    50                         S01194BHF093
 1825 O                     36@WCNA4              50                             BHF093
@@ -1154,18 +1115,13 @@
 1826 O********E** 07   64 36                                    S01125    S01117
 1827 O*******OR**      64N36                                    S01125    S01117
 1826 O          E    64 36 84                 08                                S01117
-     O*********AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
 1827 O         OR    64N36 84                                                   S01117
-     O*********AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
 1828 O***********                        68 'BRANCH -'                    S01194
 1828 O                  58                       68 'BRANCH -'                  S01194
 1829 O***********              BRNM      99                               S01194
      O                  58   A8BRNM              99                             S01194
-     O          E    64 84 05                    11                             LUC133
-     O         AND  N79 KP                                                      LUC133
-     O                       RIBAN               50                             LUC133
 1830 O*       H   08   64                                                 S01091
 1830 O********E** 08   64                                       S01091    S01117
 1830 O********E***08   64 84                                    S01117    E30556
@@ -1174,17 +1130,8 @@
 1831 O******                 PAGE4         3     99                             S01117       240776A
 1832 O*       H   10   64                                                 S01091
 1832 O********E** 10   64                                       S01091    S01117
-     O          E    64 84 KP                 30                                LUC133
-     O                                           45 'BALANCE FORWARD'           LUC133
-     O                       LSTDA               14                             LUC133
-     O                     70PSTBF              118 '   ,   ,   ,   , 0 CR'     LUC133
-     O                     71PSTBF              118 '  ,   ,   ,   , 0 . CR'    LUC133
-     O                     72PSTBF              118 ' ,   ,   ,   , 0 .  CR'    LUC133
-     O                     73PSTBF              118 '   ,   ,   , 0 .   CR'     LUC133
-     O               83                         118 'DR'                        LUC133
 1832 O          E    64 84                    10                                S01117
-     O*******  AND  N79                                                            LUC108  LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O/COPY WNCPYSRC,GLH00371
 1833 O                                           20 'ACCOUNT'
 1834 O                       ANAM                43
@@ -1203,8 +1150,8 @@
 1841 O*       H   13   64                                                 S01091
 1841 O********E** 13   64                                       S01091    S01117
 1841 O          E    64 84                    13                                S01117
-     O******** AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
+     O
 1842 O                                           21 'DATE'
 1843 O                                           44 'NARRATIVE'
      O/COPY WNCPYSRC,GL0420O108
@@ -1214,8 +1161,7 @@
 1846 O*       H   16   64                                                 S01091
 1846 O********E** 16   64                                       S01091    S01117
 1846 O          E    64 84                    16                                S01117
-     O******** AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O/COPY WNCPYSRC,GL0420O077
 1847 O                                           55 'B/F'
 1848 O                       LSTDA               23
@@ -1228,8 +1174,7 @@
      O/COPY WNCPYSRC,GL0420O083
      O*                                                                   CEU013
      O          E    64 84 10                 17                                CEU013
-     O******** AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O                       BKEURO              60                             156327
      O                                           77 '('                         156327
      O                     KAEUPBF              100 '   ,   ,   ,   , 0 CR)'    156327
@@ -1250,31 +1195,18 @@
 1855 O          E    43 51 04DET         1                                      S01091
      O*******AND*     N12                                       S01110    S01117
      O         AND  N12 84                                                      S01117
-     O******** AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
 1856 O                       PSTDA               23
 1857 O                                           27 'DR'
 1858 O                     22                    27 'CR'
 1859 O                                           42 'RATE CHANGE TO'
 1860 O                       INTR                56 '  0 .       -'
 1861 O                                           57 '%'
-     O          E    43 51 04DET         1                                       LUC133
-     O         AND  N12 84N34                                                    LUC133
-     O         AND   KP                                                          LUC133
-     O                                                                           LUC133
-     O                       PSTDA               14                              LUC133
-     O                     69VALDA               23                              LUC133
-     O                                           25 'DR'                         LUC133
-     O                     22                    25 'CR'                         LUC133
-     O                                           40 'RATE CHANGE TO'             LUC133
-     O                       INTR                53 '  0 .       -'              LUC133
-     O                                           54 '%'                          LUC133
      O/COPY WNCPYSRC,GL0420O084
 1862 O***     D 1      43 51N04                                           S01091
 1862 O          E    43 51N04DET         1                                      S01091
      O         AND   84                                                         S01117
-     O******** AND  N79                                                            LUC108  LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
 1863 O                       PSTDA               23
 1864 O                       PNAR                55
      O/COPY WNCPYSRC,GL0420O147
@@ -1285,34 +1217,11 @@
      O/COPY WNCPYSRC,GL0420O148
 1869 O                                           76 'DR'
 1870 O                     22                    76 'CR'
-     O          E    43 51N04DET         1                                      LUC133
-     O         AND      84N34                                                   LUC133
-     O         AND      KP                                                      LUC133
-     O                       PSTDA               14                             LUC133
-     O                     69VALDA               23                             LUC133
-     O                       PNAR                55                             LUC133
-     O                  23 70PSTA                75 ' ,   ,   ,   , 0 '         LUC133
-     O                  23 71PSTA                75 '   ,   ,   , 0 . '         LUC133
-     O                  23 72PSTA                75 '  ,   ,   , 0 .  '         LUC133
-     O                  23 73PSTA                75 ' ,   ,   , 0 .   '         LUC133
-     O                  23                       77 'DR'                        LUC133
-     O                  22 70PSTA                83 ' ,   ,   ,   , 0 '         LUC133
-     O                  22 71PSTA                83 '   ,   ,   , 0 . '         LUC133
-     O                  22 72PSTA                83 '  ,   ,   , 0 .  '         LUC133
-     O                  22 73PSTA                83 ' ,   ,   , 0 .   '         LUC133
-     O                  22                       85 'CR'                        LUC133
-     O                     70RUNBAL             116 '   ,   ,   ,   , 0 '       LUC133
-     O                     71RUNBAL             116 '  ,   ,   ,   , 0 . '      LUC133
-     O                     72RUNBAL             116 ' ,   ,   ,   , 0 .  '      LUC133
-     O                     73RUNBAL             116 '   ,   ,   , 0 .   '       LUC133
-     O                  09                      118 'DR'                        LUC133
-     O                 N09                      118 'CR'                        LUC133
      O/COPY WNCPYSRC,GL0420O085
      O*                                                                   CEU013
      O          E    43 51N04DET         1                                      CEU013
      O         AND   84 78                                                      CEU013
-     O******** AND  N79                                                            LUC108  LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O                       ROCCY               28                             CEU013
      O                     KEROAMT               49 '   ,   ,   ,   , 0 '       CEU013
      O                     KFROAMT               49 '  ,   ,   ,   , 0 . '      CEU013
@@ -1321,8 +1230,7 @@
      O*                                                                   216937
      O          E    43 51N04DET         1                                      216937
      O         AND   84 53                                                      216937
-     O******** AND  N79                                                            LUC108  LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O                       W#ORIG              65                             216937
      O*                                                                   216937
      O** Core hook for externalisation.                                   S01408
@@ -1348,8 +1256,7 @@
 1882 O          E       43 45ENDPG       1                                      S01091
 1874 O         AND   84                                                         S01117
      O         AND  N33                                                         S01377
-     O******** AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
 1882 O*       T 1         43 45                                           S01091
 1883 O*      OR           43 52
 1884 O                                           55 'C/F'
@@ -1361,20 +1268,11 @@
      O/COPY WNCPYSRC,GL0420O164
 1889 O                     47                   100 'DR'
      O*                                                                   CEU013
-     O          E       43 45ENDPG            54                                 LUC133
-     O         AND     N34 84                                                    LUC133
-     O         AND     N33 KP                                                    LUC133
-     O                                           90 'CARRIED FORWARD'            LUC133
-     O                     70PSTBAL             118 '   ,   ,   ,   , 0 CR'      LUC133
-     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'     LUC133
-     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'     LUC133
-     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'      LUC133
       *
      O          E       43 45ENDPG       1                                      CEU013
      O         AND   84                                                         CEU013
      O         AND  N33 10                                                      CEU013
-     O*******  AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O                       BKEURO              60                             156327
      O                                           77 '('                         156327
      O                     KAEUPBAL             100 '   ,   ,   ,   , 0 CR)'    156327
@@ -1389,21 +1287,11 @@
      O**********             KDEUPBAL 101 '   ,   ,   , 0 .   CR)' CEU013*156327
      O**********       47               101 'DR)'                  CEU013*156327
      O*                                                                   CEU013
-     O          E       43 52TOT              54                                LUC133
-     O         AND   34N33 84                                                   LUC133
-     O         AND   KP                                                         LUC133
-     O                                           67 'AVAILABLE AMOUNT'          LUC133
-     O                     70CLBL1              118 '   ,   ,   ,   , 0 CR'     LUC133
-     O                     71CLBL1              118 '  ,   ,   ,   , 0 . CR'    LUC133
-     O                     72CLBL1              118 ' ,   ,   ,   , 0 .  CR'    LUC133
-     O                     73CLBL1              118 '   ,   ,   , 0 .   CR'     LUC133
-     O                     24                   118 'DR'                        LUC133
 1883 O*       T 1         43 52                                      S1091S01091
 1883 O********E*1         43 52TOT                              S01091    S01117
 1883 O          E    84 43 52TOT         1                                      S01117
      O         AND  N33                                                         S01377
-     O******   AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
 1884 O                                           55 'C/F'                       S01091
      O/COPY WNCPYSRC,GL0420O165
 1885 O                     70PSTBAL             100 '   ,   ,   ,   , 0 CR'     S01091
@@ -1413,19 +1301,10 @@
      O/COPY WNCPYSRC,GL0420O166
 1889 O                     47                   100 'DR'                        S01091
       *
-     O          E       43 52TOT              55                                LUC133
-     O         AND  N34 84                                                      LUC133
-     O         AND  N33 KP                                                      LUC133
-     O                     70PSTBAL             118 '   ,   ,   ,   , 0 CR'     LUC133
-     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'    LUC133
-     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'    LUC133
-     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'     LUC133
-     O                     47                   118 'DR'                        LUC133
      O*                                                                   CEU013
      O          E    84 43 52TOT         1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O******** AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O                       BKEURO              60                             156327
      O                                           77 '('                         156327
      O                     KAEUPBAL             100 '   ,   ,   ,   , 0 CR)'    156327
@@ -1463,26 +1342,8 @@
 1899 O*       T 1         43 45                                           S01091
 1899 O********E*1         43 45ENDPG                            S01091    S01117
 1899 O          E    84 43 45ENDPG       1                                      S01117
-     O*******  AND  N79                                                             LUC108 LUC133
-     O         AND  N79NKP                                                                 LUC133
+     O         AND  N79                                                         LUC108
      O                                           85 '- CONTD'
-     O          E       43 45ENDPG            55                                 LUC133
-     O         AND   KPN34 84                                                    LUC133
-     O                                          116 '- CONTD'                    LUC133
-     O          E       43 52TOT              58                                 LUC133
-     O         AND     N34 84                                                    LUC133
-     O         AND   KPN33                                                       LUC133
-     O                     70PSDR               118 ' ,   ,   ,   , 0 '          LUC133
-     O                     71PSDR               118 '   ,   ,   , 0 . '          LUC133
-     O                     72PSDR               118 '  ,   ,   , 0 .  '          LUC133
-     O                     73PSDR               118 ' ,   ,   , 0 .   '          LUC133
-     O          E       43 52TOT              60                                 LUC133
-     O         AND     N34 84                                                    LUC133
-     O         AND   KPN33                                                       LUC133
-     O                     70PSCR               118 ' ,   ,   ,   , 0 '          LUC133
-     O                     71PSCR               118 '   ,   ,   , 0 . '          LUC133
-     O                     72PSCR               118 '  ,   ,   , 0 .  '          LUC133
-     O                     73PSCR               118 ' ,   ,   , 0 .   '          LUC133
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0420OP21                                           S01408
      O*                                                                   S01408
@@ -3661,14 +3522,9 @@
      O                     47                   120 'DR)'
       *
      O          E    84 43 45ENDPG            55
-     O******** AND   79                                                  LUC108 LUC133
-     O         AND   79NKP                                                      LUC133
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
-     O          E       43 45ENDPG            55                                 LUC133
-     O         AND   KPN34 84                                                    LUC133
-     O         AND   79                                                          LUC133
-     O                                          116 '- CONTD'                    LUC133
      O          E       43 52TOT              58                                 LUC133
      O         AND     N34 84                                                    LUC133
      O         AND   KPN33                                                       LUC133

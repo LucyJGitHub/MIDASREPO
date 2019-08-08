@@ -6,13 +6,19 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. LUC108   *CREATE   Date 19Apr16               *
+      *  Last Amend No. LUC133             Date 01Aug19               *
+      *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC133 - Amendments to Statement of Account feature SpA      *
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
       *****************************************************************
+      *
+     C     LUC133        IFEQ      'Y'
+     C                   Z-ADD     CFSB          RUNBAL                         LUC133
+     C                   ENDIF
       *
      C     LUC108        IFEQ      'Y'
      C                   Z-ADD     1             STPP              3 0

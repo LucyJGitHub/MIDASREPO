@@ -6,10 +6,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. LUC108   *CREATE   Date 19Apr16               *
+      *  Last Amend No. LUC133             Date 01Aug19               *
+      *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC133 - Amendments to Statement of Account feature SpA      *
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
       *****************************************************************
@@ -43,12 +45,30 @@
      C     DPMT          IFNE      'FTR'
      C                   MOVEL     PNAR          DUMY3
      C                   ELSE
+     C     LUC133        IFEQ      'N'                                          LUC133
      C                   MOVE      OTST          DUMY3
+     C                   ELSE                                                   LUC133
+     C                   MOVE      *BLANKS       DUMY3                          LUC133
+     C                   ENDIF                                                  LUC133
      C                   ENDIF
      C                   MOVE      DUMY3         DUMY2
+     C     LUC133        IFEQ      'N'                                          LUC133
      C                   MOVE      DUMY2         PNAR
+     C                   ENDIF                                                  LUC133
      C                   ENDIF
      C                   ENDIF
+      *
+     C     LUC133        IFEQ      'Y'                                           LUC133
+      *                                                                          LUC133
+     C     G2AT          IFEQ      'AT'                                          LUC133
+     C     G1CY          ANDEQ     '   '                                         LUC133
+     C                   MOVE      G2CY          G1CY                            LUC133
+     C                   MOVE      G2AT          G1AT                            LUC133
+     C                   MOVE      G2EX          G1EX                            LUC133
+     C                   END                                                     LUC133
+     C                   MOVEL     GNAR1         PNAR                            LUC133
+      *
+     C                   ENDIF                                                   LUC133
       *
       *****************************************************************
       * End of /COPY GL0420CP44                                       *

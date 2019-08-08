@@ -14,8 +14,9 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. LUC110             Date 23Jan19               *
-      *  Prev Amend No. LUC108             DATE 19Apr16               *
+      *  Last Amend No. LUC133             Date 30Jul19               *
+      *  Prev Amend No. LUC110             Date 23Jan19               *
+      *                 LUC108             DATE 19Apr16               *
       *                 LUC107             Date 21Dec15               *
       *                 MD037536           Date 26Apr16               *
       *                 MD033999           Date 29Jun15               *
@@ -158,6 +159,14 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  LUC133 - Amendments to Statement of Account feature SpA      *
+      *           /copies used:                                       *
+      *           GL04204C45, GL0420C078, GL0420C085, GL0420CP86,     *
+      *           GL0420C089, GL0420CP35, GL0420CP44, GL0420CP45,     *
+      *           GL0420CP47, GL0420CP50, GL0420CP51, GL0420CP52,     *
+      *           GL0420CP53, GL0420CP54, GL0420CP55, GL0420CP56,     *
+      *           GL0420CP57, GL0420FFPG, GL0420IP11, GL0420OOP1,     *
+      *           GLH00438                                            *
       *  LUC110 - Extended Narratives (Upgrade to FBM 2.1)            *
       *           Use of core hook GL0420CCP5                         *
       *           Use of core hook GL0420CCP7                         *
@@ -861,6 +870,7 @@
      D**********                             17  180ACSQ                               E26667 CGL029
      D  ACOD                  13     22  0                                                    CGL029
      D  ACSQ                  23     24  0                                                    CGL029
+     D
      D/COPY WNCPYSRC,GL0420I017
      D**                                                                  S01117
      D**   FILE INFORMATION DATA STRUCTURE                                S01117

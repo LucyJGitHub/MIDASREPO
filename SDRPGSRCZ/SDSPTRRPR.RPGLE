@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT147             Date 14Jan13               *
+      *  Last Amend No. MD054039           Date 05Aug19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT147             Date 14Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054039 - DBU_SPTR did not update the spot rate (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT147 - Automatic update of payment charges definitions     *
       *           Added hooks: CFT147_025, CFT147_026                 *
@@ -59,9 +61,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDISPTRL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDISPTRD0:SDISPTRX0)
      FSDISPTRL1 UF   E           K DISK    INFSR(*PSSR)
@@ -70,10 +72,10 @@
       ** API Invalid log file by Type/FO Id/Time                                              CSC011
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDSPTRR001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -85,101 +87,101 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
- 
+
       ** Array of Fields in error, temporary store
      D TmpFldNmAr      S             10A   DIM(ArrayMax)
       ** Array of error message IDs, temporary store
      D TmpMsgIdAr      S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       * Current Spot Rate Transaction in File Format
      D CrTrFilFmt    E DS                  EXTNAME(SDCURRPD)
      D                                     PREFIX(C_)
- 
+
       * Current Spot Rate Transaction in Screen Format
      D CurTrScrn     E DS                  EXTNAME(SDSPTRPD)
      D                                     PREFIX(@)
- 
+
       * New Spot Rate Transaction in File Format
      D NwTrFilFmt    E DS                  EXTNAME(SDVSPTRPD)
- 
+
       * New Spot Rate Transaction in Screen Format
      D NewTrScrn     E DS                  EXTNAME(SDSPTRPD)
- 
- 
- 
+
+
+
       * Previous Spot Rate Transaction in Screen Format
      D PrvTrScrn     E DS                  EXTNAME(SDSPTRPD)
      D                                     PREFIX(@P)
- 
- 
+
+
       * Error indicators
      D OkTrTran      E DS                  EXTNAME(SDESPTRPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** EXTERNAL DS FOR API ICD
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D ExtData       E DS                  EXTNAME(SDSPTXPD)
       * Mm Transaction Extra Data - File (D/B) format
                                                                                               CSC011
@@ -192,34 +194,34 @@
      D*PCMD************S            100    DIM(2) CTDATA PERRCD(1)                     200420 CAP084
      D PCMD            S            100    DIM(4) CTDATA PERRCD(1)                            CAP084
       ** Override Database Table                                                              200420
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZACGTFLDNO, plus the offset to the requested field).
      D FormatA         S             10A   INZ('SDSPTRPD')
- 
+
      D Field1          S             10A   INZ('DDDTFR')
- 
+
      D FldOffsetA      S              5P 0
- 
+
      D FieldNo         S              5P 0
- 
+
       ** End of fields for getting starting field number
- 
+
       ** Define module parameter fields for CVT output and DSP input
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D QQSPAE1       E                     EXTFLD(QQSPAE)                                     CGL029
      D QQFTAE1       E                     EXTFLD(QQFTAE)                                     CGL029
@@ -235,11 +237,11 @@
      D DDCYNM          S                   LIKE(A6CYNM)
      D DDDLCY          S                   LIKE(A6DLCI)
      D DDSWCY          S                   LIKE(A6SWCY)
- 
+
       ** -------------------------------------------------------------------
- 
+
      D WKCYCD          S                   LIKE(DDCYCD)
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepSPTR         S              1A   inz('N')
@@ -255,19 +257,19 @@
                                                                                               200420
      D/COPY OFCPYSRCZ,CFT147_025                                                              CFT147
       ** -------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDSPTRR002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -328,10 +330,10 @@
      C     @SCRN         IFEQ      'T'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDSPTRR013
- 
+
       /EJECT
       *****************************************************************
       * SCRN@I - BROWSE INVALID TRANSACTIONS
@@ -449,38 +451,38 @@
       *
       * MIDAS TRANSACTION NUMBER
      C                   PARM      *BLANK        DDCYCD
- 
+
       * Timestamp of transaction selected
      C                   PARM                    @TMESTPSEL
- 
+
       * Command keys
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKL
       *                                                                                       CSC011
      C                   PARM                    CSC011                                       CSC011
- 
+
       * If CK/3 taken within invalid transaction deletion function,
       * End program
- 
+
      C     @INKC         IFEQ      '1'
      C                   EXSR      ENDA
      C                   GOTO      ERDNBRW
      C                   ENDIF
- 
+
       * If invalid customer read from subfile
- 
+
      C     @OPSEL        IFNE      *BLANK
- 
+
       * Clear file formats
      C                   CLEAR                   NwTrFilFmt
- 
+
       * Black the screen
- 
+
      C                   Eval      WKCYCD = DDCYCD
      C                   CLEAR                   NewTrScrn
- 
+
       * Reset errors
- 
+
      C                   MOVE      *ALL'Y'       OkTrTran
      C                   MOVEL     *BLANK        FldNameArr
      C                   MOVEL     *BLANK        MsgIdArr
@@ -488,13 +490,13 @@
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
- 
+
       * Retrieve Transaction details
- 
+
      C                   Eval      DDCYCD = WKCYCD
      C                   Eval      DDACTN = @ACSEL
      C                   Eval      AVFOTRANID = @FOTRANSEL
- 
+
       * Make sure Invalid transaction's details are passed to 'Retrieve'
       * module for SPF checking .
       *
@@ -525,26 +527,26 @@
       * If Transaction details were retrieved
       *
      C     C_A6CYCD      IFNE      *BLANK
- 
+
       * Data Substitution - Transaction Details
- 
+
      C     GHSUBS        IFNE      *BLANK
- 
+
      C     GHSUBS        SCAN      NewTrScrn                              99
      C                   IF        *IN99
      C                   EVAL      RepSPTR = 'Y'
      C                   ENDIF
- 
+
       ** If any of the flags set above is true, do the data
       ** substution subroutine.
- 
+
      C                   IF        (RepSPTR = 'Y')
      C                   EXSR      TDtDtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDIF
       *
       * If action code, or Transaction reference were NOT OK
@@ -554,20 +556,20 @@
      C     DDCYCDOK      OREQ      'N'
      C                   MOVEL     *BLANK        DDACTN
      C                   ENDIF
- 
+
       * Go to the Detail screen
- 
+
      C                   MOVE      'A'           @SCRN
- 
+
       * Else if no invalid transaction read from subfile
- 
+
      C                   ELSE
- 
+
       * Go to browse screen
- 
+
      C                   MOVE      'I'           @SCRN
      C                   ENDIF
- 
+
      C     ERDNBRW       ENDSR
       *****************************************************************
       /EJECT
@@ -575,7 +577,7 @@
       * SNDM@A - SEND A MESSAGE TO DETAILS SCREEN
       *****************************************************************
      C     SNDM@A        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -613,13 +615,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    FormatA
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -632,12 +634,12 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   ENDDO
- 
+
      C                   MOVEA     @EI           OkTrTran
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -665,7 +667,7 @@
      C                   ELSE
      C                   EVAL      @DERFD = 'N'
      C                   ENDIF
- 
+
       * Update 'previous' screen
      C                   MOVEL     NewTrScrn     PrvTrScrn
       *
@@ -682,30 +684,30 @@
       *
       ** BKEURO currency
      C                   PARM                    DDVSEU
- 
+
       ** Swift currency code (output screen field)
      C                   PARM                    DDSWCY
- 
+
       ** Dealing Currency (screen field)
      C                   PARM                    DDDLCY
- 
+
       ** Currency name (output screen field)
      C                   PARM                    DDCYNM
- 
+
       ** Spot Rate against base currency (when DDSPRT is against BKEURO)
       ** (output screen field)
      C                   PARM                    DDSPR2
- 
+
       ** Multiply divide indicator tied to DDSPR2
       ** (output screen field)
      C                   PARM                    DDMDI2
- 
+
       ** Swift currency code tied to DDSPR2 (output screen field)
      C                   PARM                    DDSWC2
- 
+
       ** Dealing currency tied to DDSPR2 (output screen field)
      C                   PARM                    DDDCY2
- 
+
       * Fields in error
      C                   PARM                    OKTrTran
       *
@@ -742,7 +744,7 @@
       * Display fields related to Euro rates
       *
      C                   PARM                    @DERFD            1
- 
+
       * OUTPUT PARAMETERS :
       * Function Keys
      C                   PARM      '0'           @INKC
@@ -772,7 +774,7 @@
       * Validate input to screen
      C                   CAS                     VAL@A
      C                   ENDCS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -792,25 +794,25 @@
      C     DDCYCDOK      OREQ      'N'
      C                   GOTO      EndVAL@A
      C                   ENDIF
- 
+
       *----------------------------------------------------------------
       * Prior to validation, initialize error indicators as 'OK'
- 
+
      C                   MOVE      *ALL'Y'       OkTrTran
      C                   Z-ADD     *ZERO         Idx               3 0
- 
+
       * Record current number of warnings and reset
      C                   Z-ADD     WIdx          PrvN_Warn         3 0
      C                   Z-ADD     *ZERO         WIdx              3 0
- 
+
       * Validation always works with the file format returned from the
       * RTV module, i.e. unchanged by any intermediate validation.
- 
+
      C                   MOVEL     CrTrFilFmt    NwTrFilFmt
- 
+
       * Validate Spot Rate Transaction details
- 
- 
+
+
      C                   CALLB     'SDSPTRVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
@@ -840,7 +842,7 @@
      C                   PARM                    WIdx
       * Valid Transaction layout (DS) from/to caller
      C                   PARM                    NwTrFilFmt
- 
+
       *
       * If errors returned
      C     Idx           IFNE      0
@@ -939,34 +941,34 @@
       * OUTPUTS
       * Transaction - screen formats
      C                   PARM                    NewTrScrn
- 
+
       * Currency Name
      C                   PARM                    DDCYNM
- 
+
       * Dealing currency
      C                   PARM                    DDDLCY
- 
+
       * SWIFT currency code
      C                   PARM                    DDSWCY
- 
+
       * BKEURO currency
      C                   PARM                    DDVSEU
- 
+
       * Spot Rate against base currency (when DDSPRT is against BKEURO)
       * (output screen field)
      C                   PARM                    DDSPR2
- 
+
       * Multiply divide indicator tied to DDSPR2
       * (output screen field)
      C                   PARM                    DDMDI2
- 
+
       * Dealing currency tied to DDSPR2 (output screen field)
      C                   PARM                    DDDCY2
- 
+
       * Swift currency code tied to DDSPR2 (output screen field)
      C                   PARM                    DDSWC2
- 
- 
+
+
       *
       * Update 'Current' Transaction with Transaction in Screen Format
       *
@@ -1103,19 +1105,19 @@
       * TDtDtaSubs - Transaction Details Data Substitution            *
       *                                                               *
       *****************************************************************
- 
+
      C     TDtDtaSubs    BEGSR
- 
+
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
- 
+
      C                   IF        RepSPTR = 'Y'
- 
+
      C                   RESET                   ReturnCode
      C                   CLEAR                   IncData
      C                   CLEAR                   CurData
      C                   CALLB     'APDTASUBS'
- 
+
       * Return Code
      C                   PARM                    ReturnCode       10
       * Substitution character
@@ -1124,12 +1126,12 @@
      C                   PARM      NewTrScrn     IncDATA        2000
       * Current Data
      C                   PARM      CurTrScrn     CurDATA        2000
- 
+
      C                   MOVEL     IncDATA       NewTrScrn
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1214,8 +1216,8 @@
      C                   KFLD                    KMsgType                                     CSC011
      C                   KFLD                    KFrntOffID                                   CSC011
      C                   KFLD                    KTimeStamp                                   CSC011
- 
- 
+
+
       ** Get the field number for the action code field; the
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -1224,7 +1226,7 @@
      C                   PARM                    FormatA
      C                   PARM                    Field1
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetA = FieldNo - 1
      C                   ENDIF
@@ -1233,10 +1235,10 @@
       *
      C                   MOVEL     'I'           @SCRN             1
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDSPTRR014
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

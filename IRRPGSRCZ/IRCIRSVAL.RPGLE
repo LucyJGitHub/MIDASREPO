@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051346           Date 17Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053400           Date 03Jul19               *
+      *  Prev Amend No. MD051346           Date 17Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD033488           Date 12Mar15               *
       *                 CIR018             Date 11Aug14               *
       *                 MD026686           Date 08May14               *
@@ -95,6 +96,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053400 - Details are not correctly reverted back when the  *
+      *             amended transaction is rejected in WIP. Skip      *
+      *             validation if action is Reject.                   *
       *  MD051346 - The system does not allow to change the maturity  *
       *             date in OIS deal.                                 *
       *           - Ensure zero short term rate is accepted by the    *
@@ -686,6 +690,33 @@
      D*BsDayConv*******S************128A                                                      CIR017
      D BsDayConv128    S            128A                                                    MD026686
                                                                                               CIR017
+      ** Parameter list for ZA0840                                                          MD053400
+      ** =========================                                                          MD053400
+      ** Return code for numeric validation module call                                     MD053400
+     D @Rtcde          S             10A                                                    MD053400
+      ** Alpha field for numeric validation                                                 MD053400
+     D @@ALPH          S             16A                                                    MD053400
+      ** Number of decimal places field for numeric validation                              MD053400
+     D @@IDP           S              2  0                                                  MD053400
+      ** Number of integers field for numeric validation                                    MD053400
+     D @@IINT          S              2  0                                                  MD053400
+      ** Millions/Thousands id (Y=function on)                                              MD053400
+     D @@MTID          S              1A                                                    MD053400
+      ** Amount calculation field                                                           MD053400
+     D @@AMT           S             15  0                                                  MD053400
+      ** Error return code for ZA0840 module                                                MD053400
+     D @@ERCD          S              1  0                                                  MD053400
+      **Decimal data length passed as a parameter to ZALIGN                                 MD053400
+     D   ZADEC         S              1  0                                                  MD053400
+                                                                                            MD053400
+      **Digital data length passed as a parameter to ZALIGN                                 MD053400
+     D   ZADIG         S              2  0                                                  MD053400
+                                                                                            MD053400
+      **Field Passed to ZALIGN on which the work is done                                    MD053400
+     D   ZFIELD        S             16A                                                    MD053400
+                                                                                            MD053400
+      **Indicator to show whether or not ZALIGN was successful                              MD053400
+     D   ZALIGNok      S              1A                                                    MD053400
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -728,6 +759,14 @@
      C     *DTAARA       DEFINE                  ZMUSER                                       CDL038
      C                   IN        ZMUSER                                                     CDL038
      C                   UNLOCK    ZMUSER                                                     CDL038
+      *                                                                                     MD053400
+      ** Skip validation if action is 'REJECT'                                              MD053400
+      *                                                                                     MD053400
+     C     ACTRJ         IFEQ      'Y'                                                      MD053400
+     C                   EXSR      SRRSFD                                                   MD053400
+     C                   EXSR      SetupValid                                               MD053400
+     C                   RETURN                                                             MD053400
+     C                   ENDIF                                                              MD053400
       *                                                                                       CDL038
       *  *-------------------------------*                                                    CDL038
       *  * Default Sub Type and Class                                                         CDL038
@@ -3943,6 +3982,7 @@
      C                   PARM                    RespMode
       * Transaction information (DS) from source system
      C                   PARM                    TranIn
+     C                   PARM                    ACTRJ             1                        MD053400
       * Receive Settlement Method & Nostro and  Pay Settlement Method &
       *  Nostro, from default (Action = I) or valid deal (Action = A)
      C                   PARM                    RecSetCcy
@@ -4603,6 +4643,605 @@
       **********                                                                       CAS001 226002
      C**********         ENDSR                                                         CAS001 226002
       *****************************************************************                CAS001 226002
+      /EJECT                                                                                MD053400
+      *****************************************************************                     MD053400
+      *                                                               *                     MD053400
+      * SRRSFD  -  Restore orignal details (for Reject Action)        *                     MD053400
+      *                                                               *                     MD053400
+      *****************************************************************                     MD053400
+     C     SRRSFD        BEGSR                                                              MD053400
+      *                                                                                     MD053400
+      ** Maturity Date                                                                      MD053400
+      *                                                                                     MD053400
+     C                   MOVE      SMDAT         ZDATE             6 0                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM            1                        MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR              7                        MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO            5 0                      MD053400
+     C                   Z-ADD     ZDAYNO        RXMDAT                                     MD053400
+      *                                                                                     MD053400
+      ** Base Currency Rate                                                                 MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANKS       @@ALPH                                     MD053400
+     C                   MOVEL     SUBCXR        @@ALPH                                     MD053400
+     C                   Z-ADD     8             @@IDP                                      MD053400
+     C                   Z-ADD     5             @@IINT                                     MD053400
+     C                   MOVE      'N'           @@MTID                                     MD053400
+     C                   CALLB     'ZA0840'                                                 MD053400
+     C                   PARM                    @Rtcde                                     MD053400
+     C                   PARM                    @@ALPH                                     MD053400
+     C                   PARM                    @@IDP                                      MD053400
+     C                   PARM                    @@IINT                                     MD053400
+     C                   PARM                    @@MTID                                     MD053400
+     C                   PARM                    @@ERCD                                     MD053400
+     C                   PARM                    @@AMT                                      MD053400
+     C                   PARM                    BNDCSP                                     MD053400
+     C                   MOVE      @@AMT         RXUBCXR                                    MD053400
+      *                                                                                     MD053400
+      ** Our Spread/Rate                                                                    MD053400
+      *                                                                                     MD053400
+     C                   Z-ADD     0             @@AMT                                      MD053400
+     C                   Z-ADD     0             @@ERCD                                     MD053400
+     C     SURTSP        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      *BLANKS       @@ALPH                                     MD053400
+     C                   MOVEL     SURTSP        @@ALPH                                     MD053400
+     C                   Z-ADD     7             @@IDP                                      MD053400
+     C                   Z-ADD     4             @@IINT                                     MD053400
+     C                   MOVE      'N'           @@MTID                                     MD053400
+     C                   MOVE      *BLANKS       @Rtcde                                     MD053400
+     C                   CALLB     'ZA0841'                                                 MD053400
+     C                   PARM                    @Rtcde                                     MD053400
+     C                   PARM                    @@ALPH                                     MD053400
+     C                   PARM                    @@IDP                                      MD053400
+     C                   PARM                    @@IINT                                     MD053400
+     C                   PARM                    @@MTID                                     MD053400
+     C                   PARM                    @@ERCD                                     MD053400
+     C                   PARM                    @@AMT                                      MD053400
+     C                   PARM                    BNDCSP                                     MD053400
+     C                   MOVE      @@AMT         RXURTSP                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXURTSP                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Our Rate Fix Days                                                                  MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      SUFRFD        ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXUFRFD                                    MD053400
+      *                                                                                     MD053400
+      ** Our Rate Change Date                                                               MD053400
+      *                                                                                     MD053400
+     C     SUNICD        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SUNICD        ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXUNICD                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXUNICD                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Our Rate Change Day in Month                                                       MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      SUICFD        ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXUICFD                                    MD053400
+      *                                                                                     MD053400
+      ** Our Short Term Rate                                                                MD053400
+      *                                                                                     MD053400
+     C                   Z-ADD     0             @@AMT                                      MD053400
+     C                   Z-ADD     0             @@ERCD                                     MD053400
+     C     SUEINR        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      *BLANKS       @@ALPH                                     MD053400
+     C                   MOVEL     SUEINR        @@ALPH                                     MD053400
+     C                   Z-ADD     7             @@IDP                                      MD053400
+     C                   Z-ADD     4             @@IINT                                     MD053400
+     C                   MOVE      'N'           @@MTID                                     MD053400
+     C                   MOVE      *BLANKS       @Rtcde                                     MD053400
+     C                   CALLB     'ZA0841'                                                 MD053400
+     C                   PARM                    @Rtcde                                     MD053400
+     C                   PARM                    @@ALPH                                     MD053400
+     C                   PARM                    @@IDP                                      MD053400
+     C                   PARM                    @@IINT                                     MD053400
+     C                   PARM                    @@MTID                                     MD053400
+     C                   PARM                    @@ERCD                                     MD053400
+     C                   PARM                    @@AMT                                      MD053400
+     C                   PARM                    BNDCSP                                     MD053400
+     C                   MOVE      @@AMT         RXUEINR                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXUEINR                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Our Interest Payment Date                                                          MD053400
+      *                                                                                     MD053400
+     C     SUNIPD        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SUNIPD        ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXUNIPD                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXUNIPD                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Our Interest Payment Day in Month                                                  MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      SUIPFD        ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXUIPFD                                    MD053400
+      *                                                                                     MD053400
+      ** Base Currency Rate                                                                 MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANKS       @@ALPH                                     MD053400
+     C                   MOVEL     STBCXR        @@ALPH                                     MD053400
+     C                   Z-ADD     8             @@IDP                                      MD053400
+     C                   Z-ADD     5             @@IINT                                     MD053400
+     C                   MOVE      'N'           @@MTID                                     MD053400
+     C                   CALLB     'ZA0840'                                                 MD053400
+     C                   PARM                    @Rtcde                                     MD053400
+     C                   PARM                    @@ALPH                                     MD053400
+     C                   PARM                    @@IDP                                      MD053400
+     C                   PARM                    @@IINT                                     MD053400
+     C                   PARM                    @@MTID                                     MD053400
+     C                   PARM                    @@ERCD                                     MD053400
+     C                   PARM                    @@AMT                                      MD053400
+     C                   PARM                    BNDCSP                                     MD053400
+     C                   MOVE      @@AMT         RXTBCXR                                    MD053400
+      *                                                                                     MD053400
+      ** Their Spread/Rate                                                                  MD053400
+      *                                                                                     MD053400
+     C                   Z-ADD     0             @@AMT                                      MD053400
+     C                   Z-ADD     0             @@ERCD                                     MD053400
+     C     STRTSP        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      *BLANKS       @@ALPH                                     MD053400
+     C                   MOVEL     STRTSP        @@ALPH                                     MD053400
+     C                   Z-ADD     7             @@IDP                                      MD053400
+     C                   Z-ADD     4             @@IINT                                     MD053400
+     C                   MOVE      'N'           @@MTID                                     MD053400
+     C                   MOVE      *BLANKS       @Rtcde                                     MD053400
+     C                   CALLB     'ZA0841'                                                 MD053400
+     C                   PARM                    @Rtcde                                     MD053400
+     C                   PARM                    @@ALPH                                     MD053400
+     C                   PARM                    @@IDP                                      MD053400
+     C                   PARM                    @@IINT                                     MD053400
+     C                   PARM                    @@MTID                                     MD053400
+     C                   PARM                    @@ERCD                                     MD053400
+     C                   PARM                    @@AMT                                      MD053400
+     C                   PARM                    BNDCSP                                     MD053400
+     C                   MOVE      @@AMT         RXTRTSP                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTRTSP                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Their Rate Fix Days                                                                MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      STFRFD        ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXTFRFD                                    MD053400
+      *                                                                                     MD053400
+      ** Their Rate Change Date                                                             MD053400
+      *                                                                                     MD053400
+     C     STNICD        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STNICD        ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTNICD                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTNICD                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Their Rate Change Day in Month                                                     MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      STICFD        ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXTICFD                                    MD053400
+      *                                                                                     MD053400
+      ** Their Short Term Rate                                                              MD053400
+      *                                                                                     MD053400
+     C                   Z-ADD     0             @@AMT                                      MD053400
+     C                   Z-ADD     0             @@ERCD                                     MD053400
+     C     STEINR        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      *BLANKS       @@ALPH                                     MD053400
+     C                   MOVEL     STEINR        @@ALPH                                     MD053400
+     C                   Z-ADD     7             @@IDP                                      MD053400
+     C                   Z-ADD     4             @@IINT                                     MD053400
+     C                   MOVE      'N'           @@MTID                                     MD053400
+     C                   MOVE      *BLANKS       @Rtcde                                     MD053400
+     C                   CALLB     'ZA0841'                                                 MD053400
+     C                   PARM                    @Rtcde                                     MD053400
+     C                   PARM                    @@ALPH                                     MD053400
+     C                   PARM                    @@IDP                                      MD053400
+     C                   PARM                    @@IINT                                     MD053400
+     C                   PARM                    @@MTID                                     MD053400
+     C                   PARM                    @@ERCD                                     MD053400
+     C                   PARM                    @@AMT                                      MD053400
+     C                   PARM                    BNDCSP                                     MD053400
+     C                   MOVE      @@AMT         RXTEINR                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTEINR                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Their Interest Payment Date                                                        MD053400
+      *                                                                                     MD053400
+     C     STNIPD        IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STNIPD        ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTNIPD                                    MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTNIPD                                    MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** Their Interest Payment Day in Month                                                MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      STIPFD        ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXTIPFD                                    MD053400
+      *                                                                                     MD053400
+      ** Our Yield Curve                                                                    MD053400
+      *                                                                                     MD053400
+     C                   MOVEL     SOYLC         RXOYLC                                     MD053400
+      *                                                                                     MD053400
+      ** Our Forward Yield Curve                                                            MD053400
+      *                                                                                     MD053400
+     C                   MOVEL     SOFYC         RXOFYC                                     MD053400
+      *                                                                                     MD053400
+      ** Their Yield Curve                                                                  MD053400
+      *                                                                                     MD053400
+     C                   MOVEL     STYLC         RXTYLC                                     MD053400
+      *                                                                                     MD053400
+      ** Their Forward Yield Curve                                                          MD053400
+      *                                                                                     MD053400
+     C                   MOVEL     STFYC         RXTFYC                                     MD053400
+      *                                                                                     MD053400
+      ** Start Date                                                                         MD053400
+      *                                                                                     MD053400
+     C     SOSDT         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SOSDT         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXOSDT                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXOSDT                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 1st Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      SOS1B         ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXOS1B                                     MD053400
+      *                                                                                     MD053400
+      ** 1st Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     SOS1D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SOS1D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXOS1D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXOS1D                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 2nd Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      SOS2B         ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXOS2B                                     MD053400
+      *                                                                                     MD053400
+      ** 2nd Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     SOS2D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SOS2D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXOS2D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXOS2D                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** End Date                                                                           MD053400
+      *                                                                                     MD053400
+     C     SOEDT         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SOEDT         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXOEDT                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXOEDT                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 1st Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      SOE1B         ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXOE1B                                     MD053400
+      *                                                                                     MD053400
+      ** 1st Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     SOE1D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SOE1D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXOE1D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXOE1D                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 2nd Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      SOE2B         ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXOE2B                                     MD053400
+      *                                                                                     MD053400
+      ** 2nd Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     SOE2D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      SOS2D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXOE2D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXOE2D                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** End Date                                                                           MD053400
+      *                                                                                     MD053400
+     C     STSDT         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STSDT         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTSDT                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTSDT                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 1st Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C                   MOVE      *BLANK        ZFIELD                                     MD053400
+     C                   Z-ADD     0             ZADEC                                      MD053400
+     C                   Z-ADD     02            ZADIG                                      MD053400
+     C                   MOVE      STS1B         ZFIELD                                     MD053400
+     C                   CALLB     'ZALIGN'                                                 MD053400
+     C                   PARM                    ZALIGNok                                   MD053400
+     C                   PARM                    ZFIELD                                     MD053400
+     C                   PARM                    ZADEC                                      MD053400
+     C                   PARM                    ZADIG                                      MD053400
+     C                   MOVE      ZFIELD        RXTS1B                                     MD053400
+      *                                                                                     MD053400
+      ** 1st Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     STS1D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STS1D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTS1D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTS1D                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 2nd Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C     STS2B         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STS2B         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTS2B                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTS2B                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 2nd Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     STS2D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STS2D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTS2D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTS2D                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** End Date                                                                           MD053400
+      *                                                                                     MD053400
+     C     STEDT         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STEDT         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTEDT                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTEDT                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 1st Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C     STE1B         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STE1B         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTE1B                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTE1B                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 1st Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     STE1D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STE1D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTE1D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTE1D                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 2nd Term Base Rate Code                                                            MD053400
+      *                                                                                     MD053400
+     C     STE2B         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STE2B         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTE2B                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTE2B                                     MD053400
+     C                   ENDIF                                                              MD053400
+      *                                                                                     MD053400
+      ** 1st Term End Date                                                                  MD053400
+      *                                                                                     MD053400
+     C     STE1D         IFNE      *BLANKS                                                  MD053400
+     C                   MOVE      STE1D         ZDATE                                      MD053400
+     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
+     C                   CALL      'ZDATE1'                                                 MD053400
+     C                   PARM      *BLANKS       ZERR                                       MD053400
+     C                   PARM                    ZDATE                                      MD053400
+     C                   PARM                    ZDATFM                                     MD053400
+     C                   PARM                    ZDAYNO                                     MD053400
+     C                   Z-ADD     ZDAYNO        RXTE1D                                     MD053400
+     C                   ElSE                                                               MD053400
+     C                   Z-ADD     0             RXTE1D                                     MD053400
+     C                   ENDIF                                                              MD053400
+     C                   ENDSR                                                              MD053400
       /EJECT
       *****************************************************************
       *                                                               *

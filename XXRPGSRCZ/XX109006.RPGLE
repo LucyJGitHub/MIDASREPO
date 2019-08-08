@@ -15,13 +15,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. JMI109             Date 23May18               *
-      *  Prev Amend No. JMI026I02          Date 15Oct08               *
+      *  Last Amend No. JMI109A            Date 01Aug19               *
+      *  Prev Amend No. JMI109             Date 23May18               *
+      *                 JMI026I02          Date 15Oct08               *
       *                 JMI026             Date 29Sep08               *
       *                 JMI026  *CREATE    Date 30Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI109A - G-AML PreProcessor (UDF for Customer Type)         *
       *  JMI109 - G-AML PreProcessor (Upgrade to FB Midas)            *
       *  JMI026I02 - Recompiled program due to changes in SDGAMLX0    *
       *  JMI026 - Amended program to extract customer type with       *
@@ -50,6 +52,8 @@
      FXXGAMLPD  IF   E             DISK    INFSR(*PSSR)                                       JMI109
      FSDACUSL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
+     FTGZCUSDEX1IF   E           K DISK    INFSR(*PSSR)                                      JMI109A
+     F                                     Prefix(DEX_)                                      JMI109A
      F*SDCUX5L0  IF   E           K DISK    INFSR(*PSSR)                                      JMI109
      F*********                            USROPN                                             JMI109
      F*SDCSTFPP  O    E             DISK    INFSR(*PSSR)                                      JMI109
@@ -183,6 +187,13 @@
      C                   IF        %Open(SDACUSL1)
      C     BBCUST        CHAIN     SDACUSL1
      C                   ENDIF
+      *                                                                                      JMI109A
+     C                   Eval      DEX_KDDCUSN = BBCUST                                      JMI109A
+     C                   Eval      DEX_KZONE   = O#ZONE                                      JMI109A
+     C     KeyDex        Chain     TGZCUSDEX1                         51                     JMI109A
+     C                   If        Not %Found(TGZCUSDEX1)                                    JMI109A
+     C                   move      *Blanks       Dex_MGTYPE                                  JMI109A
+     C                   Endif                                                               JMI109A
       *
       ** Chain to SDCUX5L0
       *
@@ -361,7 +372,8 @@
       * Sex
      C                   EVAL      GFLDS = %Trim(GFLDS) + '~'
       * Customer Type
-     C                   EVAL      VarTmp = %Trim(BBCSTY)
+     C**********         EVAL      VarTmp = %Trim(BBCSTY)                               JMI109A
+     C                   EVAL      VarTmp = %Trim(Dex_MGTYPE)                           JMI109A
      C                   EVAL      GFLDS = %Trim(GFLDS) + VarTmp + '~'
       * Corr Bank Relation
      C                   EVAL      GFLDS = %Trim(GFLDS) + '0' + '~'
@@ -739,6 +751,26 @@
      C                   READ      XXGAMLPD                                                   JMI109
      C                   MOVE      GOPDPT        WDPT             10
      C                   EVAL      PSeq = *Blanks
+                                                                                             JMI109A
+     C     KeyDex        KList                                                               JMI109A
+     C                   Kfld                    DEX_KDDCUSN       6                         JMI109A
+     C                   Kfld                    DEX_KZONE        10                         JMI109A
+                                                                                             JMI109A
+      ** Get Zone                                                                            JMI109A
+                                                                                             JMI109A
+     C                   Call      'GOGETZONE'                                               JMI109A
+     C                   Parm      *BLANKS       I#RTCD            7                         JMI109A
+     C                   Parm      *BLANKS       I#ERMS           50                         JMI109A
+      * Inputs                                                                               JMI109A
+     C                   Parm      'N'           I#FULLCHECK       1                         JMI109A
+      * Outputs                                                                              JMI109A
+     C                   Parm                    O#ZONE           10                         JMI109A
+     C                   Parm                    O#SHTC            4                         JMI109A
+     C                   Parm                    O#RDNB            5 0                       JMI109A
+     C                   Parm                    O#DNWD            5 0                       JMI109A
+     C                   Parm                    O#BCCY            3                         JMI109A
+     C                   Parm                    O#NJOB            1 0                       JMI109A
+                                                                                             JMI109A
      C                   ENDSR
       *
       *****************************************************************

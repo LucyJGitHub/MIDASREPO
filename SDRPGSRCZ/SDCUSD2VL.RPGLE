@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. JMI109             Date 16May19               *
-      *  Prev Amend No. CSD094             Date 29Aug18               *
+      *  Last Amend No. JMI109A            Date 02Aug19               *
+      *  Prev Amend No. JMI109             Date 16May19               *
+      *                 CSD094             Date 29Aug18               *
       *                 MD051247           Date 17Jul18               *
       *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI109A - Extract for G-AML. UDF changes.                    *
+      *            Recompile due to SDCUPV049 made redundant          *
       *  JMI109 - Extract for G-AML (Upgrade to FBM)                  *
       *           Amended Hooks: SDCUDPV040, SDCUDPV041, SDCUDPV049,  *
       *           SDCUDPV050, SDCUDPV051                              *

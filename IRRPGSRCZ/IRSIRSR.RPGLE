@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051249           Date 17Jul18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053400           Date 03Jul19               *
+      *  Prev Amend No. MD051249           Date 17Jul18               *      
+      *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD031775           Date 09Jan15               *
@@ -61,6 +62,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053400 - Details are not correctly reverted back when the  *
+      *             amended transaction is rejected in WIP. Skip      *
+      *             validation if action is Reject.                   *
       *  MD051249 - Set APIRetc to '0' after PSSR.                    *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD044506 - MT300 98D trade execution date can not be before  *
@@ -430,6 +434,8 @@
      D WNoRepFlag      S              1                                                       CSW213
                                                                                               CSW213
      D CSW213          S              1                                                       CSW213
+      ** Action Code Reject                                                                 MD053400
+     D ACTRJ           S              1                                                     MD053400
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -575,7 +581,9 @@
      C                                      FORMULAOC + FORMULATC +             BUG4646
      C**********                            FORMULAOPC+ FORMULATPC + ORDATEAST        BUG4646 CSW213
      C                                      FORMULAOPC+ FORMULATPC +                          CSW213
-     C                                      InSwift2013 + ORDATEAST                           CSW213
+     C**********                            InSwift2013 + ORDATEAST                  CSW213 MD053400
+     C                                      InSwift2013 + ACTRJ +                           MD053400
+     C                                      ORDATEAST                                       MD053400
      C*******************EVAL      Buffer2=%SUBST(ORDATEAST:4239)+OPDATEAST     BUG4646BUG5357
      C*******************EVAL      BufferEx2=%SUBST(OPDATEAST:3438)+TRDATEAST   BUG4646BUG5357
      C*******************                      +TPDATEAST                       BUG4646BUG5357
@@ -706,14 +714,22 @@
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12523)+PCSAST            MD031775 CSW216
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9322)                     MD031775 CSW216
                                                                                               CSW216
-     C                   EVAL      Buffer2=%SUBST(ORDATEAST:888)+OPDATEAST                    CSW216
-     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:87)+TRDATEAST                   CSW216
-     C                                         +TPDATEAST                                     CSW216
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:486)+OCFSAST                    CSW216
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5685)+TCFSAST                     CSW216
-     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2484)                             CSW216
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST                     CSW216
-     C                   EVAL      BufferEx7=%SUBST(PCSAST:9282)                              CSW216
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:888)+OPDATEAST           CSW216 MD053400
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:87)+TRDATEAST          CSW216 MD053400
+     C**********                               +TPDATEAST                            CSW216 MD053400
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:486)+OCFSAST           CSW216 MD053400
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5685)+TCFSAST            CSW216 MD053400
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2484)                    CSW216 MD053400
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST            CSW216 MD053400
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9282)                     CSW216 MD053400
+     C                   EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST                  MD053400
+     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST                 MD053400
+     C                                         +TPDATEAST                                   MD053400
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST                  MD053400
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST                   MD053400
+     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2483)                           MD053400
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST                   MD053400
+     C                   EVAL      BufferEx7=%SUBST(PCSAST:9281)                            MD053400
      C                   ENDIF
  
      C                   EVAL      *INLR = *ON

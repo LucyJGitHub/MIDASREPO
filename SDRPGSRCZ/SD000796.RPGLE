@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD052645           Date 29May19               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CER070             Date 24Nov14               *
       *                 CDL096             Date 22Sep14               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052645 - Cannot enquire customer with 'N' Threshold Method *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1276,7 +1278,7 @@
      C                   EVAL      *IN60 = *ON
      C                   ENDIF
       *
-     C                   IF        EWTHMD = 'Y'                                             AR782319
+     C**********         IF        EWTHMD = 'Y'                                    AR782319 MD052645
      C                   EVAL      WSCUSTN = DDCUST
      C     WSCUSTN       CHAIN     SDINPHL1
       *
@@ -1286,13 +1288,13 @@
      C                   EVAL      PAMsgf = 'SDUSRMSG'
      C                   EXSR      SRZaSnMs
      C                   ENDIF
-                                                                                            AR782319
-     C                   ELSE                                                               AR782319
-     C                   EVAL      *IN40 = *ON                                              AR782319
-     C                   EVAL      PAmsId = 'USR8420'                                       AR782319
-     C                   EVAL      PAMsgf = 'SDUSRMSG'                                      AR782319
-     C                   EXSR      SRZaSnMs                                                 AR782319
-     C                   ENDIF                                                              AR782319
+                                                                                   AR782319 MD052645
+     C**********         ELSE                                                      AR782319 MD052645
+     C**********         EVAL      *IN40 = *ON                                     AR782319 MD052645
+     C**********         EVAL      PAmsId = 'USR8420'                              AR782319 MD052645
+     C**********         EVAL      PAMsgf = 'SDUSRMSG'                             AR782319 MD052645
+     C**********         EXSR      SRZaSnMs                                        AR782319 MD052645
+     C**********         ENDIF                                                     AR782319 MD052645
       *
      C                   IF        *IN60 = *ON
      C                   CLOSE     SDINPHL1

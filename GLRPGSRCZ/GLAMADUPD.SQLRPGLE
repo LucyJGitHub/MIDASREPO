@@ -132,7 +132,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD053978 - Cannot amend TI account flag from Y to N.         *
-      *           - Missing codes by MD034725                         *
+      *           - Missing codes by MD034725.                        *
       *  AR1021393 - Wrong balances on account statement. Use balance *
       *              from GLACBTPD only if a/c not opened on rundate. *
       *              (Child: AR1021396)                               *

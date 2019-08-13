@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054039           Date 05Aug19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT147             Date 14Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054039 - DBU_SPTR did not update the spot rate (Recompile) *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT147 - Automatic update of payment charges definitions     *

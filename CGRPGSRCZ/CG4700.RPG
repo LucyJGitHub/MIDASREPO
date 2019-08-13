@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. MD053332           Date 12Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
       *                 MD041443           Date 19Sep16               *
       *                 MD033852           Date 20Aug15               *
       *                 MD036269           Date 10Nov15               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053332 - Account closure - missing statement               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  MD041443 - CBC022001 failed due to invalid character in file *
@@ -251,6 +253,8 @@
      I              GLBT                            GLBTAB                088009
      I              LCD                             LCDAB                 088009
      I              ACODQQ                          ACO1QQ                                    CGL029
+     I              ACST                            ACSTAB                                  MD053332
+     I              DACC                            DACCAB                                  MD053332
       *
      I##UDCR    E DSCGUDCRPD
       **  External DS for UDC Reference Details
@@ -445,8 +449,8 @@
      C                     CLEAR@STMTL0
      C                     CLEARF1DTL1
       *
-      **  Determine what sort of statement is to be produced
-     C                     EXSR SRSTTY
+      ****Determine*what*sort*of*statement*is*to*be*produced***********                     MD053332
+     C**********           EXSR SRSTTY                                                      MD053332
       *                                                                   088009
       **  Access account details (LF/ACCNT)                               088009
      C                     CALL 'AOACCTR0'                                088009
@@ -476,6 +480,9 @@
      C                     EXSR SRERR                                     088009
      C                     ENDIF                                          088009
       *
+      **  Determine what sort of statement is to be produced                                MD053332
+     C                     EXSR SRSTTY                                                      MD053332
+      *                                                                                     MD053332
       **  Depending on Statement Type, flag output to relevant files.
      C                     MOVE 'N'       ##SMID  1
      C                     MOVE 'N'       ##SUDC  1
@@ -788,6 +795,15 @@
      C           S#NSTD    IFLT BJDNWD
      C                     MOVE 'Y'       ##PROC
      C                     ENDIF
+      *                                                                                     MD053332
+     C                     MOVE *OFF      *IN80                                             MD053332
+     C                     TESTB'1'       S#GLBT         80                                 MD053332
+     C           *IN80     IFEQ *ON                                                         MD053332
+     C           DACCAB    ANDEQBJRDNB                                                      MD053332
+     C           ACSTAB    ANDEQ'C'                                                         MD053332
+     C                     MOVE *BLANK    ##PROC                                            MD053332
+     C                     ENDIF                                                            MD053332
+      *                                                                                     MD053332
      C/COPY WNCPYSRC,CG4700C005
       *
       **  ... If a Demand Statement has been requested.

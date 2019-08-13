@@ -25,8 +25,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 13Mar14               *
+      *  Last Amend No. 262653             Date 16Jun19               *
+      *  Prev Amend No. CDL069             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD000091           Date 13Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -51,6 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262653 - Recompile due to changes in /COPY MM1008C           *
+      *           (Replaced hard coded 360).                          *
+      *  CDL069 - True Discount for Negotiable Assets.(Recompile)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Code Substitution                           *
       *           - Applied for MD025735                              *

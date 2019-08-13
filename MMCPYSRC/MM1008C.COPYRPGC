@@ -4,19 +4,23 @@
       *                                                               *
       *  MM1008C - C-specs for MM1008 subroutine                      *
       *                                                               *
+      *  Last Amend No. 262653             Date 16Jun19               *
+      *  Prev Amend No. CDL069             Date 16Jun19               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 242286             Date 27Sep06               *
+      *                 242286             Date 27Sep06               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. 191870             Date 28Nov01               *
+      *                 191870             Date 28Nov01               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 140931             Date 17Aug98               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262653 - Calculation method not used.                        *
+      *  CDL069 - True Discount for Negotiable Assets.                *
       *  242286 - Enhance calculation of interest for calc basis 6.   *
       *  191870 - Calculation basis 6 processing.                     *
       *  140931 - Purch/sale price not correct if multi-period deal.  *
@@ -150,6 +154,39 @@
      C     @@TYPE        OREQ      'TA'
      C***        @@TYPE    OREQ 'BA'                       *1
      C     @@TYPE        OREQ      'DA'
+      *                                                                                       CDL069
+     C                   MOVEL     SVALKY        SVALK1                                       CDL069
+     C                   CALL      'AOSVALR0'                                                 CDL069
+     C                   PARM                    @RTCD                                        CDL069
+     C                   PARM                    SVALK1           20                          CDL069
+     C                   PARM                    SVAL1           200                          CDL069
+     C                   PARM                    SVALK2           20                          CDL069
+     C                   PARM                    SVAL2           200                          CDL069
+     C                   PARM                    SVALK3           20                          CDL069
+     C                   PARM                    SVAL3           200                          CDL069
+     C                   PARM                    SVALK4           20                          CDL069
+     C                   PARM                    SVAL4           200                          CDL069
+     C                   PARM                    SVALK5           20                          CDL069
+     C                   PARM                    SVAL5           200                          CDL069
+     C                   PARM                    SVALK6           20                          CDL069
+     C                   PARM                    SVAL6           200                          CDL069
+     C                   PARM                    SVALK7           20                          CDL069
+     C                   PARM                    SVAL7           200                          CDL069
+     C                   PARM                    SVALK8           20                          CDL069
+     C                   PARM                    SVAL8           200                          CDL069
+     C                   PARM                    SVALK9           20                          CDL069
+     C                   PARM                    SVAL9           200                          CDL069
+     C                   PARM                    SVALK0           20                          CDL069
+     C                   PARM                    SVAL10          200                          CDL069
+      *                                                                                       CDL069
+     C                   IF        @RTCD = *BLANKS                                            CDL069
+     C                   EVAL      WNATD = %SUBST(SVAL1:1:1)                                  CDL069
+     C                   ENDIF                                                                CDL069
+      *                                                                                       CDL069
+     C                   IF        WNATD = 'Y'                                                CDL069
+     C                   EXSR      #GCALC                                                     CDL069
+     C                   GOTO      M10089                                                     CDL069
+     C                   ENDIF                                                                CDL069
      C*
      C**  CALCULATE PRICE  **  PRICE = FACE VALUE - DISCOUNTED AMOUNT
      C*
@@ -513,6 +550,67 @@
       *
      C     M10089        ENDSR                                                  ***M10089***
       *
+      *****************************************************************                       CDL069
+      *  #GCALC - TRUE DISCOUNT CALCULATION                           *                       CDL069
+      *                                                               *                       CDL069
+      *  CALLED BY    - MM1008                                        *                       CDL069
+      *                                                               *                       CDL069
+      *  CALLS        -                                               *                       CDL069
+      *                                                               *                       CDL069
+      *  FIELDS INPUT -                                               *                       CDL069
+      *                                                               *                       CDL069
+      *  @@DRAT 11,7  - DISCOUNT/YIELD RATE                           *                       CDL069
+      *  @@FVAL 15,0  - FACE VALUE                                    *                       CDL069
+      *                                                               *                       CDL069
+      *  FIELDS OUTPUT                                                *                       CDL069
+      *                                                               *                       CDL069
+      *  @@PRIC 15,0  - PRICE                                         *                       CDL069
+      *                                                               *                       CDL069
+      *  WORK FIELDS                                                  *                       CDL069
+      *                                                               *                       CDL069
+      *  @@DAY1  5,0  - NO OF DAYS IN A YEAR * 100                    *                       CDL069
+      *  @@DTM   5,0  - DAYS TO MATURITY                              *                       CDL069
+      *  UGFVDY 18,0  - FACE VALUE * DAYS IN A YEAR                   *                       CDL069
+      *  UGDIVS 16,9  - DAYS TO MATURITY * 100 * RATE                 *                       CDL069
+      *  UGDTMT  5,2  - DAYS TO MATURITY DIVIDED BY 100               *                       CDL069
+      *                                                               *                       CDL069
+      *****************************************************************                       CDL069
+     C     #GCALC        BEGSR                                                                CDL069
+      *                                                                                       CDL069
+      ** Define parameters                                                                    CDL069
+      *                                                                                       CDL069
+     C                   Z-ADD     0             UGFVDY           18 0                        CDL069
+     C                   Z-ADD     0             UGDTMT            5 2                        CDL069
+     C                   Z-ADD     0             UGDIVS           16 9                        CDL069
+      *                                                                                       CDL069
+      ** Multiply Face Value with no. of Days in a year                                       CDL069
+      *                                                                                       CDL069
+     C*****@@FVAL        MULT      360           UGFVDY                                CDL069 262653
+     C     @@FVAL        MULT      @@DAYO        UGFVDY                                       262653
+      *                                                                                       CDL069
+      ** Divide Days to Maturity by 100                                                       CDL069
+     C     @@DTM         DIV       100           UGDTMT                                       CDL069
+      *                                                                                       CDL069
+      ** Multiply (Days to Maturity * 100) with Rate                                          CDL069
+      *                                                                                       CDL069
+     C     @@DRAT        MULT      UGDTMT        UGDIVS                                       CDL069
+      *                                                                                       CDL069
+      ** Add no. of Days in a year                                                            CDL069
+      *                                                                                       CDL069
+     C*****UGDIVS        ADD       360           UGDIVS                                CDL069 262653
+     C     UGDIVS        ADD       @@DAYO        UGDIVS                                       262653
+      *                                                                                       CDL069
+      ** Do not round off if currency decimal place is 0 else                                 CDL069
+      ** round off calculated price                                                           CDL069
+      *                                                                                       CDL069
+     C     A6NBDP        IFEQ      0                                                          CDL069
+     C     UGFVDY        DIV       UGDIVS        @@PRIC                                       CDL069
+     C                   ELSE                                                                 CDL069
+     C     UGFVDY        DIV(H)    UGDIVS        @@PRIC                                       CDL069
+     C                   ENDIF                                                                CDL069
+      *                                                                                       CDL069
+     C                   ENDSR                                                                CDL069
+      *                                                                                       CDL069
       *****************************************************************
       * End of /COPY MM1008C                                          *
       *****************************************************************

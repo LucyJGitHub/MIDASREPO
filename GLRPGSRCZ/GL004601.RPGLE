@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD043945A          Date 20Feb17               *
-      *  Prev Amend No. MD043945           Date 07Feb17               *
+      *  Last Amend No. MD051765           Date 18Jul19               *
+      *  Prev Amend No. MD043945A          Date 20Feb17               *
+      *                 MD043945           Date 07Feb17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034016           Date 16Jun15               *
       *                 MD029951           Date 25Feb15               *
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051765 - Component GLC0340 00003 daily journal does not    *
+      *             balance.                                          *
       *  MD043945A - Inactive account should not be posted in suspense*
       *  MD043945 - Account transfer for blocked account should be    *
       *  MD046248 - Finastra Rebranding                               *
@@ -3281,7 +3284,14 @@
      C                   IF        WSuspnse = 'Y'                                           MD043945
      C                   EVAL      CNUM = B8BICN                                            MD043945
      C                   EVAL      ACSQ = 01                                                MD043945
-     C                   EVAL      BRCA = R1BRCA                                            MD043945
+     C**********         EVAL      BRCA = R1BRCA                                   MD043945 MD051765
+      *                                                                                     MD051765
+     C     WSuspAct      IFEQ      'D'                                                      MD051765
+     C                   EVAL      BRCA = R1DBBR                                            MD051765
+     C                   ELSE                                                               MD051765
+     C                   EVAL      BRCA = R1CRBR                                            MD051765
+     C                   ENDIF                                                              MD051765
+      *                                                                                     MD051765
      C                   MOVE      BKACCD        ACOD                                       MD043945
      C                   EVAL      ASOC = '000000'                                          MD043945
      C                   EVAL      ACNO = *ZEROS                                            MD043945

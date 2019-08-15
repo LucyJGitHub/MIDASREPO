@@ -68,7 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  JMI109A - Extract for G-AML. UDF changes.                    *
+      *  JMI109A - Extract for G-AML, UDF changes.                    *
       *            Recompile due to SDCUPV049 made redundant          *
       *  JMI109 - Extract for G-AML (Upgrade to FBM)                  *
       *           Amended Hooks: SDCUDPV040, SDCUDPV041, SDCUDPV049,  *

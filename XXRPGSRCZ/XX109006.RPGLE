@@ -23,7 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  JMI109A - G-AML PreProcessor (UDF for Customer Type)         *
+      *  JMI109A - G-AML PreProcessor, UDF for Customer Type          *
       *  JMI109 - G-AML PreProcessor (Upgrade to FB Midas)            *
       *  JMI026I02 - Recompiled program due to changes in SDGAMLX0    *
       *  JMI026 - Amended program to extract customer type with       *

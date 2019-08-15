@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036791           Date 09Dec15              */
+/*       Last Amend No. MD051643           Date 23Jul19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD036791           Date 09Dec15              */
 /*                      MD021351           Date 23Jul13              */
 /*                      CCB023             Date 06Aug12              */
 /*                      CBF002             Date 04Jul11              */
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051643 - DLC0002 job does not auto start after COB.       */
+/*                  Fix is to reset the active status to N.          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036791 - Failed Component SCKOBJLCB 00003                 */
 /*       MD021351 - Design for Kill object locks                     */
@@ -65,6 +68,8 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                           */
              DCL        VAR(&REPORT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PIMMED) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CCM002) TYPE(*CHAR) LEN(1)                                 /*MD051643*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                    /*MD051643*/
  
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
@@ -189,6 +194,22 @@ RETRYKILL:
                 ENDDO
  
              ENDDO
+                                                                                        /*MD051643*/
+/** Check if Citydealer Interface feature is switched on. */                            /*MD051643*/
+                                                                                        /*MD051643*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                    /*MD051643*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD051643*/
+             CHGVAR     VAR(&SAR) VALUE('CCM002')                                       /*MD051643*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &OPTN &SAR)                           /*MD051643*/
+             IF         COND(&PRTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CCM002) VALUE('Y'))                                      /*MD051643*/
+                                                                                        /*MD051643*/
+/** If Citydealer Interface is ON, reset the active status flag to 'N' */               /*MD051643*/
+                                                                                        /*MD051643*/
+             IF         COND(&CCM002 *EQ 'Y') THEN(DO)                                  /*MD051643*/
+                CHGDTAARA  DTAARA(DLCDSTAT (1 1)) VALUE('N')                            /*MD051643*/
+             ENDDO                                                                      /*MD051643*/
+                                                                                        /*MD051643*/
  
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 GOTO       CMDLBL(END)

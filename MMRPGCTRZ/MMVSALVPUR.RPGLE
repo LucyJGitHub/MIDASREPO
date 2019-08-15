@@ -22,12 +22,14 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 262653             Date 16Jun19               *
+      *  Prev Amend No. CDL069             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 242286             Date 27Sep06               *
+      *                 242286             Date 27Sep06               *
       *                 CDL049             Date 11Jul06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
@@ -43,6 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262653 - Recompile due to changes in /COPY MM1008C           *
+      *           (Replaced hard coded 360).                          *
+      *  CDL069 - True Discount for Negotiable Assets.(Recompile)     *
       *  MD046248 - Finastra Rebranding                               *
       *  242286 - Enhance calculation of interest for calc basis 6.   *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *

@@ -3099,7 +3099,7 @@
      C                   EVAL      W#BSRD = PCurSet01                                         CDL081
      C                   EVAL      W#NBRD = PCurSet02                                         CDL081
      C                   ENDIF                                                                CDL081
-      ** Check if JMI101 is installed                                                         JMI101
+      ** Check if JMI101 is installed.                                                        JMI101
       *                                                                                       JMI101
      C                   EVAL      JMI101 = 'N'                                               JMI101
      C                   CALL      'AOSARDR0'                                                 JMI101

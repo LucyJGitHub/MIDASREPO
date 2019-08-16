@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053978           Date 25Jul19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD053470           Date 13Aug19               *
+      *  Prev Amend No. MD053978           Date 25Jul19               *
+      *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
       *                 AR1021393          Date 13Nov18               *
       *                 224697             Date 13Nov18               *
@@ -133,6 +134,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053470 - When Additional Overdraft Rate was changed to zero*
+      *             with an OD Rate Value Date but without a DR change*
+      *             value date, the value date in STRAN is not updated*
       *  MD053978 - Cannot amend TI account flag from Y to N.         *
       *           - Missing codes by MD034725.                        *
       *  CSD101 - Password Encryption                                 *
@@ -4112,8 +4116,12 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      S1DRCR = '0'                                               236046
      C                   IF        CRE001 ='Y'                                                236046
      C                   EVAL      S1AODR = BXAODR                                            236046
-     C                   IF        BXAODR<>BX_ATAODR and BXAODR<>*ZERO                        236046
-     C                             and BXORTC <> 0                                         AR947093A
+     C**********         IF        BXAODR<>BX_ATAODR and BXAODR<>*ZERO               236046 MD053470
+     C**********                   and BXORTC <> 0                                AR947093A MD053470
+     C                   IF        (BXAODR<>BX_ATAODR and BXAODR<>*ZERO                     MD053470
+     C                             and BXORTC <> 0) or                                      MD053470
+     C                             (BXAODR<>BX_ATAODR and BXAODR=*ZERO                      MD053470
+     C                             and AMCHTP = 'A' and BXORTC <> 0)                        MD053470
      C                   Z-ADD     BXORTC        S1WOLD                                       236046
      C                   ENDIF                                                                236046
      C                   ENDIF                                                                236046
@@ -4220,8 +4228,12 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      S1DRCR = '0'
      C                   IF        CRE001 ='Y'
      C                   EVAL      S1AODR = BXAODR
-     C                   IF        BXAODR<>BX_ATAODR and BXAODR<>*ZERO
-     C                             and BXORTC <> 0                                         AR947093A
+     C**********         IF        BXAODR<>BX_ATAODR and BXAODR<>*ZERO                      MD053470
+     C**********                   and BXORTC <> 0                                AR947093A MD053470
+     C                   IF        (BXAODR<>BX_ATAODR and BXAODR<>*ZERO                     MD053470
+     C                             and BXORTC <> 0) or                                      MD053470
+     C                             (BXAODR<>BX_ATAODR and BXAODR=*ZERO                      MD053470
+     C                             and AMCHTP = 'A' and BXORTC <> 0)                        MD053470
      C                   Z-ADD     BXORTC        S1WOLD
      C                   ENDIF
      C                   ENDIF

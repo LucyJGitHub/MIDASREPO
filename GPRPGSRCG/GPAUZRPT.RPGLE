@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050279           Date 06Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053808           Date 07Aug19               *
+      *  Prev Amend No. MD050279           Date 06Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD043639           Date 27Jan17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053808 - COB Component GOC0310 fails due to field size     *
+      *             too small.                                        *
       *  MD050279 - Generate empty reports with 'NO DATA' when        *
       *             no record in GPAUCHPD.                            *
       *  MD046248 - Finastra Rebranding                               *
@@ -33,61 +36,63 @@
       *  CGP004 - Audit Reporting                                     *
       *                                                               *
       *****************************************************************
- 
+
      FGPAUCHPD  IP   E           K DISK    INFSR(*PSSR)
      FGPAUIPPD  IF   E           K DISK    INFSR(*PSSR)
      FGZSDBANKL1IF   E           K DISK    INFSR(*PSSR)
      FGZSDBRCHL0IF   E           K DISK    INFSR(*PSSR)
      FGPAUZRPTP1O    F  132        PRINTER USROPN
      F                                     INFDS(SPOOL1)
- 
- 
+
+
       * Field Attributes
       * Field Shortnames
       * Field Descriptions
      D/COPY GPCPYSRCG,GPAUFDATB
      D/COPY GPCPYSRCG,GPAUFDSNM
      D/COPY GPCPYSRCG,GPAUFDDES
- 
- 
+
+
       * Field Contents
      D/COPY GPCPYSRCG,GPAUFDCON
- 
- 
+
+
      D ArFDCON         S              1    DIM(100)
- 
- 
+
+
      D TOT             S            132    DIM(150)
      D TOTC            S            132    DIM(150)
      D LIN             S              1    DIM(132) ASCEND
      D #AINPT          S              4    DIM(9999) ASCEND                                 MD050279
      D #ABRCD          S              3    DIM(9999) ASCEND                                 MD050279
- 
- 
+
+
      D MON             S              3    DIM(12) CTDATA PERRCD(12)
- 
- 
+
+
      D                 DS
      D  YYMMDD                 1      6
      D  YY                     1      2  0
      D  MM                     3      4  0
      D  DD                     5      6  0
- 
- 
+
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D PEnty           S              3
      D ZSnum           S              6  0
      D ZSerr           S              1
- 
- 
+
+
       ** File Information Data Structure for GPAUZRPTP1
      D SPOOL1          DS
      D  PSFile1               83     92
      D  PSFNum1              123    124B 0
- 
-     DqcOvr                         128                                                     MD043639
-     DqcLen                          15P 5                                                  MD043639
+
+     D***qcOvr**                    128                                            MD043639 MD053808
+     D***qcLen**                    15P 5                                          MD043639 MD053808
+     DqcOvr            S            128                                                     MD053808
+     DqcLen            S             15P 5                                                  MD053808
                                                                                             MD043639
       ** System value Audit Report Rename                                                   MD043639
      D SysVal1         C                   'AuditRptRename'                                 MD043639
@@ -113,36 +118,65 @@
      D PSVal8          S            200A                                                    MD043639
      D PSVal9          S            200A                                                    MD043639
      D PSVal10         S            200A                                                    MD043639
- 
+      *                                                                                     MD053808
+      ** System value No Data Report Generation                                             MD053808
+      *                                                                                     MD053808
+     D SysVal@         C                   'GenAuRptNoDtaChg'                               MD053808
+      *                                                                                     MD053808
+      ** Parameter Variables to call 'AOSVALR0'                                             MD053808
+      *                                                                                     MD053808
+     D PRtcd@          S              7A                                                    MD053808
+     D P@OP01          S             20A                                                    MD053808
+     D P@OP02          S             20A                                                    MD053808
+     D P@OP03          S             20A                                                    MD053808
+     D P@OP04          S             20A                                                    MD053808
+     D P@OP05          S             20A                                                    MD053808
+     D P@OP06          S             20A                                                    MD053808
+     D P@OP07          S             20A                                                    MD053808
+     D P@OP08          S             20A                                                    MD053808
+     D P@OP09          S             20A                                                    MD053808
+     D P@OP10          S             20A                                                    MD053808
+     D P@VL01          S            200A                                                    MD053808
+     D P@VL02          S            200A                                                    MD053808
+     D P@VL03          S            200A                                                    MD053808
+     D P@VL04          S            200A                                                    MD053808
+     D P@VL05          S            200A                                                    MD053808
+     D P@VL06          S            200A                                                    MD053808
+     D P@VL07          S            200A                                                    MD053808
+     D P@VL08          S            200A                                                    MD053808
+     D P@VL09          S            200A                                                    MD053808
+     D P@VL10          S            200A                                                    MD053808
+      *                                                                                     MD053808
+
      IGPAUCHD0
      I                                          AHBRCA        L2
      I                                          AHINPT        L1
- 
+
       * Change of branch or input
- 
+
      C   L1              EXSR      CHG_BRCA_INPT
- 
+
       * Create reporting date from machine date in YYMMDD format
- 
+
      C                   EXSR      REPORT_DATE
- 
+
       * Output change headings
       * =====================
- 
+
      C                   Z-ADD     4             NoOfOutLines      3 0
      C                   MOVEL     *BLANK        R_REFI           53
      C                   EVAL      R_REFI = AHREFI
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    CHANGEID
- 
+
       * Audit Field Attributes - Retrieval
       * Audit Change Details - Retrieval
- 
+
      C                   EXSR      AUFD_RTL
      C                   EXSR      AUCD_RTL
- 
+
       * Outputs
- 
+
      C                   SELECT
      C     AHENTT        WHENEQ    'PT'
      C                   EXSR      OUT_PT
@@ -151,26 +185,26 @@
      C                   OTHER
      C                   EXSR      OUT_UP
      C                   ENDSL
- 
+
      CLR                 EXSR      END_REPT
       /SPACE 5
       ****************************************************************
       * Output PT
       ****************************************************************
      C     OUT_PT        BEGSR
- 
+
       * Output 'AFTER' image
- 
+
      C                   MOVEL     'A'           Before_After      1
- 
+
      C                   MOVE      *BLANK        TOT
      C                   MOVE      *BLANK        TOTC
      C**********         Z-ADD     1             HLN               2 0                      MD043639
      C                   Z-ADD     1             HLN               3 0                      MD043639
- 
+
      C                   EXSR      LOAD_NARR
      C                   EXSR      LOAD_FLDS
- 
+
      C                   Z-ADD     1             OLN               3 0
      C     OLN           DOWLE     HLN
      C                   Z-ADD     1             NoOfOutLines
@@ -179,7 +213,7 @@
      C                   EXCEPT    REPORTLINC
      C                   ADD       1             OLN
      C                   ENDDO
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -187,19 +221,19 @@
       * Output DL
       ****************************************************************
      C     OUT_DL        BEGSR
- 
+
       * Output 'BEFORE' image
- 
+
      C                   MOVEL     'B'           Before_After      1
- 
+
      C                   MOVE      *BLANK        TOT
      C                   MOVE      *BLANK        TOTC
      C**********         Z-ADD     1             HLN               2 0                      MD043639
      C                   Z-ADD     1             HLN               3 0                      MD043639
- 
+
      C                   EXSR      LOAD_NARR
      C                   EXSR      LOAD_FLDS
- 
+
      C                   Z-ADD     1             OLN               3 0
      C     OLN           DOWLE     HLN
      C                   Z-ADD     1             NoOfOutLines
@@ -208,7 +242,7 @@
      C                   EXCEPT    REPORTLINC
      C                   ADD       1             OLN
      C                   ENDDO
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -216,25 +250,25 @@
       * Output UP
       ****************************************************************
      C     OUT_UP        BEGSR
- 
+
       * Output 'AFTER' image
- 
+
      C                   MOVEL     'A'           Before_After      1
- 
+
      C     AHACTN        IFEQ      'AMEND'
      C                   Z-ADD     1             NoOfOutLines
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    AFTERNARR
      C                   ENDIF
- 
+
      C                   MOVE      *BLANK        TOT
      C                   MOVE      *BLANK        TOTC
      C**********         Z-ADD     1             HLN               2 0                      MD043639
      C                   Z-ADD     1             HLN               3 0                      MD043639
- 
+
      C                   EXSR      LOAD_NARR
      C                   EXSR      LOAD_FLDS
- 
+
      C                   Z-ADD     1             OLN               3 0
      C     OLN           DOWLE     HLN
      C                   Z-ADD     1             NoOfOutLines
@@ -243,25 +277,25 @@
      C                   EXCEPT    REPORTLINC
      C                   ADD       1             OLN
      C                   ENDDO
- 
+
       * Output 'BEFORE' image (if amend)
- 
+
      C     AHACTN        IFEQ      'AMEND'
- 
+
      C                   MOVEL     'B'           Before_After      1
- 
+
      C                   Z-ADD     1             NoOfOutLines
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    BEFORENARR
- 
+
      C                   MOVE      *BLANK        TOT
      C                   MOVE      *BLANK        TOTC
      C**********         Z-ADD     1             HLN               2 0                      MD043639
      C                   Z-ADD     1             HLN               3 0                      MD043639
- 
+
      C                   EXSR      LOAD_NARR
      C                   EXSR      LOAD_FLDS
- 
+
      C                   Z-ADD     1             OLN               3 0
      C     OLN           DOWLE     HLN
      C     TOTC(OLN)     IFNE      *BLANK
@@ -272,9 +306,9 @@
      C                   ENDIF
      C                   ADD       1             OLN
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -282,7 +316,9 @@
       * Change of branch or input
       ****************************************************************
      C     CHG_BRCA_INPT BEGSR
- 
+
+     C     GenReport     IFEQ      'Y'                                                      MD053808
+                                                                                            MD053808
       * If a branch is 'skipped', generate all reports for that branch with 'NO DATA'       MD050279
      C     *INL2         IFEQ      *ON                                                      MD050279
      C     AHBRCA        ANDNE     *BLANKS                                                  MD050279
@@ -451,8 +487,10 @@
      C                   MOVEL     AHBRCA        PREV_BRCA         3                        MD050279
      C                   ENDIF                                                              MD050279
                                                                                             MD050279
+     C                   ENDIF                                                              MD053808
+                                                                                            MD053808
       * Close then open printer file
- 
+
      C     Printf_Open   IFEQ      'Y'
      C                   Z-ADD     3             NoOfOutLines
      C                   EXSR      PAGE_CHG_CHK
@@ -475,7 +513,7 @@
      C                   MOVEL     'Y'           Printf_Open       1
      C                   Z-ADD     99            LineNumber        3 0
      C                   Z-ADD     1             PageNumber        5 0
- 
+
      C   L2              DO
      C     AHBRCA        IFNE      *BLANK
      C     AHBRCA        CHAIN     SDBRCHD0                           60
@@ -483,11 +521,11 @@
      C                   SETON                                        60
      C                   ENDIF
      C                   ENDDO
- 
+
      C     AHINPT        CHAIN     GPAUIPD0                           99
      C   99              MOVEL     *BLANK        AIDESC
      C   99              MOVEL     ' * UNKNOWN *'AIDESC
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -495,13 +533,13 @@
       * Create reporting date from machine date in YYMMDD format
       ****************************************************************
      C     REPORT_DATE   BEGSR
- 
+
      C                   MOVEL     AHDATE        YYMMDD
      C                   MOVE      *BLANK        Rept_Date         7
      C                   EVAL      Rept_DATE = %subst(YYMMDD: 5:2)
      C                                      + MON(MM)
      C                                      + %subst(YYMMDD: 1:2)
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -509,7 +547,7 @@
       * Audit Field Attributes - Retrieval
       ****************************************************************
      C     AUFD_RTL      BEGSR
- 
+
      C                   CALLB     'GPAUFDRTL'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -532,7 +570,7 @@
      C                   EVAL      I#ERMS = 'BAD FIELDS:'+InFile+InRecordID
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -540,7 +578,7 @@
       * Audit Change Details - Retrieval
       ****************************************************************
      C     AUCD_RTL      BEGSR
- 
+
      C                   CALLB     'GPAUCDRTL'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -564,7 +602,7 @@
      C                   EVAL      I#ERMS = 'BAD DATA:'+InFile+InRecordID
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
      C****************************************************************
       /SPACE 5
@@ -572,7 +610,7 @@
       * Load Report Narrative to Report
       ****************************************************************
      C     LOAD_NARR     BEGSR
- 
+
      C                   CALLB     'GPAURNLOD'
      C                   PARM      *BLANK        I#RTCD            7
      C                   PARM      *BLANK        I#ERMS           50
@@ -592,7 +630,7 @@
      C                   EVAL      I#ERMS = 'BAD NARR:'+InFile+InRecordID
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -600,11 +638,11 @@
       * Load Fields to Report
       *****************************************************************
      C     LOAD_FLDS     BEGSR
- 
+
      C                   Z-ADD     1             #FD               3 0
      C     #FD           DOWLE     250
      C     #_FDATRB(#FD) ANDNE     *BLANK
- 
+
      C                   MOVEL     #_FDATRB(#FD) #FDATRB
      C     AFLN          IFNE      0
      C                   MOVE      *BLANK        ArFDCON
@@ -624,11 +662,11 @@
      C                   EXSR      ADD_FDCON_CHG
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ADD       1             #FD
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -636,17 +674,17 @@
       * Add Field Contents to Report
       ****************************************************************
      C     ADD_FDCON     BEGSR
- 
+
      C* START POINT
- 
+
      C                   Z-ADD     AFPS          X                 3 0
- 
+
      C* GET LINE
- 
+
      C                   MOVEA     TOT(AFLN)     LIN
- 
+
      C* END POINT
- 
+
      C                   Z-ADD     1             Y                 3 0
      C     Y             DOWLE     AFEDTS
      C                   MOVE      ArFDCON(Y)    LIN(X)
@@ -655,13 +693,13 @@
      C                   END
      C* UPDATE
      C                   MOVEA     LIN           TOT(AFLN)
- 
+
      C* HIGHEST LINE?
- 
+
      C     AFLN          IFGT      HLN
      C                   Z-ADD     AFLN          HLN
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -669,25 +707,25 @@
       * Add Changed Field Contents to Report
       ****************************************************************
      C     ADD_FDCON_CHG BEGSR
- 
+
      C* START POINT
- 
+
      C                   Z-ADD     AFPS          X                 3 0
      C* GET LINE
- 
+
      C                   MOVEA     TOTC(AFLN)    LIN
- 
+
      C* HIGHLIGHT CHANGES
- 
+
      C     AHENTT        IFEQ      'UP'
      C     AHACTN        ANDEQ     'AMEND'
      C                   SUB       1             X
      C                   MOVE      '!'           LIN(X)
      C                   ADD       1             X
      C                   ENDIF
- 
+
      C* END POINT
- 
+
      C                   Z-ADD     1             Y                 3 0
      C     Y             DOWLE     AFEDTS
      C                   MOVE      ArFDCON(Y)    LIN(X)
@@ -696,13 +734,13 @@
      C                   END
      C* UPDATE
      C                   MOVEA     LIN           TOTC(AFLN)
- 
+
      C* HIGHEST LINE?
- 
+
      C     AFLN          IFGT      HLN
      C                   Z-ADD     AFLN          HLN
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -710,7 +748,7 @@
       * Page Change Check
       *****************************************************************
      C     PAGE_CHG_CHK  BEGSR
- 
+
      C                   ADD       NoOfOutLines  LineNumber
      C     LineNumber    IFGT      60
      C                   EXCEPT    PAGEHEAD
@@ -718,7 +756,7 @@
      C                   ADD       NoOfOutLines  LineNumber
      C                   ADD       1             PageNumber
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -726,15 +764,18 @@
       * End of report
       ****************************************************************
      C     END_REPT      BEGSR
- 
+
       * Output '* END OF REPORT *' or '* NO DATA TO REPORT *'
- 
+
      C     Printf_Open   IFEQ      'Y'
      C                   Z-ADD     3             NoOfOutLines
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    ENDREPORT
                                                                                             MD050279
      C                   CLOSE     GPAUZRPTP1                                               MD050279
+                                                                                            MD053808
+     C     GenReport     IFEQ      'Y'                                                      MD053808
+                                                                                            MD053808
       * and print rest of the report for that branch                                        MD050279
                                                                                             MD050279
      C                   DOW       #AINPT(#XF) <> *BLANKS                                   MD050279
@@ -796,10 +837,14 @@
      C                   ADD       1             #XB                                        MD050279
      C                   ENDDO                                                              MD050279
                                                                                             MD050279
+     C                   ENDIF                                                              MD053808
+                                                                                            MD053808
      C                   ELSE
       *                                                                                     MD043639
       * If no details, print all reports for all branches                                   MD050279
                                                                                             MD050279
+     C     GenReport     IFEQ      'Y'                                                      MD053808
+                                                                                            MD053808
      C     #ABRCD(#XB)   DOWNE     *BLANKS                                                  MD050279
      C     #ABRCD(#XB)   CHAIN     SDBRCHD0                           60                    MD050279
      C                   EVAL      AHBRCA = #ABRCD(#XB)                                     MD050279
@@ -838,11 +883,14 @@
      C**********         Z-ADD     3             NoOfOutLines                               MD050279
      C**********         EXSR      PAGE_CHG_CHK                                             MD050279
      C**********         EXCEPT    NODATA                                                   MD050279
+                                                                                            MD053808
+     C                   ENDIF                                                              MD053808
+                                                                                            MD053808
      C                   ENDIF
- 
+
       * Close printer file
      C**********         CLOSE     GPAUZRPTP1                                               MD050279
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -850,23 +898,23 @@
       * SRRCFP1 - Detail Spool File recorded by RCF
       *****************************************************************
      C     SRRCFP1       BEGSR
- 
+
      C                   EVAL      ZSnum = PSFNum1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      AHBRCA        PEnty
      C                   PARM                    PSFile1
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then end abnormally
- 
+
      C                   IF        ZSErr = 'Y'
      C                   EVAL      I#ERMS = 'Call to ZSFILE in error'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -874,7 +922,7 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -883,19 +931,19 @@
      C                   PARM                    I#ZONE           10
       * Sequence
      C                   PARM                    PSeq
- 
+
      C* GET BANK DETAILS
- 
+
      C     I#ZONE        CHAIN     SDBANKD0                           99        *
- 
+
      C     *IN99         IFEQ      *ON
      C                   EVAL      I#ERMS = 'BAD ZONE:' + I#ZONE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     99            LineNumber        3 0
      C                   Z-ADD     1             PageNumber        5 0
- 
+
       ** Retrieve System Value                                                              MD043639
      C                   CALL      'GPAOSVALR0'                                             MD043639
      C                   PARM      *BLANKS       PRtcd                                      MD043639
@@ -923,7 +971,37 @@
      C                   IF        Prtcd = *BLANKS                                          MD043639
      C                   MOVEL     PSVal1        AURename          1                        MD043639
      C                   ENDIF                                                              MD043639
- 
+      *                                                                                     MD053808
+      ** Call Access Program for System Value - 'GenAuRptNoDtaChg'                          MD053808
+      *                                                                                     MD053808
+     C                   CALL      'AOSVALR0'                                               MD053808
+     C                   PARM      *BLANKS       PRtcd@                                     MD053808
+     C                   PARM      SysVal@       P@OP01                                     MD053808
+     C                   PARM                    P@VL01                                     MD053808
+     C                   PARM      *BLANKS       P@OP02                                     MD053808
+     C                   PARM                    P@VL02                                     MD053808
+     C                   PARM      *BLANKS       P@OP03                                     MD053808
+     C                   PARM                    P@VL03                                     MD053808
+     C                   PARM      *BLANKS       P@OP04                                     MD053808
+     C                   PARM                    P@VL04                                     MD053808
+     C                   PARM      *BLANKS       P@OP05                                     MD053808
+     C                   PARM                    P@VL05                                     MD053808
+     C                   PARM      *BLANKS       P@OP06                                     MD053808
+     C                   PARM                    P@VL06                                     MD053808
+     C                   PARM      *BLANKS       P@OP07                                     MD053808
+     C                   PARM                    P@VL07                                     MD053808
+     C                   PARM      *BLANKS       P@OP08                                     MD053808
+     C                   PARM                    P@VL08                                     MD053808
+     C                   PARM      *BLANKS       P@OP09                                     MD053808
+     C                   PARM                    P@VL09                                     MD053808
+     C                   PARM      *BLANKS       P@OP10                                     MD053808
+     C                   PARM                    P@VL10                                     MD053808
+      *                                                                                     MD053808
+     C                   IF        PRtcd@ = *BLANKS                                         MD053808
+     C                   MOVEL     P@VL01        GenReport         1                        MD053808
+     C                   ENDIF                                                              MD053808
+                                                                                            MD053808
+
       * Load all Audit Files                                                                MD050279
      C                   Z-ADD     0             #XF               5 0                      MD050279
      C     *LOVAL        SETLL     GPAUIPPD                                                 MD050279

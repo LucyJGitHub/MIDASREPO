@@ -11,7 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053611           Date 19Aug19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053611 - Add validation when changing the interest         *
+      *             calculation type.                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG5525 - Check for Spread rate not equal to blank only since*
       *            sign is always defaulted to '+' by BUG4859.        *
@@ -37,10 +40,14 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** RE Interest Sub-types file
      FREINT     IF   E           K DISK    INFSR(*PSSR)
- 
+      **
+     FREIAC     IF   E           K DISK    INFSR(*PSSR)                                     MD053611
+     F                                     IGNORE(REIACAF)                                  MD053611
+     F                                     IGNORE(REIACZF)                                  MD053611
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -59,53 +66,62 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
      D MegDtaXAr       S                   like(#msgdata)
- 
+
+      ** Array of Fields in Warning.                                            MD053611
+     D WFldNmXAr       S             10A   DIM(XArrayMax)                       MD053611
+
+      ** Array of warning message IDs                                           MD053611
+     D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)          MD053611
+
+      ** Array of warning message data.                                         MD053611
+     D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)        MD053611
+
      D                 DS
      D  KEY                    1     12
      D  BLANC                  1      1    INZ(' ')
@@ -113,28 +129,34 @@
      D  ICSTYP                 4      8
      D  ICCCY                  9     11
      D  D                     12     12    INZ('D')
- 
+
       ** Base Rate Code Details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Second DS for access programs, long data structure                     CSD006
      D DSSDY         E DS                  EXTNAME(DSSDY)                       CSD006
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+     D WIx             S              3P 0                                                  MD053611
+      **
+     D BChar           DS                                                                   MD053611
+     D   BLen                  1      2B 0                                                  MD053611
+     D   LenStr                1      2                                                     MD053611
+     D   MsgDtaTmp                   99                                                     MD053611
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -149,14 +171,19 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MoveL     *Blanks       RetCodeIn
      C                   MoveL     *Blanks       FldNamXAr
      C                   MoveL     *Blanks       MsgIDXAr
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
+     C                   Z-Add     1             WIx                                        MD053611
+     C     *BLANKS       LOOKUP    WFldNmXAr(WIx)                         99                MD053611
+     C     *IN99         IFEQ      '1'                                                      MD053611
+     C                   SUB       1             WIx                                        MD053611
+     C                   ENDIF                                                              MD053611
       *
      C     DDDICT        IFNE      *BLANKS
      C     DDDCST        ORNE      *BLANKS
@@ -188,6 +215,59 @@
      C                   MoveL     'DDDICT'      FldNamXAr(Idx)
      C                   MoveL     'RE71207'     MsgIDXAr(Idx)
      C                   ENDIF
+      *
+      **  IF INTEREST CALC. TYPE IS NOT BLANK.   - START
+     C     Key_REIAC     KLIST                                                              MD053611
+     C                   KFLD                    CNUM                                       MD053611
+     C                   KFLD                    CCY                                        MD053611
+     C                   KFLD                    ACOD                                       MD053611
+     C                   KFLD                    ACSQ                                       MD053611
+     C                   KFLD                    BRCA                                       MD053611
+      *                                                                                     MD053611
+     C                   MOVE      DDCUSN        CNUM                                       MD053611
+     C                   MOVE      DDCCY         CCY                                        MD053611
+     C                   MOVE      DDACOD        ACOD                                       MD053611
+     C                   MOVE      DDACSQ        ACSQ                                       MD053611
+     C                   MOVE      DDBRCA        BRCA                                       MD053611
+      *                                                                                     MD053611
+     C     Key_REIAC     CHAIN     REIAC                                                    MD053611
+     C                   IF        %FOUND(REIAC)                                            MD053611
+     C                   MOVE      DICT          TDICT             2                        MD053611
+     C     DDDICT        IFNE      TDICT                                                    MD053611
+      **                                                                                    MD053611
+     C     DICT          IFEQ      1                                                        MD053611
+     C     DICT          OREQ      2                                                        MD053611
+     C     DDDICT        IFEQ      '03'                                                     MD053611
+     C     DDDICT        OREQ      '04'                                                     MD053611
+     C                   Move      'N'           DDDICTOk                                   MD053611
+     C                   Move      'N'           DDDCSTOk                                   MD053611
+     C                   ADD       1             WIx                                        MD053611
+     C                   MoveL     'DDDICT'      WFldNmXAr(WIx)                             MD053611
+     C                   MoveL     'RET1557'     WMsgIDXAr(WIx)                             MD053611
+     C                   EVAL      BLen = %Len(%Trim(TDICT))                                MD053611
+     C                   EVAL      MsgDtaTmp = LenStr +%Trim(TDICT)                         MD053611
+     C                   EVAL      BLen = %Len(%Trim(DDDICT))                               MD053611
+     C                   EVAL      WMsgDtXAr(WIx) = %TRIM(MsgDtaTmp) + LenStr               MD053611
+     C                             +%TRIM(DDDICT)                                           MD053611
+     C                   ENDIF                                                              MD053611
+     C                   ELSE                                                               MD053611
+     C                   Move      'N'           DDDICTOk                                   MD053611
+     C                   Move      'N'           DDDCSTOk                                   MD053611
+     C                   ADD       1             WIx                                        MD053611
+     C                   MoveL     'DDDICT'      WFldNmXAr(WIx)                             MD053611
+     C                   MoveL     'RET1557'     WMsgIDXAr(WIx)                             MD053611
+     C                   EVAL      BLen = %Len(%Trim(TDICT))                                MD053611
+     C                   EVAL      MsgDtaTmp = LenStr +%Trim(TDICT)                         MD053611
+     C                   EVAL      BLen = %Len(%Trim(DDDICT))                               MD053611
+     C                   EVAL      WMsgDtXAr(WIx) = %TRIM(MsgDtaTmp) + LenStr               MD053611
+     C                             +%TRIM(DDDICT)                                           MD053611
+     C                   ENDIF                                                              MD053611
+      **                                                                                    MD053611
+     C                   ENDIF                                                              MD053611
+      *                                                                                     MD053611
+     C                   ENDIF                                                              MD053611
+      *END
+      *
       *
       **      MUST BE VALID ON FILE.
      C                   MOVE      DDDICT        ICTYPE
@@ -246,7 +326,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -261,6 +341,10 @@
      C                   Parm                    DDDRIS           12
      C                   Parm                    DDDSIG            1
      C                   Parm                    DDCCY             3
+     C                   Parm                    DDCUSN            6                        MD053611
+     C                   Parm                    DDACOD           10                        MD053611
+     C                   Parm                    DDBRCA            3                        MD053611
+     C                   Parm                    DDACSQ            2                        MD053611
       *
      C                   Parm                    WWVDRC            5 0
      C                   Parm                    WWDBRT           11 7
@@ -271,6 +355,10 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
+      * Warning fields/message IDs/message data (arrays) from/to caller                     MD053611
+     C                   PARM                    WFldNmXAr                                  MD053611
+     C                   PARM                    WMsgIDXAr                                  MD053611
+     C                   PARM                    WMsgDtXAr                                  MD053611
       *
       ** Interest Calc. Type - Ok
       ** Interest Calc. Subtype - Ok
@@ -281,9 +369,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

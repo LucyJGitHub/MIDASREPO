@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD052410           Date 16May19               *
+      *  Last Amend No. 261205A            Date 20Aug19               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD052410           Date 16May19               *
       *                 MD052952           Date 25Mar19               *
       *                 MD050139           Date 23Mar18               *
       *                 MD050111           Date 17Apr18               *
@@ -274,11 +275,15 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  261205A - Incorrect lending fee accrual for calc basis 6.    *
+      *            Consider the decimal numbers of INT6DY if fee has  *
+      *            calculation basis 6.                               *
+      *          - Applied for MD053920                               *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
       *  MD052410 - Back-valued repayment does not generate a reversal*
-      *             for accrual.                                      *      
+      *             for accrual.                                      *
       *  MD052952 - LE Fees Type 06 Calculated on Facility Amount     *
       *             and not Undrawn Amount.                           *
       *           - WKPIND not set before executing subroutine ACCRUE *
@@ -286,12 +291,12 @@
       *            introduced by CLE071.                              *
       *  MD050139 - AOSARDR0 called every time causing performance    *
       *             issue. Recompile due to changes in /COPY          *
-      *             ZFREQ/ZFRQ*.                                      *      
+      *             ZFREQ/ZFRQ*.                                      *
       *  MD050111 - Component LEC0701 failed due to DBERR 18. CLE148  *
       *             introduced alphanumeric loan numbers and as such  *
       *             can no longer test for facility with 'F' in 1st   *
       *             character in LNFRA. Test with blank instead since *
-      *             loan reference can never contain blanks.          *      
+      *             loan reference can never contain blanks.          *
       *  MD051940 - PDCL X, Y, Z amount is incorrect as a result of   *
       *             conversion rounding error.                        *
       *  MD051969 - Accrual account key was considered as a repayment *
@@ -1929,6 +1934,12 @@
      I                                    P   9  125HIFRT3                                   BUG8762
      I                                    P  13  165HIFRT4                                   BUG8762
      I                                    P  17  205HIFRT5                                   BUG8762
+      *                                                                                      261205A
+      ** NUMBER OF DAYS DATA STRUCTURE                                                       261205A
+      *                                                                                      261205A
+     I            DS                                                                         261205A
+     I                                        1  138WDAYS                                    261205A
+     I                                        1   50WDAYSP                                   261205A
      I            DS                                                                        MD031473
       ** Loan Fee Amounts Data structure                                                    MD031473
      I                                    P   1  300@HLAMT                                  MD031473
@@ -4566,10 +4577,10 @@
      C********** FEINDC    ANDNE'Y'                                                    141453 227253
      C********** CLE005    OREQ 'Y'                                                    243496 245803
      C********** FENPYD    ANDNE0                                                      243496 245803
-     C           CLE005    OREQ 'Y'                                                          243496B
-     C           FELPDT    ANDNE0                                                             258414
-     C           FENPYD    ANDNE0                                                            243496B
-     C           FEINDC    ANDNE'Y'                                                           248358
+     C********** CLE005    OREQ 'Y'                                                  243496B 261205A
+     C********** FELPDT    ANDNE0                                                     258414 261205A
+     C********** FENPYD    ANDNE0                                                    243496B 261205A
+     C********** FEINDC    ANDNE'Y'                                                   248358 261205A
      C           WFLAG     IFEQ *BLANK                                    153672
      C           WFLAG     OREQ 'Y'                                       153672
      C           FELPDT    ANDLEFEPEND                                    153672
@@ -4949,7 +4960,8 @@
      C           *IN28     ANDEQ'0'                                       142402
       *                                                                   142402
      C**********           Z-ADDNDAYS     WDAYS2  50                                 142402 BUG23174
-     C                     Z-ADDNDAYS     WDAYS2 159                                        BUG23174
+     C**********           Z-ADDNDAYS     WDAYS2 159                                BUG23174 261205A
+     C                     Z-ADDNDAYS     WDAYS2 138                                         261205A
       *                                                                   142402
      C           FADATE    IFGT MSTD                                      142402
       *                                                                   142402
@@ -5295,12 +5307,12 @@
      C                     Z-ADDFADATE    ZZEND                                              BUG8762
      C                     Z-ADDSTDATE    ZZBEG                                              BUG8762
      C                     MOVE FECALC    ZZCALC                                             BUG8762
-     C                     EXSR ZINTDY                                                       BUG8762
-     C           FECALC    IFEQ 6                                                             212048
-     C                     Z-ADDINT6DY    NDAYS                                               212048
-     C                     ELSE                                                               212048
-     C                     Z-ADDZZINDY    NDAYS                                              BUG8762
-     C                     END                                                                212048
+     C**********           EXSR ZINTDY                                               BUG8762 261205A
+     C********** FECALC    IFEQ 6                                                     212048 261205A
+     C**********           Z-ADDINT6DY    NDAYS                                       212048 261205A
+     C**********           ELSE                                                       212048 261205A
+     C**********           Z-ADDZZINDY    NDAYS                                      BUG8762 261205A
+     C**********           END                                                        212048 261205A
       *                                                                                      BUG8762
       ** Add 1 day if first day accrual.                                                     BUG8762
       *                                                                                      BUG8762
@@ -5312,9 +5324,17 @@
      C           *IN18     ANDEQ'1'                                                          BUG8762
      C           CLE071    IFNE 'Y'                                                           CLE071
      C           WKADDY    OREQ 'Y'                                                           CLE071
-     C                     ADD  1         NDAYS                                              BUG8762
+     C**********           ADD  1         NDAYS                                      BUG8762 261205A
+     C                     ADD  1         ZZEND                                              261205A
      C                     ENDIF                                                              CLE071
      C                     ENDIF                                                             BUG8762
+      *                                                                                      261205A
+     C                     EXSR ZINTDY                                                       261205A
+     C           FECALC    IFEQ 6                                                            261205A
+     C                     Z-ADDINT6DY    NDAYS                                              261205A
+     C                     ELSE                                                              261205A
+     C                     Z-ADDZZINDY    NDAYS                                              261205A
+     C                     ENDIF                                                             261205A
       *                                                                                      BUG8762
      C           NDAYS     IFGT 0                                                            BUG8762
      C           FEORED    IFEQ BJRDNB                                                       BUG8762
@@ -5324,7 +5344,8 @@
       *                                                                                       CLE071
      C           FLAGR     IFEQ ' '                                                           CLE071
      C**********           Z-ADDNDAYS     WDAYS2  50                                BUG8762 BUG23174
-     C                     Z-ADDNDAYS     WDAYS2 159                                        BUG23174
+     C**********           Z-ADDNDAYS     WDAYS2 159                                BUG23174 261205A
+     C                     Z-ADDNDAYS     WDAYS2                                             261205A
      C           FADATE    IFGT MSTD                                                         BUG8762
      C           FADATE    SUB  MSTD      DIFF    50                                         BUG8762
      C           DIFF      ADD  1         DIFF                                               BUG8762
@@ -9847,9 +9868,11 @@
      C                     Z-ADD0         WFPC    63
      C                     Z-ADD0         WCBS    50
      C**********           Z-ADD0         WDAYS   50                                        BUG23174
-     C                     Z-ADD0         WDAYS  159                                        BUG23174
+     C**********           Z-ADD0         WDAYS  159                                BUG23174 261205A
      C**********           Z-ADD0         NDAYS   50                                        BUG23174
-     C                     Z-ADD0         NDAYS  159                                        BUG23174
+     C**********           Z-ADD0         NDAYS  159                                BUG23174 261205A
+     C                     Z-ADD0         WDAYS  138                                         261205A
+     C                     Z-ADD0         NDAYS  138                                         261205A
      C                     Z-ADD0         TOTI   150
      C                     Z-ADD0         TOTD    30
      C                     MOVE *BLANK    ATYP    1
@@ -12136,7 +12159,8 @@
       ** Only perform calculation if not called from HISREL                                   CLE071
       *                                                                                       CLE071
      C           FLAGR     IFEQ ' '                                                           CLE071
-     C                     Z-ADDNDAYS     WDAYS2 159                                        MD031473
+     C**********           Z-ADDNDAYS     WDAYS2 159                                        MD031473
+     C                     Z-ADDNDAYS     WDAYS2 138                                MD031473 261205A
      C           VDATP     IFGT MSTD                                                        MD031473
      C           VDATP     SUB  MSTD      DIFF    50                                        MD031473
      C           DIFF      ADD  1         DIFF                                              MD031473

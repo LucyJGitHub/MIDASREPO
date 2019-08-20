@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040941           Date 05Sep16               *
+      *  Last Amend No. MD050698           Date 17Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040941           Date 05Sep16               *
       *                 BUG22523           Date 03Feb09               *
       *                 BUG22481           Date 02Feb09               *
       *                 BUG22418           Date 02Feb09               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050698 - Send an error message if the SWIFT ID to be used  *
+      *             as Destination is being used by more than one     *
+      *             live customer.                                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040941 - Non Swift-BIC is not accepted in Network accounts.*
       *             Introduce a new system value to control whether   *
@@ -79,6 +83,9 @@
      F**********                           RENAME(GLNW94D0:GLNW94D2)                BG21987 BUG22481
      F**********                           PREFIX(M)                                BG21987 BUG22481
       *                                                                                      BG21987
+     FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)                                     MD050698
+     F                                     RENAME(@CUSTGE:SDCUSTSW)                         MD050698
+     F                                     PREFIX(A)                                        MD050698
       *****************************************************************
       *                                                               *
       * Use of Indicators                                             *
@@ -197,6 +204,11 @@
      D WPos            S              2S 0                                                    CER030
      D WDstn8          S              8A                                                     BG21986
      D WChk#           S              1S 0                                                  BUG22523
+     D WCSID           S                   LIKE(BBCSID)                                     MD050698
+     D W2CSID          S                   LIKE(BBCSID)                                     MD050698
+     D WBICB           S              4A                                                    MD050698   
+     D WCtr            S              4S 0                                                  MD050698
+     D WLen            S              2S 0                                                  MD050698
  
       *                                                                                     BUG22523
       ** Constants                                                                          BUG22523
@@ -266,6 +278,9 @@
      C     KGLNW94L10    KLIST                                                              BUG22418
      C                   KFLD                    F0NWRK                                     BUG22418
      C                   KFLD                    F0DSTN                                     BUG22418
+                                                                                            MD050698
+     C     KSDCUSTL7     KLIST                                                              MD050698
+     C                   KFLD                    WCSID                                      MD050698
  
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
@@ -375,6 +390,47 @@
  
  E2  C                   ENDIF
  
+      ** Check if SWIFT BIC is being used/shared by more than one live customer             MD050698
+      *                                                                                     MD050698
+     C                   EVAL      WLen = %LEN(%TRIM(F0DSTN))                               MD050698
+     C                   IF        @ICUST = 'Y' AND WLen > 6                                MD050698
+     C                   EVAL      WCtr = 0                                                 MD050698
+     C                   EVAL      WCSID = @BICC                                            MD050698
+     C                   EVAL      WBICB = @BICB                                            MD050698
+     C                   MOVE      WBICB         WCSID                                      MD050698
+     C                   EVAL      W2CSID = WCSID                                           MD050698
+                                                                                            MD050698
+     C     KSDCUSTL7     SETLL     SDCUSTSW                                                 MD050698
+     C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698 
+     C                   DOW       *IN90 = *OFF AND WCtr <= 1                               MD050698
+     C                   IF        ABBDTDL = 0                                              MD050698
+     C                   EVAL      WCtr = WCtr + 1                                          MD050698
+     C                   ENDIF                                                              MD050698
+     C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698
+     C                   ENDDO                                                              MD050698
+                                                                                            MD050698
+     C                   IF        WCtr = 0                                                 MD050698
+     C                   IF        @BICB = *BLANKS                                          MD050698
+     C                   MOVE      'XXX '        WCSID                                      MD050698
+     C     KSDCUSTL7     SETLL     SDCUSTSW                                                 MD050698
+     C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698 
+     C                   DOW       *IN90 = *OFF AND WCtr <= 1                               MD050698
+     C                   IF        ABBDTDL = 0                                              MD050698
+     C                   EVAL      WCtr = WCtr + 1                                          MD050698
+     C                   ENDIF                                                              MD050698
+     C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698
+     C                   ENDDO                                                              MD050698
+     C                   ENDIF                                                              MD050698
+     C                   ENDIF                                                              MD050698
+                                                                                            MD050698
+     C                   IF        WCtr > 1                                                 MD050698
+     C                   EVAL      ZAMSID = 'MIN0614'                                       MD050698
+     C                   EVAL      ZAMSDA = W2CSID                                          MD050698 
+     C                   EVAL      *IN41 = *ON                                              MD050698
+     C                   ENDIF                                                              MD050698
+                                                                                            MD050698
+     C                   ENDIF                                                              MD050698
+
       ** Retrieve the second format of the destination
       *
      C                   IF        @ICUST = 'Y'

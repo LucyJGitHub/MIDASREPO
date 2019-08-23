@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050457           Date 06Mar19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD052425           Date 22Aug19               *
+      *  Prev Amend No. MD050457           Date 06Mar19               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD041527           Date 22Sep16               *
       *                 MD041337           Date 16Sep16               *
       *                 MD039670           Date 26Jul16               *
@@ -145,6 +146,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *
       *             Patterned fix from 261272.                        *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
@@ -3301,6 +3303,13 @@
      C                   MOVEL     '5049261'     MsgIdArr(Ix)                               MD050457
      C                   GOTO      EVALAC                                                   MD050457
      C                   ENDIF                                                              MD050457
+      *                                                                                     MD052425
+      ** Customer defined on CLOANCL.OLNO                                                   MD052425
+      *                                                                                     MD052425
+     C     WDS2031       IFEQ      'F'                                                      MD052425
+     C                   MOVEL     '5049228'     MsgIdArr(Ix)                               MD052425
+     C                   GOTO      EVALAC                                                   MD052425
+     C                   ENDIF                                                              MD052425     
       *                                                                                     MD050457
       ** Customer defined on LEFEEDL1                                                       MD050457
       ** CASE: WRK.Customer Deln Flag 240 is Do not delete                                  MD050457

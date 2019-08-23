@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD022132C          Date 09Mar18               *
-      *  Prev Amend No. MD022132           Date 09Mar18               *
+      *  Last Amend No. MD032170           Date 19Jul19               *
+      *  Prev Amend No. MD022132C          Date 09Mar18               *
+      *                 MD022132           Date 09Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD030959           Date 17Jun15               *
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032170 - Ensure that GLACNTQD will be updated with the     *
+      *             correct balance.                                  *
+      *           - Applied for MD053827.                             *
       *  MD022132C- Process all retail accounts.                      *
       *           - Applied for MD-35969.                             *
       *  MD022132 - Triggers don't pick up Rollback deletes of ABC    *
@@ -454,9 +458,9 @@
       ** Account should not be attached to a facility
       *
      C*****KACCNT        CHAIN     ACCNT                                                    AR958145
-     C                   IF        %FOUND(ACCNT)
-     C                             AND FCCU = *BLANKS AND
-     C                             FACT = *ZERO AND FCNO = *ZERO
+     C**********         IF        %FOUND(ACCNT)                                            MD032170
+     C**********                   AND FCCU = *BLANKS AND                                   MD032170
+     C**********                   FACT = *ZERO AND FCNO = *ZERO                            MD032170
       *
      C/COPY WNCPYSRC,REH00066
       ** set working date for today and the next 9 working days
@@ -508,7 +512,7 @@
                                                                                            AR1055588
      C                   ENDIF                                                             AR1055588
                                                                                            AR1055588
-     C                   ENDIF
+     C**********         ENDIF                                                              MD032170
       *
      C                   ENDIF
       *

@@ -589,10 +589,10 @@
      C                   Parm                    DDDRIS
      C                   Parm                    DDDSIG
      C                   Parm                    DDCCY
-     C                   Parm                    DDCUSN                                     MD053611
-     C                   Parm                    DDACOD                                     MD053611
-     C                   Parm                    DDBRCA                                     MD053611
-     C                   Parm                    DDACSQ                                     MD053611
+     C                   PARM                    DDCUSN                                     MD053611
+     C                   PARM                    DDACOD                                     MD053611
+     C                   PARM                    DDBRCA                                     MD053611
+     C                   PARM                    DDACSQ                                     MD053611
       *
      C                   Parm                    WWVDRC
      C                   Parm                    WWDBRT

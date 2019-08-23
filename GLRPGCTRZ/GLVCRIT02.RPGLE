@@ -118,14 +118,14 @@
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
      D MegDtaXAr       S                   like(#msgdata)
 
-      ** Array of Fields in Warning.                                            MD053611
-     D WFldNmXAr       S             10A   DIM(XArrayMax)                       MD053611
+      ** Array of Fields in Warning.                                                        MD053611
+     D WFldNmXAr       S             10A   DIM(XArrayMax)                                   MD053611
 
-      ** Array of warning message IDs                                           MD053611
-     D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)          MD053611
+      ** Array of warning message IDs                                                       MD053611
+     D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)                      MD053611
 
-      ** Array of warning message data.                                         MD053611
-     D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)        MD053611
+      ** Array of warning message data.                                                     MD053611
+     D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                    MD053611
 
      D                 DS
      D  KEY                    1     12
@@ -185,11 +185,11 @@
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
      C                   Z-Add     0             Idx
-     C                   Z-Add     1             WIx                                       MD053611
-     C     *BLANKS       LOOKUP    WFldNmXAr(WIx)                         99               MD053611
-     C     *IN99         IFEQ      '1'                                                     MD053611
-     C                   SUB       1             WIx                                       MD053611
-     C                   ENDIF                                                             MD053611
+     C                   Z-ADD     1             WIx                                        MD053611
+     C     *BLANKS       LOOKUP    WFldNmXAr(WIx)                         99                MD053611
+     C     *IN99         IFEQ      '1'                                                      MD053611
+     C                   SUB       1             WIx                                        MD053611
+     C                   ENDIF                                                              MD053611
       *
      C     DDCICT        IFNE      *BLANKS
      C     DDCCST        ORNE      *BLANKS
@@ -257,8 +257,8 @@
      C                             +%TRIM(DDCICT)                                           MD053611
      C                   ENDIF                                                              MD053611
      C                   ELSE                                                               MD053611
-     C                   Move      'N'           DDCICTOk                                   MD053611
-     C                   Move      'N'           DDCCSTOk                                   MD053611
+     C                   MOVE      'N'           DDCICTOk                                   MD053611
+     C                   MOVE      'N'           DDCCSTOk                                   MD053611
      C                   ADD       1             WIx                                        MD053611
      C                   MOVEL     'DDCICT'      WFldNmXAr(WIx)                             MD053611
      C                   MOVEL     'RET1557'     WMsgIDXAr(WIx)                             MD053611
@@ -369,10 +369,10 @@
      C                   Parm                    DDCRIS           12
      C                   Parm                    DDCSIG            1
      C                   Parm                    DDCCY             3
-     C                   Parm                    DDCUSN            6                        MD053611
-     C                   Parm                    DDACOD           10                        MD053611
-     C                   Parm                    DDBRCA            3                        MD053611
-     C                   Parm                    DDACSQ            2                        MD053611
+     C                   PARM                    DDCUSN            6                        MD053611
+     C                   PARM                    DDACOD           10                        MD053611
+     C                   PARM                    DDBRCA            3                        MD053611
+     C                   PARM                    DDACSQ            2                        MD053611
       *
      C                   Parm                    WWVCRC            5 0
      C                   Parm                    WWCBRT           11 7

@@ -113,14 +113,14 @@
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
      D MegDtaXAr       S                   like(#msgdata)
 
-      ** Array of Fields in Warning.                                            MD053611
-     D WFldNmXAr       S             10A   DIM(XArrayMax)                       MD053611
+      ** Array of Fields in Warning.                                                        MD053611
+     D WFldNmXAr       S             10A   DIM(XArrayMax)                                   MD053611
 
-      ** Array of warning message IDs                                           MD053611
-     D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)          MD053611
+      ** Array of warning message IDs                                                       MD053611
+     D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)                      MD053611
 
-      ** Array of warning message data.                                         MD053611
-     D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)        MD053611
+      ** Array of warning message data.                                                     MD053611
+     D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                    MD053611
 
      D                 DS
      D  KEY                    1     12
@@ -179,7 +179,7 @@
      C                   MoveL     *Blanks       MsgIDXAr
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
-     C                   Z-Add     1             WIx                                        MD053611
+     C                   Z-ADD     1             WIx                                        MD053611
      C     *BLANKS       LOOKUP    WFldNmXAr(WIx)                         99                MD053611
      C     *IN99         IFEQ      '1'                                                      MD053611
      C                   SUB       1             WIx                                        MD053611
@@ -239,11 +239,11 @@
      C     DICT          OREQ      2                                                        MD053611
      C     DDDICT        IFEQ      '03'                                                     MD053611
      C     DDDICT        OREQ      '04'                                                     MD053611
-     C                   Move      'N'           DDDICTOk                                   MD053611
-     C                   Move      'N'           DDDCSTOk                                   MD053611
+     C                   MOVE      'N'           DDDICTOk                                   MD053611
+     C                   MOVE      'N'           DDDCSTOk                                   MD053611
      C                   ADD       1             WIx                                        MD053611
-     C                   MoveL     'DDDICT'      WFldNmXAr(WIx)                             MD053611
-     C                   MoveL     'RET1557'     WMsgIDXAr(WIx)                             MD053611
+     C                   MOVEL     'DDDICT'      WFldNmXAr(WIx)                             MD053611
+     C                   MOVEL     'RET1557'     WMsgIDXAr(WIx)                             MD053611
      C                   EVAL      BLen = %Len(%Trim(TDICT))                                MD053611
      C                   EVAL      MsgDtaTmp = LenStr +%Trim(TDICT)                         MD053611
      C                   EVAL      BLen = %Len(%Trim(DDDICT))                               MD053611
@@ -251,10 +251,10 @@
      C                             +%TRIM(DDDICT)                                           MD053611
      C                   ENDIF                                                              MD053611
      C                   ELSE                                                               MD053611
-     C                   Move      'N'           DDDICTOk                                   MD053611
-     C                   Move      'N'           DDDCSTOk                                   MD053611
+     C                   MOVE      'N'           DDDICTOk                                   MD053611
+     C                   MOVE      'N'           DDDCSTOk                                   MD053611
      C                   ADD       1             WIx                                        MD053611
-     C                   MoveL     'DDDICT'      WFldNmXAr(WIx)                             MD053611
+     C                   MOVEL     'DDDICT'      WFldNmXAr(WIx)                             MD053611
      C                   MoveL     'RET1557'     WMsgIDXAr(WIx)                             MD053611
      C                   EVAL      BLen = %Len(%Trim(TDICT))                                MD053611
      C                   EVAL      MsgDtaTmp = LenStr +%Trim(TDICT)                         MD053611
@@ -341,10 +341,10 @@
      C                   Parm                    DDDRIS           12
      C                   Parm                    DDDSIG            1
      C                   Parm                    DDCCY             3
-     C                   Parm                    DDCUSN            6                        MD053611
-     C                   Parm                    DDACOD           10                        MD053611
-     C                   Parm                    DDBRCA            3                        MD053611
-     C                   Parm                    DDACSQ            2                        MD053611
+     C                   PARM                    DDCUSN            6                        MD053611
+     C                   PARM                    DDACOD           10                        MD053611
+     C                   PARM                    DDBRCA            3                        MD053611
+     C                   PARM                    DDACSQ            2                        MD053611
       *
      C                   Parm                    WWVDRC            5 0
      C                   Parm                    WWDBRT           11 7

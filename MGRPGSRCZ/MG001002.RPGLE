@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. CSW219  *CREATE    Date 04Mar19               *
+      *  Last Amend No. MD053861           Date 16Aug19               *
+      *  Prev Amend No. CSW219  *CREATE    Date 04Mar19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053861 - Change Request: SWIFT 2019 /CLRC/ in MT300        *
       *  CSW219 - SWIFT Changes 2019                                  *
       *                                                               *
       *                                                               *
@@ -127,6 +129,7 @@
 
       ** Parameter List
      D PCustomer       S             10A
+     D PTag            S              2A                                                    MD053861
      D PAcctLine       S             35A
      D PLine1          S             40A
      D PLine2          S             40A
@@ -154,6 +157,7 @@
      D WName1          S             70A
      D WName2          S             70A
      D Slash           S              1A
+     D WrkCLRC         S              1A                                                    MD053861
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -201,6 +205,7 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    PCustomer
+     C                   PARM                    PTag                                       MD053861
      C                   PARM                    PAcctLine
      C                   PARM                    PLine1
      C                   PARM                    PLine2
@@ -429,12 +434,32 @@
       ** replacement if the constructed J format field contains an
       ** embedded "/"
 
+     C                   EVAL      WrkCLRC = *BLANK                                         MD053861
      C                   EVAL      AcctLine = *BLANKS
      C                   IF        PAcctLine <> *BLANKS
      C                   MOVEL     PAcctLine     Slash
      C                   IF        Slash = '/'
+                                                                                            MD053861
+     C                   IF        %Subst(Pacctline:1:2) = '//'                             MD053861
+                                                                                            MD053861
+      ** Clearing Code entered                                                              MD053861
+                                                                                            MD053861
+     C                   EVAL      AcctLine = %SUBST(PAcctLine:3)                           MD053861
+     C                   IF        PTag <> '53'                                             MD053861
+     C                   EVAL      WrkCLRC = 'Y'                                            MD053861
+     C                   ENDIF                                                              MD053861
+                                                                                            MD053861
+     C                   ELSE                                                               MD053861
+                                                                                            MD053861
+      ** Account with leading '/'                                                           MD053861
+                                                                                            MD053861
      C                   EVAL      AcctLine = %SUBST(PAcctLine:2)
+     C                   ENDIF                                                              MD053861
+                                                                                            MD053861
      C                   ELSE
+                                                                                            MD053861
+      ** Account without leading '/'                                                        MD053861
+                                                                                            MD053861
      C                   EVAL      AcctLine = PAcctLine
      C                   ENDIF
      C                   ENDIF
@@ -479,7 +504,11 @@
      C                             CptyNostro = 'N'
       ** Use LEI over Address
      C                   IF        WLeiorAddr = 'L'
+     C                   IF        WrkCLRC = 'Y'                                            MD053861
+     C     '/CLRC/'      CAT       AcctLine      PLine1                                     MD053861
+     C                   ELSE                                                               MD053861
      C     '/ACCT/'      CAT       AcctLine      PLine1
+     C                   ENDIF                                                              MD053861
      C     '/LEIC/'      CAT       CSLEIC        Pline2
      C     '/NAME/'      CAT       DtlName       Pline3
      C     '/ADD1/'      CAT       DtlAdd1       Pline4
@@ -491,7 +520,11 @@
 
      C                   IF        DtlAdd1 = *BLANKS OR
      C                             DtlAdd2 = *BLANKS
+     C                   IF        WrkCLRC = 'Y'                                            MD053861
+     C     '/CLRC/'      CAT       AcctLine      PLine1                                     MD053861
+     C                   ELSE                                                               MD053861
      C     '/ACCT/'      CAT       AcctLine      PLine1
+     C                   ENDIF                                                              MD053861
      C     '/LEIC/'      CAT       CSLEIC        Pline2
      C     '/NAME/'      CAT       DtlName       PLine3
      C                   IF        DtlAdd1 <> *BLANKS
@@ -503,7 +536,11 @@
 
       ** Use Address over LEI if 4 non-blank lines are populated
      C                   ELSE
+     C                   IF        WrkCLRC = 'Y'                                            MD053861
+     C     '/CLRC/'      CAT       AcctLine      PLine1                                     MD053861
+     C                   ELSE                                                               MD053861
      C     '/ACCT/'      CAT       AcctLine      PLine1
+     C                   ENDIF                                                              MD053861
      C     '/NAME/'      CAT       DtlName       PLine2
      C     '/ADD1/'      CAT       DtlAdd1       PLine3
      C     '/ADD2/'      CAT       DtlAdd2       PLine4
@@ -515,7 +552,11 @@
      C                   ELSE
 
       ** No LEI code in J format
+     C                   IF        WrkCLRC = 'Y'                                            MD053861
+     C     '/CLRC/'      CAT       AcctLine      PLine1                                     MD053861
+     C                   ELSE                                                               MD053861
      C     '/ACCT/'      CAT       AcctLine      PLine1
+     C                   ENDIF                                                              MD053861
      C     '/NAME/'      CAT       DtlName       PLine2
      C     '/ADD1/'      CAT       DtlAdd1       PLine3
      C     '/ADD2/'      CAT       DtlAdd2       PLine4

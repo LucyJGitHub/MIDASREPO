@@ -972,6 +972,13 @@
      C                   MOVEL     PSVal1        AURename          1                        MD043639
      C                   ENDIF                                                              MD043639
       *                                                                                     MD053808
+      ** Use of GenReport variable:                                                         MD053808
+      ** Value is from system value - 'GenAuRptNoDtaChg'                                    MD053808
+      ** - If N, no audit report will be generated if there is no data change.              MD053808
+      ** - If Y, audit report will always be produced.                                      MD053808
+      *                                                                                     MD053808
+     C                   MOVEL     'N'           GenReport         1                        MD053808
+      *                                                                                     MD053808
       ** Call Access Program for System Value - 'GenAuRptNoDtaChg'                          MD053808
       *                                                                                     MD053808
      C                   CALL      'AOSVALR0'                                               MD053808
@@ -998,7 +1005,7 @@
      C                   PARM                    P@VL10                                     MD053808
       *                                                                                     MD053808
      C                   IF        PRtcd@ = *BLANKS                                         MD053808
-     C                   MOVEL     P@VL01        GenReport         1                        MD053808
+     C                   MOVEL     P@VL01        GenReport                                  MD053808
      C                   ENDIF                                                              MD053808
                                                                                             MD053808
 

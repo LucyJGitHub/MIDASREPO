@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD037757           Date 26Apr16              */
+/*       Last Amend No. MD054045           Date 27Aug19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD037757           Date 26Apr16              */
 /*                      MD031644           Date 12Jan15              */
 /*                      MD023896           Date 06May14              */
 /*                      MD022394D          Date 23Apr14              */
@@ -128,6 +129,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054045 - Not able to reopen i/c after the 1st attempt     */
+/*                  to reopen failed.                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD037757 - When running COB, component CBC022001 00296      */
 /*                  failed                                           */
@@ -375,7 +378,7 @@
 /*                                                                      CCB009*/
 /**********  DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)                         */ /*CCB009 CCB020*/
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
- 
+
              DCL        VAR(&REOPTI) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CTI003*/
              DCL        VAR(&REPLY) TYPE(*CHAR) LEN(5)                                    /*CTI003*/
              DCL        VAR(&LENGTH) TYPE(*DEC) LEN(5 0)                                  /*CTI003*/
@@ -501,11 +504,17 @@
 /**********  CALL       PGM(SC001006)                           */           /*AR1090688 MD022394D*/
                                                                                        /*AR1090688*/
 /* Get copy of file SCFMBRTD */                                                         /*MD037757*/
+                                                                                        /*MD054045*/
+             CHKOBJ     OBJ(QTEMP/SCFMBRTD) OBJTYPE(*FILE)                              /*MD054045*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD054045*/
+                                                                                        /*MD054045*/
              CRTDUPOBJ  OBJ(SCFMBRTD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) DATA(*YES) CST(*NO) TRG(*NO)                     /*MD037757*/
              MONMSG     MSGID(CPF4128) EXEC(GOTO ABNOR)                                 /*MD037757*/
- 
- 
+                                                                                        /*MD054045*/
+             ENDDO                                                                      /*MD054045*/
+
+
 /** Check if CAS005 is on /*                                                              /*CAS005*/
                                                                                           /*CAS005*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CAS005*/
@@ -1257,22 +1266,22 @@ SKIP:                                                                           
                                                                                          /*BUG4841*/
 /* Check switch CSC032 */                                                                 /*CSC032*/
              CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSC032')                              /*CSC032*/
- 
+
              IF         COND(&PRTCD *EQ ' ') THEN(DO)                                     /*CSC032*/
- 
+
              CHGVAR (&CSC032) VALUE('Y')                                                  /*CSC032*/
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYS)                                 /*CSC032*/
                                                                                           /*CSC032*/
              CHGVAR     VAR(&DLIB) VALUE(&SYS *CAT 'DPLIB')                               /*CSC032*/
- 
+
              CHGVAR     VAR(&RSTCMPL) VALUE('N')                                          /*CSC032*/
- 
+
              CHGDTAARA  DTAARA(&DLIB/SCC5140DA (1 1)) +
                           VALUE(&RSTCMPL) /*CSC032*/
              CHGDTAARA  DTAARA(&DLIB/SCC5140DA (2 26)) VALUE(' ') +
                           /*249135*/
- 
+
              SBMJOB     JOB(SCC5140) JOBD(MBATCH) JOBPTY(4) +
                           OUTQ(*JOBD) USER(*JOBD) RQSDTA('CALL +
                           PGM(SCC5140)') INLLIBL(*JOBD) /*CSC032*/
@@ -1286,16 +1295,16 @@ CHKCMPLFL:                                                                      
              RTVDTAARA  DTAARA(&DLIB/SCC5140DA (1 1)) +
                           RTNVAR(&RSTCMPL)                                                /*CSC032*/
              IF         COND(&RSTCMPL = 'N') THEN(DO)                                     /*CSC032*/
- 
+
              RTVDTAARA  DTAARA(&DLIB/SCC5140DA (2 26)) RTNVAR(&JOB5140)                   /*249135*/
              IF         COND(&JOB5140 = ' ') THEN(GOTO +
                           CMDLBL(CHKCMPLFL)) /*249135*/
- 
+
              CALL       PGM(QUSRJOBI) PARM(&JOBINFO &DTALEN &FORMAT +
                           &JOB5140 &INTJOBID &ERRDTA) /*249135*/
              CHGVAR     VAR(&JOBSTS) VALUE(%SST(&JOBINFO 51 10))                          /*249135*/
              IF         COND(&JOBSTS *EQ *OUTQ) THEN(DO)                                  /*249135*/
- 
+
              CHGVAR     VAR(&JOBNAME) VALUE(%SST(&JOB5140 1 10))                          /*249135*/
              CHGVAR     VAR(&JOBUSER) VALUE(%SST(&JOB5140 11 10))                         /*249135*/
              CHGVAR     VAR(&JOBNBR) VALUE(%SST(&JOB5140 21 6))                           /*249135*/
@@ -1305,15 +1314,15 @@ CHKCMPLFL:                                                                      
                           when ready before I/C can be re-opened.') +
                           VALUES('R' 'r') MSGTYPE(*INQ) +
                           TOMSGQ(*SYSOPR) MSGRPY(&RPY) /*249135*/
- 
+
              CHGDTAARA  DTAARA(&DLIB/SCC5140DA (2 26)) VALUE(' ') +
                           /*249135*/
              SBMJOB     JOB(SCC5140) JOBD(MBATCH) JOBPTY(4) +
                           OUTQ(*JOBD) USER(*JOBD) RQSDTA('CALL +
                           PGM(SCC5140)') INLLIBL(*JOBD) /*249135*/
- 
+
              ENDDO                                                                        /*249135*/
- 
+
              GOTO       CMDLBL(CHKCMPLFL) /*249135*/
              ENDDO                                                                        /*CSC032*/
                                                                                           /*CSC032*/
@@ -1458,7 +1467,7 @@ CHKCMPLFL:                                                                      
                               CALL       PGM(SCCLRFX)                 /*S01319*/
                               CALL       PGM(SCCLRMM)                 /*S01319*/
                               ENDDO                                   /*S01319*/
- 
+
                    IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO END)
 /**/
 /*   Clear Retail Daily files.                                       */
@@ -1487,7 +1496,7 @@ CHKCMPLFL:                                                                      
 /****CLEAR*ARBITRAGE*DAILY*FILES*************************/ /*S01145*/ /*S01319*/
 /************IF*********COND((%SUBSTRING(&MMOD*19*1))**EQ*'Y')*+****/ /*S01319*/
 /***************************THEN(CALL*PGM(SCCLRAB))******/ /*S01145*/ /*S01319*/
- 
+
 /****Clear*Securities*Trading*Daily*files*****                       * *S01117*/
 /**/                                                                  /*S01117*/
 /***************** IF         COND((%SUBSTRING(&MMOD 5 1)) *EQ 'Y') +* *S01117*/
@@ -1658,7 +1667,7 @@ CHKCMPLFL:                                                                      
 /**********           ENDDO                                        */              /*CSC011 CCB022*/
              ENDDO                                                    /*CAP002*/
                                                                       /*CAP002*/
- 
+
 /* Determine first journal sequence number of current receiver. */                        /*210581*/
              RTVJRNE    JRN(ICJRN) RTNSEQNBR(&JNSEQ)                                      /*210581*/
              CHGVAR     VAR(&JNSEQA) VALUE(&JNSEQ)                                        /*210581*/
@@ -1758,7 +1767,7 @@ CHKCMPLFL:                                                                      
 /**  Start System Replication  **/                                    /*CPB002*/
                CALL       PGM(RPC0010)                                /*CPB002*/
              ENDDO                                                    /*CPB002*/
- 
+
 /* Start SWIFT jobs (process includes MS_ENABLED data area check)                         /*218851*/
              CALL       PGM(MSC0203)                                                      /*218851*/
                                                                                           /*218851*/

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD033917           Date 19Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052955           Date 15Jul19               *
+      *  Prev Amend No. MD033917           Date 19Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD032075           Date 23Jun15               *
       *                 MD032027           Date 22Jan15               *
       *                 CGL160             Date 19Aug14               *
@@ -42,6 +43,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD052955 - COB - Failed Component GLC2000 00001              *
       *  MD033917 - Non retail account with blank transaction type    *
       *             reflected as having an Unpaid Item error          *
       *           - Applied for MD-49653.                             *
@@ -106,7 +108,7 @@
      FSDPRFCL1IF  E           K        DISK
      FSDBRCHL1IF  E           K        DISK
      FSDBOOKL1IF  E           K        DISK
-     FSDCUSTL5IF  E           K        DISK
+     F***SDCUSTL5IF  E           K        DISK                                              MD052955
      FSDCURRL1IF  E           K        DISK
      FSDNARRL1IF  E           K        DISK                                                   248076
      FGL1721AUO   E             99     PRINTER      KINFDS SPOOLU     UC
@@ -229,6 +231,10 @@
       *                                                                                       CGL160
       *  Nostro Codes DS for assigning data from Access                                       CGL160
       *                                                                                       CGL160
+     ISDCUST    E DSSDCUSTPD                                                                MD052955
+      *                                                                                     MD052995
+      ** Customer Details for assigning data from Access                                    MD052995
+      *                                                                                     MD052995
      ISPOOL1      DS
      I** File information data structure
      I                                       83  92 SFILE1
@@ -840,8 +846,16 @@
      C                     ENDIF                           E2
       *
       **  Validate customer
-     C           BTCUST    CHAIN@CUSTFT              09
-     C           *IN09     IFEQ *ON                        B2
+     C********** BTCUST    CHAIN@CUSTFT              09                                     MD052955
+     C********** *IN09     IFEQ *ON                        B2                               MD052955
+     C                     MOVELBTCUST    PCUST                                             MD052955
+     C                     CALL 'AOCUSTR0'                                                  MD052955
+     C                     PARM *BLANKS   PRTCD                                             MD052955
+     C                     PARM '*KEY   ' POPTN   7                                         MD052955
+     C                     PARM           PCUST  10                                         MD052955
+     C                     PARM *BLANKS   PKYST   7                                         MD052955
+     C           SDCUST    PARM SDCUST    UUSDY                                             MD052955
+     C           PRTCD     IFNE *BLANKS                                                     MD052955
      C                     MOVE 'Y'       SUSP    1
      C                     MOVELNAR05     ERNAR
      C                     EXSR RPTERR

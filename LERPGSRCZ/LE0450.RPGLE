@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. AR1097303          Date 16May19               *
+      *  Last Amend No. MD054008           Date 20Aug19               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 AR1097303          Date 16May19               *
       *                 MD047693           Date 30Jan18               *
       *                 MD050018           Date 05Nov18               *
       *                 MD050007           Date 05Nov18               *
@@ -404,6 +405,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054008 - ABLN for past due loans should be up to the next  *
+      *             working date.                                     *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -16936,6 +16939,8 @@ C    C                   ENDIF                                                  
       *                                                                   131520
      C     MDAT          IFLT      DNWD                                          B3            13152
      C     MDAT          ANDNE     0                                                           13152
+     C     MDAT          ANDGE     FIRY                                                     MD054008
+     C     RECI          ANDEQ     'M'                                                      MD054008
      C                   Z-ADD     MDAT          CDAT              5 0                         13152
      C                   ELSE                                                    X3            13152
      C                   Z-ADD     DNWD          CDAT                                          13152

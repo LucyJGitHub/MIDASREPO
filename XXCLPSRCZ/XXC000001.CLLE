@@ -1,0 +1,88 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas XX Capture Midas Previous & Current dates')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       XXC000001 - Midas XX Capture Midas Prv & Curr Run dates     */
+/*                                                                   */
+/********(c)*Misys*International*Banking*Systems*Ltd.*2013************/            /*NCI101*/
+/*       (c) Finastra International Ltd. 2019                        */            /*NCI101*/
+/*                                                                   */
+/*       Last Amend No. NCI101             Date 17Jul19              */
+/*       Prev Amend No. NCI001  *Create    Date 21Aug13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       NCI101 - Capture Midas prvevious and current run dates      */
+/*                (Upgrade to FM2.1 SP20)                            */
+/*       NCI001 - Capture Midas previous and current run dates       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(80)
+
+/*           COPYRIGHT  TEXT('(c) Misys International Banking Systems Ltd. 2013') */ /*NCI101*/
+             COPYRIGHT  TEXT('(c) Finastra International Ltd. 2019') /*NCI101*/
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('XXC000001 - Capture Midas previous and current +
+                            run dates')  TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(00000000)
+
+/* Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+
+/* Call CB0150 to update restart indicator */
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+/* Set up the file used for the RUNSQLSTM command.  */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM)
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+
+             CHGVAR     VAR(&SQL) VALUE('INSERT INTO XXNDATPD (LENPRN, LENRND) +
+                          SELECT BJRDNB, BJDNWD FROM SDBANKPD')
+
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+
+             CLRPFM     FILE(XXNDATPD)
+             MONMSG     MSGID(CPF0000)
+
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+
+/* Call CB0150 to update restart indicator. */
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('XXC000001 Capture Midas previous and current run +
+                          dates ended Abnormally') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+END:
+             ENDPGM

@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas XX Bulk Download of Accounts & Shadow Post COB')*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Replication                                         */
+/*                                                                   */
+/*       XXC4000 - Perform Bulk Download of ACCNTAB, RSACMTPD        */
+/*                 and CLEARPD                                       */
+/*                                                                   */
+/********(C)*Copyright*Misys*International*2013***********************/             /*NCI103*/
+/*       (C) Copyright Finastra International Ltd 2019               */             /*NCI103*/
+/*                                                                   */
+/*       Last Amend No. NCI103             Date 18Jul19              */
+/*       Prev Amend No. NCI003  *Create    Date 28Aug13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       NCI103 - Replication enhancements (Upgrade to FM2.1 SP20)   */
+/*       NCI003 - Replication enhancements                           */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&CNAM &CSEQ)
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSTS) TYPE(*CHAR) LEN(1)
+
+/*           DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Copyright Misys International Ltd. 2013')       */        /*NCI103*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) Copyright +
+                          Finastra International Ltd. 2019') /*NCI103*/
+
+/* Global Monitor Message                                        **/
+
+             MONMSG     MSGID(CPF0000 CPA0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(TAG998))
+
+             SNDPGMMSG  MSG('XXC4000 Replication - Start Bulk +
+                          Download of ACCNTAB - I/C Init') +
+                          TOMSGQ(MRUNQ) MSGTYPE(*INFO)
+             CHGJOB     SWS(XXXXXX00)
+
+/*Set status of component for start of processing.               **/
+
+             CHGVAR     VAR(&CSTS) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+
+/* Call the program to perform Bulk Download                     **/
+
+             KMDDLC     PRODUCT(MIDAS) TYPE(*LIST) TABLES(ACCNTAB +
+                          RSACMTPD CLEARPD)
+
+/* If any errors are reported, perform error processing.          **/
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(TAG998)
+             ENDDO
+
+/* Set status of component for successful completion.             **/
+
+             CHGVAR     VAR(&CSTS) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+
+             GOTO       CMDLBL(TAG999)
+
+/* Error Processing:                                               */
+/* Dump the program if error occurred in this program              */
+
+TAG998:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+
+             SNDMSG     MSG('Job terminated - XXC4000 Replication - +
+                          Bulk Download ACCNTAB - Ended in Error') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000)
+
+/* End of Program:                                                 */
+TAG999:
+             ENDPGM

@@ -10,13 +10,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. NCI103             Date 18Jul19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CPK014             Date 20Jun01              */
+/*                      CPK014             Date 20Jun01              */
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      CPL005             Date 23May01              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
@@ -24,6 +25,14 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       NCI103 - Replication Enhancements (Uprade to FM2.1 SP20)    */
+/*                Addition of hook NCI103_004                        */
+/*                Addition of hook NCI103_005                        */
+/*                Addition of hook NCI103_006                        */
+/*                Addition of hook NCI103_007                        */
+/*                Addition of hook NCI103_008                        */
+/*                Addition of hook NCI103_009                        */
+/*                Addition of hook NCI103_010                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK014 - Monitor for library already being in the libl.     */
 /*       CPL005 - Add the REPMIDASxx library back into the libl      */
@@ -31,7 +40,7 @@
 /*       CPL003 - Midas-Plato Interface.                             */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM
 /**/
              DCL        VAR(&MQMSGQ) TYPE(*CHAR) LEN(48)
@@ -40,22 +49,27 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
+/*/COPY WNCPYSRC,NCI103_004                                        */ /*NCI103*/
 /**/
 /**  Global Monitor Message                                        **/
 /**/
              MONMSG     MSGID(CPF0000 CPA0000 MCH0000) EXEC(GOTO +
                           CMDLBL(TAG998))
- 
+
+/*/COPY WNCPYSRC,NCI103_005                                        */ /*NCI103*/
              SNDPGMMSG  MSG('RPC1040 Midas-Plato Interface - End +
                           Feeder Job and Trigger Monitor') +
                           TOMSGQ(MRUNQ) MSGTYPE(*INFO)
+/*/COPY WNCPYSRC,NCI103_006                                        */ /*NCI103*/
              CHGJOB     SWS(XXXXXX00)
 /**/
 /**  End Trigger Monitor.                                          **/
 /**/
+/*/COPY WNCPYSRC,NCI103_007                                        */ /*NCI103*/
              RTVDTAARA  DTAARA(RPTRGMPI (1 48)) RTNVAR(&MQMSGQ)
+/*/COPY WNCPYSRC,NCI103_008                                        */ /*NCI103*/
              SNDMSGMQQ  QUEUE(&MQMSGQ) MSG('SHUTDOWN')
- 
+
 /**/                                                                                      /*CPL005*/
 /**  Build the REPMIDASxx Name.                                    **/                    /*CPL005*/
 /**/                                                                                      /*CPL005*/
@@ -68,9 +82,9 @@
              CALL       PGM(KMDJFC)
              ADDLIBLE   LIB(&REPMIDAS) POSITION(*LAST)                                    /*CPL005*/
              MONMSG     MSGID(CPF0000)                                                    /*CPK014*/
- 
+
              GOTO       CMDLBL(TAG999)
- 
+
 /**/
 /**  Error Processing:                                               */
 /**   Dump the program if error occurred in this program             */
@@ -79,14 +93,16 @@ TAG998:      DMPCLPGM
              MONMSG     MSGID(CPF0000)
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000)
+/*/COPY WNCPYSRC,NCI103_009                                        */ /*NCI103*/
              SNDMSG     MSG('Job Terminated - RPC1040 Midas-Plato +
                           Interface - End Feeder Job and Trigger +
                           Monitor') TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000)
+/*/COPY WNCPYSRC,NCI103_010                                        */ /*NCI103*/
 /**/
 /**  End of Program:                                                 */
 TAG999:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

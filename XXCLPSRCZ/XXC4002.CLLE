@@ -1,0 +1,72 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas XX Bulk Download RSACMTPD & CLEARPD - I/C')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Replication                                         */
+/*                                                                   */
+/*       XXC4002 - I/C Perform Bulk Download of Shadow Post Files    */
+/*                                                                   */
+/********(C)*Copyright*Misys*International*2013***********************/             /*NCI103*/
+/*       (C) Copyright Finastra International Ltd 2019               */             /*NCI103*/
+/*                                                                   */
+/*       Last Amend No. NCI103             Date 18Jul19              */
+/*       Prev Amend No. NCI003  *Create    Date 28Aug13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       NCI103 - Replication enhancements (Upgrade to FM2.1 SP20)   */
+/*       NCI003 - Replication enhancements                           */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+/*           DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Copyright Misys International Ltd. 2013')       */        /*NCI103*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) Copyright +
+                          Finastra International Ltd. 2019') /*NCI103*/
+
+/* Global Monitor Message                                        **/
+
+             MONMSG     MSGID(CPF0000 CPA0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(TAG998))
+
+             SNDPGMMSG  MSG('XXC4002 Replication - Start Bulk +
+                          Download of RSACMTPD and CLEARPD - I/C') +
+                          TOMSGQ(MRUNQ) MSGTYPE(*INFO)
+             CHGJOB     SWS(XXXXXX00)
+
+/* Call the program to perform Bulk Download                     **/
+
+             KMDDLC     PRODUCT(MIDAS) TYPE(*LIST) TABLES(RSACMTPD +
+                          CLEARPD)
+
+             CHGJOB     SWS(XXXXXX00)
+/* If any errors are reported, perform error processing.          **/
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(TAG998)
+             ENDDO
+             ELSE       DO
+               GOTO       CMDLBL(TAG999)
+             ENDDO
+
+/* Error Processing:                                               */
+/* Dump the program if error occurred in this program              */
+
+TAG998:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+
+             SNDMSG     MSG('Job terminated - XXC4002 Replication - +
+                          Bulk Download RSACMTPD and CLEARPD I/C - +
+                          Ended in Error') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000)
+
+/* End of Program:                                                 */
+TAG999:
+             ENDPGM

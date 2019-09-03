@@ -9,13 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. NCI103             Date 18Jul19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. 191408             Date 23Mar01              */
+/*                      191408             Date 23Mar01              */
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /*                      CPL004             Date 03Dec00              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
@@ -23,6 +24,12 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       NCI103 - Replication Enhancements (Upgrade to FM2.1 SP20)   */
+/*                Addition of hook NCI103_011                        */
+/*                Addition of hook NCI103_012                        */
+/*                Addition of hook NCI103_013                        */
+/*                Addition of hook NCI103_014                        */
+/*                Addition of hook NCI103_015                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       191408 - Midas-Plato Interface.                             */
 /*                Separate reset of replication subsystem to a new   */
@@ -32,25 +39,28 @@
 /*       CPL003 - Midas-Plato Interface.                             */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&CNAM &CSEQ)
 /**/
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&CSTS) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
+/*/COPY WNCPYSRC,NCI103_011                                 */ /*NCI103*/
 /**/
 /**  Global Monitor Message                                        **/
 /**/
              MONMSG     MSGID(CPF0000 CPA0000 MCH0000) EXEC(GOTO +
                           CMDLBL(TAG998))
- 
+
+/*/COPY WNCPYSRC,NCI103_012                                 */  /*NCI103*/
              SNDPGMMSG  MSG('RPC1045 Midas-Plato Interface - End +
                           Feeder and Trigger - COB') TOMSGQ(MRUNQ) +
                           MSGTYPE(*INFO)
+/*/COPY WNCPYSRC,NCI103_013                                 */  /*NCI103*/
 /**/
 /** Set status of component for start of processing.               **/
 /**/
@@ -83,9 +93,9 @@
 /**/
              CHGVAR     VAR(&CSTS) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
- 
+
              GOTO       CMDLBL(TAG999)
- 
+
 /**/
 /**  Error Processing:                                               */
 /**   Dump the program if error occurred in this program             */
@@ -94,10 +104,12 @@ TAG998:      DMPCLPGM
              MONMSG     MSGID(CPF0000)
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000)
+/*/COPY WNCPYSRC,NCI103_014                              */ /*NCI103*/
              SNDMSG     MSG('Job terminated - RPC1045 Midas-Plato +
                           Interface - End Feeder and Trigger - COB +
                           - Ended in Error') TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000)
+/*/COPY WNCPYSRC,NCI103_015                              */ /*NCI103*/
 /**/
 /**  End of Program:                                                 */
 TAG999:

@@ -22,8 +22,9 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2003*************                   JMI113
       *  (c) Finastra International Limited 2018                      *                   JMI113
       *                                                               *
-      *  Last Amend No. JMI113             Date 22May18               *
-      *  Prev Amend No. JMI019             Date 06Sep07               *
+      *  Last Amend No. MD054281            Date 04Sep19               *
+      *  Prev Amend No. JMI113             Date 22May18               *
+      *                 JMI019             Date 06Sep07               *
       *                 JMI019             Date 22Feb07               *
       *                 JMI019B (CHG001)   Date 13Oct05               *
       *                 JMI019 (C03)       Date 25Aug05               *
@@ -38,6 +39,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054281 - Midas GCMS Interface (missing changes)             *
       *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
       *  JMI019 - Additional codes to upgrade                         *
       *  JMI019 - change definition of K#ACOD 4,0 to 10,0             *
@@ -1498,7 +1500,64 @@
      C**********           MOVEL@61S7     @DAT4                                               JMI019
      C                     MOVELNRTD      @DAT4                                               JMI019
      C           FUND      IFNE *BLANK                                                        JMI019
-     C/COPY WNCPYSRC,GL2805C001                                                               228622
+     C*COPY*WNCPYSRC*GL2805C001                                                       228622 MD054281
+      *
+      ** Start of MD054281
+      *           -------
+      ** Introduce processing from GL2805C001 but hardcoded in this source.
+      *
+      ** Header box details of hook:
+      *****************************************************************
+      *  LAST Amend No. 230578             Date 03MAY05               *
+      *  PREV Amend No. 229756             Date 21Oct04               *
+      *       Amend No. JMI016             Date 10Feb03               *
+      *                 BFI003 *CREATE     Date 20Nov00               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  230578 - Ensure use of 16 characters narrative description.  *
+      *  229756 - Amended program to pass correct DR/CR indicator and *
+      *           make sure that all processing of settlement types   *
+      *           does progres on GL2805A.                            *
+      *  JMI016 - Differenciate DR & CR Narrative for Outgoing Pay-   *
+      *           ment with Settlement Type '01'.                     *
+      *  BFI003 - Adding narative description for Incoming and Out-   *
+      *           going payment in MT942.                             *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Contents of hook are introduced as MD054281.
+      *
+      ** Hook was dismissed during initial analysis of upgrade,
+      ** however it has been noticed that these changes are required.
+      *
+     C                     MOVELNRTD      PREF   15
+      *
+      ** Use first 16 characters of narrative description, for non FT Trans.
+     C                     MOVE *BLANK    FNAR   30
+     C*****                MOVEL@61S7     FNAR                                        230578
+      * GET SETTLEMENT TYPE                                     JMI016
+      *                                                         JMI016
+     C                     MOVE PREF      XSETTL  2             JMI016
+      *
+      ** Use first 30 characters of narrative description, for FT Trans.
+     C********** XSETTL    IFEQ '01'                            JMI016
+     C**********           MOVELNRTD      FNAR                  JMI016                229756
+     C**********           ELSE                                 JMI016                229756
+     C**********           CALL 'GL2805A'                                             229756 MD054281
+     C                     CALL 'XX2805A'                                             229756 MD054281
+     C                     PARM '*TRANS'  W0ACT   7
+     C                     PARM           BRCA
+     C                     PARM           PREF
+     C                     PARM           FNAR   30
+     C                     PARM           DORC    10                                  229756
+     C                     PARM           W0RTN   7
+     C**********           ENDIF                                JMI016                229756
+      *
+     C                     MOVELFNAR      @DAT6                                       229756
+     C**********           MOVELFNAR      @DAT4                                       229756
+      ** End of MD054281
+      *         -------
      C                     ENDIF                                                              JMI019
      C           @DAT4     IFEQ *BLANK                                                        228622
      C           TRYP      ANDEQ'TT'                                                          228622

@@ -25,7 +25,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
-      *           - Applied for MD053614.                             *
+      *           - Applied for MD054096.                             *
       *  CSW051 - Send Confirmation from MMM to TRAM via MQ Series.   *
       *           Also include fix 262207 - Commit write to CFTRAMPD  *
       *           so msgs on't rollback onto queue.                   *

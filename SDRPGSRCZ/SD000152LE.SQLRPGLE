@@ -16,8 +16,9 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD052107           Date 02Jul19               *
-      *  Prev Amend No. MD051081           Date 29May18               *
+      *  Last Amend No. MD054189           Date 03Sep19               *
+      *  Prev Amend No. MD052107           Date 02Jul19               *
+      *                 MD051081           Date 29May18               *
       *                 MD042142           Date 08May18               *
       *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
+      *              Pay Settlement Leg                               *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD051081 - Program loop, semi colon missing                  *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
@@ -91,6 +94,7 @@
      D PFACT           S              2  0
      D PFCNO           S              2  0
      D PVDAT           S              5  0
+     D PMDAT           S              5  0                                                  MD054189
      D nFACT           S              2A
      D nFCNO           S              2A
      D KACNO           S             17A
@@ -206,7 +210,8 @@
      C/exec SQL
      C+ declare LELIST1 cursor for
      C**select*LNRF, LTYP, SUTP, VDAT from CLOANCL                                         MD038440A
-     C+ select LNRF, LTYP, SUTP, VDAT, PONS, RONS from CLOANCL                             MD038440A
+     C**********+ select LNRF, LTYP, SUTP, VDAT, PONS, RONS from CLOANCL          MD038440A MD054189
+     C+ select LNRF, LTYP, SUTP, VDAT, MDAT, PONS, RONS from CLOANCL                        MD054189
      C+ where CCY = :YyCcy and
      C+       PONS = :XxNost and
      C+       RECI = 'D' and
@@ -218,7 +223,8 @@
      C+       PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )
      C+ order by
      C**********+       LNRF                                                                MD052107
-     C+       LNRF, VDAT DESC, LTYP, SUTP                                                   MD052107
+     C**********+       LNRF, VDAT DESC, LTYP, SUTP                                MD052107 MD054189
+     C+       LNRF, VDAT DESC, MDAT DESC, LTYP, SUTP                                        MD054189
      C/end-exec
 
      C/exec SQL
@@ -243,7 +249,8 @@
      C+ fetch next
      C+ from LELIST1
      C**into**pLNRF, :pLTYP, :pSUTP, :pVDAT                                                MD038440A
-     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS                                MD038440A
+     C**********+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS             MD038440A MD054189
+     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pMDAT, :pPONS, :pRONS                         MD054189
      C/end-exec
 
      C                   DOW       SQLCode <> 100
@@ -260,7 +267,8 @@
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +               MD052107
      C**********                   ' ' + pLTYP + ' ' + pSUTP                                MD052107
      C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
-     C                             pLNRF + '      ' + pLTYP + ' '  +                        MD052107
+     C**********                   pLNRF + '      ' + pLTYP + ' '  +               MD052107 MD054189
+     C                             pLNRF + '         ' + pLTYP + ' '  +                     MD054189
      C                             pSUTP + '         ' + NOTES(2)                           MD052107
      C                   IF        PMODE = 'V'
      C                   EVAL      XxRtn  = 'R'
@@ -279,7 +287,8 @@
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   IF        PRONS = XXNOST                                          MD038440A
-     C                   IF        PVDAT <  BJRDNB                                         MD038440A
+     C                   IF        PMDAT >= BJRDNB                                          MD054189
+     C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +     MD038440A MD052107
      C**********                   ' ' + pLTYP + ' ' + pSUTP                      MD038440A MD052107
      C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
@@ -289,23 +298,33 @@
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
      C**********         GOTO      VALEXIT                                        MD038440A MD052107
      C                   ENDIF                                                             MD038440A
+                                                                                            MD054189
+     C                   IF        XxRtn <> 'R'                                             MD054189
+     C                   IF        *IN60 = *ON                                              MD054189
+     C                   WRITE     HEADP1                                                   MD054189
+     C                   EVAL      *IN60 = *OFF                                             MD054189
+     C                   ENDIF                                                              MD054189
+      *                                                                                     MD054189
+     C                   WRITE     DETAIL1                                                  MD054189
+     C                   ENDIF                                                              MD054189
      C                   ENDIF                                                             MD038440A
       *                                                                                     MD052107
-     C                   IF        XxRtn <> 'R'                                             MD052107
-     C                   IF        *IN60 = *ON                                             MD038440A
-     C                   WRITE     HEADP1                                                  MD038440A
-     C                   EVAL      *IN60 = *OFF                                            MD038440A
-     C                   ENDIF                                                             MD038440A
+     C**********         IF        XxRtn <> 'R'                                    MD052107 MD054189
+     C**********         IF        *IN60 = *ON                                    MD038440A MD054189
+     C**********         WRITE     HEADP1                                         MD038440A MD054189
+     C**********         EVAL      *IN60 = *OFF                                   MD038440A MD054189
+     C**********         ENDIF                                                    MD038440A MD054189
       *                                                                                    MD038440A
-     C                   WRITE     DETAIL1                                                 MD038440A
-     C                   ENDIF                                                              MD052107
+     C**********         WRITE     DETAIL1                                        MD038440A MD054189
+     C**********         ENDIF                                                     MD052107 MD054189
      C                   ENDIF                                                             MD038440A
 
      C/exec SQL
      C+ fetch next
      C+ from LELIST1
      C**into*:pLNRF, :pLTYP, :pSUTP, :pVDAT                                                MD038440A
-     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS                                MD038440A
+     C**********+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS             MD038440A MD054189
+     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pMDAT, :pPONS, :pRONS                         MD054189
      C/end-exec
 
      C                   ENDDO
@@ -317,7 +336,8 @@
      C/exec SQL
      C+ declare LELIST1B cursor for
      C**select LNRF, LTYP, SUTP, VDAT from CLOANCL                                         MD038440A
-     C+ select LNRF, LTYP, SUTP, VDAT, PONS, RONS from CLOANCL                             MD038440A
+     C**********+ select LNRF, LTYP, SUTP, VDAT, PONS, RONS from CLOANCL          MD038440A MD054189
+     C+ select LNRF, LTYP, SUTP, VDAT, MDAT, PONS, RONS from CLOANCL                        MD054189
      C+ where CCY = :YyCcy and
      C+       RONS = :XxNost and
      C+       RECI = 'D' and
@@ -329,7 +349,8 @@
      C+       PTYP in (66, 67, 69, 72)                                                     MD038440A
      C+ order by
      C**********+       LNRF                                                                MD052107
-     C+       LNRF, VDAT DESC, LTYP, SUTP                                                   MD052107
+     C**********+       LNRF, VDAT DESC, LTYP, SUTP                                MD052107 MD054189
+     C+       LNRF, VDAT DESC, MDAT DESC, LTYP, SUTP                                        MD054189
      C/end-exec
 
      C/exec SQL
@@ -354,7 +375,8 @@
      C+ fetch next
      C+ from LELIST1B
      C*********into :pLNRF, :pLTYP, :pSUTP, :pVDAT                                         MD038440A
-     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS                                MD038440A
+     C**********+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS             MD038440A MD054189
+     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pMDAT, :pPONS, :pRONS                         MD054189
      C/end-exec
 
      C                   DOW       SQLCode <> 100
@@ -390,7 +412,8 @@
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   IF        PPONS =  XXNOST                                         MD038440A
-     C                   IF        PVDAT <  BJRDNB                                         MD038440A
+     C                   IF        PMDAT >= BJRDNB                                          MD054189
+     C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +     MD038440A MD052107
      C**********                   ' ' + pLTYP + ' ' + pSUTP                      MD038440A MD052107
      C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
@@ -400,16 +423,24 @@
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
      C**********         GOTO      VALEXIT                                                 MD038440A
      C                   ENDIF                                                             MD038440A
+     C**********         IF        XxRtn <> 'R'                                             MD054189
+     C**********         IF        *IN60 = *ON                                              MD054189
+     C**********         WRITE     HEADP1                                                   MD054189
+     C**********         EVAL      *IN60 = *OFF                                             MD054189
+     C**********         ENDIF                                                              MD054189
+      *                                                                                     MD054189
+     C**********         WRITE     DETAIL1                                                  MD054189
+     C**********         ENDIF                                                              MD054189
      C                   ENDIF                                                             MD038440A
       *                                                                                     MD052107
-     C                   IF        XxRtn <> 'R'                                             MD052107
-     C                   IF        *IN60 = *ON                                             MD038440A
-     C                   WRITE     HEADP1                                                  MD038440A
-     C                   EVAL      *IN60 = *OFF                                            MD038440A
-     C                   ENDIF                                                             MD038440A
+     C**********         IF        XxRtn <> 'R'                                    MD052107 MD054189
+     C**********         IF        *IN60 = *ON                                    MD038440A MD054189
+     C**********         WRITE     HEADP1                                         MD038440A MD054189
+     C**********         EVAL      *IN60 = *OFF                                   MD038440A MD054189
+     C**********         ENDIF                                                    MD038440A MD054189
       *                                                                                    MD038440A
-     C                   WRITE     DETAIL1                                                 MD038440A
-     C                   ENDIF                                                              MD052107
+     C**********         WRITE     DETAIL1                                        MD038440A MD054189
+     C**********         ENDIF                                                     MD052107 MD054189
      C                   ENDIF                                                             MD038440A
 
      C/exec SQL
@@ -417,7 +448,8 @@
      C+ from LELIST1B
      C**into*:pLNRF, :pLTYP, :pSUTP, :pVDAT                                                MD038440A
      C**into*:pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS,  pRONS                       MD038440A MD051081
-     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS                                 MD051081
+     C**********+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pPONS, :pRONS              MD051081 MD054189
+     C+ into :pLNRF, :pLTYP, :pSUTP, :pVDAT, :pMDAT, :pPONS, :pRONS                         MD054189
      C/end-exec
 
      C                   ENDDO

@@ -17,8 +17,9 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD052107           Date 02Jul19               *
-      *  Prev Amend No. MD042142A          Date 13Jan19               *
+      *  Last Amend No. MD054189           Date 03Sep19               *
+      *  Prev Amend No. MD052107           Date 02Jul19               *
+      *                 MD042142A          Date 13Jan19               *
       *                 MD042142           Date 08May18               *
       *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
+      *              Pay Settlement Leg                               *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142A - Cannot close Nostro Account.                     *
       *            - Applied for MD052616.                            *
@@ -78,6 +81,7 @@
      D pDTYP           S              2
      D pDLST           S              2
      D PVDAT           S              5  0
+     D PMDAT           S              5  0                                                  MD054189
      D pPONS           S             12                                                    MD038440A
      D pRONS           S             12                                                    MD038440A
      D********** pPYCCYS              2                                                     MD042142
@@ -235,7 +239,8 @@
      C/exec SQL
      C+ declare DLLIST0 cursor for
      C**********select DLNO, DTYP, DLST, VDAT   from DEALSDC                               MD038440A
-     C+ select DLNO, DTYP, DLST, VDAT, PONS, RONS from DEALSDC                             MD038440A
+     C**********+ select DLNO, DTYP, DLST, VDAT, PONS, RONS from DEALSDC          MD038440A MD054189
+     C+ select DLNO, DTYP, DLST, VDAT, MDAT, PONS, RONS from DEALSDC                        MD054189
      C+ where CCY = :YyCcy and
      C+       PONS = :XxNost and
      C+       RECI = 'D' and
@@ -247,7 +252,8 @@
      C+       DTYP in ('IT', 'TD', 'CI', 'CD' )                                            MD038440A
      C+ order by
      C**********+       DLNO                                                                MD052107
-     C+       DLNO, VDAT DESC, DTYP, DLST                                                   MD052107
+     C**********+       DLNO, VDAT DESC, DTYP, DLST                                MD052107 MD054189
+     C+       DLNO, VDAT DESC, MDAT DESC, DTYP, DLST                                        MD054189
      C/end-exec
 
      C/exec SQL
@@ -272,7 +278,8 @@
      C+ fetch next
      C+ from DLLIST0
      C**********Into  :pdlno, :pdtyp, :pdlst, :pvdat                                       MD038440A
-     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons                               MD038440A
+     C**********+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons            MD038440A MD054189
+     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :pmdat, :ppons, :prons                        MD054189
      C/end-exec
 
      C                   DOW       SQLCode <> 100
@@ -313,7 +320,8 @@
      C                   IF        PPONS = XXNOST                                          MD038440A
      C                   EVAL      APTRAN = 'Money Market'                                  MD052107
      C                   MOVE      pDLNO         wDLNO                                      MD052107
-     C                   IF        PVDAT <  BJRDNB                                         MD038440A
+     C                   IF        PMDAT >=  BJRDNB                                         MD054189
+     C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      APTRAN = 'Money Market'                        MD038440A MD052107
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +     MD038440A MD052107
      C**********                    ' ' +  pDTYP + ' ' + pDLST                    MD038440A MD052107
@@ -324,16 +332,24 @@
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
      C**********         GOTO      VALEXIT                                        MD038440A MD052107
      C                   ENDIF                                                             MD038440A
+     C                   IF        XxRtn <> 'R'                                             MD054189
+     C                   IF        *IN60 = *ON                                              MD054189
+     C                   WRITE     HEADP1                                                   MD054189
+     C                   EVAL      *IN60 = *OFF                                             MD054189
+     C                   ENDIF                                                              MD054189
+      *                                                                                     MD054189
+     C                   WRITE     DETAIL1                                                  MD054189
+     C                   ENDIF                                                              MD054189
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
-     C                   IF        XxRtn <> 'R'                                             MD052107
-     C                   IF        *IN60 = *ON                                             MD038440A
-     C                   WRITE     HEADP1                                                  MD038440A
-     C                   EVAL      *IN60 = *OFF                                            MD038440A
-     C                   ENDIF                                                             MD038440A
+     C**********         IF        XxRtn <> 'R'                                             MD052107
+     C**********         IF        *IN60 = *ON                                             MD038440A
+     C**********         WRITE     HEADP1                                                  MD038440A
+     C**********         EVAL      *IN60 = *OFF                                            MD038440A
+     C**********         ENDIF                                                             MD038440A
       *                                                                                    MD038440A
-     C                   WRITE     DETAIL1                                                 MD038440A
-     C                   ENDIF                                                              MD052107
+     C**********         WRITE     DETAIL1                                                 MD038440A
+     C**********         ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
 
@@ -341,7 +357,8 @@
      C+ fetch next
      C+ from DLLIST0
      C**********Into  :pdlno, :pdtyp, :pdlst, :pvdat                                       MD038440A
-     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons                               MD038440A
+     C**********+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons            MD038440A MD054189
+     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :pmdat, :ppons, :prons                        MD054189
      C/end-exec
 
      C                   ENDDO
@@ -353,7 +370,8 @@
      C/exec SQL
      C+ declare DLLIST0B cursor for
      C**select*DLNO, DTYP, DLST, VDAT   from DEALSDC                                       MD038440A
-     C+ select DLNO, DTYP, DLST, VDAT, PONS, RONS from DEALSDC                             MD038440A
+     C**********+ select DLNO, DTYP, DLST, VDAT, PONS, RONS from DEALSDC          MD038440A MD054189
+     C+ select DLNO, DTYP, DLST, VDAT, MDAT, PONS, RONS from DEALSDC                        MD054189
      C+ where CCY = :YyCcy and
      C+       RONS = :XxNost and
      C+       RECI = 'D' and
@@ -365,7 +383,8 @@
      C+       DTYP in ('CF', 'CL' , 'DL', 'IP', 'TI' )                                     MD038440A
      C+ order by
      C**********+       DLNO                                                                MD052107
-     C+       DLNO, VDAT DESC, DTYP, DLST                                                   MD052107
+     C**********+       DLNO, VDAT DESC, DTYP, DLST                                MD052107 MD054189
+     C+       DLNO, VDAT DESC, MDAT DESC, DTYP, DLST                                        MD054189
      C/end-exec
 
      C/exec SQL
@@ -390,7 +409,8 @@
      C+ fetch next
      C+ from DLLIST0B
      C**into**:pdlno, :pdtyp, :pdlst, :pvdat                                               MD038440A
-     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons                               MD038440A
+     C**********+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons            MD038440A MD054189
+     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :pmdat, :ppons, :prons                        MD054189
      C/end-exec
 
      C                   DOW       SQLCode <> 100
@@ -431,7 +451,8 @@
      C                   IF        PRONS =  XXNOST                                         MD038440A
      C                   EVAL      APTRAN = 'Money Market'                                 MD038440A
      C                   MOVE      pDLNO         wDLNO                                      MD052107
-     C                   IF        PVDAT <  BJRDNB                                         MD038440A
+     C                   IF        PMDAT >=  BJRDNB                                         MD054189
+     C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      APTRAN = 'Money Market'                        MD038440A MD052107
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +     MD038440A MD052107
      C**********                    ' ' +  pDTYP + ' ' + pDLST                    MD038440A MD052107
@@ -442,16 +463,24 @@
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
      C**********         GOTO      VALEXIT                                        MD038440A MD052107
      C                   ENDIF                                                             MD038440A
+     C                   IF        XxRtn <> 'R'                                             MD054189
+     C                   IF        *IN60 = *ON                                              MD054189
+     C                   WRITE     HEADP1                                                   MD054189
+     C                   EVAL      *IN60 = *OFF                                             MD054189
+     C                   ENDIF                                                              MD054189
+      *                                                                                     MD054189
+     C                   WRITE     DETAIL1                                                  MD054189
+     C                   ENDIF                                                              MD054189
      C                   ENDIF                                                             MD038440A
       *                                                                                     MD052107
-     C                   IF        XxRtn <> 'R'                                             MD052107
-     C                   IF        *IN60 = *ON                                             MD038440A
-     C                   WRITE     HEADP1                                                  MD038440A
-     C                   EVAL      *IN60 = *OFF                                            MD038440A
-     C                   ENDIF                                                             MD038440A
+     C**********         IF        XxRtn <> 'R'                                    MD052107 MD054189
+     C**********         IF        *IN60 = *ON                                    MD038440A MD054189
+     C**********         WRITE     HEADP1                                         MD038440A MD054189
+     C**********         EVAL      *IN60 = *OFF                                   MD038440A MD054189
+     C**********         ENDIF                                                    MD038440A MD054189
       *                                                                                    MD038440A
-     C                   WRITE     DETAIL1                                                 MD038440A
-     C                   ENDIF                                                              MD052107
+     C**********         WRITE     DETAIL1                                        MD038440A MD054189
+     C**********         ENDIF                                                    MD038440A MD054189
      C                   ENDIF                                                             MD038440A
       *
 
@@ -459,7 +488,8 @@
      C+ fetch next
      C+ from DLLIST0B
      C**********into  :pdlno, :pdtyp, :pdlst, :pvdat                                       MD038440A
-     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons                               MD038440A
+     C**********+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :ppons, :prons            MD038440A MD054189
+     C+ into  :pdlno, :pdtyp, :pdlst, :pvdat, :pmdat, :ppons, :prons                        MD054189
      C/end-exec
 
      C                   ENDDO

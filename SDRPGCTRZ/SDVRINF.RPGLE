@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. MD053861           Date 15Jul19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW213             Date 03Jun13               *
       *                 AR855391           Date 27Oct11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053861 - CR SWIFT 2019 /CLRC/ in MT300                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013                                  *
       *  AR855391 - CUSD Overridable Errors not found in EN System    *
@@ -131,6 +133,7 @@
       *
       ** Digits
      D Digits          C                   '0123456789'
+     D UpCase          C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                     MD053861
       *
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -150,6 +153,9 @@
       ** Work array variable for Additinal info string
      D WAddInAr        S              1    DIM(194)
       *
+      **                                                                                    MD053861
+     D WArClr          S              1    DIM(33)                                          MD053861
+      *                                                                                     MD053861
       ** New Customer in File Format
      D NwCuFilFmt    E DS                  EXTNAME(SDVCUSDPD)
       *
@@ -178,6 +184,8 @@
      D Wi              S              4P 0
      D WkSize          S              4P 0
      D WkNonB          S              4P 0
+     D Wc              S              4P 0                                                  MD053861
+     D Wn              S              4P 0                                                  MD053861
       *
       ** Work variables
      D WkEnds          S              1A
@@ -189,6 +197,8 @@
      D WAddInf6        S              6A
      D WAddInf9        S              9A
      D WAddInf         S            194A
+     D WClCode         S              2A                                                    MD053861
+     D WClStrn         S             32A                                                    MD053861
       *
       ** Work variables for SD0011U
      D PRTCD           S              7A
@@ -354,6 +364,51 @@
      C                   EVAL      WkValInf = 'Y'
      C                   ENDIF
       *
+      ** Check if correct clearing code is entered for /CLRC/                               MD053861
+      *                                                                                     MD053861
+     C                   IF        WTCode = '/CLRC/'                                        MD053861
+     C                   MOVEL     *BLANKS       WClCode                                    MD053861
+      *                                                                                     MD053861
+     C                   IF        WkValInf = 'Y'                                           MD053861
+     C                   EVAL      Wc = Wx + 6                                              MD053861
+     C                   ELSE                                                               MD053861
+     C                   EVAL      Wc = Wx                                                  MD053861
+     C                   ENDIF                                                              MD053861
+      *                                                                                     MD053861
+      ** First two characters must be a valid Uppercase                                     MD053861
+      ** alphabetic character                                                               MD053861
+      *                                                                                     MD053861
+     C                   EVAL      WClCode = %SUBST(WDDRINF:Wc:2)                           MD053861
+     C                   IF        %CHECK(UpCase:WClCode) <> 0                              MD053861
+     C                   ADD       1             Idx                                        MD053861
+     C                   MOVEL     *ALL'N'       WDDRINFOK                                  MD053861
+     C                   MOVEL     'DDRI01'      FldNamXAr(Idx)                             MD053861
+     C                   MOVEL     'USR8914'     MsgIdXAr(IDx)                              MD053861
+     C                   GOTO      EndRecInf                                                MD053861
+     C                   ENDIF                                                              MD053861
+      *                                                                                     MD053861
+      ** followed optionally by up to 32 characters within                                  MD053861
+      ** the SWIFT x character set                                                          MD053861
+      *                                                                                     MD053861
+     C                   MOVEL     *BLANKS       WClStrn                                    MD053861
+     C                   EVAL      WClStrn = %SUBST(WDDRINF:Wc+2:32)                        MD053861
+     C                   MOVEA     WClStrn       WArClr                                     MD053861
+     C                   EVAL      Wn = 1                                                   MD053861
+      *                                                                                     MD053861
+     C                   DOW       WArClr(Wn) <> *BLANKS                                    MD053861
+     C     WArClr(Wn)    LOOKUP    ValSwChar(1)                           02                MD053861
+     C                   IF        *IN02 = '0'                                              MD053861
+     C                   ADD       1             Idx                                        MD053861
+     C                   MOVEL     *ALL'N'       WDDRINFOK                                  MD053861
+     C                   MOVEL     'DDRI01'      FldNamXAr(Idx)                             MD053861
+     C                   MOVEL     'USR8914'     MsgIdXAr(IDx)                              MD053861
+     C                   GOTO      EndRecInf                                                MD053861
+     C                   ENDIF                                                              MD053861
+     C                   EVAL      Wn = Wn + 1                                              MD053861
+     C                   ENDDO                                                              MD053861
+      *                                                                                     MD053861
+     C                   ENDIF                                                              MD053861
+      *                                                                                     MD053861
      C                   ENDIF
       *
       ** First entry is not a valid codeword

@@ -23,8 +23,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. 252771A            Date 04Sep19               *
+      *  Prev Amend No. 252771             Date 04Sep19               *
+      *                 MD053295           Date 13Apr19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
@@ -118,6 +120,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  252771A - Align customer address to the left if customer 1   *
+      *            customer 2 are the same.                           *
+      *          - Applied fix for MD054047.                          *
+      *  252771 - Align name to the left and if customer 1 and        *
+      *           customer 2 are the same, print only one.  Partially *
+      *         - Applied fix for MD054047.                           *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -2595,6 +2603,17 @@
      C                     END
      C                     END
      C                     END
+      *                                                                                       252771
+      **  Prevent duplicate names on confo, no logic as to why two                            252771
+      **  same customer names shd come out. Note that ONA1 & ONA2                             252771
+      **  is set up for Parts Sold and Purchased and when customer                            252771
+      **  confo is inserted                                                                   252771
+      *                                                                                       252771
+     C           CNA1      IFEQ ONA1                                                          252771
+     C           CNA2      ANDEQONA2                                                          252771
+     C                     MOVE *BLANKS   ONA1                                                252771
+     C                     MOVE *BLANKS   ONA2                                                252771
+     C                     END                                                                252771
      C*
      C   U4 81             ADD  1         NORET
       *                                                                   CLE004
@@ -4046,12 +4065,24 @@
      O** Confirmation name and type
      O*
      O/COPY WNCPYSRC,LE1150O016
-     O        E  2     69 71
-     O                         CNAME     72
-     O                    79             92 'ROLLOVER'
-     O                    64             92 '- CANCELLATION'
-     O                    65N79          89 '- AMENDMENT'
-     O                    63            102 'COPY'
+     O********E**2     69 71                                                                  252771
+     O************             CNAME     72                                                   252771
+     O************        79             92 'ROLLOVER'                                        252771
+     O************        64             92 '- CANCELLATION'                                  252771
+     O************        65N79          89 '- AMENDMENT'                                     252771
+     O************        63            102 'COPY'                                            252771
+     O        E  2     69 71 11                                                               252771
+     O                         CNAME     72                                                   252771
+     O                    79             92 'ROLLOVER'                                        252771
+     O                    64             92 '- CANCELLATION'                                  252771
+     O                    65N79          89 '- AMENDMENT'                                     252771
+     O                    63            102 'COPY'                                            252771
+     O        E  202   69 71N11                                                               252771
+     O                         CNAME     72                                                   252771
+     O                    79             92 'ROLLOVER'                                        252771
+     O                    64             92 '- CANCELLATION'                                  252771
+     O                    65N79          89 '- AMENDMENT'                                     252771
+     O                    63            102 'COPY'                                            252771
      O*
      O** Rundate
      O*
@@ -4072,15 +4103,22 @@
      O/COPY WNCPYSRC,LE1150O002
      O*
      O        E  1     69 71
-     O                         CNA1      85
-     O        E  2     69 71
-     O                         CNA2      85
+     O***********              CNA1      85                                                   252771
+     O                         CNA1      46                                                   252771
+     O********E**2     69 71                                                                  252771
+     O***********              CNA2      85                                                   252771
+     O        E  1     69 71                                                                  252771
+     O                         CNA2      46                                                   252771
      O        E  1     69 71
-     O                         ONA1      46
-     O                         CNA3      85
+     O***********              ONA1      46                                                  252771A
+     O***********              CNA3      85                                                  252771A
+     O                         CNA3      46                                                  252771A
+     O                         ONA1      85                                                  252771A
      O        E  2     69 71
-     O                         ONA2      46
-     O                         CNA4      85
+     O***********              ONA2      46                                                  252771A
+     O***********              CNA4      85                                                  252771A
+     O                         CNA4      46                                                  252771A
+     O                         ONA2      85                                                  252771A
      O/COPY WNCPYSRC,LE1150O003
      O*
      O** Detail line 1

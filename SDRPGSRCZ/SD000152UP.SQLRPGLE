@@ -7,7 +7,8 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *                                                               *
-      *  SD0152OM - Nostro Account Activity - Update                  *
+      ***SD0152OM*-*Nostro*Account*Activity*-*Update*******************                     MD054142
+      *  SD000152UP - Nostro Account Activity - Update                *                     MD054142
       *                                                               *
       *  Function:  This program updates transactions used by Nostro  *
       *                                                               *
@@ -15,14 +16,17 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD052129           Date 19Oct18               *
-      *  Prev Amend No. MD042142           Date 08May18               *
+      *  Last Amend No. MD054142           Date 20Aug19               *
+      *  Prev Amend No. MD052129           Date 19Oct18               *
+      *                 MD042142           Date 08May18               *
       *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054142 - Amend Nostro Account Maintenance program due to   *
+      *             reformatting of Nostro A/C Activity Report Layout *
       *  MD052129 - Settlement not updated. Extend fix MD038440A to   *
       *             the update other fields.                          *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
@@ -67,12 +71,16 @@
      D PLNRF           S              6
      D PLTYP           S              2
      D PSUTP           S              2
-     D PDLNO           S              6
+     D********** pDLNO           S              6                                           MD054142
+     D pDLNO           S              6  0                                                  MD054142
+     D wDLNO           S              6                                                     MD054142
      D PDTYP           S              2
      D PDLST           S              2
      D KACNO           S             17A
-     D APTRAN          S             40A
+     D********** APTRAN          S             40A                                          MD054142
+     D APTRAN          S             31A                                                    MD054142
      D UPD             S             20A
+     D TXSTAT          S             36A                                                    MD054142
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -145,7 +153,8 @@
      C+       RECI = 'D' and
      C+       PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )
      C+ order by
-     C+       LNRF
+     C**********+       LNRF                                                                MD054142
+     C+       LNRF, LTYP, SUTP                                                              MD054142
      C/end-exec
 
      C/exec SQL
@@ -176,8 +185,11 @@
 
 
      C                   EVAL      APTRAN = 'Customer Lending'
-     C                   EVAL      DATAP = APTRAN + UPD +  ' ' + pLNRF +
-     C                              ' ' + pLTYP + ' ' + pSUTP
+     C**********         EVAL      DATAP = APTRAN + UPD +  ' ' + pLNRF +                    MD054142
+     C**********                    ' ' + pLTYP + ' ' + pSUTP                               MD054142
+     C                   EVAL      DATAP = TXSTAT + ' ' + APTRAN + ' ' +                    MD054142
+     C                             pLNRF + '      ' + pLTYP + ' '  +                        MD054142
+     C                             pSUTP + '         ' + UPD                                MD054142
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -226,7 +238,8 @@
      C+       RECI = 'D' and
      C+       PTYP in (66, 67, 69, 72)
      C+ order by
-     C+       LNRF
+     C**********+       LNRF                                                                MD054142
+     C+       LNRF, VDAT DESC, LTYP, SUTP                                                   MD054142
      C/end-exec
 
      C/exec SQL
@@ -257,8 +270,11 @@
 
      C                   EVAL      APTRAN = 'Customer Lending'
      C                   EVAL      UPD = 'UPDATED'
-     C                   EVAL      DATAP = APTRAN + UPD +  ' ' + pLNRF +
-     C                              ' ' + pLTYP + ' ' + pSUTP
+     C**********         EVAL      DATAP = APTRAN + UPD +  ' ' + pLNRF +                    MD054142
+     C**********                    ' ' + pLTYP + ' ' + pSUTP                               MD054142
+     C                   EVAL      DATAP = TXSTAT + ' ' + APTRAN + ' ' +                    MD054142
+     C                             pLNRF + '      ' + pLTYP + ' '  +                        MD054142
+     C                             pSUTP + '         ' + UPD                                MD054142
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -306,7 +322,8 @@
      C+       RECI = 'D' and
      C+       DTYP in ('IT', 'TD', 'CI', 'CD' )
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD054142
+     C+       DLNO, DTYP, DLST                                                              MD054142
      C/end-exec
 
      C/exec SQL
@@ -336,8 +353,12 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Money Market'
-     C                   EVAL      DATAP = APTRAN + UPD + ' ' + pDLNO +
-     C                             ' ' + pDTYP +  ' ' + pDLST
+     C                   MOVE      pDLNO         wDLNO                                      MD054142
+     C**********         EVAL      DATAP = APTRAN + UPD + ' ' + pDLNO +                     MD054142
+     C**********                   ' ' + pDTYP +  ' ' + pDLST                               MD054142
+     C                   EVAL      DATAP = TXSTAT + ' ' + APTRAN + ' ' +                    MD054142
+     C                             wDLNO + '      ' + pDTYP + ' '  +                        MD054142
+     C                             pDLST + '         ' + UPD                                MD054142
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -414,7 +435,8 @@
      C+       RECI = 'D' and
      C+       DTYP in ('CF', 'CL' , 'DL', 'IP', 'TI' )
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD054142
+     C+       DLNO, DTYP, DLST                                                              MD054142
      C/end-exec
 
      C/exec SQL
@@ -446,8 +468,12 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Money Market'
-     C                   EVAL      DATAP = APTRAN + UPD + ' ' + pDLNO +
-     C                             ' ' + pDTYP +  ' ' + pDLST
+     C                   MOVE      pDLNO         wDLNO                                      MD054142
+     C**********         EVAL      DATAP = APTRAN + UPD + ' ' + pDLNO +                     MD054142
+     C**********                   ' ' + pDTYP +  ' ' + pDLST                               MD054142
+     C                   EVAL      DATAP = TXSTAT + ' ' + APTRAN + ' ' +                    MD054142
+     C                             wDLNO + '      ' + pDTYP + ' '  +                        MD054142
+     C                             pDLST + '         ' + UPD                                MD054142
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF

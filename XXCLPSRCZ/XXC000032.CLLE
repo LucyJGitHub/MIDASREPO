@@ -1,0 +1,224 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/             /*LUC109*/
+/*STD    CLPBASEBND                                                  */             /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Interface to Head Office Reporting                  */
+/*                                                                   */
+/********GLCM032*-*GL*ENGAGEMENTS*ISSUE*Details*Extract***************/             /*LUC109*/
+/*       XXC000032 - Midas XX HOR GL Engagements Issue Det. Extract  */             /*LUC109*/
+/*                                                                   */
+/********(C)*COPYRIGHT*MKI*LIMITED*1998*******************************/             /*LUC109*/
+/*       (C) Copyright Misys International Banking Systems Ltd. 2016 */             /*LUC109*/
+/*                                                                   */
+/*       THIS SRC MUST BE COMPILED WITH xxINTFLIB at BOTTOM of LIBL  */
+/*                                                                   */
+/*       Last Amend No. LUC109CC1          Date 12Sep19              */
+/*       Prev Amend No. MD045159           Date 06Apr17              */
+/*                      LUC109             Date 16Sep16              */
+/*                      159964             Date 22Aug99              */
+/*                      MMI043             Date 21Apr99              */
+/*                      MMI043  *CREATE    Date 09Dec98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109CC1 - NY Amendments                                   */
+/*              - Update facility refs on TI transactions            */
+/*       MD045159 - Monitor CPYF error message and reset switches    */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*       159964 - PGM/GLM032A cannot allocate LF/SDCUSTL0 due to     */
+/*                SCC0406.                                           */
+/*              - Seton job switches U7/U8 for error processing.     */
+/*       MMI043 - Interface to Head Office Reporting                 */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RERUN)
+/**/
+/*   Declare variables                                            */
+/**/
+/**********  DCL VAR(&CPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                 COPYRIGHT MKI LIMITED 1998')                     */                /*LUC109*/
+             DCL VAR(&CPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                 Copyright Misys Intl. Ltd. 2016')                                  /*LUC109*/
+             DCL VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DATJOB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MMDD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILENAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MIDDAYC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&LIBHIS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SLCT) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&MPEMA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*159964*/
+             DCL        VAR(&NYAMD) TYPE(*CHAR) LEN(1) VALUE('N')     /*LUC109CC1*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE('       +
+                          ')                                          /*LUC109CC1*/
+             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20) +
+                          VALUE('HOR_NY_Amendments')                  /*LUC109CC1*/
+             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)               /*LUC109CC1*/
+             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)              /*LUC109CC1*/
+/**/
+             DCLF       FILE(SDGELRPP)
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                              /*159964*/
+/**/
+/*   Create Local Data Area                                       */
+/**/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local Data Area')
+             MONMSG     MSGID(CPF0000)
+
+             CHGJOB    SWS(00000000)                                                /*MD045159*/
+
+             CALL       PGM(AOSVALR0) PARM(&PRTCD &POP01 &PVL01 +
+                          &POP02 &PVL02 &POP03 &PVL03 &POP04 &PVL04 +
+                          &POP05 &PVL05 &POP06 &PVL06 &POP07 &PVL07 +
+                          &POP08 &PVL08 &POP09 &PVL09 &POP10 &PVL10)  /*LUC109CC1*/
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)           /*LUC109CC1*/
+               CHGVAR     VAR(&NYAMD) VALUE(%SUBSTRING(&PVL01 1 1))   /*LUC109CC1*/
+             ENDDO                                                    /*LUC109CC1*/
+
+
+/*                                                                   */
+/* Retrieve 'Last Acct date' (month and day) from SDGELRPP           */
+/*                                                                   */
+/************CALL       GLCM049 PARM(&MMDD)                          */             /*LUC109*/
+             CALL       XXC000049 PARM(&MMDD)                                       /*LUC109*/
+/**/
+/*  Get Midas Run Day Number from SDBANKPD                           */
+/**/
+/************CALL       GLCM052 PARM(&MIDDAYC)                       */             /*LUC109*/
+             CALL       XXC000052 PARM(&MIDDAYC)                                    /*LUC109*/
+
+/*                                                                   */
+/* Clear working file FECRF and WKFECRF for extraction               */
+/*                                                                   */
+             CLRPFM     FILE(FECRF)
+             CLRPFM     FILE(WKFECRF)
+             CLRPFM     FILE(FECRFTI)
+
+/*                                                                   */
+/* Creating file name CRFxxyy (where xx=month, yy=day)               */
+/* CRFxxyy                                                           */
+/*                                                                   */
+             CHGVAR     VAR(&FILENAME) VALUE('CRF' *TCAT &MMDD)
+             RTVOBJD    OBJ(FECRF) OBJTYPE(*FILE) RTNLIB(&LIB)
+             DLTF       FILE(&LIB/&FILENAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(FECRF) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                          TOLIB(*FROMLIB) NEWOBJ(&FILENAME) DATA(*NO)
+
+/*                                                                   */
+/* In Rerun Mode, restore FECRFTIPSV to FECRFTIPC                    */
+/*                                                                   */
+             IF         COND(&RERUN *EQ 'Y') THEN(DO)
+             CLRPFM     FILE(&LIB/FECRFTIPC)
+             CPYF       FROMFILE(FECRFTIPSV) TOFILE(&LIB/FECRFTIPC) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+
+/*                                                                   */
+/* Copy in TI File                                                   */
+/*                                                                   */
+             CPYF       FROMFILE(FECRFTIPC) TOFILE(FECRFTI) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF0000)
+
+/*                                                                   */
+/* Run Extract                                                       */
+/*                                                                   */
+             RCVF
+
+             CHGVAR     VAR(&MPEMA) VALUE(&MPEMB)
+             CHGVAR     VAR(&SLCT) VALUE('((MDAT *LE' *BCAT +
+                          &MIDDAYC *CAT ') *AND (MDAT *GT' *BCAT +
+                          &MPEMA *CAT '))')
+             RTVOBJD    OBJ(WKMCLONL) OBJTYPE(*FILE) RTNLIB(&LIBHIS)
+             CLRPFM     FILE(WKMCLONL)
+             OPNQRYF    FILE((*LIBL/MCLONCL)) OPTION(*INP) +
+                          FORMAT(*FILE) QRYSLT(&SLCT)
+
+             CPYFRMQRYF FROMOPNID(MCLONCL) TOFILE(&LIBHIS/WKMCLONL) +
+                          MBROPT(*REPLACE) CRTFILE(*NO) FMTOPT(*NOCHK)
+             CLOF       OPNID(MCLONCL)
+
+             OVRDBF     FILE(FECRF) TOFILE(&LIB/&FILENAME)
+
+             OVRDBF     FILE(SDGELRPP) SHARE(*NO)
+/************CALL       PGM(GLM032A)                                 */             /*LUC109*/
+             CALL       PGM(XX00032A)                                               /*LUC109*/
+
+/************CALL       PGM(GLM032B)                                 */             /*LUC109*/
+             CALL       PGM(XX00032B)                                               /*LUC109*/
+
+      /*  Update TI facility references       */                                    /*LUC109CC1*/
+             IF         COND(&NYAMD *EQ 'Y') THEN(DO)                               /*LUC109CC1*/
+             CALL       PGM(HV017R)                                                 /*LUC109CC1*/
+             ENDDO                                                                  /*LUC109CC1*/
+
+/************CALL       PGM(GLM032C)                                 */             /*LUC109*/
+             CALL       PGM(XX00032C)                                               /*LUC109*/
+
+             DLTOVR     FILE(FECRF)
+
+             DLTOVR     FILE(SDGELRPP)
+                                                                      /*159964*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              /*159964*/
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)           /*159964*/
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)                        /*159964*/
+               MONMSG     MSGID(CPF0000 RPG0000 MCH0000)              /*159964*/
+               GOTO       CMDLBL(ABNOR)                               /*159964*/
+             ENDDO                                                    /*159964*/
+
+/*                                                                   */
+/* Copy FECRFTIPC to FECRFTIPSV                                      */
+/*                                                                   */
+             DLTF       FILE(&LIB/FECRFTIPSV)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(FECRFTIPC) TOFILE(&LIB/FECRFTIPSV) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+
+             CLRPFM     FILE(FECRFTIPC)
+             MONMSG     MSGID(CPF0000)
+                                                                      /*159964*/
+             GOTO       CMDLBL(ENDPGM)                                /*159964*/
+
+ ABNOR:                                                               /*159964*/
+             CHGJOB     SWS(XXXXXX11)                                 /*159964*/
+/************SNDPGMMSG  MSG('Program GLCM032 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                        */     /*159964 LUC109*/
+             SNDPGMMSG  MSG('Program XXC000032 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                      /*LUC109*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*159964*/
+ ENDPGM:                                                              /*159964*/
+/************CHGVAR &CPY '(C) COPYRIGHT MKI LIMITED 1998'                    /*159964 LUC109*/
+             CHGVAR &CPY '(C) Copyrigh Misys Intl Ltd 2016'                         /*LUC109*/
+             ENDPGM
+
+/**          CHGVAR &CPY '(C) COPYRIGHT MKI LIMITED 1998'             /*159964*/
+/**          PGM                                                      /*159964*/

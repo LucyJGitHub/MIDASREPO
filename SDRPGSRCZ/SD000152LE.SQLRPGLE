@@ -27,7 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
-      *              Pay Settlement Leg                               *
+      *              Pay/Receive Settlement Leg                       *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD051081 - Program loop, semi colon missing                  *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
@@ -287,7 +287,8 @@
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   IF        PRONS = XXNOST                                          MD038440A
-     C                   IF        PMDAT >= BJRDNB                                          MD054189
+     C                   IF        (PMDAT >= BJRDNB)                                        MD054189
+     C                              Or PMDAT = *Zeros                                       MD054189
      C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +     MD038440A MD052107
      C**********                   ' ' + pLTYP + ' ' + pSUTP                      MD038440A MD052107
@@ -412,7 +413,8 @@
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   IF        PPONS =  XXNOST                                         MD038440A
-     C                   IF        PMDAT >= BJRDNB                                          MD054189
+     C                   IF        (PMDAT >= BJRDNB)                                        MD054189
+     C                              Or PMDAT = *Zeros                                       MD054189
      C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +     MD038440A MD052107
      C**********                   ' ' + pLTYP + ' ' + pSUTP                      MD038440A MD052107

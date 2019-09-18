@@ -28,7 +28,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
-      *              Pay Settlement Leg                               *
+      *              Pay/Receive Settlement Leg                       *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142A - Cannot close Nostro Account.                     *
       *            - Applied for MD052616.                            *
@@ -320,7 +320,8 @@
      C                   IF        PPONS = XXNOST                                          MD038440A
      C                   EVAL      APTRAN = 'Money Market'                                  MD052107
      C                   MOVE      pDLNO         wDLNO                                      MD052107
-     C                   IF        PMDAT >=  BJRDNB                                         MD054189
+     C                   IF        (PMDAT >= BJRDNB)                                        MD054189
+     C                              Or PMDAT = *Zeros                                       MD054189
      C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      APTRAN = 'Money Market'                        MD038440A MD052107
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +     MD038440A MD052107
@@ -424,14 +425,16 @@
      C**********                    ' ' +  pDTYP + ' ' + pDLST                              MD052107
      C                   EVAL      DATAP = TXSTAT(3) + ' ' + APTRAN + ' ' +                 MD052107
      C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
-     C                              + pDLST + '         ' + NOTES(1)                        MD052107
+     C**********                    + pDLST + '         ' + NOTES(1)               MD052107 MD054189
+     C                              + pDLST + '         ' + NOTES(2)                        MD054189
      C                   ELSE
      C**********         EVAL      APTRAN = 'Money Market'                         MD048898 MD052107
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +               MD052107
      C**********                    ' ' +  pDTYP + ' ' + pDLST                              MD052107
      C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
      C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
-     C                              + pDLST + '         ' + NOTES(1)                        MD052107
+     C**********                    + pDLST + '         ' + NOTES(1)               MD052107 MD054189
+     C                              + pDLST + '         ' + NOTES(2)                        MD054189
      C                   IF        PMODE = 'V'
      C                   EVAL      XxRtn  = 'R'
      C**********         GOTO      VALEXIT                                                  MD052107
@@ -451,14 +454,16 @@
      C                   IF        PRONS =  XXNOST                                         MD038440A
      C                   EVAL      APTRAN = 'Money Market'                                 MD038440A
      C                   MOVE      pDLNO         wDLNO                                      MD052107
-     C                   IF        PMDAT >=  BJRDNB                                         MD054189
+     C                   IF        (PMDAT >= BJRDNB)                                        MD054189
+     C                              Or PMDAT = *Zeros                                       MD054189
      C**********         IF        PVDAT <  BJRDNB                                MD038440A MD054189
      C**********         EVAL      APTRAN = 'Money Market'                        MD038440A MD052107
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +     MD038440A MD052107
      C**********                    ' ' +  pDTYP + ' ' + pDLST                    MD038440A MD052107
      C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
      C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
-     C                              + pDLST + '         ' + NOTES(2)                        MD052107
+     C**********                    + pDLST + '         ' + NOTES(2)               MD052107 MD054189
+     C                              + pDLST + '         ' + NOTES(1)                        MD054189
      C                   IF        PMODE = 'V'                                             MD038440A
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
      C**********         GOTO      VALEXIT                                        MD038440A MD052107

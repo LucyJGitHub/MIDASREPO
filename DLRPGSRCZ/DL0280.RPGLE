@@ -8584,6 +8584,32 @@
      C                   MOVE      *BLANKS       KYSCY                                         CEU00
 1883 C                   MOVE      PRFC          OPPRFC                                        S0111
 1898 C                   EXSR      EXCP
+      *                                                                                     MD051605
+     C     CDL099        IFEQ      'N'                                                      MD051605
+     C                   MOVE      'L'           AKY(9)                                     MD051605
+     C                   MOVE      'G'           AKY(10)                                    MD051605
+     C                   Z-ADD     ILAM          KYAMT                                      MD051605
+     C                   MOVE      ILCY          KYCCY                                      MD051605
+     C                   MOVE      *BLANKS       KYSCY                                      MD051605
+     C                   MOVE      PRFC          OPPRFC                                     MD051605
+     C                   EXSR      EXCP                                                     MD051605
+      *                                                                                     MD051605
+     C                   MOVE      'D'           AKY(9)                                     MD051605
+     C                   MOVE      'I'           AKY(10)                                    MD051605
+     C                   Z-ADD     IDIA          KYAMT                                      MD051605
+     C                   MOVE      IDCY          KYCCY                                      MD051605
+     C                   MOVE      *BLANKS       KYSCY                                      MD051605
+     C                   MOVE      PRFC          OPPRFC                                     MD051605
+     C                   EXSR      EXCP                                                     MD051605
+      *                                                                                     MD051605
+     C                   MOVE      'L'           AKY(9)                                     MD051605
+     C                   Z-ADD     ILIA          KYAMT                                      MD051605
+     C                   MOVE      ILCY          KYCCY                                      MD051605
+     C                   MOVE      *BLANKS       KYSCY                                      MD051605
+     C                   MOVE      PRFC          OPPRFC                                     MD051605
+     C                   EXSR      EXCP                                                     MD051605
+     C                   ENDIF                                                              MD051605
+      *                                                                                     MD051605
 1899 C                   MOVE      'D'           AKY(9)
 1900 C                   MOVE      'B'           AKY(10)
 1901 C     IDAM          ADD       IDIA          KYAMT

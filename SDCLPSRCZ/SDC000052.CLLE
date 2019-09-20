@@ -1,0 +1,173 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDC000052 - Midas SD Sending of Message to                  */
+/*                   Compliance Watch                                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD053436 *CREATE   Date 21Sep19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD053436 - Unable to perform end to end testing for         */
+/*                  Compliance KYC                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ICCOB)
+
+             DCL        VAR(&ICCOB)     TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBTYPE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)       TYPE(*CHAR) LEN(50)
+             DCL        VAR(&JAVAPATH)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JAVAPATH2) TYPE(*CHAR) LEN(210)
+             DCL        VAR(&RTNCDE)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVALK2)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JAVA_PATH) TYPE(*CHAR) LEN(1024)
+             DCL        VAR(&KYC_PROP) TYPE(*CHAR) LEN(50) +
+                          VALUE('/kyc')
+             DCL        VAR(&ADDJAR1)    TYPE(*CHAR) LEN(200)    +
+                          VALUE('/QIBM/ProdData/Java400/jdk14/lib/ext/jce1_2_2.jar')
+             DCL        VAR(&ADDJAR2)    TYPE(*CHAR) LEN(200)    +
+                          VALUE('/QIBM/ProdData/Java400/jdk14/lib/ext/sunjce_provider.jar')
+             DCLF       FILE(SDJARFL2)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2019')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Start commitment control for batch jobs with file updates */
+
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             ENDDO
+
+/* Get 'JavaPath' system value from file SDSVALPD  */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'JavaPathStem' &JAVAPATH &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)
+
+/* If the 'JavaPathStem' system value is missing then end abnormally */
+
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             RMVLNK     OBJLNK(A)
+             MONMSG     MSGID(CPFA0A9)
+
+             RMVLNK     OBJLNK(B)
+             MONMSG     MSGID(CPFA0A9)
+
+/** Add links to system */
+
+             ADDLNK     OBJ(&JAVAPATH) NEWLNK(A)
+             MONMSG     MSGID(CPFA0A0)
+
+             CHGVAR     VAR(&JAVAPATH2) VALUE(&JAVAPATH *TCAT +
+                          '/lib/ext')
+             ADDLNK     OBJ(&JAVAPATH2) NEWLNK(B)
+             MONMSG     MSGID(CPFA0A0)
+
+/* Get 'BrgMidasSystemPrefix' system value from file SDSVALPD  */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BrgMidasSystemPrefix' &JAVAPATH &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)
+
+/* If the 'BrgMidasSystemPrefix' system value is missing then end abnormally */
+
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Setup environment variable CLASSPATH with the necessary directories */
+/** for invoking the java calculator methods */
+
+             RMVENVVAR  ENVVAR(CLASSPATH)
+             MONMSG     MSGID(CPFA981)
+
+ SETUP_PATH: RCVF       RCDFMT(SDJARFD0)
+
+             /* End of File */
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ADD_ENVVAR))
+
+             /* Concatenate Java Path */
+             CHGVAR     VAR(&JAVA_PATH) VALUE(&JAVA_PATH *TCAT ':' *TCAT &JFNAME)
+
+             /* Read next record */
+             GOTO       CMDLBL(SETUP_PATH)
+
+ ADD_ENVVAR: CHGVAR     VAR(&JAVA_PATH)   VALUE('A:' *CAT &JAVA_PATH)
+             CHGVAR     VAR(&JAVA_PATH) VALUE('A' *TCAT &KYC_PROP *TCAT ':' *TCAT &JAVA_PATH)
+             CHGVAR     VAR(&JAVA_PATH) VALUE(&JAVA_PATH *TCAT ':' *TCAT &ADDJAR1 *TCAT ':' +
+                                        *TCAT &ADDJAR2)
+             ADDENVVAR  ENVVAR(CLASSPATH) VALUE(&JAVA_PATH)
+             MONMSG     MSGID(CPFA0A0)
+
+/* Call SD Sending of Message to Compliance Watch  */
+
+             CALL       PGM(SD000052) PARM(&ICCOB)
+
+/* If no error occured in the program */
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+               GOTO       CMDLBL(END)
+             ENDDO
+
+/* Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination - batch job */
+
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            SDC000052 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+END:
+
+             ENDPGM

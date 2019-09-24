@@ -1,38 +1,30 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas GL Account Transfer Update ACCNTBXC')            *
+/*EXI *  TEXT('Midas GL Account Transfer Update REAPWDPD')
       *****************************************************************
       *                                                               *
-      *  Midas - General Ledger Module                                *
+      *  Midas   -  General Ledger Module                             *
       *                                                               *
-      *  GL004000 - Midas GL Account Transfer Update ACCNTBXC         *
+      *  GL011900 - Midas GL Account Transfer Update REAPWDPD         *
       *                                                               *
-      *  Function:  This program updates the Midas GL Account Details *
-      *             Extension File, ACCNTBXC with the new account     *
-      *             details from Account Transfer Selected Accounts   *
-      *             File, GLSLACPD.  It also will write an audit trail*
-      *             record for each update of ACCNTBXC                *
+      *  Function:  This program updates the Midas RE Retail Account  *
+      *             Passwords file, REAPWDPD with the new             *
+      *             account detail from the A/c Transfer Selected     *
+      *             Accounts File, GLSLACPD.                          *
       *                                                               *
-      *  Called By: GL003600                                          *
+      *  Called by: GL003600                                          *
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
-      *                 CER055             Date 06Dec10               *
-      *                 BUG27769           Date 09Jun10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27769           Date 09Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CGL114  *CREATE    Date 04Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
-      *  CGL165 - Dual Withholding Tax (Recompile)                    *
-      *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
-      *           (Recompile)                                         *
       *  BUG27769 - Incorrect error code                              *
       *  CGL114 - Account Transfer Utility                            *
       *                                                               *
@@ -49,13 +41,13 @@
       *  40 - 49      Output Control.                                 *
       *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
       *  90 - 99      Error Control.                                  *
+      *                                                               *
       *****************************************************************
       *
-     FACCNTBXCUF  E           K        DISK         KINFSR *PSSR A
+     FREAPWDL0UF  E           K        DISK         KINFSR *PSSR A
      F                                              KCOMIT
      FGLAUTFPDO   E           K        DISK         KINFSR *PSSR
      F                                              KCOMIT
-      /EJECT
      E                    CPY@    1   1 80
       *
       ** Array containing Copyright statement
@@ -71,10 +63,15 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
+     I              '0000000000  '        C         WKZERO
+     IDSFDY     E DSDSFDY
+      *
+      ** Definition: First DS for Access Programs, Short Data Structure
       *
      ISDBANK    E DSSDBANKPD
       *
-     IDSFDY     E DSDSFDY
+      ** Definition: Bank Details Accessed Via Access Program.
+      *
       *
      IDSFRAC      DS
      I                                        1   6 DSFCNU
@@ -82,7 +79,6 @@
      I                                       10  19 DSFACO
      I                                       20  21 DSFACS
      I                                       22  24 DSFBRC
-      *
      IDSTOAC      DS
      I                                        1   6 DSTCNU
      I                                        7   9 DSTCCY
@@ -91,11 +87,11 @@
      I                                       22  24 DSTBRC
       *
      IDSKITE      DS                             90
-     I                                        1   6 KATCNU
-     I                                        7   9 KATCCY
-     I                                       10  190KATACO
-     I                                       20  210KATACS
-     I                                       22  24 KATBRC
+     I                                        1   6 KCNUM
+     I                                        7   9 KCCY
+     I                                       10  190KACOD
+     I                                       20  210KACSQ
+     I                                       22  24 KBRCA
       *
       ** Data Area giving Installation Control Details
       *
@@ -124,143 +120,94 @@
      C                     RETRN
      C                     ENDIF
       *
-     C                     EXSR XVACCN
+     C                     EXSR XSIV01
+     C                     EXSR XMD119
       *
      C                     RETRN
-      *
       *****************************************************************
       /EJECT
       *****************************************************************
       *                                                               *
-      *  XVACCN - Validate Midas GL Accounts Detail Extension File    *
+      *  XMD119 - Midas RE Accounts Password File                     *
       *                                                               *
       *  Called By: Main Processing                                   *
       *                                                               *
-      *  Calls:     XSIV01, XMACCN                                    *
+      *  Calls: XSAUDT                                                *
       *                                                               *
       *****************************************************************
+     C           XMD119    BEGSR
       *
-     C           XVACCN    BEGSR
-      *
-      ** Check if 'To' details already exist on ACCNTBXC
-      *
-     C                     MOVELDSTCNU    KATCNU
-     C                     MOVELDSTCCY    KATCCY
-     C                     MOVELDSTACO    KATACO
-     C                     MOVELDSTACS    KATACS
-     C                     MOVELDSTBRC    KATBRC
-     C           KACCN     SETLLACCNTBD0               2122
-      *
-     C           *IN21     IFEQ *ON
-     C           *LOCK     IN   LDA
-     C                     MOVEL'001'     DBASE
-     C                     MOVEL'ACCNTBXC'DBFILE
-     C                     MOVELDSKITE    DBKEY
-     C                     OUT  LDA
-     C                     EXSR *PSSR
-     C                     ENDIF
-      *
-      ** Process each Primary file record. The corresponding posting
-      ** records are retrieved and updated.
-      *
-     C           *IN22     IFEQ *OFF
-     C                     EXSR XSIV01
-     C                     EXSR XMACCN
-      *
-     C                     ELSE
-     C                     MOVE 'F'       P@RTCD
-     C                     RETRN
-     C                     ENDIF
-      *
-     C                     ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  XMACCN - Maintain Midas GL Accounts Detail Extension File    *
-      *                                                               *
-      *  Called By: XVACCN                                            *
-      *                                                               *
-      *  Calls:     XSAUDT                                            *
-      *                                                               *
-      *****************************************************************
-      *
-     C           XMACCN    BEGSR
-      *
-     C           KACCN     SETLLACCNTBXC
-     C           KACCN     READEACCNTBXC               2122
+     C           KREAPW    SETLLREAPWDL0
+     C           KREAPW    READEREAPWDL0               2122
       *
      C           *IN21     IFEQ *ON
      C           *LOCK     IN   LDA
      C                     MOVEL'002'     DBASE
-     C                     MOVEL'ACCNTBXC'DBFILE
+     C                     MOVEL'REAPWDL0'DBFILE
      C                     MOVELDSKITE    DBKEY
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
       *
-      ** Delete and Write Records until End of File for Selected Account
+      ** Delete and Write Record for Selected Account
       *
-     C           *IN22     DOWEQ*OFF
-     C                     DELETACCNTBD0               21
+     C           *IN22     IFEQ *OFF
+     C                     DELETREAPWDD0               21
       *
      C           *IN21     IFEQ *ON
      C           *LOCK     IN   LDA
      C                     MOVEL'003'     DBASE
-     C                     MOVEL'ACCNTBXC'DBFILE
+     C                     MOVEL'REAPWDL0'DBFILE
      C                     MOVELDSKITE    DBKEY
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
       *
-     C                     MOVELDSTCNU    ATCNUM
-     C                     MOVELDSTCCY    ATCCY
-     C                     MOVELDSTACO    ATACOD
-     C                     MOVELDSTACS    ATACSQ
-     C                     MOVELDSTBRC    ATBRCA
-     C                     WRITEACCNTBD0               21
+     C                     CLEARCNUM
+     C                     CLEARCCY
+     C                     CLEARACOD
+     C                     CLEARACSQ
+     C                     CLEARBRCA
+     C                     MOVELDSTCNU    CNUM
+     C                     MOVELDSTCCY    CCY
+     C                     MOVELDSTACO    ACOD
+     C                     MOVELDSTACS    ACSQ
+     C                     MOVELDSTBRC    BRCA
+     C                     WRITEREAPWDD0               21
       *
      C           *IN21     IFEQ *ON
      C           *LOCK     IN   LDA
      C                     MOVEL'004'     DBASE
-     C                     MOVEL'ACCNTBXC'DBFILE
+     C                     MOVEL'REAPWDL0'DBFILE
      C                     MOVELDSKITE    DBKEY
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
       *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'REAPWDL0'AULFIL
      C                     EXSR XSAUDT
       *
-     C           KACCN     READEACCNTBXC               2122
-      *
-     C           *IN21     IFEQ *ON
-     C           *LOCK     IN   LDA
-     C                     MOVEL'005'     DBASE
-     C                     MOVEL'ACCNTBXC'DBFILE
-     C                     MOVELDSKITE    DBKEY
-     C                     OUT  LDA
-     C                     EXSR *PSSR
      C                     ENDIF
-     C                     ENDDO
       *
      C                     ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       *                                                               *
-      *  XSAUDT - Set Audit records                                   *
+      *  XSAUDT -  Set Audit records.                                 *
       *                                                               *
-      *  Called By: XVACCN                                            *
+      *  Called By: XMD119                                            *
       *                                                               *
-      *  Calls:     None                                              *
+      *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
-      *
      C           XSAUDT    BEGSR
       *
+      ** Set fields for audit file and write a audit record.
+      *
      C                     MOVELP@RFNO    AURFNO
-     C                     MOVEL'ACCNTBXC'AUFILE
-     C                     MOVEL'ACCNTBXC'AULFIL
+     C                     MOVEL'REAPWDPD'AUFILE
      C                     MOVELDSFBRC    AUFBRC
      C                     MOVELDSFCNU    AUFCNU
      C                     MOVELDSFACO    AUFACO
@@ -269,19 +216,12 @@
      C                     MOVELDSTCNU    AUTCNU
      C                     MOVELDSTACO    AUTACO
      C                     MOVELDSTACS    AUTACS
-     C                     MOVELATCRST    WKCRST  2
-     C                     MOVELATSUBO    WKSUBO  1
-     C                     MOVELATITAX    WKITAX  1
-     C                     MOVELATCHAM    WKCHAM  7
-     C           WKCRST    CAT  WKSUBO:1  AUTEXT
-     C                     CAT  WKITAX:1  AUTEXT
-     C                     CAT  WKCHAM:1  AUTEXT 50 P
      C                     MOVELWKDFMT    AUCRTD
      C                     WRITEGLAUTFD0               21
       *
      C           *IN21     IFEQ *ON
      C           *LOCK     IN   LDA
-     C                     MOVEL'006'     DBASE
+     C                     MOVEL'001'     DBASE
      C                     MOVEL'GLAUTFPD'DBFILE
      C                     MOVELAURFNO    DBKEY
      C                     OUT  LDA
@@ -293,38 +233,41 @@
       /EJECT
       *****************************************************************
       *                                                               *
-      *  XSIV01 - Set up initial values                               *
+      *  XSIV01 -  Set Up Initial Values.                             *
       *                                                               *
-      *  Called By: XVACCN                                            *
+      *  Called By: Main Processing                                   *
       *                                                               *
-      *  Calls:     None                                              *
+      *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
-      *
      C           XSIV01    BEGSR
       *
-     C                     MOVELDSFBRC    KATBRC
-     C                     MOVELDSFCNU    KATCNU
-     C                     MOVELDSFCCY    KATCCY
-     C                     MOVELDSFACO    KATACO
-     C                     MOVELDSFACS    KATACS
+      ** Set up key for REAPWDL0
+      *
+     C                     MOVELDSFCNU    KCNUM
+     C                     MOVELDSFCCY    KCCY
+     C                     MOVELDSFACO    KACOD
+     C                     MOVELDSFACS    KACSQ
+     C                     MOVELDSFBRC    KBRCA
+      *
+     C           DSTCNU    CAT  DSTACO:0  WKDLIN 18
+     C                     CAT  DSTACS:0  WKDLIN
       *
      C                     ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       *                                                               *
-      *  SRINIT - Initialise and define fields                        *
+      *  SRINIT -  Initialise and define fields                       *
       *                                                               *
       *  Called By: Main Processing                                   *
       *                                                               *
-      *  Calls:     None                                              *
+      *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
-      *
      C           SRINIT    BEGSR
       *
-      ** Set up copyright parameter
+      ** Initialise parameters, work fields, etc.
       *
      C                     MOVEACPY@      CPY2@  80
       *
@@ -346,7 +289,7 @@
      C           *LOCK     IN   LDA
      C                     MOVEL'AOBANKR0'DBFILE
      C                     MOVEL'*FIRST'  DBKEY
-     C                     Z-ADD007       DBASE
+     C                     Z-ADD005       DBASE
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
@@ -360,17 +303,17 @@
      C           WKYEAR    ADD  1900      WKCCYY
      C                     ENDIF
       *
-     C                     MOVE WKCCYY    WKDFMT  9
+     C                     MOVE WKCCYY    WKDFMT
+     C                     MOVE *BLANKS   WKDLIN
       *
-     C           KACCN     KLIST
-     C                     KFLD           KATCNU
-     C                     KFLD           KATCCY
-     C                     KFLD           KATACO
-     C                     KFLD           KATACS
-     C                     KFLD           KATBRC
+     C           KREAPW    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
       *
      C                     ENDSR
-      *
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -380,25 +323,25 @@
       *          or directly by the program code using EXSR.          *
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
-      * Called by: (**calling routines**)                             *
+      *  Called By: (**calling routines**)                            *
       *                                                               *
-      * Calls: None                                                   *
+      *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
-      *
      C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
       *
      C                     MOVE 'F'       P@RTCD
      C           @RUN      IFEQ *BLANK
      C                     MOVE 'Y'       @RUN    1
      C                     DUMP
-     C                     END
+     C                     ENDIF
       *
      C                     SETON                     U7U8LR
      C                     RETRN
       *
      C                     ENDSR
-      *
-      ********************************************************************
-**  CPY@
+      *****************************************************************
+** CPY@
 (c) Finastra International Limited 2010

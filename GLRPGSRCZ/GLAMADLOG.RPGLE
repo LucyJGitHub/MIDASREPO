@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER049             Date 06Dec10               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *

@@ -134,7 +134,7 @@
      FDEALDCV0  IF   E           K DISK    USROPN
      F                                     RENAME(DEALSDCF:DLDCSTMT)
      FDLCCGDL0  IF   E           K DISK    USROPN                               CDL006
-      **  Midas DL Charge Types Codes file (FDCCY/FDCCOM).                CDL006
+      **  Midas DL Charge Types Codes file (FDCCY/FDCCOM)                 CDL006
      FDLGXSTL0  IF   E           K DISK                                         CIR003
       *                                                                                       CGL031
       **  Midas SD Customer Income                                                            CGL031

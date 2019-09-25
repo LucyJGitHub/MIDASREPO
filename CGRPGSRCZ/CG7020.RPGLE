@@ -16,8 +16,9 @@
       *                                                               *
       *  (C) COPYRIGHT Finastra International Limited                 *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 MD031034           Date 25Nov14               *
       *                 CER070             Date 19Aug14               *
       *                 CER069             Date 03Jul14               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD031034 - REC0950 failed in COB with database error due to  *

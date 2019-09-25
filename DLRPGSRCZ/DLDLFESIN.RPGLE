@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036070           Date 19Oct15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -58,7 +60,7 @@
       *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -70,55 +72,55 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CrDlFilFmt    E DS                  EXTNAME(DLFEED)
       * Current Transaction Detail in File Format
- 
+
       * New Transaction Detail in File Format
      D VFRec                 152    220
      D VFPay                 221    779
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(DLDLFEPD)
      D                                     PREFIX(@)
       * Current Transaction  Detail in Screen Format
- 
+
      D DealsDtlC     E DS                  EXTNAME(DEALSDC)
      D                                     PREFIX(C_)
      D DealsDtlD     E DS                  EXTNAME(DEALSDD)
@@ -127,19 +129,19 @@
       **New*Transaction Detail in File Format
      D***VFRec                 154    222
      D***VFPay                 223    711
- 
+
       * Previous Transaction Detail in Scrn Format
      D NwDlScnFmt    E DS                  EXTNAME(DLDLFEPD)
       * Previous Transaction Detail in Scrn Format
      D PrvTrnDets    E DS                  EXTNAME(DLDLFEPD)
      D                                     PREFIX(W_)
- 
+
       * Error indicators
      D OkDlfe        E DS                  EXTNAME(DLEDLFEPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      **  Payment Instructions (File Format)
@@ -154,101 +156,101 @@
      D P_RECS        E DS                  EXTNAME(SDESSRPD)
      **  FRA/IRS Instructions (Screen Format)
      D P_FRIS        E DS                  EXTNAME(SDESSFPD)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access progrmas, long data structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Transaction number Work Field
      D WKDLNO          S                   LIKE(DDDLNO)
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Build subfile
      D @BDSFL          S              1A
- 
+
       ** Customer selected
      D @CUSEL          S              6A
- 
+
       ** Whether position/select fields have been changed during key browse
      D KPosSelChg      S              1A
- 
- 
+
+
       ** error message reference
      D @ERRMS          S              7A
- 
+
       ** F3 Exit
      D @INKC           S              1A
- 
+
       ** F7 Roll backwards
      D @INKG           S              1A
- 
+
       ** F8 Roll forwards
      D @INKH           S              1A
- 
+
       ** F9 Insert
      D @INKI           S              1A
- 
+
       ** F10 Delete
      D @INKJ           S              1A
- 
+
       ** F10 Authorise
      D @INKK           S              1A
- 
+
       ** F12 Cancel
      D @INKL           S              1A
- 
+
       ** F14 Extended SEttlements
      D @INKN           S              1A
- 
+
       ** F15 Browse
      D @INKP           S              1A
- 
+
       ** Option selected
      D @OPSEL          S              1A
- 
+
       ** Read backwards in roll
      D @RDBCK          S              1A
- 
+
       ** Read forwards in roll
      D @RDFWD          S              1A
- 
+
       ** Read next browse
      D @RDNB           S              1A
- 
+
       ** Read subfile
      D @RDSFL          S              1A
- 
+
       **
      D @SCRED          S              6A
      D @FTRED          S             20A
      D @SQRED          S              2A
- 
+
       ** Screen / function
      D @SCRN           S              1A
- 
- 
+
+
       ** Read next browse in key screen query browse subfile
      D K@RDNB          S              1A
- 
+
       ** Query check in key screen customer number field
      D KEYQUERY        S              1A
- 
+
       ** Mode of operation
      D MODEOFOP        S              6A
- 
+
       ** Called from Customer Details or Midas menu
      D BrwQuery        S              1A
- 
+
       ** Index of errors
      D Idx             S              3P 0
      D WIdx            S              3P 0
@@ -261,9 +263,9 @@
      D @EINKK                  6      6
      D @EINKN                  7      7
      D @EINKP                  8      8
- 
+
      D @PCI@M          DS             8
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
      D@TrSEL           S                   LIKE(DDDLNO)
@@ -308,7 +310,7 @@
      D DealType        S                   LIKE(C_DTYP)
      D InRCCY          S              3A                                                     CSF011A
      D InPCCY          S              3A                                                     CSF011A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -316,91 +318,91 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Issue rollback to clear any possible updates in window functions
- 
+
      C                   IF        @INKL = '1'
      C                   ROLBK
      C                   ENDIF
- 
+
       ** Read next browse subfile record
      C                   IF        @SCRN = 'R'
      C                   EXSR      RDNBRW
      C                   ENDIF
- 
+
       ** Do while screen: Transaction Detail Screen
      C                   DOW       @SCRN = 'M'
      C                   EXSR      SCRN@M
      C                   ENDDO
- 
+
       ** SCREEN: WINDOW
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   ENDIF
- 
+
       ** DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   ENDDO
- 
+
       ** SCREEN: CONFIRMATION OF INPUT
      C     @SCRN         IFEQ      'C'
      C                   EXSR      SCRN@C
      C                   ENDIF
- 
+
       ** UPDATE FILES
      C                   IF        @SCRN = 'U'
      C                   EXSR      UPDATS
      C                   ENDIF
- 
+
       ** Terminate program
      C                   IF        @SCRN = 'T'
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS DETAIL SCREEN
       *****************************************************************
      C     SCRN@M        BEGSR
- 
+
      C                   EVAL      @PDLNO = DDDLNO
      C                   EVAL      @PACTN = DDACTN
      C                   EVAL      @PFSEQ = DDFSEQ
      C                   EVAL      @PCI@M = @CCI@M
- 
+
       ** Write/Read Display Screen - Primary Details
      C                   CALLB     'DLDLFEDSP'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * Input Parameters :
- 
+
       * Return code
      C                   PARM      *BLANKS       RetCodeIn
- 
+
       ** Transaction Details in screen format
      C                   PARM                    NwDlScnFmt
- 
+
       ** Transaction Details OK indicators
      C                   PARM                    OkDlfe
- 
+
       * Errors
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       * Warning
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       *
       * Enabled Key & Detail Fields
       *
@@ -422,9 +424,9 @@
      C                   PARM                    @EINKP
       * Status
      C                   PARM                    DDSTAT
- 
+
       * Output Parameters :
- 
+
       * Function Keys
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKG
@@ -434,7 +436,7 @@
      C                   PARM      '0'           @INKL
      C                   PARM      '0'           @INKN
      C                   PARM      '0'           @INKP
- 
+
       * Reset Errors
      C                   Exsr      ResetErrs
       *
@@ -455,10 +457,10 @@
       *
       * Validate Input to Details Screen
      C                   CAS                     VAL@M
- 
+
      C                   ENDCS
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -502,7 +504,7 @@
      C                   IF        @INKJ = '1'
      C                   MOVEL     'U'           @SCRN
      C                   ENDIF
- 
+
      C                   GOTO      EndVAL@M
      C                   ENDIF
       *
@@ -517,13 +519,13 @@
      C     @INKN         IFEQ      '1'
      C                   MOVEL     'S'           @SCRN
      C                   ELSE
- 
+
      C     @RDNB         IFEQ      'Y'
      C                   EVAL      @SCRN = 'R'
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
      C                   GOTO      EndVAL@M
      C                   ENDIF
       ***  If authorize
@@ -539,17 +541,17 @@
      C                   MOVEL     'S'           @SCRN
      C                   GOTO      EndVAL@M
      C                   END
- 
- 
+
+
       *
       *----------------------------------------------------------------
       * If Insert or Amend / Change
       *
      C                   IF        DDACTN = 'I' OR
      C                             DDACTN = 'A'
- 
+
       * Validate Transaction Detail
- 
+
       * Store image of input screen and current number of warnings
      C                   EVAL      PrvTrnDets = NwDlScnFmt
      C                   Z-ADD     WIdx          PrvN_Warn
@@ -598,45 +600,45 @@
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErr          1
      C                   END
- 
+
      C                   CALLB     'DLDLFEVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * Inputs
- 
+
       * Response mode
      C                   PARM      *BLANK        RespMode
- 
+
       ** Transaction Details
      C                   PARM                    NwDlScnFmt
- 
+
       * Outputs
- 
+
       ** Transaction Details OK inds
      C                   PARM                    OkDlfe
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Transaction details layout (DS) from/to caller
      C                   PARM                    ValidDlfe
       * Deals Detail (DEALSDC)
      C                   PARM                    DealsDtlC
       * Deals Detail (DEALSDD)
      C                   PARM                    DealsDtlD
- 
+
       *
       * If errors returned
      C                   IF        Idx <> 0
@@ -653,11 +655,11 @@
       * Clear any warning messages
      C                   MOVE      *ALL'Y'       OkDlfe
      C                   ENDIF
- 
+
      C                   IF        Idx = 0
      C                   EVAL      @SCRN = 'S'
      C                   ENDIF
- 
+
      C     EndVAL@M      ENDSR
       *****************************************************************
       /EJECT
@@ -673,26 +675,26 @@
      C                   CALLB     'DLDLFEDSP'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * Input Parameters :
- 
+
       * Return code
      C                   PARM      *BLANKS       RetCodeIn
- 
+
       ** Transaction Details in screen format
      C                   PARM                    NwDlScnFmt
- 
+
       ** Transaction Details OK indicators
      C                   PARM                    OkDlfe
- 
+
       * Errors
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       * Warning
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       *
       * Enabled Key & Detail Fields
       *
@@ -714,9 +716,9 @@
      C                   PARM                    @EINKP
       * Status
      C                   PARM                    DDSTAT
- 
+
       * Output Parameters :
- 
+
       * Function Keys
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKG
@@ -736,7 +738,7 @@
      C                   PARM                    Data
      C                   PARM      *BLANKS       PWRtn
      C                   PARM                    PWSpare
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -756,9 +758,9 @@
      C                   ELSE
      C                   EVAL      WScrn = 'M'
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     EWINDOW       ENDSR
       *
       *****************************************************************
@@ -786,7 +788,7 @@
      C                   CALLB     'DLDLFERED'
       *
       * Input Parameters :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Mode
@@ -803,9 +805,9 @@
      C                   PARM                    @RDFWD
       * Read Backwards
      C                   PARM                    @RDBCK
- 
+
       * Output Parameters :
- 
+
       * Error message
      C                   PARM      *BLANK        @ERRMS
       * Transaction read
@@ -821,14 +823,14 @@
      C                   EXSR      SNDM@P
      C                   GOTO      EROLL
      C                   ENDIF
- 
+
       * If transaction read
      C                   IF        @SCRED <> *BLANK
- 
+
       * Retrieve transaction details
      C                   MOVEL     @SCRED        DDDLNO
      C                   MOVEL     @SQRED        DDFSEQ
- 
+
      C                   EXSR      RTVDEL
       *
       * Set field and function key status on main details screen
@@ -859,9 +861,9 @@
       *
       * Build Browse subfile
      C                   CALLB     'DLDLFEBRW'
- 
+
       * Input Parameters :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Action Code
@@ -924,9 +926,9 @@
       *
       * Read Next Subfile Record
      C                   CALLB     'DLDLFEBRW'
- 
+
       * Input Parameters :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Action Code
@@ -962,9 +964,9 @@
       * Retrieve Transaction Detail
      C                   EVAL      DDACTN = @OPSEL
      C                   EVAL      DDDLNO = @TrSEL
- 
+
      C                   EXSR      RTVDEL
- 
+
       * Stay on browse screen if there is an error on Transaction number
      C*                  IF        OKDLNO = 'N' OR
      C*                            OKACTN = 'N'
@@ -1038,7 +1040,7 @@
      C                   PARM      *BLANK        OKDLNO
       * OK - Fee Sequence
      C                   PARM      *BLANK        OKFSEQ
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1051,8 +1053,8 @@
       * Deals Detail (DEALSDD)
      C                   PARM                    DealsDtlD
       *
- 
- 
+
+
      C     EndRTVDEL     ENDSR
       *****************************************************************
       /EJECT
@@ -1073,15 +1075,15 @@
       * Dealing Fees Transaction Details File Format
      C                   PARM                    CrDlFilFmt
       *
- 
+
       * Output Parameters
- 
+
       * Dealing Fees Transaction Details Screen Format
      C                   PARM                    NwDlScnFmt
       * Status
      C                   PARM                    DDSTAT
      C                   MOVEL     NwDlScnFmt    CrDlScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1090,17 +1092,17 @@
       * SFKEYS - SET FUNCTION KEY STATUS ON SCREEN
       *****************************************************************
      C     SFKEYS        BEGSR
- 
+
       * Enable/disable function keys
- 
+
       * KJ = Command Key F10 = CONFIRM DELETE
- 
+
      C                   IF        DDACTN = 'D'
      C                   EVAL      @EINKJ = 'Y'
      C                   ELSE
      C                   EVAL      @EINKJ = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1155,13 +1157,13 @@
       * UPDATS - UPDATES
       *****************************************************************
      C     UPDATS        BEGSR
- 
+
       * Update valid transaction: transaction reference
- 
- 
+
+
      C                   EVAL      @RTCD = *BLANK
      C                   EVAL      DLLCDT = DDACTN
- 
+
       * Dealing Fees Details Updates
      C                   CALLB     'DLDLFEUPD'
      C                   PARM      *BLANKS       @RTCD
@@ -1245,25 +1247,25 @@
       *
      C                   EVAL      P_PPAY = 'N'
      C                   EVAL      P_PREC = 'N'
- 
+
      C                   IF        DDACTN ='E' OR DDACTN = 'D' OR DDACTN = 'X'
      C                   EVAL      P_PPAY = 'Y'
      C                   EVAL      P_PREC = 'Y'
      C                   ENDIF
- 
+
      C     C_DTYP        IFNE      *BLANK
      C                   EVAL      DealType = C_DTYP
      C                   ELSE
      C                   EVAL      DealType = D_DTYP
      C                   ENDIF
- 
+
      C                   IF        DealType = 'IT' OR DealType = 'TD' OR
      C                             DealType = 'CI' OR DealType = 'CD'
      C                   EVAL      P_PREC = 'Y'
      C                   ELSE
      C                   EVAL      P_PPAY = 'Y'
      C                   ENDIF
- 
+
      C     OKCUST        IFEQ      'Y'
      C                   MOVEL(P)  DDCUST        PKEY1
      C                   CALL      'AOCUSTR0'
@@ -1281,90 +1283,90 @@
       * SETTLEMENT INSTRUCTIONS INPUT
       *
      C                   CALLB     'ZASETINSIN'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM      *BLANK        P_RTCD
- 
+
       ** Action code
      C                   PARM      DDACTN        P_ACTN
- 
+
       ** Deal number
      C                   PARM      DDDLNO        P_DLNO
- 
+
       ** Protect Payment
      C                   PARM                    P_PPAY
- 
+
       ** Protect Receive
      C                   PARM                    P_PREC
- 
+
       ** Calling program
      C                   PARM      'DLFE'        P_CALP
- 
+
       ** Payment currency
      C                   PARM      DDFCCY        P_PCCY
- 
+
       ** Receive currency
      C                   PARM      DDFCCY        P_RCCY
- 
+
       ** Customer shortname
      C                   PARM      BBCSSN        P_CSNM
- 
+
       ** Transaction Type
      C                   PARM      DFDTYP        P_TTYP
- 
+
       ** Federal Funds Ind.
      C                   PARM      *BLANK        P_FFND
- 
+
       ** Booking branch
      C                   PARM      DFBRCA        P_BRCA
- 
+
       ** Receipt Date
      C                   PARM                    P_DATR
- 
+
       ** Payment Date
      C                   PARM                    P_DATP
- 
+
       ** Payment instructions
      C                   PARM                    P_PAYS
- 
+
       ** Receive instructions
      C                   PARM                    P_RECS
- 
+
       ** FRA/IRS instructions
      C                   PARM                    P_FRIS
- 
+
       * OUTPUTS
- 
+
       ** Payment instructions
      C                   PARM                    P_PAYF
- 
+
       ** Receive instructions
      C                   PARM                    P_RECF
- 
+
       ** FRA/IRS instructions
      C                   PARM                    P_FRIF
- 
+
       ** FUNCTION KEYS
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKK                                      MD036070
      C                   PARM      '0'           @INKL
- 
+
       ** CK/3 - END PROGRAM
- 
+
      C     @INKC         CASEQ     '1'           ENDP
- 
+
       ** CK/12 - CANCEL ON SETTLEMENT DETAILS
- 
+
      C     @INKK         CASEQ     '1'           CANC@S                                     MD036070
      C     @INKL         CASEQ     '1'           CANC@S
- 
+
       ** EXIT FROM SETTLEMENT DETAILS
- 
+
      C                   CAS                     EXIT@S
      C                   ENDCS
- 
+
      C                   ENDSR
       *****************************************************************
       * SCRN@C - PROCESS SCREEN: CONFIRMATION OF INPUT
@@ -1381,34 +1383,34 @@
      C                   CALLB     'DLDLFEVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * Inputs
- 
+
       * Response mode
      C                   PARM      *BLANK        RespMode
- 
+
       ** Transaction Details
      C                   PARM                    NwDlScnFmt
- 
+
       * Outputs
- 
+
       ** Transaction Details OK inds
      C                   PARM                    OkDlfe
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Transaction details layout (DS) from/to caller
      C                   PARM                    ValidDlfe
       * Deals Detail (DEALSDC)
@@ -1428,26 +1430,26 @@
      C                   CALLB     'DLDLFEDSP'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * Input Parameters :
- 
+
       * Return code
      C                   PARM      *BLANKS       RetCodeIn
- 
+
       ** Transaction Details in screen format
      C                   PARM                    NwDlScnFmt
- 
+
       ** Transaction Details OK indicators
      C                   PARM                    OkDlfe
- 
+
       * Errors
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       * Warning
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       *
       * Enabled Key & Detail Fields
       *
@@ -1469,9 +1471,9 @@
      C                   PARM      'N'           @EINKP
       * Status
      C                   PARM                    DDSTAT
- 
+
       * Output Parameters :
- 
+
       * Function Keys
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKG
@@ -1954,7 +1956,7 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       *
       ** Initialise program name
      C                   MOVEL     'DLDLFESIN'   DBPGM
@@ -1972,7 +1974,7 @@
      C                   EVAL      DBKEY  = @OPTN
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
@@ -1982,7 +1984,7 @@
       * Go To Initial Screen
       *
      C                   EXSR      INITIAL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1998,7 +2000,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       ****************************************************************
       /EJECT
       ****************************************************************

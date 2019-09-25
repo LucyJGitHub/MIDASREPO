@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039575           Date 07Jul16               *
+      *  Last Amend No. MD039617           Date 16Jun19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD039575           Date 07Jul16               *
       *                 MD031617           Date 23Jun15               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -71,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039617 - Corrupted data in CDL096 fields                   *
+      *             Applied for CER050                                *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039575 - LDNI ERROR in validating Payment Convention fields*
       *             but fields are not available for this Deal        *
@@ -145,6 +150,7 @@
      F*FORAT*****IF   E           K DISK                                                      185276
      FBKRAT1    IF   E           K DISK                                                       185276
      FDEALSC    IF   E           K DISK    INFSR(*PSSR)                                     MD031617
+     FDLAPRHI0  IF   E           K DISK    INFSR(*PSSR)                                       CER050
  
       *****************************************************************
       ** +--------------------------------------+
@@ -279,6 +285,7 @@
      D CRE073          S              1A                                                      CRE073
      D CDL096          S              1A                                                      CDL096
      D CGL165          S              1A                                                      CGL165
+     D CER050          S              1A                                                      CER050
       *                                                                                       CER020
       ** Defined fields for parameter to be passed to SRZDate2                                CER020
       *                                                                                       CER020
@@ -1020,6 +1027,7 @@
      C                   ENDIF                                                                CDL049
                                                                                               CDL096
      C                   IF        CDL096 = 'Y'                                               CDL096
+     C                             or CDL096 = 'N'                                          MD039617
      C                   EVAL      DDC1PC = HKC1PC                                            CDL096
      C                   EVAL      DDC2PC = HKC2PC                                            CDL096
      C                   EVAL      DDC3PC = HKC3PC                                            CDL096
@@ -1034,15 +1042,33 @@
      C                   EVAL      DDAMTC = HKAMTC                                            CDL096
      C                   ENDIF                                                                CDL096
       *                                                                                       CDL096
-     C                   IF        CDL096 = 'N'                                               CDL096
-     C                   Eval      BsDayScn = BsDayFil                                        CDL096
-     C                   ENDIF                                                                CDL096
+     C**********         IF        CDL096 = 'N'                                      CDL096 MD039617
+     C**********         Eval      BsDayScn = BsDayFil                               CDL096 MD039617
+     C**********         ENDIF                                                       CDL096 MD039617
       *                                                                                       CGL165
       * Tax Codes                                                                             CGL165
      C                   IF        CGL165 = 'Y'                                               CGL165
      C                   EVAL      DDTXC1 = HKTAX1                                            CGL165
      C                   EVAL      DDTXC2 = HKTAX2                                            CGL165
      C                   ENDIF                                                                CGL165
+      *                                                                                       CER050
+     C     CER050        Ifeq      'Y'                                                        CER050
+      *                                                                                       CER050
+     C                   Eval      DDAPRC = HKAPRC                                            CER050
+      *                                                                                       CER050
+     C                   Move      *BLANKS       DDAPRR                                       CER050
+     C     HKDN38        Chain     DLAPRHI0                           65                      CER050
+     C                   If        *In65 = *Off                                               CER050
+     C                             and IAPRR > 0                                              CER050
+     C                   Z-Add     0             @@AMTW                                       CER050
+     C                   Move      IAPRR         @@AMTW                                       CER050
+     C                   Z-Add     2             @@QECN                                       CER050
+     C                   Exsr      FMTAMT                                                     CER050
+     C                   Move      @@AMTD        DDAPRR                                       CER050
+     C                   Else                                                                 CER050
+     C                   Move      *BLANKS       DDAPRR                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
  
      C                   ENDSR
       *****************************************************************
@@ -1577,6 +1603,21 @@
      C                   ELSE                                                                 CGL165
      C                   EVAL      CGL165 = 'N'                                               CGL165
      C                   ENDIF                                                                CGL165
+      *                                                                                       CER050
+      ** Check if feature CER050 is On.                                                       CER050
+      *                                                                                       CER050
+     C                   CallB     'AOSARDR0'                                                 CER050
+     C                   Parm      *BLANKS       PRTCD                                        CER050
+     C                   Parm      '*VERIFY'     POPTN                                        CER050
+     C                   Parm      'CER050'      PSARD                                        CER050
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
+      *                                                                                       CER050
+     C                   If        PRTCD = *Blanks                                            CER050
+     C                   Eval      CER050 = 'Y'                                               CER050
+     C                   Else                                                                 CER050
+     C                   Eval      CER050 = 'N'                                               CER050
+     C                   Endif                                                                CER050
+      *                                                                                       CER050
      C                   ENDSR
       *****************************************************************
       /EJECT

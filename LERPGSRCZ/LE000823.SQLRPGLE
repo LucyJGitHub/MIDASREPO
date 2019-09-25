@@ -14,10 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054245           Date 09Sep19               *
-      *  Prev Amend No. MD051883           Date 04Apr19               *
-      *                 MD051944           Date 22Sep18               *
-      *                 MD049865           Date 06Aug18               *
+      *  Last Amend No. MD051944           Date 22Sep18               *
+      *  Prev Amend No. MD049865           Date 06Aug18               *
       *                 MD051242           Date 25Jun18               *
       *                 MD049363           Date 19Sep18               *
       *                 MD051242           Date 25Jun18               *
@@ -27,8 +25,6 @@
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054245 - Missing P and S settlement entries on Loan Fee    *
-      *  MD051883 - CLE031: Changes to Value Date Account Keys        *
       *  MD051944 - Settlement entries from Principal Increase        *
       *             event is rounded down                             *
       *  MD049865 - Component LEC000823 failed in COB                 *
@@ -635,8 +631,6 @@
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      L1_ECCY       WCCY1
      C     SDCURR        PARM                    DSSDY
-                                                                                            MD054245
-     C                   EVAL      WNBDP2 = A6NBDP                                          MD054245
 
      C     L1_ECCY       IFEQ      BJCYCD
      C                   Z-ADD     L1_EAMT       BSAMT            13 0
@@ -653,10 +647,8 @@
      C                   PARM      A6MDIN        WMDIN                                      MD051944
      C                   PARM      L1_ECCY       WCCY1                                      MD051944
      C                   PARM      BJCYCD        WCCY2                                      MD051944
-     C**********         PARM      A6NBDP        WNBDP1                            MD051944 MD054245
-     C**********         PARM      WNBDP1        WNBDP2                            MD051944 MD054245
-     C                   PARM                    WNBDP2                                     MD054245
-     C                   PARM                    WNBDP1                                     MD054245
+     C                   PARM      A6NBDP        WNBDP1                                     MD051944
+     C                   PARM      WNBDP1        WNBDP2                                     MD051944
      C                   PARM                    WOUTAMT                                    MD051944
       *                                                                                     MD051944
      C                   EVAL      BSAMT = WOUTAMT                                          MD051944
@@ -736,13 +728,9 @@
      C                   IF        FELOAN > *BLANKS                                         MD051242
      C                   MOVE      'S'           AKY(3)                                     MD051242
      C                   MOVEA     ' '           AKY(6)                                     MD051242
-     C                   MOVE      AKY(3)        SAV3              1                        MD051883
-     C                   MOVE      AKY(6)        SAV6              1                        MD051883
      C                   ELSE                                                               MD051242
      C                   MOVE      'S'           AKY(4)                                     MD051242
      C                   MOVEA     '  '          AKY(5)
-     C                   MOVE      AKY(4)        SAV4              1                        MD051883
-     C                   MOVE      AKY(5)        SAV5              1                        MD051883
      C                   ENDIF                                                              MD051242
 
      C                   IF        PTFI <> ' '
@@ -758,23 +746,6 @@
      C                   IF        WRKCCY = *BLANKS                                         MD051242
      C                   LEAVESR                                                            MD051242
      C                   ENDIF                                                              MD051242
-                                                                                            MD051883
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      'R'           AKY(4)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      'R'           AKY(3)                                     MD051883
-     C                   ENDIF                                                              MD051883
-     C                   MOVE      'V'           AKY(10)                                    MD051883
-     C                   MOVEA     AKY           L2_LKAKEY                                  MD051883
-     C                   UPDATE    LKEY2DPF                                                 MD051883
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      SAV4          AKY(4)                                     MD051883
-     C                   MOVE      SAV5          AKY(5)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      SAV3          AKY(3)                                     MD051883
-     C                   MOVE      SAV6          AKY(6)                                     MD051883
-     C                   ENDIF                                                              MD051883
-                                                                                            MD051883
 
      C     PTFI          IFEQ      'P'
      C     PTFI          OREQ      'S'
@@ -826,26 +797,8 @@
      C                   MOVEA     AKY           L2_LKAKEY
      C                   WRITE     LKEY2DPF
      C                   EXSR      SRHASH                                                   MD051242
-                                                                                            MD051883
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      'R'           AKY(4)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      'R'           AKY(3)                                     MD051883
-     C                   ENDIF                                                              MD051883
-     C                   MOVE      ' '           AKY(7)                                     MD051883
-     C                   MOVE      'J'           AKY(10)                                    MD051883
-     C                   MOVEA     AKY           L2_LKAKEY                                  MD051883
-     C                   WRITE     LKEY2DPF                                                 MD051883
-     C                   EXSR      SRHASH                                                   MD051883
 
      C                   MOVEA     L2_LKAKEY     AKY
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      SAV4          AKY(4)                                     MD051883
-     C                   MOVE      SAV5          AKY(5)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      SAV3          AKY(3)                                     MD051883
-     C                   MOVE      SAV6          AKY(6)                                     MD051883
-     C                   ENDIF                                                              MD051883
      C                   CALL      'AOCURRR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*KEY'        @OPTN
@@ -861,8 +814,6 @@
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      FEFCCY        WCCY1
      C     SDCURR        PARM                    DSSDY
-                                                                                            MD054245
-     C                   EVAL      WNBDP2 = A6NBDP                                          MD054245
 
      C*****WRKFCY        IFEQ      BJCYCD                                                   MD051242
      C     FEFCCY        IFEQ      BJCYCD                                                   MD051242
@@ -875,10 +826,8 @@
      C                   PARM      A6MDIN        WMDIN
      C                   PARM      FEFCCY        WCCY1
      C                   PARM      BJCYCD        WCCY2
-     C**********         PARM      A6NBDP        WNBDP1                                     MD054245
-     C**********         PARM      WNBDP1        WNBDP2                                     MD054245
-     C                   PARM                    WNBDP2                                     MD054245
-     C                   PARM                    WNBDP1                                     MD054245
+     C                   PARM      A6NBDP        WNBDP1
+     C                   PARM      WNBDP1        WNBDP2
      C                   PARM                    WOUTAMT
 
      C                   EVAL      BSAMT = WOUTAMT
@@ -916,8 +865,7 @@
      C                   MOVEA     AKY           L2_LKAKEY
      C                   WRITE     LKEY2DPF
      C                   EXSR      SRHASH                                                   MD051242
-     C**********         ADD       4             L2NORE                            MD051242 MD051883
-     C                   ADD       5             L2NORE                                     MD051883
+     C                   ADD       4             L2NORE                                     MD051242
 
      C                   ENDSR
 
@@ -967,18 +915,13 @@
      C                   IF        FELOAN > *BLANKS                                         MD051242
      C                   MOVE      'S'           AKY(3)                                     MD051242
      C                   MOVEA     ' '           AKY(6)                                     MD051242
-     C                   MOVE      AKY(3)        SAV3                                       MD051883
-     C                   MOVE      AKY(6)        SAV6                                       MD051883
      C                   ELSE                                                               MD051242
      C                   MOVE      'S'           AKY(4)                                     MD051242
      C                   MOVE      ' '           AKY(5)
-     C                   MOVE      AKY(4)        SAV4                                       MD051883
-     C                   MOVE      AKY(5)        SAV5                                       MD051883
      C                   ENDIF                                                              MD051242
 
      C                   IF        FEPYON = 'S'
      C                   MOVE      'S'           AKY(6)
-     C                   MOVE      AKY(6)        SAV6                                       MD051883
      C                   ENDIF
 
      C                   IF        PTFI <> ' '
@@ -994,23 +937,6 @@
      C                   IF        WRKCCY = *BLANKS                                         MD051242
      C                   LEAVESR                                                            MD051242
      C                   ENDIF                                                              MD051242
-                                                                                            MD051883
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      'R'           AKY(4)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      'R'           AKY(3)                                     MD051883
-     C                   ENDIF                                                              MD051883
-     C                   MOVE      'V'           AKY(10)                                    MD051883
-     C                   MOVEA     AKY           L3_LKAKEY                                  MD051883
-     C                   UPDATE    LKEY3DPF                                                 MD051883
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      SAV4          AKY(4)                                     MD051883
-     C                   MOVE      SAV5          AKY(5)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      SAV3          AKY(3)                                     MD051883
-     C                   MOVE      SAV6          AKY(6)                                     MD051883
-     C                   ENDIF                                                              MD051883
-                                                                                            MD051883
 
      C     PTFI          IFEQ      'P'
      C     PTFI          OREQ      'S'
@@ -1062,26 +988,8 @@
      C                   MOVEA     AKY           L3_LKAKEY
      C                   WRITE     LKEY3DPF
      C                   EXSR      SRHASH                                                   MD051242
-                                                                                            MD051883
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      'R'           AKY(4)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      'R'           AKY(3)                                     MD051883
-     C                   ENDIF                                                              MD051883
-     C                   MOVE      ' '           AKY(7)                                     MD051883
-     C                   MOVE      'J'           AKY(10)                                    MD051883
-     C                   MOVEA     AKY           L3_LKAKEY                                  MD051883
-     C                   WRITE     LKEY3DPF                                                 MD051883
-     C                   EXSR      SRHASH                                                   MD051883
 
      C                   MOVEA     L3_LKAKEY     AKY
-     C                   IF        FELOAN = *BLANKS                                         MD051883
-     C                   MOVE      SAV4          AKY(4)                                     MD051883
-     C                   MOVE      SAV5          AKY(5)                                     MD051883
-     C                   ELSE                                                               MD051883
-     C                   MOVE      SAV3          AKY(3)                                     MD051883
-     C                   MOVE      SAV6          AKY(6)                                     MD051883
-     C                   ENDIF                                                              MD051883
      C                   CALL      'AOCURRR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*KEY'        @OPTN
@@ -1098,8 +1006,6 @@
      C                   PARM      FEFCCY        WCCY1
      C     SDCURR        PARM                    DSSDY
 
-     C                   EVAL      WNBDP2 = A6NBDP                                          MD054245
-                                                                                            MD054245
      C     FEFCCY        IFEQ      BJCYCD
      C                   Z-ADD     L3_LKEAMT     BSAMT            13 0
      C                   ELSE
@@ -1110,10 +1016,8 @@
      C                   PARM      A6MDIN        WMDIN
      C                   PARM      FEFCCY        WCCY1
      C                   PARM      BJCYCD        WCCY2
-     C**********         PARM      A6NBDP        WNBDP1                                     MD054245
-     C**********         PARM      WNBDP1        WNBDP2                                     MD054245
-     C                   PARM                    WNBDP2                                     MD054245
-     C                   PARM                    WNBDP1                                     MD054245
+     C                   PARM      A6NBDP        WNBDP1
+     C                   PARM      WNBDP1        WNBDP2
      C                   PARM                    WOUTAMT
 
      C                   EVAL      BSAMT = WOUTAMT
@@ -1151,8 +1055,7 @@
      C                   MOVEA     AKY           L3_LKAKEY
      C                   WRITE     LKEY3DPF
      C                   EXSR      SRHASH                                                   MD051242
-     C**********         ADD       4             L3NORE                            MD051242 MD051883
-     C                   ADD       5             L3NORE                                     MD051883
+     C                   ADD       4             L3NORE                                     MD051242
 
      C                   ENDSR
 

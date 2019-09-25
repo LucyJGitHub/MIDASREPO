@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD029805           Date 05Sep14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -79,6 +80,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Amend for compilation   *
+      *           purposes. Rename of DDIBEI required. Not CER050)    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation (Recompile)                *
@@ -273,6 +276,7 @@
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(SDCUPRPD)
      D TranInSwft    E DS                  EXTNAME(SDCUSWPD)                                  CSW207
+     D DDIBEIS       E                     EXTFLD(DDIBEI)                                     CER050
      D TranInSeco    E DS                  EXTNAME(SDCUSEPD)
      D TranInMT3X    E DS                  EXTNAME(SDCUMTPD)                                  CSW024
      D TranInMsrt    E DS                  EXTNAME(SDCUMRPD)

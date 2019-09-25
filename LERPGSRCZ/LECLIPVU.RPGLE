@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD053143           Date 04Apr19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD053143           Date 04Apr19               *
       *                 MD052478           Date 15Jan19               *
       *                 MD052134           Date 18Oct18               *
       *                 MD034521A          Date 14Sep15               *
@@ -137,6 +138,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
       *             applied for loan start date rate fixing.          *
@@ -1474,6 +1476,24 @@
      C                   ENDIF
 
      C                   SETON                                        LR
+     C     DDAPRC        Ifeq      'N'                                                        CER050
+     C     DDAPRR        Ifne      *Blanks                                                    CER050
+     C                   Move      *Blanks       DDAPRR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDPREM        Ifne      *Blanks                                                    CER050
+     C                   Move      *Blanks       DDPREM                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
+     C     DDAPRC        Ifeq      'Y'                                                        CER050
+     C     DDAPRR        Ifeq      *Blanks                                                    CER050
+     C     @DDAPRR       andne     *Blanks                                                    CER050
+     C                   Move      @DDAPRR       DDAPRR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDPREM        Ifeq      *Blanks                                                    CER050
+     C     @DDPREM       andne     *Blanks                                                    CER050
+     C                   Move      @DDPREM       DDPREM                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
 
       ** If action is for Update, get the correct record information                         BUG4685
       ** from file                                                                           BUG4685

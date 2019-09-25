@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD021377           Date 18Jul18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD021377           Date 18Jul18               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046370           Date 07Nov17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028931           Date 13May14               *
@@ -108,6 +109,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD021377 - Reversed Fee Rate Changes have FCRECI = 'R'.      *
       *             LER0238 should be checked against live fees only. *
       *  CLE071 - Value Dating of Rate Changes to Fees                *

@@ -20,14 +20,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054244           Date 09Sep19               *
-      *  Prev Amend No. MD052008           Date 05Oct18               *
-      *                 MD051940           Date 21Sep18               *
+      *  Last Amend No. MD052008           Date 05Oct18               *
+      *  Prev Amend No. MD051940           Date 21Sep18               *   
       *                 MD049363           Date 19Sep18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048557           Date 27Nov17               *
-      *                 MD046080           Date 21Sep17               *
+      *                 MD046080           Date 21Sep17               *      
       *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD023378           Date 25Apr14               *
@@ -57,18 +56,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054244 - Generation of additional B-repayment key will     *
-      *             only apply to same currency even if CLE031 is on. *
       *  MD052008 - Rounding off issue on PDCL amount using           *
       *             settlement account with partial balance           *
       *  MD051940 - PDCL X, Y, Z amount is incorrect as a result of   *
-      *             conversion rounding error.                        *
+      *             conversion rounding error.                        *      
       *  MD049363 - Percentage allocation error                       *
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048557 - Failing COB Component - LEC000471A                *
-      *  MD046080 - Gap between CLE031 and CLE134                     *
+      *  MD046080 - Gap between CLE031 and CLE134                     *      
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -181,32 +178,32 @@
       ** handler)
       ** and the following variables:
       ** RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** The following /COPY line includes the definitions for error &
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
      D SPOOL1          DS
      D SFILE1                 83     92
      D SFNUM1                123    124B 0
      D OFLLN1                188    189B 0
      D PRTLN1                367    368B 0
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** General Ledger Details
       *
@@ -217,7 +214,7 @@
       ** Trading ICD
       *
      D QQACCD1       E                     EXTFLD(QQACCD)
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details
                                                                                            MD021423E
@@ -228,10 +225,10 @@
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Currency Details
       *
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access programs - short data structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access programs - long data structure
       *
@@ -332,31 +329,31 @@
      D SEQ             S              2  0
      D COD             S              2  0
      D FACL            S              5  0
-
+ 
      D W@Type          S              1
-
+ 
      D WMult           S              1  0
-
+ 
      D wf10            S             10
-
+ 
      D K_RECI          S              1
-
+ 
      D Branch          S              3
-
+ 
      D RCDTT           S              1
-
+ 
      D WRK01           S              1
-
+ 
      D PPCUST          S              1
      D W@PGNM          S             10
      D BlockCredit     S              1A   INZ(*BLANKS)                                    MD021423E
-
+ 
      D ZS2             S              1    DIM(21)
      D                 DS
      D  WORK15                 1     15  0
      D  ZS1                    1     15  0
      D                                     DIM(15)
-
+ 
      D PRTCD           S              7A
      D SUPFLG          S              1A
      D PNAME           S             10A
@@ -393,16 +390,16 @@
      D WMINUS          S              1A                                                   MD049745A
      D KVDAT           S              5P 0                                                  MD049363
      D KLASN           S              3S 0                                                  MD049363
-
+ 
       ** Cache Work Variables and Storage
-
+ 
      D CurrKey         S                   LIKE (A6CYCD)
      D CurrIdx         S              3  0 INZ(1)
      D TrailIdx        S              3  0 INZ(1)
      D CurrCache       S                   INZ LIKE(A6CYCD)
      D                                     DIM(250) ASCEND
       ** Key for Currency Details (Full Cache)
-
+ 
      D DSCurr        E DS                  INZ EXTNAME(SDCURRPD)
      D                                     DIM(250) QUALIFIED
       *                                                                                    MD021423E
@@ -416,21 +413,21 @@
      D  PBranch        S              3A                                                   MD021423E
       *                                                                                    MD021423E
       ** Storage for Currency Details (Full Cache)
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *****************************************************************
       ** M A I N  P R O C E S S I N G                                 *
       *****************************************************************
-
+ 
       ** Read a/c keys file that contains a/c key subject
       ** to funds pre-check
-
+ 
      C     *LOVAL        SETLL     LEPK1L3
       *
       ** Loop to read a/c keys on LEPK1DPD
@@ -593,16 +590,16 @@
      C                   EVAL      WSIND = *Blanks                                         MD049745A
      C                   EVAL      WSRATE = *ZERO                                          MD049745A
      C                   EVAL      WMINUS = ' '                                            MD049745A
-
-
+ 
+ 
      C                   IF        AUTO = 'C'
      C                             AND RECI = 'D'
-
+ 
      C                   Z-ADD     EAMT          WRepaym
      C                   IF        WRepaym < 0
      C                   EVAL      WRepaym = WRepaym * -1
      C                   ENDIF
-
+ 
      C                   EVAL      P@BLAF = AAMT
       *
       ** Set available balance flag
@@ -1032,10 +1029,6 @@
      C                   ENDIF                                                              MD052008
                                                                                             MD052008
      C                   IF        w@Pdamt <> wRepaym
-     C                             AND CLE031 <> 'Y'                                        MD054244
-     C                             OR w@Pdamt <> wRepaym                                    MD054244
-     C                             AND CLE031 = 'Y'                                         MD054244
-     C                             AND (WCCY1 = *BLANKS OR WCCY2 = *BLANKS)                 MD054244
      C                   EVAL      EAMT = WRepaym - W@Pdamt
       *
      C                   IF        w@OEAMT < 0
@@ -1184,10 +1177,6 @@
                                                                                             MD052008
      C                   EVAL      W@Totak = W@Pdamt + W@Avail
      C                   IF        w@Totak <> wRepaym
-     C                             AND CLE031 <> 'Y'                                        MD054244
-     C                             OR w@Totak <> wRepaym                                    MD054244
-     C                             AND CLE031 = 'Y'                                         MD054244
-     C                             AND (WCCY1 = *BLANKS OR WCCY2 = *BLANKS)                 MD054244
      C                   EVAL      EAMT = WRepaym - W@Totak
       *
      C                   IF        w@OEAMT < 0
@@ -1269,28 +1258,28 @@
       *                                                               *
       *****************************************************************
      C     SRReverse     BEGSR
-
+ 
      C                   CLEAR                   W@TotPD
      C                   CLEAR                   W@TotPI
      C                   CLEAR                   W@Totak
      C                   Z-ADD     EAMT          W@OEAMT
-
+ 
       ** Read a/c keys file that contains a/c key subject
       ** to funds pre-check
-
+ 
      C     KPDCL         SETLL     LEPDUEL5
      C                   EVAL      *IN87 = *OFF
-
+ 
       ** Loop to read a/c keys on LEPDUEPD to retrieve the total
       ** past due that was accounted to the DP account key
-
+ 
      C     *IN87         DOWEQ     *OFF
-
+ 
      C     KPDCLP        READE     LEPDUEL5                               87
-
+ 
       ** YTYLC = 'R' (ignore record if amount has already been
       ** reversed out)
-
+ 
      C                   IF        *IN87 = *OFF
      C                             AND YTYLC <> 'R'
      C                   IF        CLE031 = 'Y'                                            MD049745A
@@ -1303,33 +1292,33 @@
      C                   EVAL      YPCPAM = EAMT                                           MD049745A
      C                   EVAL      WREV = ' '                                              MD049745A
      C                   ENDIF                                                             MD049745A
-
+ 
       ** Past due principal
-
+ 
      C                   IF        W@TotPD < PAMT
-
+ 
      C                   IF        YPCPAM <= PAMT
      C                   ADD       YPCPAM        W@TotPD
      C                   ELSE
      C                   ADD       PAMT          W@TotPD
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Past due interest
-
+ 
      C                   IF        W@TotPI < IAMT
-
+ 
      C                   IF        YPDINT <= IAMT
      C                   ADD       YPCPAM        W@TotPD
      C                   ELSE
      C                   ADD       IAMT          W@TotPD
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** If total past due is greater than the event amount,
       ** then subtract difference from LEPDUEPD
       ** otherwise flag record as processed
-
+ 
      C                   EVAL      W@Totak = W@TOTPD + W@TotPI
      C                   IF        W@Totak <= EAMT
      C                   EVAL      YTYLC = 'R'
@@ -1348,15 +1337,15 @@
      C                   UPDATE    LEPDUED0
      C                   ENDIF
      C                   ENDDO
-
+ 
       ** If Total Past Due Principal and Interest are greater than zero,
       ** then reverse them using a/c key  xxRyy---DP and xxRyy---DI
-
+ 
      C                   IF        W@TotPD <> *ZEROS
      C                             AND W@TotPI <> *ZEROS
-
+ 
       ** Principal
-
+ 
      C                   IF        W@TotPD <> *ZEROS
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XP'          Wf10
@@ -1371,7 +1360,7 @@
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
      C                   EXSR      SrConvert                                                MD046080
-
+ 
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
      C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
@@ -1388,9 +1377,9 @@
      C                   EVAL      WMINUS = ' '                                            MD049745A
      C                   ENDIF                                                             MD049745A
      C                   ENDIF
-
+ 
       ** Interest: write a new record on the account key file
-
+ 
      C                   IF        W@TotPI <> *ZEROS
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XI'          Wf10
@@ -1399,12 +1388,12 @@
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
      C                   EXSR      SrConvert                                                MD046080
-
+ 
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
      C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
-
+ 
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
@@ -1418,19 +1407,19 @@
      C                   EVAL      WMINUS = ' '                                            MD049745A
      C                   ENDIF                                                             MD049745A
      C                   ENDIF
-
+ 
       ** If total reversed out is different from Account key original
       ** amount, then create an account key xxRyy----B  with amount
       ** = Difference between Original amount and amount already
       ** reversed out.
-
+ 
      C                   IF        w@Totak <> wRepaym
      C                   EVAL      EAMT = WRepaym - W@Totak
-
+ 
      C                   IF        w@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
-
+ 
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      ' B'          Wf10
      C                   MOVEL     Wf10          AKEY
@@ -1442,14 +1431,14 @@
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** If either the Past Due principal or the past due interest
       ** are not zero
-
+ 
      C                   ELSE
-
+ 
       ** Principal
-
+ 
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ELSE
@@ -1464,15 +1453,15 @@
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
      C                   EXSR      SrConvert                                                MD046080
-
+ 
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
      C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
-
+ 
       ** Interest
-
+ 
      C                   IF        W@TotPI <> *ZEROS
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XI'          Wf10
@@ -1482,7 +1471,7 @@
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
      C                   EXSR      SrConvert                                                MD046080
-
+ 
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
      C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
@@ -1499,18 +1488,18 @@
      C                   ELSE                                                              MD049745A
      C                   EVAL      WMINUS = ' '                                            MD049745A
      C                   ENDIF                                                             MD049745A
-
+ 
       ** If total reversed out is different from Account key original
       ** amount, then create an account key xxRyy----B  with amount =
       ** Difference between Original amount and amount already rev. out
-
+ 
      C                   IF        w@Totak <> wRepaym
      C                   EVAL      EAMT = WRepaym - W@Totak
-
+ 
      C                   IF        w@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
-
+ 
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      ' B'          Wf10
      C                   MOVEL     Wf10          AKEY
@@ -1528,9 +1517,9 @@
      C                   ENDIF                                                             MD049745A
      C                   ADD       1             W@NewRc
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1716,13 +1705,13 @@
       *                                                               *
       *****************************************************************
      C     SRUpdtra      BEGSR
-
+ 
      C                   IF        W@NewRc <> 0
      C                             OR w@adjamt <> 0
      C     1             SETLL     LEPK1ZZ
      C                   READ      LEPK1ZZ                                88
      C                   IF        *IN88 = *OFF
-
+ 
      C                   ADD       W@NewRC       NORE
       *
       ***  Set up amount fields for insert
@@ -1745,16 +1734,16 @@
      C                   ENDIF                                                             MD049745A
      C                   Z-ADD     ZZTOTI        VLRF
      C                   Z-ADD     ZZTOTD        VLRL
-
+ 
      C                   UPDATE    LEPK1ZZF
      C                   ENDIF
      C                   CLEAR                   W@NewRc
      C                   CLEAR                   w@adjamt
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1841,10 +1830,10 @@
       *                                                               *
       *****************************************************************
      C     SRGetCcy      BEGSR
-
+ 
       ** Use details from the array if currency in the cache,
       ** otherwise, retrieve details from Access Object program
-
+ 
      C                   EVAL      CurrKey = ECCY
      C                   EVAL      CurrIdx = %LOOKUP( CurrKey :
      C                                                CurrCache :
@@ -1859,9 +1848,9 @@
      C                   PARM                    ECCY
      C     SDCURR        PARM                    DSSDY
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1874,19 +1863,19 @@
       *                                                               *
       *****************************************************************
      C     SRSetfield    BEGSR
-
+ 
      C                   EVAL      ZFLD15 = EAMT
      C                   EVAL      Zdecs = A6NBDP
      C                   EVAL      Zecode = 'J'
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        OEAMT
-
+ 
      C                   EVAL      ZFLD15 = AAMT
      C                   EVAL      Zdecs = A6NBDP
      C                   EVAL      Zecode = 'J'
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        OAAMT
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1900,13 +1889,13 @@
       *                                                               *
       *****************************************************************
      C     SRgetBRca     BEGSR
-
+ 
      C                   CALL      'AOBRCHR1'
      C                   PARM      '*DBERR'      @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    Branch
      C     SDBRCH        PARM                    DSSDY
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2121,14 +2110,14 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    pAPOS
      C                   PARM                    pCNAME
      C                   PARM                    pReturnCode
-
+ 
      C                   EVAL      dbPgm = PSProcPgm
-
+ 
      C     KACTN1        KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    CNUM
@@ -2136,16 +2125,16 @@
      C                   KFLD                    AVDAT
      C                   KFLD                    APRSQ
      C                   KFLD                    ALASN
-
+ 
      C     Kpdcl         KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    LNNO
      C                   KFLD                    EDAT
-
+ 
      C     Kpdclp        KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    LNNO
-
+ 
      C     Kcloan        KLIST
      C                   KFLD                    LNNO
      C                   KFLD                    RCDTT
@@ -2162,16 +2151,16 @@
      C                   KFLD                    ALASN                                     MD049745A
                                                                                            MD049745A
      C                   EVAL      RCDTT = 'A'
-
+ 
       ** Access General Ledger details
-
+ 
      C                   CALL      'AOGELRR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDGELR        PARM      SDGELR        DSSDY
-
+ 
       ** DBERR 005
-
+ 
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDGELRPD'
@@ -2180,16 +2169,16 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
-
+ 
       ** Retrieve trading data
-
+ 
      C                   CALL      'AOTRADR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDTRAD        PARM      SDTRAD        DSFDY
-
+ 
       ** DBERR 006
-
+ 
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '*FIRST'      DBKEY
@@ -2198,12 +2187,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR'      @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
                                                                                             MD046080
      C                   CALL      'AOSARDR0'                                               MD046080
      C                   PARM      *BLANKS       @RTCD                                      MD046080
@@ -2225,11 +2214,11 @@
                                                                                             MD046080
       ** Check System Value: Use Original Borrower or Purchased From?
       ** Set up parameter so access object checks LoanCustOriginPurch
-
+ 
      C                   EVAL      SVALK1 = WPARM
-
+ 
       ** Call Access object:
-
+ 
      C                   CALL      'AOSVALR0'
      C                   PARM                    WRetcd
      C                   PARM                    SVALK1
@@ -2252,15 +2241,15 @@
      C                   PARM                    SVAL9
      C                   PARM                    SVALK0
      C                   PARM                    SVAL10
-
+ 
       ** If the system value is not found then default value to 'P'
-
+ 
      C                   IF        WRetcd <> *BLANKS
      C                   EVAL      PPCUST = 'P'
      C                   ELSE
-
+ 
       ** Isolate the first character of SVAL1 which = 'P' or 'O'.
-
+ 
      C                   MOVEL     SVAL1         WRK01
      C                   IF        WRK01 = 'O'
      C                   EVAL      PPCUST = 'O'
@@ -2268,20 +2257,20 @@
      C                   EVAL      PPCUST = 'P'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   EVAL      SUPFLG = 'N'
      C                   CALL      'AOCOMR0'
      C                   PARM      'LEC000456'   PNAME
      C                   PARM      '*ALL'        PCSEQ
      C                   PARM      'LE00045601'  PSCTN
      C                   PARM      *BLANKS       PRTCD
-
+ 
      C                   IF        PRTCD = 'Y'
      C                   EVAL      SUPFLG = 'Y'
      C                   ENDIF
-
+ 
       ** Full Cache SDCURRPD
-
+ 
      C                   READ      SDCURRL1
      C                   DOW       not %EOF and CurrIdx <= %ELEM(CurrCache)
      C                   EVAL      CurrCache(CurrIdx) = A6CYCD
@@ -2289,19 +2278,19 @@
      C                   EVAL      CurrIdx = CurrIdx + 1
      C                   READ      SDCURRL1
      C                   ENDDO
-
+ 
      C                   EVAL      TrailIdx = CurrIdx - 1
-
+ 
      C     *LIKE         DEFINE    EAMT          WRepaym
      C     *LIKE         DEFINE    EAMT          WEAMT
-
+ 
      C     *LIKE         DEFINE    LNRF          W@FELN
-
+ 
      C                   WRITE     LE0456H1
      C                   WRITE     LE0456H2
-
+ 
      C                   ENDSR
-
+ 
       ****************************************************************
       /EJECT
       *****************************************************************

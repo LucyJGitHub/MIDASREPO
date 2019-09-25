@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD047554           Date 11Oct17               *
+      *  Last Amend No. MD054317           Date 09Sep19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD047554           Date 11Oct17               *
       *                 MD051892           Date 22Sep18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD049571           Date 06Feb18               *
@@ -115,6 +116,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
       *             with recalculated amount based on newly inserted, *
@@ -3501,7 +3503,30 @@
      C                   MOVE      FEFCCY        ZCCY
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   Z-ADD     1             Y
-     C     FEFCCY        LOOKUP    CYA(Y)                                 12
+      *                                                                                     MD054317
+      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
+      *                                                                                     MD054317
+     C                   MOVE      FEFCCY        WKCCY             3                        MD054317
+      *                                                                                     MD054317
+     C     CLE031        IFEQ      'Y'                                                      MD054317
+      *                                                                                     MD054317
+     C     PTFI          IFEQ      'P'                                                      MD054317
+     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FEPSCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ELSE                                                               MD054317
+     C     FESCCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FESCCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   MOVE      WKCCY         ZCCY                                       MD054317
+     C                   MOVE      WKCCY         PCURR                                      MD054317
+      *                                                                                     MD054317
+     C*****FEFCCY        LOOKUP    CYA(Y)                                 12                MD054317
+     C     WKCCY         LOOKUP    CYA(Y)                                 12                MD054317
      C                   MOVE      *OFF          *IN12
      C                   MOVE      TND(Y)        ZNRDYS
 
@@ -3517,7 +3542,8 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    PCUSN             6
-     C                   PARM      FEFCCY        PCURR
+     C**********         PARM      FEFCCY        PCURR                                      MD054317
+     C                   PARM                    PCURR                                      MD054317
      C**********         PARM                    PACCD             4                          CGL029
      C                   PARM                    PACCD                                        CGL029
      C                   PARM                    PACSN             2
@@ -5981,7 +6007,30 @@
      C                   MOVE      FEFCCY        ZCCY                                         CLE073
      C                   Z-ADD     BJRDNB        ZDAYNO                                       CLE073
      C                   Z-ADD     1             X                                            CLE073
-     C     FEFCCY        LOOKUP    CYA(X)                                 69                  CLE073
+      *                                                                                     MD054317
+      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
+      *                                                                                     MD054317
+     C                   MOVE      FEFCCY        WKCCY                                      MD054317
+      *                                                                                     MD054317
+     C     CLE031        IFEQ      'Y'                                                      MD054317
+      *                                                                                     MD054317
+     C     PTFI          IFEQ      'P'                                                      MD054317
+     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FEPSCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ELSE                                                               MD054317
+     C     FESCCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FESCCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   MOVE      WKCCY         ZCCY                                       MD054317
+     C                   MOVE      WKCCY         PCURR                                      MD054317
+      *                                                                                     MD054317
+     C*****FEFCCY        LOOKUP    CYA(X)                                 69         CLE073 MD054317
+     C     WKCCY         LOOKUP    CYA(X)                                 69                MD054317
      C                   MOVE      *OFF          *IN69                                        CLE073
      C                   MOVE      TND(X)        ZNRDYS                                       CLE073
       *                                                                                       CLE073
@@ -5997,7 +6046,8 @@
      C                   PARM      *BLANKS       PRTCD                                        CLE073
      C                   PARM      '*KEY   '     POPTN                                        CLE073
      C                   PARM                    PCUSN             6                          CLE073
-     C                   PARM      FEFCCY        PCURR                                        CLE073
+     C**********         PARM      FEFCCY        PCURR                               CLE073 MD054317
+     C                   PARM                    PCURR                                      MD054317
      C                   PARM                    PACCD                                        CLE073
      C                   PARM                    PACSN             2                          CLE073
      C                   PARM      FEOURS        PNONB             2                          CLE073

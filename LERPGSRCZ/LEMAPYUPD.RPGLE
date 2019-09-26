@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD048975           Date 26Sep19               *
+      *  Prev Amend No. MD054317           Date 09Sep19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD047554           Date 11Oct17               *
       *                 MD051892           Date 22Sep18               *
       *                 CLE071             Date 18Jul18               *
@@ -116,6 +117,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048975 - Duplicated shadow movement in PAMV after          *
+      *             input/authorise MR for PDCL                       *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
@@ -878,6 +881,7 @@
      D CurArr          S              3    DIM(10)                                            CLE141
      D LocArr          S              3    DIM(10)                                            CLE141
      D PPDDI           S              1                                                       CLE141
+     D UpdateRSAC      S              1A   INZ('N')                                         MD048975
       *
       /EJECT
       *    =============
@@ -1206,6 +1210,8 @@
 
      C                   EVAL      MR_PTRF = MRPCRF                                          CSF011A
                                                                                              CSF011A
+     C                   EVAL      UpdateRSAC = 'Y'                                         MD048975
+                                                                                            MD048975
       ***  Ensure that details used for update are right
       ***  - if so, bypass updating and return to calling program.
 
@@ -1402,6 +1408,7 @@
                                                                                              BUG4325
       ** If authorise mode, do not update the last change type                               BUG7348
      C                   If        MRCHTP = 'X'                                              BUG7348
+     C                   Eval      UpdateRSAC = 'N'                                         MD048975
      C                   Eval      MRCHTP = CHTP                                             BUG7348
      C                   EndIf                                                               BUG7348
       *                                                                                      BUG7348
@@ -5272,6 +5279,8 @@
      C                   MOVE      WSETT         SHTIST                                     MD023787
      C                   MOVE      Z#ADTA        Z#ADT1                                     MD023787
      C     WWACTN        IFEQ      'R'                                                      MD023787
+     C     WWACTN        OREQ      'A'                                                      MD048975
+     C     UpdateRSAC    OREQ      'N'                                                      MD048975
      C                   MOVE      Z#ADTA        Z#BDT1                                     MD023787
      C                   ENDIF                                                              MD023787
      C                   MOVE      'Y'           PDCLI                                      MD023787

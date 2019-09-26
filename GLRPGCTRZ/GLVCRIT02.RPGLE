@@ -1,7 +1,7 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
-/*OVRF*: OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)              : *                      MD04211
+/*OVRF*: OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)              : *                     MD054211
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate credit interest calc. type/subtp')   *
       *****************************************************************
@@ -30,7 +30,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054211 - Confirm Authorize Insert in AMAD results in       *
-      *                Serious Midas Error. (Recompile)               *
+      *             Serious Midas Error. Use OVRDBF for REIAC.        *
       *  MD053611 - Add validation when changing the interest         *
       *             calculation type.                                 *
       *  MD046248 - Finastra Rebranding                               *

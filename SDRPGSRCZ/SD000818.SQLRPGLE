@@ -18,12 +18,14 @@
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER069C01          Date 07Nov14               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER069C01          Date 07Nov14               *
       *                 CER069  *CREATE    Date 03Jul14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER069C01 - Retain Certificate of Exemption Details          *
       *  CER069 - German Tax Enhancement                              *

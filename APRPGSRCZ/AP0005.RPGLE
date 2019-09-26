@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 09Aug12               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 09Aug12               *
       *                 CGL133             Date 01May13               *
       *                 CGL132             Date 01May13               *
       *                 CFT039             Date 28Sep12               *
@@ -103,6 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CGL133 - FATCA Phase 1 - Customers' Identification and       *
@@ -1152,7 +1154,7 @@
      C                   IF        CAP183 = 'Y'                                               CAP183
      C                   EXSR      IMPRI                                                      CAP183
      C                   ENDIF                                                                CAP183
- 
+
      C/COPY WNCPYSRC,APH00013
      C/COPY WNCPYSRC,APH00024
       *

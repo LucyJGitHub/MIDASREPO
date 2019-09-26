@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD053143           Date 04Apr19               *      
-      *  Prev Amend No. MD052279           Date 14Nov18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD053143           Date 04Apr19               *      
+      *                 MD052279           Date 14Nov18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
@@ -115,6 +116,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
       *             applied for loan start date rate fixing.          *      
       *  MD052279 - Negative rate loan got unexpected error 45021183  *

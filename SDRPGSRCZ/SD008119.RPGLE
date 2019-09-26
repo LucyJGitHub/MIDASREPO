@@ -10,13 +10,17 @@
       *                                                               *
       *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR837609A          Date 15Nov11               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR837609A          Date 15Nov11               *
       *                 AR837609           Date 09Nov11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Changes reqd due to     *
+      *           SC245692 in ZEDIT hook, for compilation purposes.   *
+      *           Changes are not due to CER050).                     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR837609A - Update current fields during COB only.           *
       *  AR837609 - Update current fields during COB only.            *
@@ -131,6 +135,9 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details
  
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                CER050
+      ** Dealing ICD                                                                        CER050
+                                                                                            CER050
      I/COPY ZSRSRC,ZDATE9Z2LE
       **  ZDATE9 Subroutine Array
  
@@ -220,6 +227,22 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+ 
+      ** Access Dealing ICD Details                                                         CER050
+      *                                                                                     CER050
+     C                   CALL      'AODEALR0'                                               CER050
+     C                   PARM      '*DBERR '     @RTCD             7                        CER050
+     C                   PARM      '*FIRST '     @OPTN             7                        CER050
+     C     SDDEAL        PARM      SDDEAL        DSFDY                                      CER050
+      *                                                                                     CER050
+     C     @RTCD         IFNE      *BLANKS                                                  CER050
+     C     *LOCK         IN        LDA                                                      CER050
+     C                   MOVEL     'SDDEALPD'    DBFILE                                     CER050
+     C                   z-add     2             DBASE                                      CER050
+     C                   MOVEL     @OPTN         DBKEY                                      CER050
+     C                   OUT       LDA                                                      CER050
+     C                   EXSR      *PSSR                                                    CER050
+     C                   ENDif                                                              CER050
  
       ** Obtain Midas Run Date
  

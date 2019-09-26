@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052327           Date 17Nov18               *
-      *  Prev Amend No. MD052214           Date 26Oct18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD052327           Date 17Nov18               *
+      *                 MD052214           Date 26Oct18               *
       *                 MD052213           Date 26Oct18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD027418           Date 18Jul18               *
@@ -164,6 +165,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD052327 - A serious MIDAS error occurred while Inserting    *
       *             a New Participation Sold                          *
       *  MD052214 - Warning message with outside block not appearing. *
@@ -752,6 +754,9 @@
       *
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ***  External DS for customer details
+      *                                                                                     CER050
+     D SDACUS        E DS                  EXTNAME(SDACUSPD)                                CER050
+      ***  External DS for additional customer details                                      CER050
       *
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
@@ -784,6 +789,10 @@
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  First DS for access programs, long data structure
+      *                                                                                     CER050
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   CER050
+     D                                     PREFIX(L@)                                       CER050
+      ***  DS used by access program, dummy data (2000 field length)                        CER050
       *
      D ValidLnCl     E DS                  EXTNAME(LEVCLILPD)
       ***  Valid Loans CL layout -> CLOANCL
@@ -1157,6 +1166,9 @@
      D @KEY2           S              2                                                       CLE134
      D WPEAInd         S              1A                                                      CSC054
      D CSC054          S              1A                                                      CSC054
+      ***  Work field for APR Required Flag warning message                                   CER050
+     D WfAPRC          S              1                                                       CER050
+     D CER050          S              1A                                                      CER050
       ** Data Structure for MPHAS Dataarea                                                  MD031225
      D MPHAS           DS             1                                                     MD031225
      D AYPCS1          S             11P 7                                                  MD019830
@@ -1837,6 +1849,12 @@
      C                   ENDIF                                                                CER020
       *                                                                                       CER020
      C                   ENDIF                                                                CER020
+      *                                                                                       CER050
+      ***  Validate APR Flag                                                                  CER050
+     C                   IF        CER050 = 'Y'                                               CER050
+     C                   EXSR      SrVAPRF                                                    CER050
+     C                   ENDIF                                                                CER050
+
       *
       ***  Update error information with that received back
       ***  from each validation module.
@@ -8907,6 +8925,129 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   ENDIF                                                                CER020
       *                                                                                       CER020
      C                   ENDSR                                                                CER020
+      /EJECT                                                                                  CER050
+      *****************************************************************                       CER050
+      * SRVAPRF - Validate the APR flag                               *                       CER050
+      *****************************************************************                       CER050
+     C     SRVAPRF       BEGSR                                                                CER050
+      *                                                                                       CER050
+     C                   Move      *Blank        DDAPRCOK          1                          CER050
+     C                   Move      *Blank        DDPREMOK          1                          CER050
+      *                                                                                       CER050
+     C                   IF        DDAPRC = 'Y'                                               CER050
+     C                             and LoanType <> 'LOAN'                                     CER050
+     C                   Move      'N'           DDAPRCOK          1                          CER050
+     C                   Add       1             Idx                                          CER050
+     C                   MoveL     'DDAPRC'      FldNamXAr(Idx)                               CER050
+     C                   MoveL     'LEX0462'     MsgIDXAr(Idx)                                CER050
+     C                   Endif                                                                CER050
+      *                                                                                       CER050
+     C                   IF        DDPREM <> *Blanks                                          CER050
+     C                             and LoanType <> 'LOAN'                                     CER050
+     C                   Move      'N'           DDPREMOK          1                          CER050
+     C                   Add       1             Idx                                          CER050
+     C                   MoveL     'DDPREM'      FldNamXAr(Idx)                               CER050
+     C                   MoveL     'LEX0462'     MsgIDXAr(Idx)                                CER050
+     C                   Endif                                                                CER050
+      *                                                                                       CER050
+     C                   IF        DDAPRCOK <> 'N' and DDPREMOK <> 'N'                        CER050
+      *                                                                                       CER050
+      **  APR Flag must be Y or N                                                             CER050
+     C                   IF        DDAPRC <> 'Y' AND DDAPRC <> 'N'                            CER050
+     C                             AND DDAPRC <> *Blank                                       CER050
+     C                   Move      'N'           DDAPRCOK          1                          CER050
+     C                   Add       1             Idx                                          CER050
+     C                   MoveL     'DDAPRC'      FldNamXAr(Idx)                               CER050
+     C                   MoveL     'LEX0460'     MsgIDXAr(Idx)                                CER050
+     C                   ENDIF                                                                CER050
+                                                                                              CER050
+      **  Check entered APR flag against default                                              CER050
+     C                   If        DDAPRCOK <> 'N' or DDAPRCOK = *Blanks                      CER050
+     C                   Exsr      SRDAPRF                                                    CER050
+      *                                                                                       CER050
+      ** Validate Amount                                                                      CER050
+                                                                                              CER050
+     C                   MOVE      *BLANKS       PSCRF                                        CER050
+     C                   MOVE      DDPREM        PSCRF                                        CER050
+     C                   Z-ADD     WCDPL         PNDEC                                        CER050
+     C*****15            SUB       WCDPL         PNDIG                                        CER050
+     C     13            SUB       WCDPL         PNDIG                                        CER050
+     C                   CALL      'ZALIGN'      PPAR1                                        CER050
+     C     PRTCD         IFNE      *BLANKS                                                    CER050
+     C                   MOVE      'N'           DDPREMOK                                     CER050
+     C                   ADD       1             Idx                                          CER050
+     C                   MOVEL     'DDPREM'      FldNamXAr(Idx)                               CER050
+     C                   MOVEL     'LEX0461'     MsgIDXAr(Idx)                                CER050
+     C                   ENDIF                                                                CER050
+     C                   ENDIF                                                                CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+     C     DDAPRCOK      IFNE      'N'                                                        CER050
+     C                   MOVEL     DDAPRC        CCLAPRC                                      CER050
+     C                   ENDIF                                                                CER050
+     C     DDPREMOK      IFNE      'N'                                                        CER050
+     C                   MOVE      PRVAL         CCLPREM                                      CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+     C                   ENDSR                                                                CER050
+      *****************************************************************                       CER050
+      ** SRDAPRF - Default APR Flag                                                           CER050
+      *****************************************************************                       CER050
+     C     SRDAPRF       BEGSR                                                                CER050
+      *                                                                                       CER050
+     C                   EVAL      WfAPRC = 'N'                                               CER050
+      *                                                                                       CER050
+      * If APRLELoans system value is 'Y', check for flag on                                  CER050
+      * additional customer details                                                           CER050
+     C                   IF        SVALLE = 'Y'                                               CER050
+      *                                                                                       CER050
+     C                   MOVEL     DDCUST        CNUMA             6                          CER050
+     C                   CALLB     'AOACUSR0'                                                 CER050
+     C                   PARM      *Blanks       @RTCD             7                          CER050
+     C                   PARM      '*KEY   '     @OPTN             7                          CER050
+     C                   PARM      CNUMA         @CNUM             6                          CER050
+     C     SDACUS        PARM      SDACUS        DSLDY                                        CER050
+      *                                                                                       CER050
+      * If Additional Customer details not found or if flag is blank                          CER050
+      * set value of default Loan APR flag to 'Y'                                             CER050
+     C                   IF        P@RTCD = *Blanks                                           CER050
+     C                             and E5APRC <> *Blanks                                      CER050
+     C                   Eval      WfAPRC = E5APRC                                            CER050
+     C                   ELSE                                                                 CER050
+     C                   Eval      WfAPRC = 'Y'                                               CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+      * If the screen value for the flag is different to the default                          CER050
+      * value issue a warning message                                                         CER050
+     C                   IF        DDAPRC <> WfAPRC                                           CER050
+     C                             AND DDAPRC <> *Blanks                                      CER050
+     C                   MOVE      'W'           DDAPRCOK                                     CER050
+     C                   ADD       1             WId                                          CER050
+     C                   MOVEL     'DDAPRC'      WFldNmXAr(WId)                               CER050
+     C                   MOVEL     'LEX0464'     WMsgIDXAr(WId)                               CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+      * ....else, default to 'N'                                                              CER050
+     C                   ELSE                                                                 CER050
+      *                                                                                       CER050
+      * If the screen value for the flag is different to the default                          CER050
+      * value issue a warning message                                                         CER050
+     C                   IF        DDAPRC = 'Y'                                               CER050
+     C                   MOVE      'W'           DDAPRCOK                                     CER050
+     C                   ADD       1             WId                                          CER050
+     C                   MOVEL     'DDAPRC'      WFldNmXAr(WId)                               CER050
+     C                   MOVEL     'LEX0463'     WMsgIDXAr(WId)                               CER050
+     C                   ENDIF                                                                CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+      * Default APR flag if Blanks and Insert                                                 CER050
+     C                   If        DDAPRC = *Blanks and                                       CER050
+     C                             DDACTN = 'I'                                               CER050
+     C                   Eval      DDAPRC = WfAPRC                                            CER050
+     C                   MOVE      'Y'           DDAPRCOK                                     CER050
+     C                   Endif                                                                CER050
+      *                                                                                       CER050
+     C                   ENDSR                                                                CER050
       *****************************************************************                       CER020
       /EJECT                                                                                  CER020
       *****************************************************************                       CER020
@@ -9773,6 +9914,65 @@ E004 C                   ENDIF
      C                   EVAL      CLE158 = 'Y'                                               CLE158
      C                   ENDIF                                                                CLE158
                                                                                               CLE158
+      *                                                                                       CER050
+      ** Determine if CER050 feature is enabled                                               CER050
+     C                   EVAL      CER050 = 'N'                                               CER050
+     C                   CALLB     'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       PRtcd                                        CER050
+     C                   PARM      '*VERIFY'     POptn                                        CER050
+     C                   PARM      'CER050'      PSard                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+      *                                                                                       CER050
+     C                   IF        PRtcd <> *BLANKS AND                                       CER050
+     C                             PRtcd <> '*NRF   '                                         CER050
+     C                   EVAL      DBKEY = PSard                                              CER050
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER050
+     C                   EVAL      DBASE = 24                                                 CER050
+     C                   EXSR      *PSSR                                                      CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+     C                   IF        PRtcd = *BLANKS                                            CER050
+     C                   MOVE      'Y'           CER050                                       CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+      * Retrieve system values for 'APRLELoans'                                               CER050
+     C                   Eval      P@OP01 = *Blanks                                           CER050
+     C                   Eval      P@OP01 = 'APRLELoans'                                      CER050
+     C                   CALL      'AOSVALR0'                                                 CER050
+     C                   PARM                    P@RTCD            7                          CER050
+     C                   PARM                    P@OP01           20                          CER050
+     C                   PARM                    P@VL01          200                          CER050
+     C                   PARM      *Blanks       P@OP02           20                          CER050
+     C                   PARM                    P@VL02          200                          CER050
+     C                   PARM      *Blanks       P@OP03           20                          CER050
+     C                   PARM                    P@VL03          200                          CER050
+     C                   PARM      *Blanks       P@OP04           20                          CER050
+     C                   PARM                    P@VL04          200                          CER050
+     C                   PARM      *Blanks       P@OP05           20                          CER050
+     C                   PARM                    P@VL05          200                          CER050
+     C                   PARM      *Blanks       P@OP06           20                          CER050
+     C                   PARM                    P@VL06          200                          CER050
+     C                   PARM      *Blanks       P@OP07           20                          CER050
+     C                   PARM                    P@VL07          200                          CER050
+     C                   PARM      *Blanks       P@OP08           20                          CER050
+     C                   PARM                    P@VL08          200                          CER050
+     C                   PARM      *Blanks       P@OP09           20                          CER050
+     C                   PARM                    P@VL09          200                          CER050
+     C                   PARM      *Blanks       P@OP10           20                          CER050
+     C                   PARM                    P@VL10          200                          CER050
+      *                                                                                       CER050
+      * APRLELoans system value not found                                                     CER050
+     C                   IF        P@RTCD <> *Blank                                           CER050
+     C     *LOCK         IN        LDA                                                        CER050
+     C                   MOVEL     'SDSVALPD'    DBFILE                                       CER050
+     C                   Z-ADD     10            DBASE                                        CER050
+     C                   MOVEL     'APRLELoans'  DBKEY                                        CER050
+     C                   OUT       LDA                                                        CER050
+     C                   EXSR      *PSSR                                                      CER050
+     C                   ELSE                                                                 CER050
+     C                   MOVEL     P@VL01        SVALLE            1                          CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050                                                                                        
       ** Check for auto allocation of loan numbers system value.                             BUG6108
      C                   CALLB     'AOSVALR0'                                                BUG6108
      C                   PARM      *BLANKS       PRtCd                                       BUG6108
@@ -10018,6 +10218,14 @@ E004 C                   ENDIF
      C*****K_LOEV        KLIST                                                    MD022807 MD022807C
      C**********         KFLD                    @@ORLN                           MD022807 MD022807C
      C**********         KFLD                    WSVMD                            MD022807 MD022807C
+      ***  Define parameter list for ZALIGN                                                   CER050
+      *                                                                                       CER050
+     C     PPAR1         PLIST                                                                CER050
+     C                   PARM      *BLANKS       PRTCD             7                          CER050
+     C                   PARM                    PSCRF            16                          CER050
+     C                   PARM                    PNDEC             1 0                        CER050
+     C                   PARM                    PNDIG             2 0                        CER050
+     C                   PARM      *BLANKS       PRVAL            16                          CER050
       *
       ***  set the message file
       *

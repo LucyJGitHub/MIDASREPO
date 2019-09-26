@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -67,31 +69,31 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPUTXTL0  IF A E           K DISK    INFSR(*PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
       ** DEFINE FIELDS FOR ZDATE10
      D                 DS
      D ZWDTIN                  1      8S 0
      D  ZWYYYY                 1      4S 0
      D  ZWMTH                  5      6S 0
      D  ZWDAY                  7      8S 0
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
      D DSSDY         E DS                  EXTNAME(DSSDY)                                   BUG11830
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -99,28 +101,28 @@
      C                   PARM                    MMDELD
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    DealDate          5 0            Midas day no.
      C                   PARM                    ValueDate         5 0            Midas day no.
      C                   PARM                    MaturityDate      5 0            Midas day no.
- 
+
       * CONVERT DATES
- 
+
      C                   EXSR      CONVT_DATES
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
       * CONVERT DATES
       *****************************************************************
      C     CONVT_DATES   BEGSR
- 
+
       * deal date
      C                   Z-ADD     HKDDYY        ZWYYYY
      C                   Z-ADD     HKDDMM        ZWMTH
@@ -139,7 +141,7 @@
      C                   Z-ADD     HKMDDD        ZWDAY
      C                   EXSR      ZDATE10
      C                   Z-ADD     ZZMDNO        MaturityDate                     Midas day no.
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -147,11 +149,11 @@
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -251,14 +253,14 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
- 
+
+
       * key list
- 
+
      C     GPUTXTK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_MOD

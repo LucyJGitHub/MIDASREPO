@@ -12,7 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
       *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD052589           Date 22Jan19               *
       *                 MD050007           Date 05Nov18               *
@@ -157,7 +157,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054317 - PDCL X not generated for freq based repayment     *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052589 - Projections are shown with PDCLPAMPayAC set to N  *
       *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
@@ -1075,6 +1075,7 @@
      D CCF001          S              1    INZ('N')                                          BUG3760
      D CAP086          S              1A   INZ('N')                                           CAP086
      D CLE055          S              1    INZ('N')                                           CLE055
+     D CER050          S              1A   INZ('N')                                           CER050
      D WFuncType       S              8                                                      BUG3760
      D WIdntifier      S             40                                                      BUG3760
      D WBranch         S              3                                                      BUG3760
@@ -3897,6 +3898,12 @@
      C                   EVAL      L9PI = L_CLL9PI                                            CLE141
      C                   EVAL      L0PI = L_CLL0PI                                            CLE141
      C                   ENDIF                                                                CLE141
+      *                                                                                       CER050
+     C                   IF        CER050 = 'Y'                                               CER050
+     C                   EVAL      APRC = L_CLAPRC                                            CER050
+     C                   EVAL      PREM = L_CLPREM                                            CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
                                                                                               CLE164
      C                   ENDSR
       ****************************************************************
@@ -4581,6 +4588,12 @@
      C                   EVAL      L9PI = L_CLL9PI                                            CLE141
      C                   EVAL      L0PI = L_CLL0PI                                            CLE141
      C                   ENDIF
+      *                                                                                       CER050
+     C                   IF        CER050 = 'Y'                                               CER050
+     C                   EVAL      APRC = L_CLAPRC                                            CER050
+     C                   EVAL      PREM = L_CLPREM                                            CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -7246,30 +7259,7 @@
      C                   MOVE      FEFCCY        ZCCY
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   Z-ADD     1             X
-      *                                                                                     MD054317
-      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
-      *                                                                                     MD054317
-     C                   MOVE      FEFCCY        WKCCY             3                        MD054317
-      *                                                                                     MD054317
-     C     CLE031        IFEQ      'Y'                                                      MD054317
-      *                                                                                     MD054317
-     C     PTFI          IFEQ      'P'                                                      MD054317
-     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FEPSCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ELSE                                                               MD054317
-     C     FESCCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FESCCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   MOVE      WKCCY         ZCCY                                       MD054317
-     C                   MOVE      WKCCY         PCURR                                      MD054317
-      *                                                                                     MD054317
-     C*****FEFCCY        LOOKUP    CYA(X)                                 69                MD054317
-     C     WKCCY         LOOKUP    CYA(X)                                 69                MD054317
+     C     FEFCCY        LOOKUP    CYA(X)                                 69
      C                   MOVE      *OFF          *IN69
      C                   MOVE      TND(X)        ZNRDYS
       *
@@ -7285,8 +7275,7 @@
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*KEY   '     POPTN             7
      C                   PARM                    PCUSN             6
-     C**********         PARM      FEFCCY        PCURR             3                        MD054317
-     C                   PARM                    PCURR             3                        MD054317
+     C                   PARM      FEFCCY        PCURR             3
      C**********         PARM                    PACCD             4                          CGL029
      C                   PARM                    PACCD                                        CGL029
      C                   PARM                    PACSN             2
@@ -9547,6 +9536,30 @@
      C                   EXSR      SRErr                                                    MD046370
      C                   ENDIF                                                              MD046370
       *                                                                                     MD046370
+                                                                                              CER050
+      *                                                                                       CER050
+      ** Check if CER050 feature is enabled                                                   CER050
+      *                                                                                       CER050
+     C                   CALL      'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       PRtcd                                        CER050
+     C                   PARM      '*VERIFY'     POptn                                        CER050
+     C                   PARM      'CER050'      PSard                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+      *                                                                                       CER050
+     C                   IF        PRtcd <> *BLANKS  AND                                      CER050
+     C                             PRtcd <> '*NRF   '                                         CER050
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER050
+     C                   EVAL      DBASE = 72                                                 CER050
+     C                   EVAL      DBKEY = 'CER050'                                           CER050
+     C                   EXSR      *PSSR                                                      CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+     C                   IF        PRtcd = *BLANKS                                            CER050
+     C                   EVAL      CER050 = 'Y'                                               CER050
+     C                   ELSE                                                                 CER050
+     C                   EVAL      CER050 = 'N'                                               CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
       ** If Past Due Call Loans Processing;                                                   CLE134
       ** Set Basel II Classification Period Description & Days Arrays.                        CLE134
                                                                                               CLE134

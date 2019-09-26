@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD037440           Date 18Sep19               *
-      *  Prev Amend No. 246029             Date 18Sep19               *
+      *  Last Amend No. MD053826           Date 25Sep19               *
+      *  Prev Amend No. MD037440           Date 18Sep19               *
+      *                 246029             Date 18Sep19               *
       *                 MD051963A          Date 10Dec18               *
       *                 AR325915           Date 03Oct18               *
       *                 MD045032           Date 07Apr18               *
@@ -154,6 +155,8 @@
      A*                                                               *
      A*---------------------------------------------------------------*
      A*                                                               *
+      *  MD053826 - Consider any back valued RC of the tranche when   *
+      *             updating a CA with 'T' revolving credit indicator *
       *  MD037440 - Facility amount of credit agreement is incorrect  *
       *             after backvalued transaction. Extend fix 246029.  *
       *           - Rename the rest of the fields in HISUPD1 as       *
@@ -3502,14 +3505,42 @@
      C                     Z-ADDFADATE    KYDATE  50                                          246032
       *                                                                                       246032
      C           FADATE    IFLT BJRDNB                                                        246032
+      *                                                                                     MD053826
+      ** Check if there is an existing RC record in the action file.                        MD053826
+      *                                                                                     MD053826
+     C                     MOVE *BLANKS   INDRC   1                                         MD053826
+     C           KEY009    SETGTHISACTL2                                                    MD053826
+     C           KEY008    REDPEHISACTL2                 83                                 MD053826
+     C           *IN83     DOWEQ'0'                                                         MD053826
+     C           ACTN2     IFEQ 'RC'                                                        MD053826
+     C                     MOVE 'Y'       INDRC                                             MD053826
+     C                     SETON                     83                                     MD053826
+     C                     ELSE                                                             MD053826
+     C           KEY008    REDPEHISACTL2                 83                                 MD053826
+     C                     ENDIF                                                            MD053826
+     C                     ENDDO                                                            MD053826
+      *                                                                                     MD053826
      C           KEY009    SETGTHISUPD1                                                       246032
      C           KEY008    REDPEHISUPD1                  99                                   246032
+      *                                                                                     MD053826
+     C           *IN99     IFEQ '0'                                                         MD053826
+     C           *IN14     ANDEQ'1'                                                         MD053826
+     C                     MOVE F2RCIN    WRCIN   1                                         MD053826
+     C           INDRC     IFEQ 'Y'                                                         MD053826
+     C           DATE2     ANDLEF2DATE                                                      MD053826
+     C           DATE2     ANDLEFADATE                                                      MD053826
+     C                     MOVE RCIN2     WRCIN                                             MD053826
+     C                     ENDIF                                                            MD053826
+     C                     ENDIF                                                            MD053826
+      *                                                                                     MD053826
      C           *IN99     IFEQ '1'                                                           246032
      C                     MOVE RVCR      @RCI                                                246032
      C                     ELSE                                                               246032
      C           *IN14     IFEQ '1'                                                           246032
-     C           F2RCIN    IFNE 'T'                                                           246032
-     C                     MOVE F2RCIN    @RCI                                                246032
+     C********** F2RCIN    IFNE 'T'                                                  246032 MD053826
+     C**********           MOVE F2RCIN    @RCI                                       246032 MD053826
+     C           WRCIN     IFNE 'T'                                                         MD053826
+     C                     MOVE WRCIN     @RCI                                              MD053826
      C                     ELSE                                                               246032
      C                     MOVE RVCR      @RCI                                                246032
      C                     ENDIF                                                              246032
@@ -3801,7 +3832,6 @@
      C*********  FAACTN    OREQ 'RE'                                                 225591 AR325915
      C*********  FARIND    ANDEQ'R'                                                  225591 AR325915
      C*********  FARCIN    ANDNE'Y'                                                  225591 AR325915
-     C           @RCI      ANDNE'Y'                                                         MD037440
      C/COPY WNCPYSRC,LEH01351
      C                     ADD  @AMT      FAUNDR                          154584
      C/COPY WNCPYSRC,LEH01352

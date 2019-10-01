@@ -6,11 +6,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. LUC133             Date 01Aug19               *
-      *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
+      *  Last Amend No. MD054505           Date 30Sept19              *
+      *  Prev Amend No. LUC133             Date 01Aug19               *
+      *                 LUC108   *CREATE   Date 19Apr16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054505 - Running Balance not shown in GL0420P2 (LUC133)    *
       *  LUC133 - Amendments to Statement of Account feature SpA      *
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
@@ -2753,6 +2755,12 @@
      O               22 72   PSTA                83 '  ,   ,   , 0 .  '
      O               22 73   PSTA                83 ' ,   ,   , 0 .   '
      O               22                          85 'CR'
+     O               KP 70   RUNBAL             116 '   ,   ,   ,   , 0 '       MD054505
+     O               KP 71   RUNBAL             116 '  ,   ,   ,   , 0 . '      MD054505
+     O               KP 72   RUNBAL             116 ' ,   ,   ,   , 0 .  '      MD054505
+     O               KP 73   RUNBAL             116 '   ,   ,   , 0 .   '       MD054505
+     O               09 KP                      118 'DR'                        MD054505
+     O              N09 KP                      118 'CR'                        MD054505
       *
      O          E    41 51N34DET         1
      O         AND  N04 84 78

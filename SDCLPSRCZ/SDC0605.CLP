@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD053260           Date 12Jul19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 22May08              */
@@ -24,6 +25,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD053260 - FBM COB - Component SDC000817 00001 terminated   */
+/*                  abnormally. Database error in file SDCUSTPD,     */
+/*                  key 000992, in , at 001                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       BG18886 - Amend non-standard codes.                         */
@@ -75,6 +79,10 @@
                IF         COND(%SST(&SWITCH 8 1) *EQ '1') THEN(GOTO +
                             CMDLBL(ABNOR))                            /*055652*/
                DLTOVR     FILE(*ALL)
+               CALL       PGM(SD000955)                                                 /*MD053260*/
+               RTVJOBA    SWS(&SWITCH)                                                  /*MD053260*/
+               IF         COND(%SST(&SWITCH 8 1) *EQ '1') THEN(GOTO +
+                            CMDLBL(ABNOR))                                              /*MD053260*/
 /**/
 /**********    CRTPF      FILE(&LIB/F256) RCDLEN(256) TEXT('Midas +   /*055652*/
 /**********               SD Temporary File') SHARE(*YES) LVLCHK(*NO) /*055652*/

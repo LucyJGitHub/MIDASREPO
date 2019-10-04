@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. AR908919           Date 02Oct19               *
       *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *               . MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD035358           Date 08Mar17               *
@@ -145,6 +146,11 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  AR908919 - MT320 message not acknowleged by SWIFT alliance.  *
+      *             Ensure that for Early Maturity deal amendments,   *
+      *             tag 30X will be generated instead of 32H.         *
+      *             (Child: AR908920)                                 *
+      *           - Applied for MD053816                              *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -152,7 +158,7 @@
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD035358 - MT320 Messages missing information                *
       *           - complete the fix of AR733390                      *
       *  AR641715 - Incorrect details shown in 57A and 58A is not     *
@@ -1461,6 +1467,8 @@
      C                     Z-ADD17        BLSBYT  60                                          CSW208
      C                     MOVE 'N'       WAMND   1                                         AR916823
       *                                                                                       CSW208
+     C                     MOVE *BLANKS   WRK22B  4                                         AR908919
+      *                                                                                     AR908919
      C                     ENDSR
      C/EJECT
       *****************************************************************
@@ -4294,6 +4302,7 @@
      C           MGEVTP    WHEQ 'EM'                                                        MD034675
      C***********          MOVEL'CINT'    MFLD                                         245960 261382
      C                     MOVEL'CONF'    MFLD                                                261382
+     C                     MOVE 'CONF'    WRK22B                                            AR908919
       *                                                                                       245960
      C********** MGMATU    WHEQ 'C'                                                  CSW200 MD034675
      C           MGMATU    WHEQ 'I'                                                         MD034675
@@ -4700,6 +4709,10 @@
       *                                                                   CSW200
      C           MGROTN    IFNE 0                                         CSW200
      C           MGMATU    OREQ 'C'                                       CSW200
+     C           MGEVTP    ANDNE'EM'                                                        AR908919
+     C           MGMATU    OREQ 'C'                                                         AR908919
+     C           MGEVTP    ANDEQ'EM'                                                        AR908919
+     C           WRK22B    ANDNE'CONF'                                                      AR908919
      C           MGMATU    OREQ 'I'                                       CSW200
       *                                                                   CSW200
       **  Format purchase currency and rollover amount.                   CSW200
@@ -5089,6 +5102,8 @@
       *                                                                   CSW200
      C           MGMATU    IFNE 'C'                                       CSW200
      C           MGMATU    ANDNE'I'                                       CSW200
+     C           WRK22B    OREQ 'CONF'                                                      AR908919
+     C           MGEVTP    ANDEQ'EM'                                                        AR908919
      C                     CALL 'ZM0065'               15                 CSW200
      C                     PARM           ZMDAY   50                      CSW200
      C                     PARM           ZSDATE  6                       CSW200

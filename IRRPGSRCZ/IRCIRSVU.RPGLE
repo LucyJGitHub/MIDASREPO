@@ -1449,6 +1449,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D @@AMT           S             15  0                                                    245692
       ** Error return code for ZA0840 module                                                  245692
      D @@ERCD          S              1  0                                                    245692
+      ** Action Code Reject                                                                 MD053400
+     D ACTRJ           S              1                                                     MD053400
+      ** +--------------------------------------+
       *                                                                                     MD054117
      D PSYSVAL1        C                   CONST('DspPrinInDecInd')                         MD054117
      D PRETURN         S              7A                                                    MD054117
@@ -5894,9 +5897,12 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                              BUG5449
      C                   EVAL      WRK153 = InDateMDN/7                                      BUG5449
      C                   MOVE      WRK153        WRK30                                       BUG5449
-     C                   IF        (WRK30 = 142) OR (WRK30 = 285)                            BUG5449
-     C                   EVAL      WHoliday = 'Y'                                            BUG5449
-     C                   ENDIF                                                               BUG5449
+     C**********         IF        (WRK30 = 142) OR (WRK30 = 285)                   BUG5449 MD052154
+     C**********         EVAL      WHoliday = 'Y'                                   BUG5449 MD052154
+     C**********         ENDIF                                                      BUG5449 MD052154
+     C                   IF        (WRK30 = 142) OR (WRK30 = 285)                           MD052876
+     C                   EVAL      WHoliday = 'Y'                                           MD052876
+     C                   ENDIF                                                              MD052876
                                                                                              BUG5449
      C                   ENDIF                                                               BUG5449
                                                                                              BUG5449
@@ -7777,7 +7783,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    PAGVC             2
                                                                                               CSD095
       ** Deal Subtype                                                                         CSD095
-     C                   PARM      *BLANK        BlankSTYP                                    CSD095
+     C********           PARM      *BLANK        BlankSTYP                          CSD095 CSD095CC1
+     C                   PARM      SDLST         BlankSTYP                                 CSD095CC1
                                                                                               CSD095
       ** Branch                                                                               CSD095
      C********           PARM      *BLANK        BlankBRCA                          CSD095 CSD095CC1

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044506           Date 28Mar17               *
+      *  Last Amend No. MD054117           Date 12Sep19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD031861           Date 12Jan15               *
       *                 CSW214             Date 25Nov14               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
@@ -401,6 +403,30 @@
      D DFOfcrIDOK      S              1                                                       CSW213
      D WNoRepFlag      S              1                                                       CSW213
      D CSW213          S              1                                                       CSW213
+      *                                                                                     MD054117
+     D PSYSVAL1        C                   CONST('DspPrinInDecInd')                         MD054117
+     D PRETURN         S              7A                                                    MD054117
+     D POP01           S             20A                                                    MD054117
+     D PVL01           S            200A                                                    MD054117
+     D POP02           S             20A                                                    MD054117
+     D PVL02           S            200A                                                    MD054117
+     D POP03           S             20A                                                    MD054117
+     D PVL03           S            200A                                                    MD054117
+     D POP04           S             20A                                                    MD054117
+     D PVL04           S            200A                                                    MD054117
+     D POP05           S             20A                                                    MD054117
+     D PVL05           S            200A                                                    MD054117
+     D POP06           S             20A                                                    MD054117
+     D PVL06           S            200A                                                    MD054117
+     D POP07           S             20A                                                    MD054117
+     D PVL07           S            200A                                                    MD054117
+     D POP08           S             20A                                                    MD054117
+     D PVL08           S            200A                                                    MD054117
+     D POP09           S             20A                                                    MD054117
+     D PVL09           S            200A                                                    MD054117
+     D POP10           S             20A                                                    MD054117
+     D PVL10           S            200A                                                    MD054117
+     D PCIDCF          S              1A                                                    MD054117
  
       ** +--- Start of main processing -----------------------------------+
  
@@ -886,7 +912,8 @@
      C                   EVAL      PCPDAT = DTPR                                BUG5403
      C                   Z-ADD     0             WAMT             15 0          BUG5403
                                                                                 BUG6233
-     C                   IF        BGN2ST = 'Y'                                 BUG6233
+     C**********         IF        BGN2ST = 'Y'                                     BUG6233 MD054117
+     C                   IF        PCIDCF = 'Y'                                             MD054117
      C                   IF        CAMT > 0                                     BUG5403
      C                   EVAL      PCIDFLG = 'I'                                BUG5403
      C                   Z-ADD     CAMT          WAMT                           BUG5403
@@ -1504,6 +1531,41 @@
                                                                                               CSW213
      C                   ENDIF                                                                CSW213
                                                                                               CSW213
+                                                                                            MD054117
+     C                   CALL      'AOSVALR0'                                               MD054117
+     C                   PARM      *BLANKS       PRETURN                                    MD054117
+     C                   PARM      PSYSVAL1      POP01                                      MD054117
+     C                   PARM      *BLANKS       PVL01                                      MD054117
+     C                   PARM      *BLANKS       POP02                                      MD054117
+     C                   PARM      *BLANKS       PVL02                                      MD054117
+     C                   PARM      *BLANKS       POP03                                      MD054117
+     C                   PARM      *BLANKS       PVL03                                      MD054117
+     C                   PARM      *BLANKS       POP04                                      MD054117
+     C                   PARM      *BLANKS       PVL04                                      MD054117
+     C                   PARM      *BLANKS       POP05                                      MD054117
+     C                   PARM      *BLANKS       PVL05                                      MD054117
+     C                   PARM      *BLANKS       POP06                                      MD054117
+     C                   PARM      *BLANKS       PVL06                                      MD054117
+     C                   PARM      *BLANKS       POP07                                      MD054117
+     C                   PARM      *BLANKS       PVL07                                      MD054117
+     C                   PARM      *BLANKS       POP08                                      MD054117
+     C                   PARM      *BLANKS       PVL08                                      MD054117
+     C                   PARM      *BLANKS       POP09                                      MD054117
+     C                   PARM      *BLANKS       PVL09                                      MD054117
+     C                   PARM      *BLANKS       POP10                                      MD054117
+     C                   PARM      *BLANKS       PVL10                                      MD054117
+      *                                                                                     MD054117
+     C                   EVAL      PCIDCF = 'N'                                             MD054117
+     C                   IF        PRETURN <> *BLANKS                                       MD054117
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      MD054117
+     C                   EVAL      DBKEY = PSYSVAL1                                         MD054117
+     C                   EVAL      DBASE = 18                                               MD054117
+     C                   OUT       LDA                                                      MD054117
+     C                   EXSR      *PSSR                                                    MD054117
+     C                   ENDIF                                                              MD054117
+      *                                                                                     MD054117
+     C                   MOVEL     PVL01         PCIDCF                                     MD054117
+      *                                                                                     MD054117
  
       ** Store local currency
  

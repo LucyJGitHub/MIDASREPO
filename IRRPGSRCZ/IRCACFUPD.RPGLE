@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054117           Date 12Sep19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054117 - Principal change Increase/Decrease capability     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -599,7 +601,8 @@
      D KPrgMn          S             10A   INZ('IRCACFUPD ')                                  CRE020
      D PSysVal01       S             20A   INZ('CapsCollarsFloorsMnt')                        CRE020
      D PCurSet01       S            200A                                                      CRE020
-     D PSysVal02       S             20A                                                      CRE020
+     D***PSysVal02     S             20A                                             CRE020 MD054117
+     D PSysVal02       S             20A   INZ('DspPrinInDecInd')                           MD054117
      D PCurSet02       S            200A                                                      CRE020
      D PSysVal03       S             20A                                                      CRE020
      D PCurSet03       S            200A                                                      CRE020
@@ -618,6 +621,8 @@
      D PSysVal10       S             20A                                                      CRE020
      D PCurSet10       S            200A                                                      CRE020
      D WSysVal01       S              1A                                                      CRE020
+      *                                                                                     MD054117
+     D PCIDCF          S              1A                                                    MD054117
 
       *****************************************************************
       /EJECT
@@ -795,7 +800,8 @@
      C                   PARM      *Zero         PLastPRDT                                    CAP043
      C                   PARM      UCUCY         POurCcy                                      CAP043
      C                   PARM      TCUCY         PThrCcy                                      CAP043
-     C                   PARM      BGN2ST        PBGN2ST                                      CAP043
+     C**********         PARM      BGN2ST        PBGN2ST                             CAP043 MD054117
+     C                   PARM      PCIDCF        PBGN2ST                                    MD054117
      C                   PARM                    RECScnFmt                                    CAP043
      C                   PARM                    PAYScnFmt                                    CAP043
      C                   PARM                    FRIRScnFmt                                   CAP043
@@ -1617,7 +1623,8 @@
                                                                                               CAP043
       ** Midas-Plato Interface is switched on                                                 CAP043
                                                                                               CAP043
-     C                   IF        BGN2ST = 'Y'                                               CAP043
+     C**********         IF        BGN2ST = 'Y'                                      CAP043 MD054117
+     C                   IF        PCIDCF = 'Y'                                             MD054117
                                                                                               CAP043
       ** Move amount to workfield for computation                                             CAP043
                                                                                               CAP043
@@ -1659,7 +1666,8 @@
       ** Update records with processing dates greater than the processing                     CAP043
       ** date of the inserted record                                                          CAP043
                                                                                               CAP043
-     C                   IF        BGN2ST = 'Y'                                               CAP043
+     C**********         IF        BGN2ST = 'Y'                                      CAP043 MD054117
+     C                   IF        PCIDCF = 'Y'                                             MD054117
      C                   EXSR      SRUpdPCSC                                                  CAP043
      C                   ENDIF                                                                CAP043
                                                                                               CAP043
@@ -3819,6 +3827,43 @@
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
                                                                                               CSD083
+     C                   CALLB     'AOSVALR0'                                               MD054117
+     C                   PARM      *BLANKS       PRtCd                                      MD054117
+     C                   PARM                    PSysVal01                                  MD054117
+     C                   PARM                    PCurSet01                                  MD054117
+     C                   PARM                    PSysVal02                                  MD054117
+     C                   PARM                    PCurSet02                                  MD054117
+     C                   PARM                    PSysVal03                                  MD054117
+     C                   PARM                    PCurSet03                                  MD054117
+     C                   PARM                    PSysVal04                                  MD054117
+     C                   PARM                    PCurSet04                                  MD054117
+     C                   PARM                    PSysVal05                                  MD054117
+     C                   PARM                    PCurSet05                                  MD054117
+     C                   PARM                    PSysVal06                                  MD054117
+     C                   PARM                    PCurSet06                                  MD054117
+     C                   PARM                    PSysVal07                                  MD054117
+     C                   PARM                    PCurSet07                                  MD054117
+     C                   PARM                    PSysVal08                                  MD054117
+     C                   PARM                    PCurSet08                                  MD054117
+     C                   PARM                    PSysVal09                                  MD054117
+     C                   PARM                    PCurSet09                                  MD054117
+     C                   PARM                    PSysVal10                                  MD054117
+     C                   PARM                    PCurSet10                                  MD054117
+                                                                                            MD054117
+     C                   EVAL      PCIDCF = 'N'                                             MD054117
+                                                                                            MD054117
+     C                   IF        PRtCd = *BLANKS                                          MD054117
+     C                   MOVEL     PCurSet02     PCIDCF                                     MD054117
+     C                   ELSE                                                               MD054117
+                                                                                            MD054117
+     C     *LOCK         IN        LDA                                                      MD054117
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD054117
+     C                   EVAL      DBase = 26                                               MD054117
+     C                   EVAL      DBKey = PSysVal02                                        MD054117
+     C                   OUT       LDA                                                      MD054117
+     C                   EXSR      SRErr                                                    MD054117
+                                                                                            MD054117
+     C                   ENDIF                                                              MD054117
      C                   ENDSR
       ****************************************************************
       /EJECT                                                                                  CRE020

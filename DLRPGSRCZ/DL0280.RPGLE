@@ -551,6 +551,7 @@
      D WPARML          C                   CONST('LECalcBasis6LeapYear')                    MD035545
      D UseDealCust     C                   Const('UseDealCustforEuTax')                     MD026788
      D UseHistRate     C                   Const('UseHistRateforBVDeal')                    MD031283
+     D DSPPRIN         C                   Const('DspPrinInDecInd')                         MD054117
      D/COPY ZSRSRC,ZHOLILE                                                                   BUG6293
      D/COPY ZSRSRC,ZINTDYZ1LE                                                                BUG6293
      D/COPY ZSRSRC,ZDATE9Z2LE                                                                BUG6293
@@ -583,6 +584,7 @@
      D WBRCH           S              3A                                                      CRE105
      D WACCD           S             10A                                                      CRE105
      D WASEQ           S              2A                                                      CRE105
+     D PCIDCF          S              1A                                                    MD054117
       *                                                                   066550
      IDEALSL1   NS  01    1 CH                                                  S01117
 0123 I*    DEALS FILE - HEADER RECORD.
@@ -2763,7 +2765,8 @@
      C                   PARM                    PCurSet01                                    245308
      C                   PARM                    PSysVal02                                    245308
      C                   PARM                    PCurSet02                                    245308
-     C                   PARM                    PSysVal03                                    245308
+     C**********         PARM                    PSysVal03                           245308 MD054117
+     C                   PARM      DSPPRIN       PSysVal03                                  MD054117
      C                   PARM                    PCurSet03                                    245308
      C                   PARM                    PSysVal04                                    245308
      C                   PARM                    PCurSet04                                    245308
@@ -2795,6 +2798,7 @@
      C                   IF        CDL020 = 'Y'                                             MD031283
      C                   MOVEL     PCurSet02     HSTRAT                                     MD031283
      C                   ENDIF                                                              MD031283
+     C                   MOVEL     PCurSet03     PCIDCF                                     MD054117
       *                                                                                       CGL031
      C     KYEUTI        KLIST                                                                CGL031
      C                   KFLD                    BJRDNB                                       CGL031
@@ -18709,7 +18713,8 @@
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Their Last Rate Change Date field (PLTLRC)         CPL002
       *                                                                   CPL002
-     C     BGN2ST        IFEQ      'Y'                                                         CPL00
+     C*****BGN2ST        IFEQ      'Y'                                                CPL00 MD054117
+     C     PCIDCF        IFEQ      'Y'                                                      MD054117
      C     TBRTT         ANDNE     0                                                           CPL00
      C                   Z-ADD     TNICD         PLTLRC                                        CPL00
      C                   ENDIF                                                                 CPL00
@@ -18974,7 +18979,8 @@
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Our Last Rate Change Date field (PLULRC)           CPL002
       *                                                                   CPL002
-     C     BGN2ST        IFEQ      'Y'                                                         CPL00
+     C*****BGN2ST        IFEQ      'Y'                                                CPL00 MD054117
+     C     PCIDCF        IFEQ      'Y'                                                      MD054117
      C     UBRTT         ANDNE     0                                                           CPL00
      C                   Z-ADD     UNICD         PLULRC                                        CPL00
      C                   ENDIF                                                                 CPL00
@@ -23067,7 +23073,8 @@
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Their Last Rate Change Date field (PLTLRC)         CPL002
       *                                                                   CPL002
-     C     BGN2ST        IFEQ      'Y'                                                         CPL00
+     C*****BGN2ST        IFEQ      'Y'                                                CPL00 MD054117
+     C     PCIDCF        IFEQ      'Y'                                                      MD054117
      C     TBRTT         ANDNE     0                                                           CPL00
      C                   Z-ADD     TNICD         PLTLRC                                        CPL00
      C                   ENDIF                                                                 CPL00
@@ -23301,7 +23308,8 @@
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Our Last Rate Change Date field (PLULRC)           CPL002
       *                                                                   CPL002
-     C     BGN2ST        IFEQ      'Y'                                                         CPL00
+     C*****BGN2ST        IFEQ      'Y'                                                CPL00 MD054117
+     C     PCIDCF        IFEQ      'Y'                                                      MD054117
      C     UBRTT         ANDNE     0                                                           CPL00
      C                   Z-ADD     UNICD         PLULRC                                        CPL00
      C                   ENDIF                                                                 CPL00

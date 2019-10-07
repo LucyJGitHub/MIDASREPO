@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD052465           Date 10Jan19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD023188           Date 20Sep18               *
       *                 MD051305           Date 19Jun18               *
       *                 MD050345           Date 04Apr18               *
@@ -146,6 +147,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052465 - Not possible to capture mandatory US TIN for      *
+      *             FATCA reporting                                   *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD023188 - European tax status disappears after re-inserting *
@@ -5861,6 +5864,7 @@
      C                   PARM                    PAPARM                                     MD042692
      C                   PARM                    V_CUAHArr                                  MD045238
      C                   PARM                    CurCuCRSH                                    CGL157
+     C                   PARM                    TranInCRDD                                 MD052465
                                                                                               CGL132
       ** OUTPUTS                                                                              CGL132
       ** FATCA Customer Details OK inds                                                       CGL132

@@ -1358,12 +1358,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       2072          Bfp                                   CER043 CSF011
      C**********         ADD       605           Bfp                                   CSF011 CDL096
      C**********         ADD       571           Bfp                                   CDL096 CGL165
-     C                   ADD       567           Bfp                                          CGL165
+     C**********         ADD       567           Bfp                                   CGL165 CER050
+     C                   ADD       558           Bfp                                          CER050
                                                                                               CSF011
       ** Start of Buffer2                                                                     CSF011
                                                                                               CSF011
-     C                   ADD       1467          Bfp2                                         CSF011
-     C                   ADD       1681          Bfp2                                       MD038485
+     C**********         ADD       1467          Bfp2                                CSF011 MD038485
+     C**********         ADD       1681          Bfp2                                MD038485 CER050
+     C                   ADD       1680          Bfp2                                         CER050
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
      C**********         ADD       LDSTQLn       Bfp                                CER049 AR819540A

@@ -2649,7 +2649,8 @@
       ** Initialise screen fields to default values:
       ** if called from initial screen                                                        240312
      C                   If        DefaultFlag = 'Y'                                          240312
-     C                             and Blankchk = *BLANKS                                     249660
+     C**********                   and Blankchk = *BLANKS                            249660 MD041837
+     C                             and AccIn130 = *BLANKS                                   MD041837
       ***Test rightmost 130 characters of screen, if blank then default.               BUG553 240312
      C******             MOVE      AccnInMast    BLANKCHK        130                   BUG553 240312
      C*****BLANKCHK      IFEQ      *BLANKS                                             BUG553 237341
@@ -3039,7 +3040,8 @@
       ** - if called from initial screen                                                      240312
      C                   MOVE      AccnInMast    BLANKCHK        130                          240366
      C                   If        DefaultFlag = 'Y'                                          240312
-     C                             and Blankchk = *BLANKS                                     240366
+     C**********                   and Blankchk = *BLANKS                            240366 MD041837
+     C                             and AccIn130 = *BLANKS                                   MD041837
       ** Test rightmost 130 characters of screen, if blank then default.                      BUG553
      C******             MOVE      AccnInMast    BLANKCHK                              BUG553 240312
      C*****BLANKCHK      IFEQ      *BLANKS                                             BUG553 240312

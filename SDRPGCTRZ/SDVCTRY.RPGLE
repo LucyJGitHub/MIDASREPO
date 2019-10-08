@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD050359           Date 06Apr18               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD052566           Date 24Jan19               *
+      *  Prev Amend No. MD050359           Date 06Apr18               *
+      *                 CGL177             Date 11Jan16               *
       *                 CGL157  *CREATE    Date 17Aug15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052566 - Indicia "CRS Agreement" was not retrieved from    *
+      *             the country of tax code table                     *
       *  MD050359 - Input field in the NAHO List of Countries page    *
       *             defaults to US when entered                       *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -260,7 +263,8 @@
      C                   CALL      'AOCTTXR0'                                               MD050359
      C                   PARM      *BLANKS       PRTCD                                      MD050359
      C                   PARM      '*KEY   '     POPTN                                      MD050359
-     C                   PARM      DS_A8LCCD     @PCTRT                                     MD050359
+     C**********         PARM      DS_A8LCCD     @PCTRT                            MD050359 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                     MD050359
      C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD050359
                                                                                             MD050359
@@ -269,7 +273,8 @@
      C                   CALL      'AOCTTXR0'                                               MD050359
      C                   PARM      *BLANKS       PRTCD                                      MD050359
      C                   PARM      '*KEY   '     POPTN                                      MD050359
-     C                   PARM      DS_A8LCCD     @PCTRT                                     MD050359
+     C**********         PARM      DS_A8LCCD     @PCTRT                            MD050359 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      *Blanks       @PCTRR                                     MD050359
      C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD050359
      C                   ENDIF                                                              MD050359
@@ -347,6 +352,22 @@
      C                   PARM      BBBRCD        PBRCH                                      MD050359
      C     SDBRCH        PARM      SDBRCH        DSSDY                                      MD050359
 
+                                                                                            MD052566
+      ** Access Customer detail of branch to retrieve country of loation                    MD052566
+      *                                                                                     MD052566
+     C                   MOVEL     *BLANKS       ##CTRY            3                        MD052566
+     C                   IF        PRTCD = *Blanks                                          MD052566
+     C                   CALL      'AOCUSTR0'                                               MD052566
+     C                   PARM      *BLANKS       PRTCD                                      MD052566
+     C                   PARM      '*KEY   '     POPTN                                      MD052566
+     C                   PARM      DS_A8BICN     Pkey2                                      MD052566
+     C                   PARM      *BLANKS       Pkyst                                      MD052566
+     C     SDCUST        PARM      SDCUST        DSSDY                                      MD052566
+                                                                                            MD052566
+     C                   IF        PRTCD = *BLANKS                                          MD052566
+     C                   EVAL      ##CTRY = BBCOLC                                          MD052566
+     C                   ENDIF                                                              MD052566
+     C                   ENDIF                                                              MD052566
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

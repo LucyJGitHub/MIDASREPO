@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD052566           Date 24Jan19               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD036509           Date 12Nov15               *
       *                 MD036460           Date 05Nov15               *
       *                 MD036356           Date 02Nov15               *
@@ -61,6 +62,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052566 - Indicia "CRS Agreement" was not retrieved from    *
+      *             the country of tax code table (Recompile)         *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036509 - NAHO CRS Info Complete is validating on Enquire   *

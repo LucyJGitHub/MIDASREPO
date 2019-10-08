@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD052431           Date 18Dec18               *
-      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *  Last Amend No. MD052566           Date 24Jan19               *
+      *  Prev Amend No. MD052431           Date 18Dec18               *
+      *                 MD051393           Date 29Jun18               *
       *                 MD050493           Date 05May18               *
       *                 MD041522           Date 21Sep16               *
       *                 MD040627           Date 18Aug16               *
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052566 - Indicia "CRS Agreement" was not retrieved from    *
+      *             the country of tax code table                     *
       *  MD052431 - CGL157 CRS - Maintain Customer got error 45049010 *
       *             (The TIN for DE is not set when Local TIN         *
       *             Mandatory is Y) even if Local TIN is input        *
@@ -373,7 +376,8 @@
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
      C**********         PARM      WCOLC         @PCTRR                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -383,7 +387,8 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -447,7 +452,8 @@
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
      C**********         PARM      WCOLC         @PCTRR                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -457,7 +463,8 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -548,7 +555,8 @@
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
      C**********         PARM      WCOLC         @PCTRR                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -558,7 +566,8 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -641,7 +650,8 @@
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
      C**********         PARM      WCOLC         @PCTRR                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -651,7 +661,8 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -1097,7 +1108,8 @@
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
      C**********         PARM      WCOLC         @PCTRR                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -1107,7 +1119,8 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C**********         PARM      WCNCD         @PCTRT                                       CGL177
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -1205,6 +1218,22 @@
      C                   PARM      '*KEY   '     Poptn                                        CGL177
      C                   PARM      BBBRCD        PBRCH                                        CGL177
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL177
+                                                                                            MD052566
+      ** Access Customer detail of branch to retrieve country of loation                    MD052566
+      *                                                                                     MD052566
+     C                   MOVEL     *BLANKS       ##CTRY            3                        MD052566
+     C                   IF        PRTCD = *Blanks                                          MD052566
+     C                   CALL      'AOCUSTR0'                                               MD052566
+     C                   PARM      *BLANKS       PRTCD                                      MD052566
+     C                   PARM      '*KEY   '     POPTN                                      MD052566
+     C                   PARM      DS_A8BICN     Pkey2                                      MD052566
+     C                   PARM      *BLANKS       Pkyst                                      MD052566
+     C     SDCUST        PARM      SDCUST        DSSDY                                      MD052566
+                                                                                            MD052566
+     C                   IF        PRTCD = *BLANKS                                          MD052566
+     C                   EVAL      ##CTRY = BBCOLC                                          MD052566
+     C                   ENDIF                                                              MD052566
+     C                   ENDIF                                                              MD052566
 
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.

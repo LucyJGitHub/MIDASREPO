@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD039670           Date 26Jul16               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD052566           Date 24Jan19               *
+      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD052566 - Indicia "CRS Agreement" was not retrieved from    *
+      *             the country of tax code table                     *
       *  MD039670 - FATCA Housekeeping program                        *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *
@@ -100,7 +103,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     WPCTRT
+     C**********         PARM      DS_A8LCCD     WPCTRT                                     MD052566
+     C                   PARM      ##CTRY        WPCTRT                                     MD052566
      C                   PARM      CNCTRY        WPCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -109,7 +113,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     WPCTRT
+     C**********         PARM      DS_A8LCCD     WPCTRT                                     MD052566
+     C                   PARM      ##CTRY        WPCTRT                                     MD052566
      C                   PARM                    WPCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -184,6 +189,23 @@
      C                   PARM      '*KEY   '     Poptn
      C                   PARM      BBBRCD        PBRCH
      C     SDBRCH        PARM      SDBRCH        DSSDY
+                                                                                            MD052566
+      ** Access Customer detail of branch to retrieve country of loation                    MD052566
+      *                                                                                     MD052566
+     C                   MOVEL     *BLANKS       ##CTRY            3                        MD052566
+     C                   IF        PRTCD = *Blanks                                          MD052566
+     C                   CALL      'AOCUSTR0'                                               MD052566
+     C                   PARM      *BLANKS       PRTCD                                      MD052566
+     C                   PARM      '*KEY   '     POPTN                                      MD052566
+     C                   PARM      DS_A8BICN     Pkey1                                      MD052566
+     C                   PARM      *BLANKS       Pkyst                                      MD052566
+     C     SDCUSD        PARM      SDCUSD        DSSDY                                      MD052566
+                                                                                            MD052566
+     C                   IF        PRTCD = *BLANKS                                          MD052566
+     C                   EVAL      ##CTRY = BBCOLC                                          MD052566
+     C                   ENDIF                                                              MD052566
+     C                   ENDIF                                                              MD052566
+                                                                                            MD052566
 
      C                   ENDSR
 

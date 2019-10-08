@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD051393           Date 29Jun18               *
-      *  Prev Amend No. MD051230           Date 08Jun18               *
+      *  Last Amend No. MD052432           Date 18Dec18               *
+      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *                 MD051230           Date 08Jun18               *
       *                 MD050572           Date 03May18               *
       *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
@@ -669,6 +670,7 @@
      C                   PARM                    SDVACUD1
       ** CRS Country Transaction Details
      C                   PARM                    PCrsdS
+     C                   PARM                    V_CUAHArr                                  MD052432
 
       ** Outputs
       ** Transaction Details OK inds

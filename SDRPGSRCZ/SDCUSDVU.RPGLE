@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD052432           Date 18Dec18               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD023188           Date 20Sep18               *
       *                 MD051305           Date 19Jun18               *
       *                 MD050345           Date 04Apr18               *
@@ -146,6 +147,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052432 - System does not recognise the defined authority   *
+      *              holders (i.e. controlling persons for CRS)       *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD023188 - European tax status disappears after re-inserting *
@@ -5968,6 +5971,7 @@
      C                   PARM                    ValidCuad                                    CGL157
       ** CRS Country Transaction Details                                                      CGL157
      C                   PARM                    PCrsdS                                       CGL157
+     C                   PARM                    V_CUAHArr                                  MD052432
                                                                                               CGL157
       ** Outputs                                                                              CGL157
       ** Transaction Details OK inds                                                          CGL157

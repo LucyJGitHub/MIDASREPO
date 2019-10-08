@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD050572           Date 03May18               *
+      *  Last Amend No. MD052432           Date 18Dec18               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD050572           Date 03May18               *
       *                 MD040734           Date 23Aug16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036459           Date 06Nov15               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052432 - System does not recognise the defined authority   *
+      *              holders (i.e. controlling persons for CRS)       *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD050572 - Exception 14 and 15 is not being displayed /      *
       *             triggered                                         *
@@ -1015,12 +1018,28 @@
      C                             AND PFeature = 'CRS'                                     MD036369
      C     DDCUSN        CHAIN     SDJACCD0                                                   CGL157
      C                   IF        NOT %FOUND(SDJACCL0)                                       CGL157
+     C                   EVAL      Idy = 1                                                  MD052432
+     C                   EVAL      WCINT = 'N'                                              MD052432
+     C                   DOW       Idy <= 50                                                MD052432
+     C                   CLEAR                   ValidCUAH                                  MD052432
+     C                   EVAL      ValidCUAH = V_CUAHArr(Idy)                               MD052432
+     C                   IF        DDCUSN = V_ACCUST                                        MD052432
+     C                             AND V_ACCINT = 'Y'                                       MD052432
+     C                   EVAL      Idy = 50                                                 MD052432
+     C                   EVAL      WCINT = 'Y'                                              MD052432
+     C                   LEAVE                                                              MD052432
+     C                   ENDIF                                                              MD052432
+     C                   EVAL      Idy = Idy + 1                                            MD052432
+     C                   ENDDO                                                              MD052432
+                                                                                            MD052432
+     C                   IF        WCINT = 'N'                                              MD052432
      C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL157
      C                   EVAL      WExcpRptArr (WArrCnt) = 'H'                                CGL157
                                                                                               CGL157
      C                   EVAL      WIx = WIx + 1                                              CGL157
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXMI    '                              CGL157
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0436'                                CGL157
+     C                   ENDIF                                                              MD052432
      C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CGL157
                                                                                               CGL157

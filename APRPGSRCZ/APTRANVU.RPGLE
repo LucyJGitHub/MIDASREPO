@@ -1353,10 +1353,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C     90            SUBST     BUFFER:Bfp    WDUMMY                                     BUG10563
      C                   ADD       90            Bfp                                        BUG10563
       *                                                                                       CER043
-      ** Need to add 240 + 2072 to extract the Customer ease of use details                   CER043
+      ***Need*to*add*240*+*2072*to*extract*the*Customer*ease*of*use*details*         CER043 MD054028
+      ** Need to add 240 + 2034 to extract the Customer ease of use details                 MD054028
       ** Narrative - 240 (SFNARR01 (60A) + SFNARR02 (60A) +                                   CER043
       **                  SFNARR03 (60A) + SFNARR04 (60A))                                    CER043
-      ** Filler2 - 2072A                                                                      CER043
+      ***Filler2*-*2072A***********************************************              CER043 MD054028
+      ** Filler2 - 2034A                                                                    MD054028
       *                                                                                       CER043
      C                   ADD       240           Bfp                                          CER043
      C**********         ADD       2072          Bfp                                   CER043 CSF011
@@ -1364,14 +1366,16 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       571           Bfp                                   CDL096 CGL165
      C**********         ADD       567           Bfp                                   CGL165 CER050
      C**********         ADD       558           Bfp                                 CER050 MD054028
-     C                   ADD       567           Bfp                                        MD054028
+      ** Buffer1 has remaining 356 fields that should be empty because of Filler2           MD054028
+     C                   ADD       356           Bfp                                        MD054028
+      ** Remaining from Filler2 is 1678 = 2034 - 356                                        MD054028
                                                                                               CSF011
       ** Start of Buffer2                                                                     CSF011
                                                                                               CSF011
      C**********         ADD       1467          Bfp2                                CSF011 MD038485
      C**********         ADD       1681          Bfp2                                MD038485 CER050
      C**********         ADD       1680          Bfp2                                CER050 MD054028
-     C                   ADD       1681          Bfp2                                       MD054028
+     C                   ADD       1678          Bfp2                                       MD054028
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
      C**********         ADD       LDSTQLn       Bfp                                CER049 AR819540A
@@ -1832,7 +1836,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       AMRXLn        Bfp2                               CSF011A MD044880
      C*****AMEXLn        SUBST     BUFFER2:Bfp2  Extdata                             CRE073 MD044880
      C**********         ADD       AMEXLn        Bfp2                                CRE073 MD044880
-     C                   EVAL      Buffer9999 = Buffer + Buffer2                            MD054028     
 
      C                   CALL      'GLAMADVU'
       * Common header information (DS) from source system

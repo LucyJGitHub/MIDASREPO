@@ -539,7 +539,7 @@
      C**********         EVAL      Buffer2 = %SUBST(Filler2:606)                       CSF011 CDL096
      C**********         EVAL      Buffer2 = %SUBST(Filler2:572)                       CDL096 CGL165
      C**********         EVAL      Buffer2 = %SUBST(Filler2:568)                     CGL165 MD054028
-     C                   EVAL      Buffer2 = %SUBST(Filler2:336)                            MD054028
+     C                   EVAL      Buffer2 = %SUBST(Filler2:357)                            MD054028
      C                                       + TranQExt                                       CSF011
      C                                       + DDAPRC + DDAPRR                              MD054028
      C                                       + FIDTScnRpt                                     CSF011

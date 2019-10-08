@@ -678,7 +678,6 @@
      D  DDRDFDOK                      1A                                                      CRE073
      D  DDAIROK                       1A                                                    AR876535
      D  DDAprcOk                      1A                                                      CER050
-     D  DDAPRC         S              1A                                                    MD054028
 
       ** Error flags from Dates validation routine
      D ErrDealDat      S              1A   INZ('N')

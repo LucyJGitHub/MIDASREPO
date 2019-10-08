@@ -331,13 +331,12 @@
  
      C                   PARM                    RetCodeOut
      C                   PARM                    TRANFilFmt
+     C                   PARM                    DDAPRC                         MD054028
+     C                   PARM                    DDAPRR                         MD054028
      C                   PARM                    LDNIScnFmt
      C                   PARM                    PSTS
      C                   PARM                    PCSTS
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
-     C                   PARM                    DDAPRR                                     MD054028
- 
+      
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE

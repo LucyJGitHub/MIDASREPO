@@ -1688,10 +1688,6 @@
                                                                                 180721
       ** Front Office Id                                                        180721
      C                   PARM                    FOTRID                         180721
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDAPDR            8                        MD054028
-     C                   PARM                    DDAPCR            8                        MD054028
  
       * OUTPUTS :
  
@@ -1725,6 +1721,10 @@
                                                                                               CSD012
       * Authorisation Mode                                                                    CSD012
      C                   PARM                    AUTHMD                                       CSD012
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       * If errors returned
      C     Idx           IFNE      0

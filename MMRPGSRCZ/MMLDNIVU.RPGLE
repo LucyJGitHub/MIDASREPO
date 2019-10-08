@@ -1143,11 +1143,13 @@
      C                   EVAL      FIDTScnRstN = %SUBST(Buffer:5194:240)                      CGL165
      C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +               CSF011 MD042711
      C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1777) +             MD042711 MD044873
-     C                   EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +                      MD044873
-     C                                          %SUBST(BufferEx2:1:2315)                      CSF011
+     C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +             MD044873 MD054028
+     C                   EVAL      FIDTScnRpt = %SUBST(Buffer2:1783) +                      MD054028
+     C**********                                %SUBST(BufferEx2:1:2315)             CSF011 MD054028
+     C                                          BufferEx2                                   MD054028
      C                   EndIf                                                               BUG9827
      C                   IF        CER050 = 'Y'                                             MD054028
-     C                   EVAL      DDAPRC = %SUBST(Buffer2:1795)                            MD054028
+     C                   EVAL      DDAPRC = %SUBST(Buffer2:1774)                            MD054028
      C                   ENDIF                                                              MD054028
      C                   IF        CDL033 = 'Y'                                               CDL033
      C**********         EVAL      RFormula = %SUBST(Buffer:454:8)                    CDL033 BUG9827
@@ -1454,7 +1456,7 @@
      C**********         EVAL      Buffer2 = %SUBST(Filler:572)                        CDL096 CGL165
      C**********         EVAL      Buffer2 = %SUBST(Filler:568)                      CGL165 MD038485
      C**********         EVAL      Buffer2 = %SUBST(Filler:354)                    MD038485 MD054028
-     C                   EVAL      Buffer2 = %SUBST(Filler:336)                             MD054028
+     C                   EVAL      Buffer2 = %SUBST(Filler:357)                             MD054028
      C                                       + TranQExt                                       CSF011
      C                                       + DDAPRC + DDAPRR                              MD054028
      C                                       + FIDTScnRpt                                     CSF011

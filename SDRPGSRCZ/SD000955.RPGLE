@@ -2,6 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2019')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas SD Interest Payment History SDINPHPD Update')    *
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module                                 *
@@ -19,48 +20,48 @@
       *             key 000992, in , at 001                           *
       *                                                               *
       *****************************************************************
- 
+
      FSDINPHL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     EXTMBR('*ALL')
      F                                     INFDS(INFDS)
- 
+
       ** =======
       ** D-specs
       ** =======
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Short Data Structure for Access Objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Objects
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Data Structure for Customer Master File
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Data Structure for Swtichable feature
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
      D INFDS           DS
      D  MEMBER               129    138A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PRTCD           S              7
      D POPTN           S              7
      D PSARD           S              6
      D PKEY1           S             10
      D PKYST           S              7
- 
+
      D CER048          S              1
- 
+
      D/COPY ZSRSRC,ZHOLILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

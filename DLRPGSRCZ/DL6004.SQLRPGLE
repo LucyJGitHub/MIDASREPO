@@ -2512,6 +2512,9 @@ tina C                   ENDIF
      C                   ENDIF
      C     HDTYP         Ifeq      'CL'
      C     HDTYP         oreq      'LN'
+     C     HDTYP         OREQ      'DL'                                                     MD054107
+     C     HDTYP         OREQ      'TI'                                                     MD054107
+     C     HDTYP         OREQ      'IP'                                                     MD054107
      C     RTYP          Ifeq      'LD'
      C     RTYP          oreq      'RO'
      C     RTYP          oreq      'PI'
@@ -2618,14 +2621,14 @@ tina C                   ENDIF
      X/COPY ZSRSRC,ZDATE9Z4
      X/COPY ZSRSRC,ZPOWERZ2
 **  TAB1 & TAB2   -   See comments in extension speca for key to values
-IPV11522D1 3I1I              ** PREVIOUSLY 3I1O
-IPI21557D1 1I4O                            1I4I
-IPM11532D7 2I2O                            2I2I
-IPM21537D2 1I0O                            1I0I
-TIV11522D1 3I1I              ** PREVIOUSLY 3I1O
-TII21557D1 1I4O                            1I4I
-TIM11532D7 2I2O                            2I2I
-TIM21537D2 1I0O                            1I0I
+IPV11522D1 3I1O              ***PREVIOUSLY*3I1O                                             MD054107
+IPI21557D1 1I4I              **************1I4I                                             MD054107
+IPM11532D7 2I2I              **************2I2I                                             MD054107
+IPM21537D2 1I0I              **************1I0I                                             MD054107
+TIV11522D1 3I1O              ***PREVIOUSLY*3I1O                                             MD054107
+TII21557D1 1I4I              **************1I4I                                             MD054107
+TIM11532D7 2I2I              **************2I2I                                             MD054107
+TIM21537D2 1I0I              **************1I0I                                             MD054107
 LNV11522D1 3I1O
 LNI21557D1 1I4I
 LNM11532D7 2I2I
@@ -2660,14 +2663,50 @@ CDM11642D7 2I2O              ** PREVIOUSLY CDM11642D1
 CDM21637D2 1I0O
 CDV31674D2 1I3I
 CDM41674D2 1I3O
-TIV31574D2 1I3I
-TIM41574D2 1I3O
-IPV31574D2 1I3I
-IPM41574D2 1I3O
+TIV31574D2 1I3O              ** PREVIOUSLY TIV31574D2 1I3I                                  MD054107
+TIM41574D2 1I3I              ** PREVIOUSLY TIM41574D2 1I3O                                  MD054107
+IPV31574D2 1I3O              ** PREVIOUSLY IPV31574D2 1I3I                                  MD054107
+IPM41574D2 1I3I              ** PREVIOUSLY IPM41574D2 1I3O                                  MD054107
 TDV31674D2 1I3I
 TDM41674D2 1I3O
 ITV31674D2 1I3I
 ITM41674D2 1I3O
+LNV61522D1 3I1O                                                                             MD054107
+LNI61558D1 1I4I                                                                             MD054107
+LNM61532D8 2I2I                                                                             MD054107
+LNM81538D2 1I0I                                                                             MD054107
+ITV61622D1 3I1I                                                                             MD054107
+ITI61658D1 1I4O                                                                             MD054107
+ITM61632D8 2I2O                                                                             MD054107
+ITM81638D2 1I0O                                                                             MD054107
+CLV61522D1 1I1O                                                                             MD054107
+CLI61558D1 1I4I                                                                             MD054107
+CLM61542D8 2I2I                                                                             MD054107
+CLM81538D2 1I0I                                                                             MD054107
+DLV61522D1 1I1O                                                                             MD054107
+DLI61558D1 1I4I                                                                             MD054107
+DLM61542D8 2I2I                                                                             MD054107
+DLM81538D2 1I0I                                                                             MD054107
+TDV61622D1 3I1I                                                                             MD054107
+TDI61658D1 1I4O                                                                             MD054107
+TDM61632D8 2I2O                                                                             MD054107
+TDM81638D2 1I0O                                                                             MD054107
+CIV61622D1 3I1I                                                                             MD054107
+CII61658D1 1I4O                                                                             MD054107
+CIM61632D8 2I2O                                                                             MD054107
+CIM81638D2 1I0O                                                                             MD054107
+CDV61622D1 1I1I                                                                             MD054107
+CDI61658D1 1I4O                                                                             MD054107
+CDM61642D8 2I2O                                                                             MD054107
+CDM81638D2 1I0O                                                                             MD054107
+TIV61522D1 3I1O                                                                             MD054107
+TII61558D1 1I4I                                                                             MD054107
+TIM61532D8 2I2I                                                                             MD054107
+TIM81538D2 1I0I                                                                             MD054107
+IPV61522D1 3I1O                                                                             MD054107
+IPI61558D1 1I4I                                                                             MD054107
+IPM61532D8 2I2I                                                                             MD054107
+IPM81538D2 1I0I                                                                             MD054107
 **  FRQ - Frequencies requiring non-working day check
 FLRSW
 **  CPY@ - Copyright

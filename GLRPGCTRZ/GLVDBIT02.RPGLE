@@ -47,7 +47,7 @@
       ** RE Interest Sub-types file
      FREINT     IF   E           K DISK    INFSR(*PSSR)
       **
-      *****FREIAC     IF   E           K DISK    INFSR(*PSSR)                      MD053611 MD054211
+      *****FREIAC     IF   E           K DISK    INFSR(*PSSR)                     MD053611 MD054211A
      FREIACXX   IF   E           K DISK    INFSR(*PSSR)                                    MD054211A
      F                                           IGNORE(REIACAF)                  MD053611 MD054211A
      F                                           IGNORE(REIACZF)                  MD053611 MD054211A
@@ -235,10 +235,10 @@
      C                   MOVE      DDACSQ        ACSQ                                       MD053611
      C                   MOVE      DDBRCA        BRCA                                       MD053611
       *                                                                                     MD053611
-     C**********Key_REIAC     CHAIN     REIAC                                      MD053611 MD054211
-     C**********         IF        %FOUND(REIAC)                                   MD053611 MD054211
-     C     Key_REIAC     CHAIN     REIACXX                                                  MD054211
-     C                   IF        %FOUND(REIACXX)                                          MD054211
+     C**********Key_REIAC     CHAIN     REIAC                                     MD053611 MD054211A
+     C**********         IF        %FOUND(REIAC)                                  MD053611 MD054211A
+     C     Key_REIAC     CHAIN     REIACXX                                                 MD054211A
+     C                   IF        %FOUND(REIACXX)                                         MD054211A
      C                   MOVE      DICT          TDICT             2                        MD053611
      C     DDDICT        IFNE      TDICT                                                    MD053611
       **                                                                                    MD053611

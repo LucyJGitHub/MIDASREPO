@@ -33,8 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD049048           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
@@ -137,6 +137,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
@@ -599,6 +601,8 @@
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
       *                                                                                       CER043
+     D DDAPRC          S              1A                                                    MD054028
+     D DDAPRR          S              8A                                                    MD054028
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -1142,7 +1146,9 @@
      C                   EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +                      MD044873
      C                                          %SUBST(BufferEx2:1:2315)                      CSF011
      C                   EndIf                                                               BUG9827
-
+     C                   IF        CER050 = 'Y'                                             MD054028
+     C                   EVAL      DDAPRC = %SUBST(Buffer2:1795)                            MD054028
+     C                   ENDIF                                                              MD054028
      C                   IF        CDL033 = 'Y'                                               CDL033
      C**********         EVAL      RFormula = %SUBST(Buffer:454:8)                    CDL033 BUG9827
      C**********         EVAL      PFormula = %SUBST(Buffer:462:8)                    CDL033 BUG9827
@@ -1370,6 +1376,11 @@
      C                   MOVEA     RatDATEA      RatDateDS                                   CDL033
      C                   MOVEA     PayDATEA      PayDateDS                                   CDL033
      C                   ENDIF                                                               CDL033
+     C                   IF        CER050 = 'Y'                                             MD054028
+     C     DDAPRC        IFEQ      *BLANKS                                                  MD054028
+     C                   MOVE      'N'           DDAPRC                                     MD054028
+     C                   ENDIF                                                              MD054028
+     C                   ENDIF                                                              MD054028
                                                                                               CER050
      C     DDAPRC        Ifeq      'N'                                                        CER050
      C     DDAPRR        andne     *Blanks                                                    CER050
@@ -1386,6 +1397,10 @@
      C                   IF        UpdateYN = 'Y'                                            BUG4808
      C                             AND Idx = 0                                               BUG8119
      C                   MOVE      IKDN38        DDDLNO_In                                   BUG4808
+     C                   IF        CER050 = 'Y'                                             MD054028
+     C                   MOVE      DDAPRC        HKAPRC                                     MD054028
+     C                   MOVE      DDAPRC        IKAPRC                                     MD054028
+     C                   ENDIF                                                              MD054028
      C                   CALL      'MMLDNIR'                                                 BUG4808
      C                   PARM                    @AuthComp         1                         BUG4808
      C                   PARM                    @FwdBck           1                         BUG4808
@@ -1438,8 +1453,10 @@
      C**********         EVAL      Buffer2 = %SUBST(Filler:606)                        CSF011 CDL096
      C**********         EVAL      Buffer2 = %SUBST(Filler:572)                        CDL096 CGL165
      C**********         EVAL      Buffer2 = %SUBST(Filler:568)                      CGL165 MD038485
-     C                   EVAL      Buffer2 = %SUBST(Filler:354)                             MD038485
+     C**********         EVAL      Buffer2 = %SUBST(Filler:354)                    MD038485 MD054028
+     C                   EVAL      Buffer2 = %SUBST(Filler:336)                             MD054028
      C                                       + TranQExt                                       CSF011
+     C                                       + DDAPRC + DDAPRR                              MD054028
      C                                       + FIDTScnRpt                                     CSF011
      C**********         EVAL      BufferEx2 = RatDateDS + PayDateDS                 CDL033 BUG10943
      C**********                              + RegData                            BUG10563 BUG10943
@@ -2088,6 +2105,18 @@
      C                   ENDIF                                                                CER043
                                                                                               CER043
      C                   ENDIF                                                                CER043
+      *                                                                                     MD054028
+      ** Check if CER050 is ON                                                              MD054028
+     C                   CallB     'AOSARDR0'                                               MD054028
+     C                   Parm      *Blanks       PRTCD                                      MD054028
+     C                   Parm      '*VERIFY'     POPTN                                      MD054028
+     C                   Parm      'CER050'      PSARD                                      MD054028
+     C     SCSARD        Parm      SCSARD        DSFDY                                      MD054028
+      *                                                                                     MD054028
+     C                   Move      'N'           CER050            1                        MD054028
+     C                   If        PRTCD = *Blanks                                          MD054028
+     C                   Eval      CER050 = 'Y'                                             MD054028
+     C                   Endif                                                              MD054028
      C/COPY WNCPYSRC,MMLDNIXC03
 
      C                   ENDSR
@@ -2466,6 +2495,8 @@
      C                   PARM                    PayNostro
      C                   PARM      HKFRNT        @@FRNT           20
      C                   PARM                    ExtData
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
       * Field OK flags (DS) from/to caller
      C                   PARM                    MMELDN
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -2915,6 +2946,8 @@
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
 
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
@@ -2924,6 +2957,8 @@
       ** Collateral Status
      C                   PARM                    DDCSTS           10
 
+     C                   MOVE      DDAPRC        @DDAPRC           1                        MD054028
+     C                   MOVE      DDAPRR        @DDAPRR           8                        MD054028
       ** DATA SUBSTITUTION
 
      C                   RESET                   ReturnCode
@@ -3013,6 +3048,10 @@
       * Convert file format to screen format
 
      C                   RESET                   ReturnCode
+     C                   IF        CER050 = 'Y'                                             MD054028
+     C                   MOVE      DDAPRC        HKAPRC                                     MD054028
+     C                   MOVE      DDAPRC        IKAPRC                                     MD054028
+     C                   ENDIF                                                              MD054028
      C                   CALLB     'MMLDNICVT'
 
       * INPUTS
@@ -3021,6 +3060,8 @@
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
 
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
@@ -3030,6 +3071,8 @@
       ** Collateral Status
      C                   PARM                    DDCSTS           10
 
+     C                   MOVE      DDAPRC        @DDAPRC                                    MD054028
+     C                   MOVE      DDAPRR        @DDAPRR                                    MD054028
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
      C                   CALLB     'MMLDNIAMD'

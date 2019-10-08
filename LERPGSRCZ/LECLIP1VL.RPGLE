@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052327           Date 17Nov18               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052327           Date 17Nov18               *
       *                 MD052214           Date 26Oct18               *
       *                 MD052213           Date 26Oct18               *
       *                 CLE071             Date 18Jul18               *
@@ -165,6 +166,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD052327 - A serious MIDAS error occurred while Inserting    *
       *             a New Participation Sold                          *
@@ -1852,7 +1855,14 @@
       *                                                                                       CER050
       ***  Validate APR Flag                                                                  CER050
      C                   IF        CER050 = 'Y'                                               CER050
+      ** Move APR fields if CER050 is ON.                                                   MD054028
+     C                   MOVE      PRMAPRC       DDAPRC            1                        MD054028
+     C                   MOVE      PRMPREM       DDPREM           15                        MD054028
+     C                   MOVE      PRMAPRR       DDAPRR            8                        MD054028
      C                   EXSR      SrVAPRF                                                    CER050
+     C                   MOVE      DDAPRC        PRMAPRC                                    MD054028
+     C                   MOVE      DDPREM        PRMPREM                                    MD054028
+     C                   MOVE      DDAPRR        PRMAPRR                                    MD054028
      C                   ENDIF                                                                CER050
 
       *
@@ -9377,6 +9387,10 @@ B001 C     ZERR          IFNE      *BLANKS
                                                                                               CLE141
       ** Business Day Convention Screen Detail                                                CLE141
      C                   PARM                    TranInScr7                                   CLE141
+      *                                                                                     MD054028
+     C                   PARM                    PRMAPRC           1                        MD054028
+     C                   PARM                    PRMPREM          15                        MD054028
+     C                   PARM                    PRMAPRR           8                        MD054028
       *
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS

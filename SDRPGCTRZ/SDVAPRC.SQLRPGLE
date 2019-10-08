@@ -17,10 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER050  *Create    Date 16Jun19               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050  *Create    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *                                                               *
       *****************************************************************
@@ -149,12 +152,17 @@
      C     DDAPRC        ANDNE     'N'
      C     DDAPRC        ANDNE     *BLANKS
       *
-     C                   MOVE      'Y'           DDAPRCOK
-     C                   EVAL      RetCodeIn = 'Warning'
-     C                   EVAL      DDAPRC = 'N'
-     C                   ADD       1             WId
-     C                   MOVEL     'DDAPRC'      WFldNmXAr(WId)
-     C                   MOVEL     'SDX0460'     WMsgIDXAr(WId)
+     C**********         MOVE      'Y'           DDAPRCOK                                   MD054028
+     C**********         EVAL      RetCodeIn = 'Warning'                                    MD054028
+     C**********         EVAL      DDAPRC = 'N'                                             MD054028
+     C**********         ADD       1             WId                                        MD054028
+     C**********         MOVEL     'DDAPRC'      WFldNmXAr(WId)                             MD054028
+     C**********         MOVEL     'SDX0460'     WMsgIDXAr(WId)                             MD054028
+     C                   MOVE      'N'           DDAPRCOK                                   MD054028
+     C                   EVAL      RetCodeIn = 'Error'                                      MD054028
+     C                   ADD       1             Idx                                        MD054028
+     C                   MOVEL     'DDAPRC'      FldNamXAr(Idx)                             MD054028
+     C                   MOVEL     'SDX0460'     MsgIDXAr(Idx)                              MD054028
       *
      C                   ENDIF
       *

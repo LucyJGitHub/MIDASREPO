@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD051191           Date 05Jun18               *
       *                 CGL177             Date 11Jan16               *
       *                 MD035388           Date 20Oct15               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051191 - US Phone Number field in FATCA Information tab    *
@@ -441,6 +444,7 @@
                                                                                               CGP001
      D CFX001          S              1                                                       CFX001
      D CLE025          S              1                                                       CLE025
+     D DDAPRC          S              1                                                     MD054028
      D CLE134          S              1                                                       CLE134
       ** Swift installed flag                                                                 CSW207
      D CSW207          S              1A                                                      CSW207
@@ -4260,6 +4264,8 @@
       ** Switchable features                                                                  CLE025
      C                   PARM                    CLE025                                       CLE025
      C                   PARM                    CFX001                                       CFX001
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC                                     MD054028
       *
       * Output parameters
       *

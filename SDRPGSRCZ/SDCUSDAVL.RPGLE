@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050052           Date 16Mar18               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD050052           Date 16Mar18               *
       *                 CGL157             Date 17Aug15               *
       *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD050052 - Serious Midas Error is encountered during CUSD    *
       *  CGL157 - CRS Reporting                                       *
@@ -174,6 +177,7 @@
      D RespMode        S              1A
      D DDCUSN          S              6A
      D DDBNBI          S              1A                                                    AR739736
+     D DDAPRC          S              1A                                                    MD054028
      D CGL032          S              1A
      D CLE134          S              1A                                                      CLE134
      D CSW207          S              1A                                                    BUG14992
@@ -1455,6 +1459,8 @@
       ** Customer Number                                                                    AR739736
                                                                                             AR739736
      C                   PARM                    DDBNBI                                     AR739736
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC                                     MD054028
  
       ** Outputs
       ** Additional Details OK inds

@@ -10,9 +10,10 @@
       *  GLAMAD1VL -  Account Master Details Validation               *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
-      *                                                               *	
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. AR1021393          Date 13Nov18               *
+      *                                                               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 AR1021393          Date 13Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 CGL165             Date 23Feb15               *
@@ -82,6 +83,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  AR1021393 - Wrong balances on account statement. If stmt freq*
       *              changed from non-'E' to 'E', issue warning msg   *
@@ -2468,6 +2471,10 @@
      C                   PARM                    AUTHRQ            1                          CSD012
       * Authorisation Mode                                                                    CSD012
      C                   PARM                    AUTHMD            1                          CSD012
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       **  GET ZMUSER to access default branch.
       *

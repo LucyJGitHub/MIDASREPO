@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039617           Date 16Jun19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD039617           Date 16Jun19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039575           Date 07Jul16               *
       *                 MD031617           Date 23Jun15               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  MD039617 - Corrupted data in CDL096 fields                   *
       *             Applied for CER050                                *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1187,6 +1190,9 @@
       *
       * Deal in file format
      C                   PARM                    DealFilFmt
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
      C/COPY WNCPYSRC,MMLDNINC02
       *
       * Output parameters

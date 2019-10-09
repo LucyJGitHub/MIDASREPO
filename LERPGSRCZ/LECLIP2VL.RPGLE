@@ -130,7 +130,7 @@
       *           - Applied for MD034449                              *
       *           - Applied for MD052515                              *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
-      *             applied for loan start date rate fixing.          *      
+      *             applied for loan start date rate fixing.          *
       *  MD052279 - Negative rate loan got unexpected error 45021183  *
       *             (Entry is not allowed for discounted loans or zero*
       *             interests) and 45021165 (Valid rate is req. if no *
@@ -519,7 +519,7 @@
                                                                                             MD053143
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
      D OKFlags1DS    E DS                  EXTNAME(LEECLI1PD)                                BUG3721
       ** Flags to indicate whether transaction fields are valid on 1st screen                BUG3721
       *
@@ -3024,7 +3024,7 @@ E004 C                   ENDIF
       *  SRFCRA - Validate facility currency repayment amount         *
       *****************************************************************
      C     SRFCRA        BEGSR
- 
+
      C     *IN83         IFEQ      '0'
      C                   MOVE      FCCYF         @CYCD
      C                   ELSE
@@ -4164,7 +4164,7 @@ E004 C                   ENDIF
      C                   ELSE
      C                   Z-ADD     ZINTR         WCHKI
      C                   ENDIF
- 
+
      C*****WCHKI         IFLT      *ZEROS                                                   AR988460
      C**********         Z-SUB     WCHKI         WCHKI                                      AR988460
      C**********         MOVE      'Y'           WSUB              1                        AR988460
@@ -4376,15 +4376,13 @@ E004 C                   ENDIF
      C                   MOVEL     'LEL0004'     MsgIDXAr(Idx)                               BUG3721
                                                                                              BUG3721
      C**********         MOVEL     ZOUT20        MsgDtaXAr(Idx)                     BUG3721 MD000091
-     C                   EVAL      BLen = %Len(%Trim(ZOUT20))                               MD000091
-     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)                   MD000091
      C     ZNEG          IFEQ      '-'                                                      AR988460
      C                   MOVE      *BLANKS       WRKFLD1          20                        AR988460
      C                   EVAL      WRKFLD1 = %trim(ZOUT20)                                  AR988460
      C     '-'           CAT       WRKFLD1       MsgDtaXAr(Idx)                             AR988460
-     C                   ELSE                                                               AR988460
-     C                   MOVEL     ZOUT20        MsgDtaXAr(Idx)                              BUG3721
      C                   ENDIF                                                              AR988460
+     C                   EVAL      BLen = %Len(%Trim(ZOUT20))                               MD000091
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)                   MD000091
      C                   ENDIF                                                               BUG3721
                                                                                              BUG3721
      C                   ENDIF                                                               BUG3721

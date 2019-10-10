@@ -2514,9 +2514,9 @@ tina C                   ENDIF
      C                   ENDIF
      C     HDTYP         Ifeq      'CL'
      C     HDTYP         oreq      'LN'
-     C*****HDTYP         OREQ      'DL'                                            MD054107 MD054779
-     C*****HDTYP         OREQ      'TI'                                            MD054107 MD054779
-     C*****HDTYP         OREQ      'IP'                                            MD054107 MD054779
+     C*****HDTYP         OREQ      'DL'                                            MD054107 MD054479
+     C*****HDTYP         OREQ      'TI'                                            MD054107 MD054479
+     C*****HDTYP         OREQ      'IP'                                            MD054107 MD054479
      C     RTYP          Ifeq      'LD'
      C     RTYP          oreq      'RO'
      C     RTYP          oreq      'PI'

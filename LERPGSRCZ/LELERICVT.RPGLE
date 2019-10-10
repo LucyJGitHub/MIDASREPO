@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD044083           Date 12Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD034449           Date 24Jan19               *
+      *  Prev Amend No. MD044083           Date 12Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD028338           Date 25Nov14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034449 - Correct negative discount amount display          *
+      *           - Applied for MD052515                              *
       *  MD044083 - Issue 2: Spread rate showing incorrect value on   *
       *             rollover enquiry. Issue fixed with by replacing   *
       *             EVAL with EVALR and MOVEL to MOVE.                *
@@ -431,7 +434,8 @@
      C                   Z-ADD     51            DBASE
      C                   EXSR      SRCurrDet
      C                   MOVE      *BLANKS       ZFIELD
-     C                   MOVE      K_NDAM        ZFIELD
+     C**********         MOVE      K_NDAM        ZFIELD                                     MD034449
+     C                   EVALR     ZFIELD = %trimr(%char(K_NDAM))                           MD034449
      C                   Z-ADD     A6NBDP        ZADEC
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        DDNDAM

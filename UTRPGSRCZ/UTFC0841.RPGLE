@@ -21,11 +21,6 @@
       *****************************************************************
 
      FFCPREQPD  UF   E           K DISK
-     FFCRREQPD  O    E             DISK
-     FFCPARPL1  IF   E           K DISK
-     FFCPARDPD  O    E             DISK
-     FMAARCDPD  O    E             DISK
-     FMAARCPL2  IF   E           K DISK
      FMUSER     IF   E           K DISK
      FSDBANKL1  IF   E           K DISK
      FUTFC0841P1O    E             PRINTER OFLIND(*IN25)
@@ -65,12 +60,6 @@
      D PMODE           S              1
      D PRTN            S              1
 
-      *
-      ** Report Sequence Number
-      *
-     D REPSEQ          DS
-     D  SEQ                    1      5  0
-
      D                 DS
      D  YYYYMMDD               1      8  0
      D  YYYY                   1      4  0
@@ -98,7 +87,7 @@
      C                   KFLD                    D9RNAM
      C                   KFLD                    D9PSQN
       *
-     C                   MOVEL     'FC0010'      DBPGM
+     C                   MOVEL     'UTFC0841'    DBPGM
       *
      C                   READ      FCPREQPD                               75
       *
@@ -106,50 +95,8 @@
       **DATE < NEXT WORKING DAY
       *
      C     *IN75         DOWEQ     '0'
-     C*    D9PNDT        IFLT      BJDNWD
-     C     D9PNDT        IFEQ      17226
+     C     D9PNDT        IFLT      BJDNWD
      C     D9FREQ        ANDEQ     'M'
-      *
-      ** Obtain next sequence number from data area REPSEQ and update
-      ** data area for next request.
-      *
-     C     *DTAARA       DEFINE                  REPSEQ
-     C     *LOCK         IN        REPSEQ
-     C                   MOVE      SEQ           REPCON            5 0
-     C                   ADD       1             SEQ
-     C                   OUT       REPSEQ
-      *
-     C                   MOVEL     D9RNAM        CHARCP           12
-     C                   MOVE      D9PSQN        CHARCP
-      *
-      **WRITES A RECORD TO FCRREQPD FROM FCPREQPD, MUSERDD & REPCON
-      *
-     C                   MOVE      D9RNAM        D5RNAM
-     C                   MOVE      REPCON        D5RQSQ
-     C                   MOVE      D9SOID        D5SOID
-     C                   MOVE      D9LVL         D5LVL
-     C                   MOVE      D9ETTY        D5ETTY
-      **MOVE 'N' TO INPUT CYCLE *
-     C                   MOVE      'N'           D5IPCY
-      * MOVE 'Y' TO PERIODIC *
-     C                   MOVE      'Y'           D5PDFL
-     C                   MOVE      D9DLS1        D5DLS1
-     C                   MOVE      D9DLS2        D5DLS2
-     C                   MOVE      D9USRO        D5USRO
-     C                   MOVE      D9ARMF        D5ARMF
-     C                   MOVE      D9AROD        D5AROD
-     C                   MOVE      D9DRQD        D5DRQD
-     C                   MOVE      D9USRR        D5USRR
-      * SET REQ TIME TO ZERO *
-     C                   Z-ADD     0             D5RQTM
-      * 'N' TO CLOSE OF BUSINESS *
-     C                   MOVE      'N'           D5COBR
-     C                   MOVE      *BLANKS       D5JBNM
-     C                   MOVE      *BLANKS       D5JUSR
-     C                   MOVE      *BLANKS       D5JBNB
-     C                   MOVE      D9PSQN        D5PSQR
-     C                   MOVEL     D9COTT        D5COTT
-     C                   MOVEL     D9CSEQ        D5CSEQ
       *
       **RETRIEVE USER BRANCH FROM MUSERDD THEN WRITE RECORD TO FCRREQPD
       *
@@ -161,67 +108,6 @@
      C                   Z-ADD     1             DBASE
      C                   SETOFF                                           71
      C                   EXSR      *PSSR
-     C                   ENDIF
-      *
-     C                   MOVE      DBRN          D5DBRN
-      *
-      **UPDATES SEQUENCE NUMBER
-      *
-     C  N10              WRITE     FCRREQD0
-      *
-      **CHAIN TO FCPARPPD USING KEY ACCESSED ON FCPREQPD
-      *
-     C     ARCKEY        CHAIN     FCPARPL1                           28
-      *
-      **IF CHAIN SUCCESSFUL WRITE A RECORD TO FCPARDPD
-      *
-     C     *IN28         IFEQ      '0'
-     C                   MOVE      D9RNAM        D7RNAM
-     C                   MOVE      D5RQSQ        D7RQSQ
-     C                   MOVEL     D8PARM        D7PARM
-      *
-     C  N10              WRITE     FCPARDD0
-     C/COPY WNCPYSRC,FC0010C002
-      *
-     C                   ELSE
-     C                   SETOFF                                       28
-     C                   ENDIF
-      *
-      **IF ARCHIVED ON MICROFICHE AND/OR OPTICAL DISK = 'Y'
-      **IN FCPREQPD WRITE A RECORD TO MAARCDPD
-      *
-     C     D9ARMF        IFEQ      'Y'
-     C     D9AROD        OREQ      'Y'
-      *
-     C     ARCKEY        SETLL     MAARCPL2
-      *
-      **READ EQUAL ON LGL. FILE MAARCPL2(KEYED ON REPT.NAME & SEQ NO.)
-      *
-     C     ARCKEY        READE     MAARCPL2                               73
-      *
-     C     *IN73         IFEQ      '1'
-      *
-     C                   MOVEL     'MAARCPL2'    DBFILE
-     C                   MOVEL     CHARCP        DBKEY
-     C                   Z-ADD     2             DBASE
-     C                   SETOFF                                           73
-     C                   EXSR      *PSSR
-     C                   ENDIF
-      *
-     C     *IN73         DOWEQ     '0'
-     C                   MOVE      ECARID        EBARID
-     C                   MOVE      D9RNAM        EBRNAM
-     C                   MOVE      D5RQSQ        EBRQSQ
-     C                   MOVE      ECRSFX        EBRSFX
-     C                   MOVE      *BLANKS       EBCFLG
-     C                   MOVE      *BLANKS       EBACFL
-      *
-     C  N10              WRITE     MAARCDD0
-      *
-     C     ARCKEY        READE     MAARCPL2                               73
-     C                   ENDDO
-      *
-     C                   SETOFF                                           73
      C                   ENDIF
       *
       **CALLS PROGRAM FC0015 TO AMEND NEXT ACTIVE DATE
@@ -247,14 +133,14 @@
       *
      C     P@RTCD        IFEQ      '*FREQ'
      C                   MOVEL     'FCPREQPD'    DBFILE
-     C                   MOVEL     CHARCP        DBKEY
+     C                   MOVEL     D9RNAM        DBKEY
      C                   Z-ADD     3             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
       *
      C     P@RTCD        IFEQ      '*FRQDAY'
      C                   MOVEL     'FCPREQPD'    DBFILE
-     C                   MOVEL     CHARCP        DBKEY
+     C                   MOVEL     D9RNAM        DBKEY
      C                   Z-ADD     4             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF

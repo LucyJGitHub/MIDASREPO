@@ -95,7 +95,7 @@
       **DATE < NEXT WORKING DAY
       *
      C     *IN75         DOWEQ     '0'
-     C     D9PNDT        IFLT      BJDNWD
+     C     D9PNDT        IFLT      BJRDNB
      C     D9FREQ        ANDEQ     'M'
       *
       **RETRIEVE USER BRANCH FROM MUSERDD THEN WRITE RECORD TO FCRREQPD

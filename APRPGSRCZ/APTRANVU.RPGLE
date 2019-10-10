@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *      
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD054538           Date 08Oct19               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
@@ -220,6 +221,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054538 - Buffer issue on Rollover Maintenance              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1836,6 +1838,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       AMRXLn        Bfp2                               CSF011A MD044880
      C*****AMEXLn        SUBST     BUFFER2:Bfp2  Extdata                             CRE073 MD044880
      C**********         ADD       AMEXLn        Bfp2                                CRE073 MD044880
+      ** Remove fix MD054028                                                                MD054538
+     C**********         EVAL      Buffer9999 = Buffer + Buffer2                   MD054028 MD054538
 
      C                   CALL      'GLAMADVU'
       * Common header information (DS) from source system
@@ -3858,6 +3862,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
+      ** CER050 Fields                                                                      MD054538
+     C                   ADD       9             Bfp                                        MD054538
      C     ROEXLn        SUBST     BUFFER:Bfp    ExtData
 
      C                   CALL      'MMRODLVU'

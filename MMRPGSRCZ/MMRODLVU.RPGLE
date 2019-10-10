@@ -549,9 +549,9 @@
      C**********         MOVEL     Infdata500    Infdata                                     CSF011A
      C                   MOVEL     Extdata500    Extdata
      C                   IF        CER050 = 'Y'                                             MD054538
-     C                   EVAL      DDAPRC = %SUBST(Buffer:2319)                             MD054538
+     C                   EVAL      DDAPRC = %SUBST(Buffer:2310)                             MD054538
      C                   IF        DDAPRC = 'Y'                                             MD054538
-     C                   EVAL      DDAPRR = %SUBST(Buffer:2320)                             MD054538
+     C                   EVAL      DDAPRR = %SUBST(Buffer:2311)                             MD054538
      C                   ELSE                                                               MD054538
      C                   EVAL      DDAPRR = *BLANKS                                         MD054538
      C                   ENDIF                                                              MD054538

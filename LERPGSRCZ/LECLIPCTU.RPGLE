@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD030621           Date 26Feb15               *
       *                 MD032052           Date 23Jan15               *
@@ -71,6 +72,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -1166,6 +1169,10 @@
                                                                                               CLE106
       ** Screen Detail 3                                                                      CLE106
      C                   PARM                    TranInThir                                   CLE106
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDPREM           15                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
  
       * OUTPUTS
  
@@ -1732,6 +1739,10 @@
       * Customer loans - file formats
      C                   PARM                    ValidClil
      C                   PARM                    ValidClik
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDPREM           15                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
  
       * Output parameters
       * Customer loans Details - screen formats 1

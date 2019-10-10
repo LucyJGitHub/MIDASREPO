@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Last Amend No. MD054028           Date 05Sep19               *      
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
@@ -219,6 +220,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *           (Change applied to CRE101_064 as well)              *
       *  MD052075 - [CGL150] Warning message should be displayed when *
@@ -651,6 +654,7 @@
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
      D  TransCUEX                          LIKE(SDCUEX)                                     MD044880
      D  TransCRSH                          LIKE(SDCRSS)                                       CGL157
+     D  TransCR50                     1A                                                    MD054028
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -1349,23 +1353,29 @@ RGC  D RPIF4LN         S              4  0                                      
      C     90            SUBST     BUFFER:Bfp    WDUMMY                                     BUG10563
      C                   ADD       90            Bfp                                        BUG10563
       *                                                                                       CER043
-      ** Need to add 240 + 2072 to extract the Customer ease of use details                   CER043
+      ***Need*to*add*240*+*2072*to*extract*the*Customer*ease*of*use*details*         CER043 MD054028
+      ** Need to add 240 + 2034 to extract the Customer ease of use details                 MD054028
       ** Narrative - 240 (SFNARR01 (60A) + SFNARR02 (60A) +                                   CER043
       **                  SFNARR03 (60A) + SFNARR04 (60A))                                    CER043
-      ** Filler2 - 2072A                                                                      CER043
+      ***Filler2*-*2072A***********************************************              CER043 MD054028
+      ** Filler2 - 2034A                                                                    MD054028
       *                                                                                       CER043
      C                   ADD       240           Bfp                                          CER043
      C**********         ADD       2072          Bfp                                   CER043 CSF011
      C**********         ADD       605           Bfp                                   CSF011 CDL096
      C**********         ADD       571           Bfp                                   CDL096 CGL165
      C**********         ADD       567           Bfp                                   CGL165 CER050
-     C                   ADD       558           Bfp                                          CER050
+     C**********         ADD       558           Bfp                                 CER050 MD054028
+      ** Buffer1 has remaining 356 fields that should be empty because of Filler2           MD054028
+     C                   ADD       356           Bfp                                        MD054028
+      ** Remaining from Filler2 is 1678 = 2034 - 356                                        MD054028
                                                                                               CSF011
       ** Start of Buffer2                                                                     CSF011
                                                                                               CSF011
      C**********         ADD       1467          Bfp2                                CSF011 MD038485
      C**********         ADD       1681          Bfp2                                MD038485 CER050
-     C                   ADD       1680          Bfp2                                         CER050
+     C**********         ADD       1680          Bfp2                                CER050 MD054028
+     C                   ADD       1678          Bfp2                                       MD054028
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
      C**********         ADD       LDSTQLn       Bfp                                CER049 AR819540A
@@ -1772,6 +1782,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      GLFullAcct = %SUBST(BufferTotal:Bfp:24)                  MD044880
      C                   ADD       24            Bfp                                        MD026979
      C***/COPY*OFCPYSRCZ,CRE101_003                                                  CRE101 MD044880
+     C                   EVAL      ACMILn = 10                                              MD054028
      C                   EVAL      ACMIData = %SUBST(BufferTotal:Bfp:ACMILn)                MD044880
      C                   ADD       ACMILn        Bfp                                        MD044880
      C*****AMIFLn        SUBST     BUFFER:Bfp    InfData                             CAP086 MD044880
@@ -1779,6 +1790,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       AMIFLn        Bfp                                        BUG10280
      C                   EVAL      ExtData = %SUBST(BufferTotal:Bfp:AMEXLn)                 MD044880
      C                   ADD       AMEXLn        Bfp                                        MD044800
+                                                                                            MD054028
+      *** APR Fields for AMAD (CER050)                                                      MD054028
+     C     AMCR50Ln      SUBST     BUFFER:Bfp    AMAPRDta         17                        MD054028
+     C                   EVAL      ExtData = %SUBST(ExtData:1:AMEXLn) + AMAPRDta            MD054028
+     C                   ADD       AMCR50Ln      Bfp                                        MD054028
+                                                                                            MD054028
      C                   EVAL      RepeatData = %SUBST(BufferTotal:Bfp:AMPPLn2)             MD044880
      C                   ADD       AMPPLn2       Bfp                                        MD044880
      C                   EVAL      RegData = %SUBST(BufferTotal:Bfp:AMRXLn)                 MD044880
@@ -2517,6 +2534,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C     CLEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       CLEXLn        Bfp                                        MD044880
                                                                                             MD044880
+      *** APR Fields for CLIP (CER050)                                                      MD054028
+     C     CLCR50Ln      SUBST     BUFFER:Bfp    CLAPRDta         24                        MD054028
+     C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn) + CLAPRDta            MD054028
+     C                   ADD       CLCR50Ln      Bfp                                        MD054028
+                                                                                            MD054028
      C     CLRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       CLRXLn        Bfp                                          CER001
                                                                                               CER001
@@ -5311,6 +5333,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'GLAMEXPD'    Filename                                   BUG10280
      C                   EXSR      GETRCDLN                                                 BUG10280
      C                   Z-ADD     Recordlen     AMEXLn            4 0                      BUG10280
+      *                                                                                     MD054028
+     C                   Z-ADD     17            AMCR50Ln          4 0                      MD054028
+      *                                                                                     MD054028
      C                   EVAL      FileName = 'GLAMPP1PD'                                     CRE015
      C                   EXSR      GETRCDLN                                                   CRE015
      C                   EVAL      AMPPLn1 = RecordLen                                        CRE015
@@ -5974,6 +5999,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LECLEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CLEXLn            4 0
+      *                                                                                     MD054028
+     C                   Z-ADD     24            CLCR50Ln          4 0                      MD054028
                                                                                               CER049
      C                   MOVEL     *BLANKS       FileName                                     CER049
      C                   MOVEL     'LESTMP2PD'   FileName                                     CER049
@@ -7279,6 +7306,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      Bfp  += SDEXLn                                           MD044880
      C                   EVAL      TransCRSH = %SUBST(BufferEx2:Bfp:CRSSLn)                   CGL157
      C                   EVAL      Bfp  += CRSSLn                                             CGL157
+      *** APR Calculation Required Field (CUSD)                                             MD054028
+     C                   EVAL      TransCR50 = %SUBST(BufferEx2:Bfp:1)                      MD054028
+     C                   EVAL      Bfp  += 1                                                MD054028
+     C                                                                                      MD054028
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093
      C                   ENDSR                                                              MD022093

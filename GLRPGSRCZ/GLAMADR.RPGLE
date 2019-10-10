@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044546           Date 20Mar17               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD101 - Password Encryption                                 *
       *  MD044880 - BOE Switched On Testing and Fixing                *
@@ -513,6 +516,9 @@
      C/COPY OFCPYSRCZ,CRE101_020                                                              CRE101
      C                                           + InfData                                    CRE015
      C                                           + ExtData                                  MD044880
+     C                                           + DDAPRC                                   MD054028
+     C                                           + DDAPDR                                   MD054028
+     C                                           + DDAPCR                                   MD054028
      C                                           + AccnInPena2                                CRE015
      C                                           + RegData                                  MD044880
      C**********                                 + RegData                           BUG10280 CRE073
@@ -1495,6 +1501,10 @@
       * Retail Details
      C                   PARM                    R_FACH
      C                   PARM                    R_TSTMC
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       * OUTPUTS
       * Account - screen formats
      C                   PARM                    AccnInMast

@@ -17,12 +17,14 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. MD054107           Date 11Sep19               *
-      *  Prev Amend No. MD054017           Date 04Sep19               *
+      *  Last Amend No. MD054479           Date 27Sep19               *
+      *  Prev Amend No. MD054107           Date 11Sep19               *
+      *                 MD054017           Date 04Sep19               *
       *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054479 - Correction on CashFlow for MMLoans / MMDeposits   *
       *  MD054107 - No APR Recalculation on Deal Amendment            *
       *  MD054017-Change on validation of System Value "APR Formula"  *
       *  CER050 - Annualised Percentage Rate (APR)                    *
@@ -2512,9 +2514,9 @@ tina C                   ENDIF
      C                   ENDIF
      C     HDTYP         Ifeq      'CL'
      C     HDTYP         oreq      'LN'
-     C     HDTYP         OREQ      'DL'                                                     MD054107
-     C     HDTYP         OREQ      'TI'                                                     MD054107
-     C     HDTYP         OREQ      'IP'                                                     MD054107
+     C*****HDTYP         OREQ      'DL'                                            MD054107 MD054779
+     C*****HDTYP         OREQ      'TI'                                            MD054107 MD054779
+     C*****HDTYP         OREQ      'IP'                                            MD054107 MD054779
      C     RTYP          Ifeq      'LD'
      C     RTYP          oreq      'RO'
      C     RTYP          oreq      'PI'
@@ -2621,24 +2623,24 @@ tina C                   ENDIF
      X/COPY ZSRSRC,ZDATE9Z4
      X/COPY ZSRSRC,ZPOWERZ2
 **  TAB1 & TAB2   -   See comments in extension speca for key to values
-IPV11522D1 3I1O              ***PREVIOUSLY*3I1O                                             MD054107
-IPI21557D1 1I4I              **************1I4I                                             MD054107
-IPM11532D7 2I2I              **************2I2I                                             MD054107
-IPM21537D2 1I0I              **************1I0I                                             MD054107
-TIV11522D1 3I1O              ***PREVIOUSLY*3I1O                                             MD054107
-TII21557D1 1I4I              **************1I4I                                             MD054107
-TIM11532D7 2I2I              **************2I2I                                             MD054107
-TIM21537D2 1I0I              **************1I0I                                             MD054107
+IPV11522D1 3I1I              ***PREVIOUSLY*3I1O                                    MD054107 MD054479
+IPI21557D1 1I4O              **************1I4I                                    MD054107 MD054479
+IPM11532D7 2I2O              **************2I2I                                    MD054107 MD054479
+IPM21537D2 1I0O              **************1I0I                                    MD054107 MD054479
+TIV11522D1 3I1I              ***PREVIOUSLY*3I1O                                    MD054107 MD054479
+TII21557D1 1I4O              **************1I4I                                    MD054107 MD054479
+TIM11532D7 2I2O              **************2I2I                                    MD054107 MD054479
+TIM21537D2 1I0O              **************1I0I                                    MD054107 MD054479
 LNV11522D1 3I1O
 LNI21557D1 1I4I
 LNM11532D7 2I2I
 LNM21537D2 1I0I
-CLV11522D1 1I1O
-CLI21557D1 1I4I
-CLM11542D7 2I2I              ** PREVIOUSLY CLM11542D1
-CLM21537D2 1I0I
-CLV31574D2 1I3O
-CLM41574D2 1I3I
+CLV11522D1 1I1I                                                                             MD054479
+CLI21557D1 1I4O                                                                             MD054479
+CLM11542D7 2I2O              ** PREVIOUSLY CLM11542D1                                       MD054479
+CLM21537D2 1I0O                                                                             MD054479
+CLV31574D2 1I3I                                                                             MD054479
+CLM41574D2 1I3O                                                                             MD054479
 DLV11522D1 1I1O
 DLI21557D1 1I4I
 DLM11542D7 2I2I              ** PREVIOUSLY DLM11542D1
@@ -2663,10 +2665,10 @@ CDM11642D7 2I2O              ** PREVIOUSLY CDM11642D1
 CDM21637D2 1I0O
 CDV31674D2 1I3I
 CDM41674D2 1I3O
-TIV31574D2 1I3O              ** PREVIOUSLY TIV31574D2 1I3I                                  MD054107
-TIM41574D2 1I3I              ** PREVIOUSLY TIM41574D2 1I3O                                  MD054107
-IPV31574D2 1I3O              ** PREVIOUSLY IPV31574D2 1I3I                                  MD054107
-IPM41574D2 1I3I              ** PREVIOUSLY IPM41574D2 1I3O                                  MD054107
+TIV31574D2 1I3I              ** PREVIOUSLY TIV31574D2 1I3I                         MD054107 MD054479
+TIM41574D2 1I3O              ** PREVIOUSLY TIM41574D2 1I3O                         MD054107 MD054479
+IPV31574D2 1I3I              ** PREVIOUSLY IPV31574D2 1I3I                         MD054107 MD054479
+IPM41574D2 1I3O              ** PREVIOUSLY IPM41574D2 1I3O                         MD054107 MD054479
 TDV31674D2 1I3I
 TDM41674D2 1I3O
 ITV31674D2 1I3I
@@ -2679,10 +2681,10 @@ ITV61622D1 3I1I                                                                 
 ITI61658D1 1I4O                                                                             MD054107
 ITM61632D8 2I2O                                                                             MD054107
 ITM81638D2 1I0O                                                                             MD054107
-CLV61522D1 1I1O                                                                             MD054107
-CLI61558D1 1I4I                                                                             MD054107
-CLM61542D8 2I2I                                                                             MD054107
-CLM81538D2 1I0I                                                                             MD054107
+CLV61522D1 1I1I                                                                    MD054107 MD054479
+CLI61558D1 1I4O                                                                    MD054107 MD054479
+CLM61542D8 2I2O                                                                    MD054107 MD054479
+CLM81538D2 1I0O                                                                    MD054107 MD054479
 DLV61522D1 1I1O                                                                             MD054107
 DLI61558D1 1I4I                                                                             MD054107
 DLM61542D8 2I2I                                                                             MD054107
@@ -2699,14 +2701,14 @@ CDV61622D1 1I1I                                                                 
 CDI61658D1 1I4O                                                                             MD054107
 CDM61642D8 2I2O                                                                             MD054107
 CDM81638D2 1I0O                                                                             MD054107
-TIV61522D1 3I1O                                                                             MD054107
-TII61558D1 1I4I                                                                             MD054107
-TIM61532D8 2I2I                                                                             MD054107
-TIM81538D2 1I0I                                                                             MD054107
-IPV61522D1 3I1O                                                                             MD054107
-IPI61558D1 1I4I                                                                             MD054107
-IPM61532D8 2I2I                                                                             MD054107
-IPM81538D2 1I0I                                                                             MD054107
+TIV61522D1 3I1I                                                                    MD054107 MD054479
+TII61558D1 1I4O                                                                    MD054107 MD054479
+TIM61532D8 2I2O                                                                    MD054107 MD054479
+TIM81538D2 1I0O                                                                    MD054107 MD054479
+IPV61522D1 3I1I                                                                    MD054107 MD054479
+IPI61558D1 1I4O                                                                    MD054107 MD054479
+IPM61532D8 2I2O                                                                    MD054107 MD054479
+IPM81538D2 1I0O                                                                    MD054107 MD054479
 **  FRQ - Frequencies requiring non-working day check
 FLRSW
 **  CPY@ - Copyright

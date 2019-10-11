@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD054035           Date 03Sep19               *
+      *  Prev Amend No. MD054317           Date 09Sep19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD052589           Date 22Jan19               *
       *                 MD050007           Date 05Nov18               *
       *                 MD051922           Date 15OCt18               *
@@ -157,6 +158,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052589 - Projections are shown with PDCLPAMPayAC set to N  *
@@ -2272,7 +2274,8 @@
      C                   Z-ADD     0             WFFACL                                       262735
       *                                                                                       262735
      C     WKFEE         SETLL     LEFEEDL1                                                   262735
-     C     WKFEE         READE     LEFEEDL1                               89                 262735A
+     C*****WKFEE         READE     LEFEEDL1                               89        262735A MD054035
+     C     WKFEE         READE (N) LEFEEDL1                               89                MD054035
       *                                                                                       262735
      C     *IN89         DOWEQ     '0'                                                        262735
       *                                                                                       262735
@@ -2304,10 +2307,21 @@
      C                   Z-ADD     MDAT          FEPEND                                       262735
      C                   ENDIF                                                                262735
      C                   ENDIF                                                                262735
+      *                                                                                     MD054035
+     C                   MOVEL     FECNUM        WFCNUMX                                    MD054035
+     C                   MOVEL     FEFACL        WFFACLX                                    MD054035
+     C                   MOVEL     FELOAN        WFLOANX                                    MD054035
+     C                   MOVEL     FEFSEQ        WFSEQNX                                    MD054035
       *                                                                                       262735
      C     FEPEND        IFNE      FEPENDP                                                    262735
      C     FENPYD        ORNE      FENPYDP                                                    262735
-     C                   UPDATE    LEFEEDF                                                    262735
+     C     WKFEEX        CHAIN     LEFEEDL0                                                 MD054035
+     C                   IF        %FOUND(LEFEEDL0)                                         MD054035
+     C                   Z-ADD     FENPYD        X_FENPYD                                   MD054035
+     C                   Z-ADD     FEPEND        X_FEPEND                                   MD054035
+     C**********         UPDATE    LEFEEDF                                           262735 MD054035
+     C                   UPDATE    LEFEEDX                                                  MD054035
+     C                   ENDIF                                                              MD054035
       *                                                                                       262735
      C                   Z-ADD     FEPEND        F_FEPEND                                     262735
      C                   Z-ADD     FENPYD        F_FENPYD                                     262735
@@ -2333,7 +2347,8 @@
       *                                                                                       262735
      C                   ENDIF                                                                262735
       *                                                                                      262735A
-     C     WKFEE         READE     LEFEEDL1                               89                 262735A
+     C*****WKFEE         READE     LEFEEDL1                               89        262735A MD054035
+     C     WKFEE         READE (N) LEFEEDL1                               89                MD054035
       *                                                                                      262735A
      C                   ENDDO                                                                262735
       *                                                                                       241196

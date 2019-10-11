@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD036375           Date 02Nov15               *
       *                 MD036356           Date 02Nov15               *
       *                 MD035388           Date 20Oct15               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036375 - Exception 3 is displayed even TIN details are comp*

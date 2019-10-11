@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD052589           Date 22Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD052589           Date 22Jan19               *
       *                 MD050007           Date 05Nov18               *
       *                 MD051922           Date 15OCt18               *
       *                 CLE071             Date 18Jul18               *
@@ -156,6 +157,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052589 - Projections are shown with PDCLPAMPayAC set to N  *
       *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
@@ -1073,6 +1075,7 @@
      D CCF001          S              1    INZ('N')                                          BUG3760
      D CAP086          S              1A   INZ('N')                                           CAP086
      D CLE055          S              1    INZ('N')                                           CLE055
+     D CER050          S              1A   INZ('N')                                           CER050
      D WFuncType       S              8                                                      BUG3760
      D WIdntifier      S             40                                                      BUG3760
      D WBranch         S              3                                                      BUG3760
@@ -3895,6 +3898,12 @@
      C                   EVAL      L9PI = L_CLL9PI                                            CLE141
      C                   EVAL      L0PI = L_CLL0PI                                            CLE141
      C                   ENDIF                                                                CLE141
+      *                                                                                       CER050
+     C                   IF        CER050 = 'Y'                                               CER050
+     C                   EVAL      APRC = L_CLAPRC                                            CER050
+     C                   EVAL      PREM = L_CLPREM                                            CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
                                                                                               CLE164
      C                   ENDSR
       ****************************************************************
@@ -4579,6 +4588,12 @@
      C                   EVAL      L9PI = L_CLL9PI                                            CLE141
      C                   EVAL      L0PI = L_CLL0PI                                            CLE141
      C                   ENDIF
+      *                                                                                       CER050
+     C                   IF        CER050 = 'Y'                                               CER050
+     C                   EVAL      APRC = L_CLAPRC                                            CER050
+     C                   EVAL      PREM = L_CLPREM                                            CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -9521,6 +9536,30 @@
      C                   EXSR      SRErr                                                    MD046370
      C                   ENDIF                                                              MD046370
       *                                                                                     MD046370
+                                                                                              CER050
+      *                                                                                       CER050
+      ** Check if CER050 feature is enabled                                                   CER050
+      *                                                                                       CER050
+     C                   CALL      'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       PRtcd                                        CER050
+     C                   PARM      '*VERIFY'     POptn                                        CER050
+     C                   PARM      'CER050'      PSard                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+      *                                                                                       CER050
+     C                   IF        PRtcd <> *BLANKS  AND                                      CER050
+     C                             PRtcd <> '*NRF   '                                         CER050
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER050
+     C                   EVAL      DBASE = 72                                                 CER050
+     C                   EVAL      DBKEY = 'CER050'                                           CER050
+     C                   EXSR      *PSSR                                                      CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
+     C                   IF        PRtcd = *BLANKS                                            CER050
+     C                   EVAL      CER050 = 'Y'                                               CER050
+     C                   ELSE                                                                 CER050
+     C                   EVAL      CER050 = 'N'                                               CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
       ** If Past Due Call Loans Processing;                                                   CLE134
       ** Set Basel II Classification Period Description & Days Arrays.                        CLE134
                                                                                               CLE134

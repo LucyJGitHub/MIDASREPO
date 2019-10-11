@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -107,10 +109,10 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *
@@ -178,12 +180,12 @@
      C                             CHIN = 'R' OR
      C                             BRTT <> 0 AND
      C                             CHIN = 'R'
- 
+
      C                   IF        RFDY = *Blanks
      C                   EVAL      RFDY = '02'
      C                   UPDATE    CLOANCLF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Read next record.
@@ -200,9 +202,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
       *
@@ -221,9 +223,9 @@
       *****************************************************************
       *
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     CPY@          CPY2@            80
- 
+
      C     *DTAARA       DEFINE                  LDA
       *
      C     *LOCK         IN        LDA
@@ -232,7 +234,7 @@
      C                   EVAL      DBKey = *Blank
      C                   EVAL      DBase = 0
      C                   OUT       LDA
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -249,9 +251,9 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
@@ -264,6 +266,6 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2001

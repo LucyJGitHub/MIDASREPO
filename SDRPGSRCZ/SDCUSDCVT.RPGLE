@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD051191           Date 05Jun18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD051191           Date 05Jun18               *
       *                 CGL177             Date 11Jan16               *
       *                 MD035388           Date 20Oct15               *
       *                 CGL157             Date 17Aug15               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051191 - US Phone Number field in FATCA Information tab    *
       *             blanks out after amendment authorisation          *
@@ -2762,6 +2764,10 @@
      C                   EVAL      DDTNC4 = E5TNC4                                            CGL132
      C                   EVAL      DDTIN5 = E5TIN5                                            CGL132
      C                   EVAL      DDTNC5 = E5TNC5                                            CGL132
+      *                                                                                       CER050
+     C                   IF        CER050 = 'Y'                                               CER050
+     C                   EVAL      DDAPRC = E5APRC                                            CER050
+     C                   ENDIF                                                                CER050
                                                                                               CGL157
       ** Effective Date 1                                                                     CGL157
      C                   IF        E5EFF1 = *ZERO                                             CGL157
@@ -4840,6 +4846,19 @@
      C                   EVAL      CTI006 = 'N'                                             MD030956
      C                   ENDIF                                                              MD030956
       *                                                                                     MD030956
+      ** Check if feature CER050 is switched on                                               CER050
+      *                                                                                       CER050
+     C                   CALLB     'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       @RTCD                                        CER050
+     C                   PARM      '*VERIFY'     @OPTN                                        CER050
+     C                   PARM      'CER050'      @SARD                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+     C     @RTCD         IFEQ      *BLANK                                                     CER050
+     C                   MOVEL     'Y'           CER050            1                          CER050
+     C                   ELSE                                                                 CER050
+     C                   MOVEL     'N'           CER050                                       CER050
+     C                   END                                                                  CER050
+      *                                                                                       CER050
      C                   ENDSR
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079

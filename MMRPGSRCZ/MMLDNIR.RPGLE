@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
@@ -1077,6 +1079,12 @@
  
      C                   EVAL      DDFOID = HKFRNT                                            239400
                                                                                               239400
+      *                                                                                       CER050
+     C     DDAPRC        IFEQ      'N'                                                        CER050
+     C     DDAPRR        ANDNE     *Blanks                                                    CER050
+     C                   MOVE      *Blanks       DDAPRR                                       CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
      C                   ENDSR
       **********************************************************************
       /EJECT

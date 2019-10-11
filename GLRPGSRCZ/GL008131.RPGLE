@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040278           Date 18Aug16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040278           Date 18Aug16               *
       *                 MD037319           Date 16Feb16               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
@@ -41,6 +42,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split. *
       *             Complete rework of the component to allow task    *
@@ -185,7 +187,7 @@
      D SR@             S              6    DIM(3) CTDATA PERRCD(3)
      D DC@             S             20    DIM(3) CTDATA PERRCD(3)
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
      D TotalCHG        S             13P 0 INZ(*ZEROS)
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -689,7 +691,7 @@
       *                                                                                     MD040278
      C                   DOW       NOT %EOF(GEICPD) AND RRN <= LastRRN                      MD040278
      C                             AND NOT PerformLRPrc                                     MD040278
- 
+
       *
       ** Determine whether record is to be selected:
       *

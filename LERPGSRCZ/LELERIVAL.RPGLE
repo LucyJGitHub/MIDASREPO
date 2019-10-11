@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR325915           Date 03Oct18               *      
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. AR325915           Date 03Oct18               *      
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
       *                 CLE154             Date 10Aug12               *
@@ -111,6 +112,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  AR325915 - Fclty amounts on tranche did not reflect in CA.   *
       *             Upgraded Gems fix 248611 to M+ for rollover input.*
       *           - Applied for MD051963.                             *      

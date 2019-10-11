@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD049048           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -136,6 +137,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD049048 - LDNI inserted through SOAP cannot be amended due  *
@@ -1368,7 +1370,17 @@
      C                   MOVEA     RatDATEA      RatDateDS                                   CDL033
      C                   MOVEA     PayDATEA      PayDateDS                                   CDL033
      C                   ENDIF                                                               CDL033
-
+                                                                                              CER050
+     C     DDAPRC        Ifeq      'N'                                                        CER050
+     C     DDAPRR        andne     *Blanks                                                    CER050
+     C                   Move      *Blanks       DDAPRR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDAPRC        Ifeq      'Y'                                                        CER050
+     C     DDAPRR        andeq     *Blanks                                                    CER050
+     C     @DDAPRR       andne     *Blanks                                                    CER050
+     C                   Move      @DDAPRR       DDAPRR                                       CER050
+     C                   Endif                                                                CER050
+                                                                                              CER050
       ** If action is for Update, get the correct record information                         BUG4808
       ** from file                                                                           BUG4808
      C                   IF        UpdateYN = 'Y'                                            BUG4808
@@ -2339,6 +2351,10 @@
       * For Amends, put the complete (pre-existing) deal into the Valid
       *  file record - fields in this will be updated during  processing
      C                   MOVEL     DealFilFmt    ValidDeal
+     C     DDAPRC        Ifeq      *Blank                                                     CER050
+     C     DDACTN        andeq     'A'                                                        CER050
+     C                   Eval      DDAPRC     = HKAPRC                                        CER050
+     C                   Endif                                                                CER050
      C                   Z-ADD     HKRRAT        IKRRAT                                     BUG12551
      C                   Z-ADD     HKMATD        OLD_MATD
       *****************************************************************           MD027337 MD027337A

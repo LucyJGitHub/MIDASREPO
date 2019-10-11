@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054130           Date 28Aug19               *
-      *  Prev Amend No. MD052529           Date 12Feb19               *
-      *                 MD050619           Date 24Apr18               *
+      *  Last Amend No. MD052529           Date 12Feb19               *
+      *  Prev Amend No. MD050619           Date 24Apr18               *
       *                 MD050574           Date 20Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
@@ -170,9 +169,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054130 - Default Ordering Customer line 1 with 'MT202'     *
-      *             keyword if incoming pay MT202 message has no      *
-      *             field 50.                                         *
       *  MD052529 - If incoming pay MT202 message has no 50 field,    *
       *             Ordering Customer lines 2-5 should not be         *
       *             populated with values of field 52A details 1-4.   *
@@ -5252,9 +5248,8 @@
       * If pay message from SWIFT move MT202 to order cust1
       * and OPORB* fields to fields 2 3 and 4.
       *
-     C*****P52**         IFNE      *BLANKS                                                  MD054130
-     C*****SORC1         ANDEQ     *BLANKS                                                  MD054130
-     C     SORC1         IFEQ      *BLANKS                                                  MD054130
+     C     P52           IFNE      *BLANKS
+     C     SORC1         ANDEQ     *BLANKS
      C     PNWRK         ANDEQ     'SWIFT '
      C     PMTPY         IFEQ      '200'
      C     PMTPY         OREQ      '201'

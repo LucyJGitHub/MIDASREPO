@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD051892           Date 22Sep18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD051892           Date 22Sep18               *
       *                 MD052228           Date 30Oct18               *
       *                 MD038593           Date 09Jun16               *
       *                 CLE168             Date 26Feb18               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051892 - Proj settlement amnt calculated at defaulted rate *
       *  MD052228 - Overridable message Settlement account is         *

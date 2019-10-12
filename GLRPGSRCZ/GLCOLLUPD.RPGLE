@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE141             Date 08Feb16               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -347,7 +349,7 @@
      D  PUSRID                 1     10                                                       CAP084
      D  PDBRN                 11     13                                                       CAP084
      D  PDPPT                 14     16                                                       CAP084
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦

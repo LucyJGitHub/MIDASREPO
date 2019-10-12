@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD051890           Date 17Sep18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD051890           Date 17Sep18               *
       *                 MD039547           Date 20Sep16               *
       *                 CLE071             Date 18Jul18               *
       *                 MD041649           Date 29Sep16               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051890 - Missing Principal Projection on Nostro Account    *
       *  MD039547 - Referred account is not properly validated.       *

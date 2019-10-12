@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1094242          Date 03Mar13               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1094242          Date 03Mar13               *
       *                 AR1076968          Date 07Feb13               *
       *                 AR1078092          Date 20Jan13               *
       *                 AR1078443          Date 17Jan12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1094242 - Event code not found                             *
       *  AR1076968A - System did not generate PDCL fees for unpaid    *

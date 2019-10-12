@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD053837           Date 28Aug19               *
-      *  Prev Amend No. MD021377           Date 18Jul18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD053837           Date 28Aug19               *
+      *                 MD021377           Date 18Jul18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046370           Date 07Nov17               *
       *                 MD046248           Date 27Oct17               *
@@ -109,6 +110,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053837 - Classification out of range for initial date if   *
       *             rundate falls on the last day of classification.  *
       *             Use %LOOKUP if rundate is equal to start date +   *

@@ -1,6 +1,7 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
+
 /*OVRF*: OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)               :*                     MD054211
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate credit interest calc. type/subtp')   *
@@ -14,7 +15,7 @@
       *                                                               *
       *  Last Amend No. MD054211A          Date 02Oct19               *
       *  Prev Amend No  MD054211           Date 18Sep19               *
-      *  Prev Amend No. MD053611           Date 19Aug19               *
+      *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 CER055             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -51,7 +52,7 @@
 
       ** RE Interest Sub-types file
      FREINT     IF   E           K DISK    INFSR(*PSSR)
-      *****FREIAC     IF   E           K DISK    INFSR(*PSSR)                      MD053611 MD054211
+       *****FREIAC     IF   E           K DISK    INFSR(*PSSR)                      MD053611 MD054211
      FREIACXX   IF   E           K DISK    INFSR(*PSSR)                                     MD054211
       *****F                                     IGNORE(REIACAF)                            MD053611
       *****F                                     IGNORE(REIACZF)                            MD053611

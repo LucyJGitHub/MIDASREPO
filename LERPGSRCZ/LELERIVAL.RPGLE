@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034449           Date 24Jan19               *
-      *  Prev Amend No. AR988460           Date 24Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD034449           Date 24Jan19               *
+      *                 AR988460           Date 24Jan19               *      
       *                 AR325915           Date 03Oct18               *      
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -113,6 +114,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
       *           - Applied for MD052515                              *
       *  AR988460 - Cannot input negative all-in-rate on Lending.     *

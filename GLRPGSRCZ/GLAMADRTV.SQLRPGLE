@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD051247           Date 16Jul18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD051247           Date 16Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046635           Date 10Aug17               *
       *                 MD037025           Date 10Feb16               *
@@ -85,6 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD051247 - SP15_CUSD API issue                               *
       *  MD046635 - User permissions are not verified on account      *

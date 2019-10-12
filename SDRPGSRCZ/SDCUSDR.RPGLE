@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD051532           Date 13Jul18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD051532           Date 13Jul18               *
       *                 MD051299           Date 19Jun18               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051532 - BOE details changed after authorisation           *
       *  MD051299 - Serious Midas Error occurs during insert,         *

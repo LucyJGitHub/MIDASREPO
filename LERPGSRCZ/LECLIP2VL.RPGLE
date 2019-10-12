@@ -11,11 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052515           Date 24Jan19               *
-      *  Prev Amend No. MD036008           Date 24Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD052515           Date 24Jan19               *
+      *                 MD036008           Date 24Jan19               *
       *                 MD034449           Date 24Jan19               *
-      *                 AR988460           Date 24Jan19               *
-      *                 MD053143           Date 04Apr19               *
+      *                 AR988460           Date 24Jan19               *      
+      *                 MD053143           Date 04Apr19               *      
       *                 MD052279           Date 14Nov18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -119,6 +120,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052515 - Negative fixed rate loan got unexpected errors    *
       *  MD036008 - Total Interest always displayed as positive.      *
       *           - Applied for MD052515                              *
@@ -130,7 +132,7 @@
       *           - Applied for MD034449                              *
       *           - Applied for MD052515                              *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
-      *             applied for loan start date rate fixing.          *
+      *             applied for loan start date rate fixing.          *      
       *  MD052279 - Negative rate loan got unexpected error 45021183  *
       *             (Entry is not allowed for discounted loans or zero*
       *             interests) and 45021165 (Valid rate is req. if no *
@@ -519,7 +521,7 @@
                                                                                             MD053143
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
-
+ 
      D OKFlags1DS    E DS                  EXTNAME(LEECLI1PD)                                BUG3721
       ** Flags to indicate whether transaction fields are valid on 1st screen                BUG3721
       *
@@ -3024,7 +3026,7 @@ E004 C                   ENDIF
       *  SRFCRA - Validate facility currency repayment amount         *
       *****************************************************************
      C     SRFCRA        BEGSR
-
+ 
      C     *IN83         IFEQ      '0'
      C                   MOVE      FCCYF         @CYCD
      C                   ELSE
@@ -4164,7 +4166,7 @@ E004 C                   ENDIF
      C                   ELSE
      C                   Z-ADD     ZINTR         WCHKI
      C                   ENDIF
-
+ 
      C*****WCHKI         IFLT      *ZEROS                                                   AR988460
      C**********         Z-SUB     WCHKI         WCHKI                                      AR988460
      C**********         MOVE      'Y'           WSUB              1                        AR988460

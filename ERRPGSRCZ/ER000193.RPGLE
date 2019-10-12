@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 MD030247           Date 26Jan15               *
       *                 MD030946           Date 11Dec14               *
       *                 CER070             Date 19Aug14               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD030247 - Increase size of GSRE to 21.                      *
@@ -84,67 +86,67 @@
       *  *PSSR   - Error processing                                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas ER BAIS Module Mapping Table
- 
+
      FERBMODPD  IT   F    4        DISK
- 
+
       ** Midas GL Accounts by branch
- 
+
      FACCBR     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(AC)
- 
+
       ** Midas RE Retail accrued Int. to date File
- 
+
      FREACR     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(REACRAF)
      F                                     IGNORE(REACRZF)
- 
+
       ** Midas DL Money market & loans deals details
- 
+
      FDEALSDC   IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(DL)
                                                                                             BUG26870
       ** Midas MM Loan/deposit/CD issued                                                    BUG26870
                                                                                             BUG26870
      FMMDELDL2  IF   E           K DISK    INFSR(*PSSR)                                     BUG26870
- 
+
       ** Midas LE Customer loans
- 
+
      FCLOANCL   IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(LE)
- 
+
       ** Midas ER Account Code Decision Table File
- 
+
      FERDEACL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas ER Transaction Type Decision Table File
- 
+
      FERDETTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas ER GRI Master Account/Transaction Balances File
- 
+
      FERGSTSPD  O    E             DISK
- 
+
       ** Midas ER GRI Master Account/Transaction File
- 
+
      FERGSTIPD  O    E             DISK
- 
+
       ** Midas ER GRI GL Accounts File
- 
+
      FERBILIPD  O    E             DISK
- 
+
       ** Midas ER Transaction/Account Balances Extract Audit
- 
+
      FER000193AUO    E             PRINTER INFDS(SPOOLU)
      F                                     USROPN
      F                                     INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -153,22 +155,22 @@
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
- 
+
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Array from file
- 
+
      D                 DS
      D ArrModules                     4A   DIM(4) FROMFILE(ERBMODPD)
      D ArMMOD                         2A   OVERLAY(ArrModules:1)
      D ArBAMO                         2A   OVERLAY(ArrModules:*NEXT)
- 
+
       ** Local data area for database error details
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** The following fields are defined in the external file:
       **                                    134 141 DBFile
       **                                    142 170 DBKey
@@ -176,64 +178,64 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Externally described DS for bank details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for Currency Codes
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Externally described DS for Additional Customer Details
- 
+
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
- 
+
       ** Externally described DS for System Values
- 
+
      D SDSVAL        E DS                  EXTNAME(SDSVALPD)
- 
+
       ** DS for access objects - Long data structure
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** DS for access objects
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                               CER070
       ** External DS for SAR Details                                                          CER070
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER070
- 
+
       ** File Information Data Structure for SD0760P1.
- 
+
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for ER000193AU.
- 
+
      D SPOOLU          DS
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ** Indicator Array
- 
+
      D Indicators      DS                  BASED(IndicatorP)
      D  EndOfFile             02     02
      D  RecNotFnd             03     03
- 
+
       ** Account Ref DS
- 
+
      D*AcctRef**       DS            20                                                     MD030247
      D AcctRef         DS            21                                                     MD030247
      D**ACust***               1      6S 0                                                  MD030247
@@ -249,29 +251,29 @@
      D PZDayNo         S              5P 0                                                    CER070
      D PZDate1         S              8S 0                                                    CER070
      D PErrorFlag      S              1A                                                      CER070
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Named constants             ¦
       ** ¦ =======  ===============             ¦
       ** +--------------------------------------+
- 
+
       ** True and False can be used for indicators being on or off.
- 
+
      D True            C                   *On
      D False           C                   *Off
- 
+
       ** Constants for system values
- 
+
      D WKeySysVal1     C                   CONST('BundBILKTCode')
      D WKeySysVal2     C                   CONST('BundClientId')
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
- 
+
      D PRtcd           S              7
      D PDayno          S              5A
      D PFDate          S               D   DATFMT(*ISO)
@@ -299,13 +301,13 @@
      D PSVal9          S            200A
      D PSValK0         S             20A
      D PSVal0          S            200A
- 
+
       ** Parameter list fields
- 
+
      D PCurr           S              3
- 
+
       ** Other fields used
- 
+
      D WBDate          S               D   DATFMT(*ISO)                                     BUG26308
      D WEDate          S               D   DATFMT(*ISO)                                     BUG26308
      D WFDate          S               D   DATFMT(*ISO)                                     BUG26308
@@ -328,21 +330,21 @@
      D WIx             S              1  0
      D WCcy            S              3
      D WAcct           S             10
- 
+
      D KMMOD           S              2
      D KTRTY           S              2
      D KTRST           S              2
      D KTRCL           S              4
- 
+
       ** Pointer for the indicator Array
- 
+
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -356,11 +358,11 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   EXSR      SRProcess
      C                   EVAL      *INLR  = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -368,84 +370,84 @@
       *  SRProcess - Processing subroutine                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProcess     BEGSR
- 
+
       ** Process Account Balances
       ** Set file pointer to first record and do initial read.
- 
+
      C     *LOVAL        SETLL     ACCBR
      C                   READ      ACCBR
- 
+
      C                   DOW       NOT %EOF(ACCBR)
- 
+
      C                   IF        ACRECI = 'D'
- 
+
       ** Process only records to be Extracted to GRI.
- 
+
      C                   MOVE      ACACOD        WAcct
      C     WAcct         CHAIN     ERDEACL1
      C                   IF        %FOUND() AND
      C                             N3GRI = 'Y'
- 
+
      C                   MOVE      ACCNUM        PCust
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCust
      C     SDACUS        PARM      SDACUS        DSLDY
- 
+
      C                   IF        PRtcd   = *BLANKS
- 
+
      C                   IF        E5BEXT  = 'Y'
- 
+
      C                   EVAL      WNetAcc = 0
      C     KACCT         CHAIN     REACR
      C                   IF        %FOUND()
- 
+
      C                   EVAL      WTotDAcc = DAIC1 + MADI + GADI
      C                   EVAL      WTotCAcc = CAIC1 + MACI + GACI
- 
+
      C                   EVAL      WNetAcc  = WTotDAcc - WTotCAcc
      C                   ENDIF
- 
+
      C                   EVAL      WBal = ACLDBL - WNetAcc
      C                   IF        WBal <> 0
      C                   EVAL      WMod = 'RE'
      C                   EXSR      SRFmtAccTran
      C                   EXSR      SRFmtAccBal
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Read next record.
- 
+
      C                   READ      ACCBR
- 
+
      C                   ENDDO
- 
+
       ** Process Transaction Details - DL
       ** Set file pointer to first record and do initial read.
- 
+
      C                   EVAL      WMod = 'MM'
      C                   READ      DEALSDC
- 
+
      C                   DOW       NOT %EOF()
- 
+
      C                   IF        DLRECI = 'D'
- 
+
      C                   EVAL      KMMOD = WMod
      C                   EVAL      KTRTY = DLDTYP
      C                   EVAL      KTRST = DLDLST
      C                   EVAL      KTRCL = DLCLAS
      C     KTRAN         CHAIN     ERDETTL1
- 
+
      C                   IF        %FOUND() AND
      C                             N4GRI = 'Y'
      C                   MOVE      DLCNUM        PCust
@@ -454,40 +456,40 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCust
      C     SDACUS        PARM      SDACUS        DSLDY
- 
+
      C                   IF        PRtcd   = *BLANKS
- 
+
      C                   IF        E5BEXT  = 'Y'
      C                   EXSR      SRFmtAccTran
      C                   EXSR      SRFmtAccBal
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      DEALSDC
      C                   ENDDO
- 
+
       ** Process Transaction Details - LE
       ** Set file pointer to first record and do initial read.
- 
+
      C                   EVAL      WMod = 'LE'
      C                   READ      CLOANCL
- 
+
      C                   DOW       NOT %EOF()
- 
+
      C                   IF        LERECI = 'D' AND
      C                             LELSTS = 'A'
- 
+
      C                   EVAL      KMMOD = WMod
      C                   EVAL      KTRTY = LELTYP
      C                   EVAL      KTRST = LESUTP
      C                   EVAL      KTRCL = LECLAS
      C     KTRAN         CHAIN     ERDETTL1
- 
+
      C                   IF        %FOUND() AND
      C                             N4GRI = 'Y'
      C                   MOVE      LECNUM        PCust
@@ -496,29 +498,29 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCust
      C     SDACUS        PARM      SDACUS        DSLDY
- 
+
      C                   IF        PRtcd   = *BLANKS
- 
+
      C                   IF        E5BEXT  = 'Y'
      C                   EXSR      SRFmtAccTran
      C                   EXSR      SRFmtAccBal
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      CLOANCL
      C                   ENDDO
- 
+
       ** Write to Extract file ERBILIPD
- 
+
      C                   EXSR      SRFmtAccGL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -526,14 +528,14 @@
       *  SRFmtAccTran -  Write record to ERGSTIPD                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtAccTran  BEGSR
- 
+
      C                   CLEAR                   ERGSTID0
- 
+
      C                   EVAL      B3MDAN = PSVal2
      C                   SELECT
- 
+
      C                   WHEN      WMod   = 'RE'
      C                   EVAL      B3FILN = ACBRCA
      C**********         EVAL      B3KDNR = ACCNUM                                            CER059
@@ -556,7 +558,7 @@
      C                   EVAL      B3DXBS = 0
      C********           EVAL      B3KONK = ' '                                      CER070 MD030946
      C                   EVAL      B3KONK = 'N'                                             MD030946
- 
+
      C                   WHEN      WMod   = 'MM'
      C                   EVAL      B3FILN = DLBRCA
      C**********         EVAL      B3KDNR = DLCNUM                                            CER059
@@ -570,7 +572,7 @@
      C                   EVAL      WMDate = DLMDAT
      C**********         EVAL      B3KONK = ' '                                      CER070 MD030946
      C                   EVAL      B3KONK = 'N'                                             MD030946
- 
+
      C                   WHEN      WMod   = 'LE'
      C                   EVAL      B3FILN = LEBRCA
      C**********         EVAL      B3KDNR = LECNUM                                            CER059
@@ -591,7 +593,7 @@
      C                   EVAL      B3KONK = 'N'                                               CER070
      C                   ENDIF                                                                CER070
      C                   ENDSL
- 
+
      C                   EVAL      B3WHIS = WCcy
      C                   MOVE      WSDate        PDayno
      C                   EXSR      SRDate
@@ -605,7 +607,7 @@
      C                   EXSR      SRDate
      C                   MOVE      PFDate        B3DXBS
      C                   ENDIF
- 
+
      C                   EVAL      WIx    = %LOOKUP(WMod:ArMMOD:1)
      C                   IF        WIx   <> 0
      C                   EVAL      B3MODU = ArBAMO(WIx)
@@ -625,7 +627,7 @@
      C                   EVAL      B3KZLS = 'N'
      C                   EVAL      B3HAFI = 'N'
      C                   EVAL      B3AWVK = 'K'
- 
+
      C                   EVAL      B3AUSF = 'N'
      C                   EVAL      B3RANG = 1
      C                   EVAL      B3IFNA = 'MIDAS PLUS'
@@ -666,9 +668,9 @@
                                                                                               CER070
      C                   MOVE      PZDate1       B3DLDT                                       CER070
      C                   EVAL      B3RISK = E5RIGR                                            CER070
- 
+
      C                   WRITE     ERGSTID0
- 
+
      C                   ENDSR
                                                                                             BUG26308
       *****************************************************************                     BUG26308
@@ -710,7 +712,7 @@
                                                                                             BUG26308
      C                   ENDDO                                                              BUG26308
      C                   ENDSR                                                              BUG26308
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -718,19 +720,19 @@
       *  SRFmtAccBal  -  Write record to ERGSTSPD                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtAccBal   BEGSR
- 
+
      C                   CLEAR                   ERGSTSD0
- 
+
       ** Get Number of decimal places for the Currency
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      WCcy          PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -740,9 +742,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      B4NBDP = A6NBDP
- 
+
      C                   EVAL      B4MDAN = PSVal2
      C**********         EVAL      B4FILN = B3FILN                                          BUG26308
      C                   EVAL      B4FILN = B3FILN                                            CER059
@@ -750,11 +752,11 @@
      C                   EVAL      B4KDNR = B3KDNR
      C                   EVAL      B4KTON = B3KTON
      C                   EVAL      B4GSRE = B3GSRE
- 
+
      C                   SELECT
      C                   WHEN      WMod   = 'RE'
      C                   EVAL      B4ABGB = ACLDBL
- 
+
       *                                                                                     BUG26254
       ** In Money Market, use Principal (PCPL) rather than Original principal amount (OPAM) BUG26254
       *                                                                                     BUG26254
@@ -766,7 +768,7 @@
      C                   ELSE                                                               BUG26870
      C                   EVAL      WBal   = 0 - DLPCPL                                      BUG26870
      C                   ENDIF                                                              BUG26870
- 
+
      C                   WHEN      WMod   = 'LE'
      C**********         EVAL      WBal   = LECPAM                                          BUG26870
      C                   IF        LEPTYP = 66                                             BUG26870A
@@ -778,21 +780,21 @@
      C                   EVAL      WBal   = 0 - LECPAM                                      BUG26870
      C                   ENDIF                                                             BUG26870A
      C                   ENDSL
- 
+
      C                   EVAL      B4SLDU = WBal
      C                   IF        WMod   = 'MM' AND                                        BUG26308
      C                             DLNOTD > 0                                               BUG26308
      C                   EVAL      B4GKBT = B4SLDU                                          BUG26308
      C                   ENDIF                                                              BUG26308
- 
+
      C                   EVAL      B4IFNA = 'MIDAS PLUS'
                                                                                               CER070
      C                   MOVE      PZDate1       B4DLDT                                       CER070
- 
+
      C                   WRITE     ERGSTSD0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -800,20 +802,20 @@
       *  SRFmtAccGL -  Write record to ERBILIPD                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtAccGL    BEGSR
- 
+
      C                   CLEAR                   ERBILID0
- 
+
      C                   EVAL      B5MDAN = PSVal2
      C                   MOVEL     PSVal1        B5BILK
      C                   EVAL      B5IFNA = 'MIDAS PLUS'
      C                   MOVE      PZDate1       B5DLDT                                       CER070
- 
+
      C                   WRITE     ERBILID0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -821,17 +823,17 @@
       *  SRDate - Convert Midas date to YYYYMMDD format               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDate        BEGSR
- 
+
      C                   CALL      'ZACVTDATE'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM                    PDayno
      C                   PARM                    PFDate
      C                   PARM      *BLANKS       PCDate
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -839,21 +841,21 @@
       *  SRAudit - Write audit report                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAudit       BEGSR
- 
+
      C                   OPEN      ER000193AU
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -865,35 +867,35 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     KACCT         KLIST
      C                   KFLD                    ACCNUM
      C                   KFLD                    ACCCY
      C                   KFLD                    ACACOD
      C                   KFLD                    ACACSQ
      C                   KFLD                    ACBRCA
- 
+
      C     KTRAN         KLIST
      C                   KFLD                    KMMOD
      C                   KFLD                    KTRTY
      C                   KFLD                    KTRST
      C                   KFLD                    KTRCL
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -927,9 +929,9 @@
      C                   ELSE                                                                 CER070
      C                   MOVEL     'N'           CLE006                                       CER070
      C                   ENDIF                                                                CER070
- 
+
       ** Retrieve system values.
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      WKeySysVal1   PSValK1
@@ -952,33 +954,33 @@
      C                   PARM                    PSVal9
      C                   PARM                    PSValK0
      C                   PARM                    PSVal0
- 
+
       ** If the system value is not found then issue a database error.
- 
+
      C                   IF        PRtcd    <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDSVALPD'
      C                   EVAL      DBase = 002
- 
+
      C                   SELECT
      C                   WHEN      PSVal1 = '*NRF'
      C                   EVAL      DBKey = PSValK1
      C                   WHEN      PSVal2 = '*NRF'
      C                   EVAL      DBKey = PSValK2
      C                   ENDSL
- 
+
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Report Work fields.
- 
+
      C                   EVAL      RqdLn1 = 0
      C                   EVAL      DifLn1 = 0
      C                   EVAL      PRTLN1 = 0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -993,9 +995,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blank
      C                   EVAL      WRun = 'Y'
      C                   EVAL      *INU7 = *On
@@ -1004,14 +1006,14 @@
      C                   DUMP
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044546           Date 20Mar17               *
       *                 222427             Date 05Dec16               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD101 - Password Encryption                                 *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
@@ -1528,6 +1530,15 @@
      C                   PARM                    DDDRMG1          12
      C                   PARM                    DDCRMG1          12
  
+     C     DDAPRC        Ifeq      'N'                                                        CER050
+     C     DDAPCR        Ifne      *Blanks                                                    CER050
+     C                   move      *Blanks       DDAPCR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDAPDR        Ifne      *Blanks                                                    CER050
+     C                   move      *Blanks       DDAPDR                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
+      *                                                                                       CER050
      C                   ENDSR
       **********************************************************************
       /EJECT

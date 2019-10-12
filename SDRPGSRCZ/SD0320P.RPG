@@ -12,8 +12,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *S01117
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -102,6 +104,8 @@
      IINFDS$    E DSY2I$DSP
       * Printer file information data structure.
       *
+     IDSSDY     E DSDSSDY                                                                     CER050
+     ISDCURR    E DSSDCURRPD                                                                  CER050
      ISCSARD    E DSSCSARDPD                                                                  CAS001
       ** External data structures for Switchable Features Details                             CAS001
       *                                                                                       CAS001
@@ -218,6 +222,28 @@
      C                     MOVELAUFENV    XRFENV           Fee Narrative
      C                     MOVELAUADJY    XRADJY                                              CAS001
      C                     MOVELAUPGID    XRDESC                                              CLE164
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C           AUIAPR    IFEQ *BLANKS                                                       CER050
+     C                     MOVEL'N'       XRIAPR                                              CER050
+     C                     ELSE                                                               CER050
+     C                     MOVELAUIAPR    XRIAPR                                              CER050
+     C                     ENDIF                                                              CER050
+     C**         AUMINF    IFEQ 0                                                             CER050
+     C**                   MOVE *BLANKS   XRMINF                                              CER050
+     C**                   ELSE                                                               CER050
+     C                     Z-ADD0         W#NUMB                                              CER050
+     C                     MOVE AUMINF    W#NUMB                                              CER050
+     C                     CALL 'ZSEDIT'                                                      CER050
+     C                     PARM           W#NUMB 150                                          CER050
+     C                     PARM A6NBDP    W#DECS  10                                          CER050
+     C                     PARM *BLANK    W#EDTC  1                                           CER050
+     C                     PARM           W#CHAR 21                                           CER050
+     C                     MOVELW#CHAR    W#CH20 20                                           CER050
+     C                     MOVE W#CH20    XRMINF                                              CER050
+     C                     Z-ADD0         W#NUMB                                              CER050
+     C**                   ENDIF                                                              CER050
+     C                     ENDIF                                                              CER050
      C/COPY WNCPYSRC,SD0320PC03
      C                     MOVEL*BLANK    XRACDT           alpha change da
      C                     MOVEL*BLANK    XRALCH           alpha of last c
@@ -809,6 +835,42 @@
      C                     ELSE                                                               CLE164
      C                     MOVE *OFF      *IN73                                               CLE164
      C                     ENDIF                                                              CLE164
+      *                                                                                       CER050
+      ** Check if CER050 is ON                                                                CER050
+      *                                                                                       CER050
+     C                     CALL 'AOSARDR0'                                                    CER050
+     C                     PARM *BLANKS   @RTCD   7                                           CER050
+     C                     PARM '*KEY   ' @OPTN   7                                           CER050
+     C                     PARM 'CER050'  @SARD   6                                           CER050
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER050
+      *                                                                                       CER050
+     C           @RTCD     IFEQ *BLANKS                                                       CER050
+     C                     MOVE 'Y'       CER050  1                                           CER050
+     C                     MOVE *ON       *IN75                                               CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE 'N'       CER050                                              CER050
+     C                     MOVE *OFF      *IN75                                               CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+     C                     CALL 'AOCURRR0'                                                    CER050
+     C                     PARM *BLANKS   @RTCD                                               CER050
+     C                     PARM '*KEY   ' @OPTN                                               CER050
+     C                     PARM BJCYCD    ##KEY1  3                                           CER050
+     C           SDCURR    PARM SDCURR    DSSDY                                               CER050
+      *                                                                                       CER050
+     C           @RTCD     IFNE *BLANKS                                                       CER050
+     C           *LOCK     IN   LDA                        ***************                    CER050
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **                    CER050
+     C                     MOVE 'SDCURRPD'DBFILE           ***************                    CER050
+     C                     MOVELBJCYCD    DBKEY                                               CER050
+     C                     OUT  LDA                                                           CER050
+     C                     EXSR *PSSR                                                         CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE A6NBDP    UINBDP  10                                          CER050
+     C                     ENDIF                                                              CER050
+     C                     ENDIF                                                              CER050
      C/COPY WNCPYSRC,SD0320PC06
      C*                                                                   S01117
       *

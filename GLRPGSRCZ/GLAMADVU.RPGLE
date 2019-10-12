@@ -34,8 +34,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD041837           Date 16Jun19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD051247           Date 17Jul18               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -137,6 +139,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041837 - Tax indicator is not defaulted anymore with       *
+      *             CER050.                                           *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD101 - Password Encryption                                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051247 - SP15_CUSD API issue                               *
@@ -443,6 +448,7 @@
       * Incoming Transaction
      D AccnInMast    E DS                  EXTNAME(GLAMADPD)
      D  AcnOthDet             84    213                                                       249660
+     D  AccIn130             177    253                                                     MD041837
      D AccnInDebi    E DS                  EXTNAME(GLAMDIPD)
      D AccnInCred    E DS                  EXTNAME(GLAMCIPD)
      D AccnInComm    E DS                  EXTNAME(GLAMCOPD)
@@ -930,7 +936,8 @@
       *
      C                   Eval      TIx = Ix                                                   238839
      C     Ix            IFNE      0
-     C     BLANKCHK      Ifeq      *Blanks                                                    249966
+     C*****BLANKCHK      Ifeq      *Blanks                                           249966 MD041837
+     C     AccIn130      Ifeq      *Blanks                                                  MD041837
      C     DDACTN        ANDEQ     'I'                                                      AR801992
      C                   MOVE      *Blanks       AcnOthDet                                    249660
      C                   Endif                                                                249966
@@ -1089,6 +1096,24 @@
  
      C                   SETON                                        LR
  
+     C     DDAPRC        Ifeq      'N'                                                        CER050
+     C     DDAPCR        Ifne      *Blanks                                                    CER050
+     C                   Move      *Blanks       DDAPCR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDAPDR        Ifne      *Blanks                                                    CER050
+     C                   Move      *Blanks       DDAPDR                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
+     C     DDAPRC        Ifeq      'Y'                                                        CER050
+     C     DDAPCR        Ifeq      *Blanks                                                    CER050
+     C     @DDAPCR       andne     *Blanks                                                    CER050
+     C                   Move      @DDAPCR       DDAPCR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDAPDR        Ifeq      *Blanks                                                    CER050
+     C     @DDAPDR       andne     *Blanks                                                    CER050
+     C                   Move      @DDAPDR       DDAPDR                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
       ** Please ensure that when setting up the buffer, new core fields                      BUG6218
       ** are added before the data structure ExtData                                         BUG6218
                                                                                              BUG6218
@@ -2624,7 +2649,8 @@
       ** Initialise screen fields to default values:
       ** if called from initial screen                                                        240312
      C                   If        DefaultFlag = 'Y'                                          240312
-     C                             and Blankchk = *BLANKS                                     249660
+     C**********                   and Blankchk = *BLANKS                            249660 MD041837
+     C                             and AccIn130 = *BLANKS                                   MD041837
       ***Test rightmost 130 characters of screen, if blank then default.               BUG553 240312
      C******             MOVE      AccnInMast    BLANKCHK        130                   BUG553 240312
      C*****BLANKCHK      IFEQ      *BLANKS                                             BUG553 237341
@@ -3014,7 +3040,8 @@
       ** - if called from initial screen                                                      240312
      C                   MOVE      AccnInMast    BLANKCHK        130                          240366
      C                   If        DefaultFlag = 'Y'                                          240312
-     C                             and Blankchk = *BLANKS                                     240366
+     C**********                   and Blankchk = *BLANKS                            240366 MD041837
+     C                             and AccIn130 = *BLANKS                                   MD041837
       ** Test rightmost 130 characters of screen, if blank then default.                      BUG553
      C******             MOVE      AccnInMast    BLANKCHK                              BUG553 240312
      C*****BLANKCHK      IFEQ      *BLANKS                                             BUG553 240312

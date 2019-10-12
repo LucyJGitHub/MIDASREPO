@@ -16,8 +16,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *
-      *  Prev Amend No. MD047554           Date 11Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD047554           Date 11Oct17               *      
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR943686           Date 23Sep16               *
@@ -83,11 +83,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054317 - PDCL X not generated for freq based repayment     *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
       *             with recalculated amount based on newly inserted, *
       *             amended, or reversed RE. Check the change of the  *
-      *             autosettle indicator and call LE2041.             *
+      *             autosettle indicator and call LE2041.             *      
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR943686 - CLE031: System generating wrong projected move-   *
@@ -909,7 +909,7 @@
       *****************************************************************
       * MAIN - Main body                                              *
       *****************************************************************
-
+ 
       ** Check whether user is a web browser user, if so overwrite                            CAP084
      C                   CALL      'SFC000026'                                                CAP084
      C                   PARM      *BLANKS       USER             10                          CAP084
@@ -1932,7 +1932,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   EVAL      PEXR = RPPEXR                                              CLE031
      C                   EVAL      PEXI = RPPEXI                                              CLE031
      C                   ENDIF                                                                CLE031
-
+ 
      C                   IF        CLE154 = 'Y'                                             MD040830
      C                   EVAL      REPT = RPREPT                                            MD040830
      C                   ENDIF                                                              MD040830
@@ -3436,30 +3436,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVE      FEFCCY        ZCCY              3
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   Z-ADD     1             Y                 3 0
-      *                                                                                     MD054317
-      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
-      *                                                                                     MD054317
-     C                   MOVE      FEFCCY        WKCCY             3                        MD054317
-      *                                                                                     MD054317
-     C     CLE031        IFEQ      'Y'                                                      MD054317
-      *                                                                                     MD054317
-     C     PTFI          IFEQ      'P'                                                      MD054317
-     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FEPSCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ELSE                                                               MD054317
-     C     FESCCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FESCCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   MOVE      WKCCY         ZCCY                                       MD054317
-     C                   MOVE      WKCCY         @CURR                                      MD054317
-      *                                                                                     MD054317
-     C*****FEFCCY        LOOKUP    CYA(Y)                                 20                MD054317
-     C     WKCCY         LOOKUP    CYA(Y)                                 20                MD054317
+     C     FEFCCY        LOOKUP    CYA(Y)                                 20
      C                   MOVE      *OFF          *IN20
      C                   MOVE      TND(Y)        ZNRDYS
       *
@@ -3475,8 +3452,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @CUSN             6
-     C**********         PARM      FEFCCY        @CURR             3                        MD054317
-     C                   PARM                    @CURR             3                        MD054317
+     C                   PARM      FEFCCY        @CURR             3
      C**********         PARM                    @ACCD             4                          CGL029
      C                   PARM                    @ACCD                                        CGL029
      C                   PARM                    @ACSN             2
@@ -3943,30 +3919,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVE      FEFCCY        ZCCY                                         CLE073
      C                   Z-ADD     BJRDNB        ZDAYNO                                       CLE073
      C                   Z-ADD     1             X                 3 0                        CLE073
-      *                                                                                     MD054317
-      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
-      *                                                                                     MD054317
-     C                   MOVE      FEFCCY        WKCCY                                      MD054317
-      *                                                                                     MD054317
-     C     CLE031        IFEQ      'Y'                                                      MD054317
-      *                                                                                     MD054317
-     C     PTFI          IFEQ      'P'                                                      MD054317
-     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FEPSCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ELSE                                                               MD054317
-     C     FESCCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FESCCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   MOVE      WKCCY         ZCCY                                       MD054317
-     C                   MOVE      WKCCY         @CURR                                      MD054317
-      *                                                                                     MD054317
-     C*****FEFCCY        LOOKUP    CYA(X)                                 69         CLE073 MD054317
-     C     WKCCY         LOOKUP    CYA(X)                                 69                MD054317
+     C     FEFCCY        LOOKUP    CYA(X)                                 69                  CLE073
      C                   MOVE      *OFF          *IN69                                        CLE073
      C                   MOVE      TND(X)        ZNRDYS                                       CLE073
       *                                                                                       CLE073
@@ -3982,8 +3935,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   PARM      *BLANKS       @RtCd                                        CLE073
      C                   PARM      '*KEY   '     @Optn                                        CLE073
      C                   PARM                    @Cusn             6                          CLE073
-     C**********         PARM      FEFCCY        @Curr             3                 CLE073 MD054317
-     C                   PARM                    @Curr             3                        MD054317
+     C                   PARM      FEFCCY        @Curr             3                          CLE073
      C                   PARM                    @Accd                                        CLE073
      C                   PARM                    @Acsn             2                          CLE073
      C                   PARM      FEOURS        @Nonb             2                          CLE073
@@ -4701,7 +4653,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   EVAL      WPEAInd = 'Y'                                              CSC054
      C                   ENDIF                                                                CSC024
      C                   ENDIF                                                                CSC024
-
+ 
      C                   EVAL      @RTCD = *BLANKS
       *                                                                                       CAS011
       ** Check if switchable feature CAS009 is installed                                      CAS011
@@ -4777,7 +4729,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVEL     'N'           CLE134            1                        AR806351
      C                   ENDIF                                                              AR806351
                                                                                             AR806351
-
+ 
       ** Check if Watch List Element (CSD083) is on                                           CSD083
                                                                                               CSD083
      C                   CALLB     'AOSARDR0'                                                 CSD083

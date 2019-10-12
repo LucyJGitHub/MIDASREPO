@@ -9,8 +9,10 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD020934           Date 11May19              */
-/*       Prev Amend No. MD052820           Date 21Feb19              */
+/*       Last Amend No. MD040181           Date 16Jun19              */
+/*       Prev Amend No. CER050             Date 16Jun19              */
+/*                      MD020934           Date 11May19              */
+/*                      MD052820           Date 21Feb19              */
 /*                      MD049309           Date 14Feb18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD048608           Date 20Nov17              */
@@ -66,6 +68,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     MD040181 - CER050 error. Changed file XLEPARHTD to XLEAPRHTD.*/
+/*     CER050 - Annualised Percentage Rate                          */
 /*     MD020934 - COB component LERC135 failed due to CDL045.       */
 /*                Amend length of field &EXTLIB from 8 to 10 to     */
 /*                avoid truncated library name which causes error   */
@@ -193,6 +197,7 @@
              DCL        VAR(&ULX004) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CER001*/
              DCL        VAR(&CAS009) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CAS009*/
              DCL        VAR(&CLE038) TYPE(*CHAR) LEN(1)                                   /*CLE038*/
+             DCL        VAR(&CER050) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CER050*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,LEC0605DCL                                           /*S01408*/
 /**/                                                                  /*082177*/
@@ -284,6 +289,14 @@
              CHGVAR     VAR(&LKEY3B) VALUE(&PRFX *CAT 'LKEY3DP2')                         /*CDL045*/
          ENDDO                                                                            /*CDL045*/
                                                                                           /*CDL045*/
+/**/                                                                                      /*CER050*/
+/* Check if CER050 is installed */                                                        /*CER050*/
+/**/                                                                                      /*CER050*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER050*/
+             CHGVAR     VAR(&SARD) VALUE('CER050')                                        /*CER050*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CER050*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CER050) VALUE('Y'))                                        /*CER050*/
 /**/                                                                  /*CLE005*/
 /* Check if CLE005 is installed */                                    /*CLE005*/
 /**/                                                                  /*CLE005*/
@@ -367,6 +380,13 @@
                           FILE(&DPLIB/ACTN5DK))                                         /*MD020268*/
              ENDDO                                                                      /*MD023527*/
                                                                                         /*MD020268*/
+                                                                                          /*CER050*/
+             IF         COND(&CER050 *EQ 'Y') THEN(DO)                                    /*CER050*/
+                CPYF       FROMFILE(&DPLIB/XLEAPRHTD) +
+                             TOFILE(*LIBL/LEAPRHTD) MBROPT(*REPLACE)                      /*CER050*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(*LIBL/LEAPRHTD))                                           /*CER050*/
+             ENDDO       /*CER050*/
              ENDDO                                                                        /*CLE134*/
               /**/                                                                        /*CLE134*/
              IF         COND(&STAT *NE 'Y') THEN(DO)                                      /*CLE134*/
@@ -407,6 +427,18 @@
                           FILE(&DPLIB/XACTN5DK))                                        /*MD020268*/
              ENDDO                                                                      /*MD023527*/
                                                                                         /*MD020268*/
+             IF         COND(&CER050 *EQ 'Y') THEN(DO)                                    /*CER050*/
+             DLTF       FILE(&DPLIB/XLEAPRHTD)                                            /*CER050*/
+             MONMSG     MSGID(CPF2105)                                                    /*CER050*/
+/**********  CPYF       FROMFILE(*LIBL/LEAPRHTD) +
+                          TOFILE(&DPLIB/XLEPARHTD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) */                                       /*CER050 MD040181*/
+             CPYF       FROMFILE(*LIBL/LEAPRHTD) +
+                          TOFILE(&DPLIB/XLEAPRHTD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD040181*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(&DPLIB/XLEAPRHTD))                                         /*CER050*/
+             ENDDO       /*CER050*/
 /**********  ENDDO                                                              /*CLE134 AR1055617*/
              ENDDO                                                                        /*CLE134*/
 /************IF         COND(%SUBSTRING(&LESTAT 9 3) *EQ 'OLD') +
@@ -930,6 +962,15 @@
  *****************************VALUE('OLD')****/                       /*S01189*/
 /************CHGDTAARA  DTAARA(LESTAT) VALUE(&LESTAT)*/               /*S01189*/
 /******************DLCOBJ     OBJ((LESTAT *DTAARA *EXCLRD))*/         /*S01189*/
+                                                                                         /*CER050*/
+/** APR Processing                                         */                            /*CER050*/
+             IF         COND(&CER050 = 'Y') THEN(DO)                                     /*CER050*/
+             CALL       PGM(LE6008)                                                      /*CER050*/
+             IF COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)                                    /*CER050*/
+             GOTO       CMDLBL(ABNOR)                                                    /*CER050*/
+             ENDDO                                                                       /*CER050*/
+             ENDDO                                                                       /*CER050*/
+                                                                                         /*CER050*/
                    CHGVAR  VAR(&STAT) VALUE('N')                      /*S01189*/
                    CALL    PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        /*S01189*/
 /**/

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD051230           Date 08Jun18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD051230           Date 08Jun18               *
       *                 MD040734           Date 23Aug16               *
       *               . CGL177             Date 11Jan16               *
       *                 CGL157             Date 17Aug15               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051230 - Authorise of customer record in CUSD gets serious *
       *             midas error message                               *

@@ -21,7 +21,7 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
@@ -86,9 +86,7 @@
      F*---------------------------------------------------------------*
      F*  AMENDMENT HISTORY                                            *
      F*                                                               *
-      *  MD053295 - Lending loan with Interest Calculation Basis      *
-      *             method 3 (30/360) has wrong interest payment      *
-      *             amount for month of March (Recompile)             *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
@@ -179,6 +177,9 @@
       ** Stamp Tax file                                                                       CER049
       *                                                                                       CER049
      FCLONCLL1IF  E           K        DISK                                                   CER049
+      *                                                                                       CER050
+     FLEAPRHI0IF  E           K        DISK                                                   CER050
+      *                                                                                       CER050
      F*
      F/COPY WNCPYSRC,CG6005F001
       /TITLE FUNCTION OF INDICATORS
@@ -3255,6 +3256,10 @@
      C                     ENDIF                                                              CLE141
      C*                                                                                       CLE141
      C/COPY WNCPYSRC,CG6005C006
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR ZI@APR                                                        CER050
+     C                     ENDIF                                                              CER050     
      C**  Accumulate RDEs and associated data and output to PF/CGUDTPD.
      C*
      C                     EXSR SRADTA
@@ -4047,6 +4052,50 @@
      C           LNSTA9    ENDSR                           ** LNSTA9 **                       CER049
       *                                                                                       CER049
       *****************************************************************                       CER049
+      * Subroutine  :  ZI@APR                                         *                       CER050
+      * Function    :  Extract - Annualised Percentage Rate (APR)     *                       CER050
+      *                                                               *                       CER050
+      * Called by   :                                                 *                       CER050
+      * Calls       :                                                 *                       CER050
+      *****************************************************************                       CER050
+     C           ZI@APR    BEGSR                                                              CER050
+      *                                                                                       CER050
+      **  Only if processing type is 61, 62 or 63                                             CER050
+     C           ##PTYP    IFEQ 61                                                            CER050
+     C           ##PTYP    OREQ 62                                                            CER050
+     C           ##PTYP    OREQ 63                                                            CER050
+      *                                                                                       CER050
+      * Run this process only if Do not print APR is set to Blank                             CER050
+      *                                                                                       CER050
+     C           APRC      IFEQ 'Y'                                                           CER050
+     C           LNRF      CHAINLEAPRHI0             89                                       CER050
+      *                                                                                       CER050
+      * Look for the first element in blank in series                                         CER050
+     C                     Z-ADD1         R1                                                  CER050
+     C           ##R,R1    DOUEQ*BLANKS                                                       CER050
+     C           R1        OREQ 20                                                            CER050
+     C                     ADD  1         R1                                                  CER050
+     C                     ENDDO                                                              CER050
+     C*                                                                                       CER050
+     C                     CLEARR#DATA                                                        CER050
+     C                     CLEARR#DEFN                                                        CER050
+     C                     CLEAR#@RDE                                                         CER050
+     C                     MOVEL'ZI_AAPR '#@RDE  10                                           CER050
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER050
+     C                     MOVELIAPRR     R#DATA                                              CER050
+     C                     MOVELIAPRR     ##DATA                                              CER050
+     C                     MOVEL'Rate  '  ##RDEC                                              CER050
+     C                     MOVEL'L'       ##RDET                                              CER050
+     C                     MOVEL'2'       ##DCPA                                              CER050
+     C                     MOVELR#DATA    ##D,R1                                              CER050
+     C                     MOVELR#DEFN    ##R,R1                                              CER050
+     C*                                                                                       CER050
+     C                     END                                                                CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDSR                                                              CER050
+      *                                                                                       CER050
+      *****************************************************************                       CER050
      C/EJECT
      C*****************************************************************
      C*                                                               *
@@ -4688,6 +4737,19 @@
       *                                                                                     MD029242
      C                     ENDIF                                                            MD029242
       *                                                                                       CER049
+      ** Access SAR details file to determine if CER050 is installed.                         CER050
+      *                                                                                       CER050
+     C                     CALL 'AOSARDR0'                                                    CER050
+     C                     PARM '       ' ##RTCD                                              CER050
+     C                     PARM '*VERIFY' ##OPTN                                              CER050
+     C                     PARM 'CER050'  ##SARD  6                                           CER050
+      *                                                                                       CER050
+     C           ##RTCD    IFEQ *BLANK                                                        CER050
+     C                     MOVEL'Y'       CER050  1                                           CER050
+     C                     ELSE                                                               CER050
+     C                     MOVEL'N'       CER050                                              CER050
+     C                     END                                                                CER050
+      *                                                                                       CER050      
       ** Check if CLE141 is installed.                                                        CLE141
       *                                                                                       CLE141
      C                     CALL 'AOSARDR0'                                                    CLE141

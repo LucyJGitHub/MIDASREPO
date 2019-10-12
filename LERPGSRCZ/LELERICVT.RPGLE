@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD044083           Date 12Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD044083           Date 12Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD028338           Date 25Nov14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD044083 - Issue 2: Spread rate showing incorrect value on   *
       *             rollover enquiry. Issue fixed with by replacing   *
       *             EVAL with EVALR and MOVEL to MOVE.                *

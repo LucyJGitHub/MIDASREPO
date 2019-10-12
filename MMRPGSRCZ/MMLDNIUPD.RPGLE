@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 AR784570           Date 21Feb17               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR784570 - Condition whether internal customer of customer   *
@@ -391,6 +393,7 @@
      D CGL165          S              1A                                                      CGL165
                                                                                               CAP042
      D CAP042          S              1A                                                      CAP042
+     D CER050          S              1A                                                      CER050
                                                                                               CAS001
       ** Define fields used in CAS001                                                         CAS001
                                                                                               CAS001
@@ -1279,6 +1282,10 @@
      C                   MOVE      IKRDMT        RDMT                                         CRE073
      C                   MOVE      IKRDFD        RDFD                                         CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                       CER050
+     C                   If        CER050 = 'Y'                                               CER050
+     C                   Move      IKAPRC        APRC                                         CER050
+     C                   Endif                                                                CER050
       *
       * WRITE DEAL
       *
@@ -1350,6 +1357,10 @@
      C                   MOVE      *BLANKS       RTFC                           CAP004
      C                   ENDIF                                                  CAP004
       *
+     C                   If        CER050 = 'Y'                                               CER050
+     C                   Move      IKAPRC        APRC                                         CER050
+     C                   Endif                                                                CER050
+      *                                                                                       CER050
      C                   UPDATE    DEALSDCF
       *
      C                   END
@@ -1798,6 +1809,9 @@
      C                   ENDIF                                                                CER020
       *
       * UPDATE DEAL
+     C                   If        CER050 = 'Y'                                               CER050
+     C                   Move      IKAPRC        APRC                                         CER050
+     C                   Endif                                                                CER050
       *
      C                   UPDATE    DEALSDCF
                                                                                               CRE020
@@ -3605,6 +3619,21 @@
      C                   ELSE                                                                 CGL165
      C                   EVAL      CGL165 = 'N'                                               CGL165
      C                   ENDIF                                                                CGL165
+                                                                                              CER050
+      ** Access SAR details file to determine if CER050 is on.                                CER050
+      *                                                                                       CER050
+     C                   CallB     'AOSARDR0'                                                 CER050
+     C                   Parm      *BLANKS       PRTCD                                        CER050
+     C                   Parm      '*VERIFY'     POPTN                                        CER050
+     C                   Parm      'CER050'      PSARD                                        CER050
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
+      *                                                                                       CER050
+     C                   If        PRtcd = *Blanks                                            CER050
+     C                   Eval      CER050 = 'Y'                                               CER050
+     C                   Else                                                                 CER050
+     C                   Eval      CER050 = 'N'                                               CER050
+     C                   Endif                                                                CER050
+      *                                                                                       CER050
      C                   ENDSR
      C****************************************************************
       /EJECT

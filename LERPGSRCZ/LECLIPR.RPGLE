@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039248           Date 07Jun16               *
       *                 MD037909           Date 08Mar16               *
       *                 CLE141             Date 08Feb16               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039248 - Business Day Convention details missing in BDC    *
@@ -1043,6 +1045,10 @@
       *
      C                   PARM                    CrLnScnFmt1
       *
+     C     @DDAPRC       Ifeq      'N'                                                        CER050
+     C     @DDAPRR       andne     *Blanks                                                    CER050
+     C                   move      *Blanks       @DDAPRR                                      CER050
+     C                   Endif                                                                CER050
       *
       *
      C                   ENDSR

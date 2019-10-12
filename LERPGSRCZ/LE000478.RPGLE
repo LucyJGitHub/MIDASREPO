@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD053837           Date 13Sep19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD053837           Date 13Sep19               *      
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD028099           Date 27Oct14               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053837 - Inconsistency in Basel II initial date and        *
       *             classification for fees. Create separate codes    *
       *             that retrieve loan details by facility for origin *
@@ -47,7 +49,7 @@
       *           - Remove KF_BRCA as key for CLOAF as loans of diff  *
       *             branch with facility are not retrieved.           *
       *           - Use event control date instead of rundate as class*
-      *             is not incremented on ANWD COB.                   *
+      *             is not incremented on ANWD COB.                   *      
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *

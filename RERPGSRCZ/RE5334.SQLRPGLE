@@ -11,12 +11,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CRE083AA           Date 06Aug12               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CRE083AA           Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 239284             Date 13Apr06               *
+      *                 239284             Date 13Apr06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
@@ -27,6 +28,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CRE083AA - COB Restructure - RE COB Optimisation Phase 1     *
       *  239284 - Applied fix 238920.                                 *
       *  238920 - Make sure correct branch is output to report trail. *

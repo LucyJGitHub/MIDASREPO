@@ -9,8 +9,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 10Aug12               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE164             Date 18Aug14               *
@@ -57,6 +58,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                             *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -147,6 +149,9 @@
      FLEPDUELBUF  E           K        DISK         KINFSR *PSSR                            AR574425
      F            LEPDUED0                          KRENAMELEPDUED2                           CLE134
       *                                                                                       193112
+      * Midas LE Loan APR History file                                                        CER050
+     FLEAPRHI0UF  E           K        DISK                                                   CER050
+      *                                                                                       CER050
      F/COPY WNCPYSRC,LE0451F001
      F****************************************************************
      F* ID F  C  H  L    FUNCTION OF INDICATORS
@@ -513,6 +518,12 @@
      C                     ADD  1         CONTDD
      C                     END
      C/COPY WNCPYSRC,LE0451C001
+      *                                                                                       CER050
+      * If CER050 is one execute subroutine to delete Loans APR records                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR SRLEAP                                                        CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C                     MOVE 'B'       RCDTL
      C           KLIST2    DELETCLOANCKF             91
      C           *IN91     IFEQ '0'
@@ -702,6 +713,35 @@
      C                     ENDDO                                                              CAS016
       *                                                                                       CAS016
      C                     ENDSR                                                              CAS016
+     C*****************************************************************                       CER050
+     C/EJECT                                                                                  CER050
+      *****************************************************************                       CER050
+      *                                                                                       CER050
+      *  SRLEAP - Delete records from Loans APR History files                                 CER050
+      *  CALLED BY: Main Processing                                                           CER050
+      *                                                                                       CER050
+      *****************************************************************                       CER050
+     C           SRLEAP    BEGSR                                                              CER050
+      *                                                                                       CER050
+      * If record deleted from CLOANCLF                                                       CER050
+     C           *IN81     IFEQ *OFF                                                          CER050
+      *                                                                                       CER050
+      * Delete associated records from Loans APR Extension                                    CER050
+      * & History files                                                                       CER050
+      *                                                                                       CER050
+     C           LNRFL     SETLLLEAPRHI0                                                      CER050
+     C           LNRFL     READELEAPRHI0                 51                                   CER050
+      *                                                                                       CER050
+     C           *IN51     DOWEQ*OFF                                                          CER050
+      *                                                                                       CER050
+     C                     DELETLEAPRHD0                                                      CER050
+     C           LNRFL     READELEAPRHI0                 51                                   CER050
+     C                     ENDDO                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDSR                                                              CER050
+      *                                                                                       CER050
      C*****************************************************************
      C/EJECT
      C/COPY WNCPYSRC,LE0451C009
@@ -950,6 +990,32 @@
      C                     MOVE 'N'       CAS016                                              CAS016
      C                     ENDIF                                                              CAS016
       *                                                                                       CAS016
+      *                                                                                       CER050
+      * Determine if switchable feature CER050 is installed                                   CER050
+     C                     CALL 'AOSARDR0'                                                    CER050
+     C                     PARM *BLANKS   WRTCD                                               CER050
+     C                     PARM '*VERIFY 'WOPTN                                               CER050
+     C                     PARM 'CER050'  PSARD   6                                           CER050
+     C           SCSARD    PARM SCSARD    DSSDY                                               CER050
+      *                                                                                       CER050
+     C           WRTCD     IFNE *BLANKS                                                       CER050
+     C           WRTCD     ANDNE'*NRF   '                                                     CER050
+     C           *LOCK     IN   LDA                                                           CER050
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER050
+     C                     Z-ADD7         DBASE                                               CER050
+     C                     MOVELPSARD     DBKEY                                               CER050
+     C                     OUT  LDA                                                           CER050
+     C                     MOVE *ON       *INU7                                               CER050
+     C                     MOVE *ON       *INU8                                               CER050
+     C                     EXSR *PSSR                                                         CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C           WRTCD     IFEQ *BLANKS                                                       CER050
+     C                     MOVE 'Y'       CER050  1                                           CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE 'N'       CER050                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
       ** Key list for LEFHSTL5                                                                193112
      C           KLFHS5    KLIST                                                              193112
      C                     KFLD           LNRFL                                               193112

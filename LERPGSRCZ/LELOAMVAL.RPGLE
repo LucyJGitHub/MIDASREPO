@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034449           Date 24Jan19               *
-      *  Prev Amend No. MD052213           Date 26Oct18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD034449           Date 24Jan19               *      
+      *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
       *                 MD027418           Date 18Jul18               *
       *                 MD026971           Date 18Jul18               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
       *           - Applied for MD052515                              *
       *  MD052213 - If CLE158 ON CLE025 OFF, issue overridable error  *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Prev Amend No. MD034449           Date 24Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD034449           Date 24Jan19               *      
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Negative Rate/Spread field is not displayed       *
       *           - Applied for MD052515                              *
       *  MD046248 - Finastra Rebranding                               *

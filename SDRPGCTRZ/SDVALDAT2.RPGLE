@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039287A          Date 17Jun16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039287A          Date 17Jun16               *
       *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR741461           Date 06May11               *
@@ -31,6 +32,7 @@
       *                                                               *
       *--------------------------------------------------------------**
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039287A - Customer number is not automatically generated   *
       *              when CSD021 is on                                *

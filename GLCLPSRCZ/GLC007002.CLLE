@@ -10,16 +10,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD053610           Date 07Aug19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      MD026169           Date 04Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD026169           Date 04Apr14              */
 /*                      MD025679B          Date 26Mar14              */
 /*                      MD025679A          Date 21Mar14              */
 /*                      MD025679  *CREATE  Date 17Mar14              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD053610 - GO_ONL_OLP and GO_ONL_SYN issue with RCVJRNE     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD026169 - GO_ONL_OLP background job is processing          */
 /*                  full receiver chain                              */
@@ -29,66 +27,24 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
-
+ 
              DCL        VAR(&JRCVR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JSEQA) TYPE(*CHAR) LEN(20)
              DCL        VAR(&JSEQN) TYPE(*DEC) LEN(10 0)
-
+ 
              DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
-                                                                                        /*MD053610*/
-             DCL        VAR(&DLYTIM) TYPE(*DEC) LEN(3)                                  /*MD053610*/
-             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE('       +
-                          ')                                                            /*MD053610*/
-             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20) +
-                          VALUE('DelayTimeValue')                                       /*MD053610*/
-             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)                                 /*MD053610*/
-             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)                                /*MD053610*/
-                                                                                        /*MD053610*/
              DCLF       FILE(GLOLJSTD)
-
+ 
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2014')
-
+ 
 /* Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
              CHGJOB SWS(00000000)
-
-/**/                                                                                    /*MD053610*/
-/* Retrieve the current setting of 'DelayTimeValue' system value     */                 /*MD053610*/
-/**/                                                                                    /*MD053610*/
-             CALL       PGM(AOSVALR0) PARM(&PRTCD &POP01 &PVL01 +
-                          &POP02 &PVL02 &POP03 &PVL03 &POP04 &PVL04 +
-                          &POP05 &PVL05 &POP06 &PVL06 &POP07 &PVL07 +
-                          &POP08 &PVL08 &POP09 &PVL09 &POP10 &PVL10)                    /*MD053610*/
-             IF         COND(&PRTCD *EQ '       ') THEN(DO)                             /*MD053610*/
-               CHGVAR     VAR(&DLYTIM) VALUE(%SUBSTRING(&PVL01 1 3))                    /*MD053610*/
-             ENDDO                                                                      /*MD053610*/
-             ELSE       CMD(DO)                                                         /*MD053610*/
-               SNDPGMMSG  MSG('Database Error in File SDSVALPD, Key +
-                          DelayTimeValue') TOMSGQ(MRUNQ)                                /*MD053610*/
-               GOTO       CMDLBL(END)                                                   /*MD053610*/
-             ENDDO                                                                      /*MD053610*/
-                                                                                        /*MD053610*/
+ 
              ALCOBJ     OBJ((GLOLJSTD *FILE *EXCLRD)) WAIT(0)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
              SNDPGMMSG  MSG('Attempt to start background update of +
@@ -97,22 +53,22 @@
                           TOMSGQ(MOPERQ MRUNQ)
              GOTO       CMDLBL(END)
              ENDDO
-
+ 
              CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
-
+ 
              OVRDBF     FILE(GLOLJSTD) SHARE(*NO)
-
+ 
              SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&JRCVR) SEQ(&JSEQN)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
 /* Check if journal sequence exists. */
 /* If journal sequence does not exist, set to restart at first entry */
-
+ 
              RCVF
              MONMSG     MSGID(CPF0864)
-
+ 
              IF         COND(&JRCVR *LT &OLJRCV) THEN(DO)
                 CHGVAR     VAR(&JRCVR) VALUE(&OLJRCV)
                 CHGVAR     VAR(&JSEQA) VALUE(&OLJSEQ)
@@ -123,64 +79,56 @@
                 ENDDO
                 CHGVAR     VAR(&JSEQA) VALUE('*FIRST')
              ENDDO
-
+ 
 RERUN:
              RTVJRNE    JRN(ICJRN) RCVRNG(&JRCVR) FROMENTLRG(&JSEQA) +
                           RTNRCV(&JRCVR) RTNSEQLRG(&JSEQA)
-
+ 
              MONMSG     MSGID(CPF0000) EXEC(DO)
                 CHGVAR     VAR(&JRCVR) VALUE('*CURCHAIN')
                 CHGVAR     VAR(&JSEQA) VALUE('*FIRST')
                 GOTO       CMDLBL(RERUN)
              ENDDO
-
+ 
              CALL       PGM(GL007002) PARM(&JSEQA &JRCVR 'INCREMENT')
-
+ 
 /* Receive journal entries*/
-
-/**********  RCVJRNE    JRN(ICJRN) EXITPGM(GL007001) FILE((GLOLPSTD) +  */              /*MD053610*/
-/**********               (GLPRONTD)) RCVRNG(&JRCVR) +                  */              /*MD053610*/
-/**********               FROMENTLRG(&JSEQA) TOENTLRG(*NONE) +          */              /*MD053610*/
-/**********               JRNCDE((R) (U *IGNFILSLT) (J *IGNFILSLT)) +   */              /*MD053610*/
-/**********               ENTTYP(PT PX DR OL NR) ENTFMT(*JRNENTFMT) +   */              /*MD053610*/
-/**********               DELAY(*NEXTENT) BLKLEN(*NONE) +               */              /*MD053610*/
-/**********               JRNENTFMT(RJNE0200) RTNPTR(*SYSMNG)           */              /*MD053610*/
-                                                                                        /*MD053610*/
+ 
              RCVJRNE    JRN(ICJRN) EXITPGM(GL007001) FILE((GLOLPSTD) +
                           (GLPRONTD)) RCVRNG(&JRCVR) +
                           FROMENTLRG(&JSEQA) TOENTLRG(*NONE) +
                           JRNCDE((R) (U *IGNFILSLT) (J *IGNFILSLT)) +
                           ENTTYP(PT PX DR OL NR) ENTFMT(*JRNENTFMT) +
-                          DELAY(*NEXTENT &DLYTIM) BLKLEN(*NONE) +
-                          JRNENTFMT(RJNE0200) RTNPTR(*SYSMNG)                           /*MD053610*/
-
+                          DELAY(*NEXTENT) BLKLEN(*NONE) +
+                          JRNENTFMT(RJNE0200) RTNPTR(*SYSMNG)
+ 
 /* Receiver has changed - get new starting details for RCVJRNE command */
-
+ 
              IF COND(%SWITCH(XXXXX100)) THEN(DO)
                 CALL       PGM(GL007002) PARM(&JSEQA &JRCVR 'JRNDTL')
                 CHGJOB     SWS(00000000)
                 GOTO       CMDLBL(RERUN)
              ENDDO
-
+ 
              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
              GOTO       CMDLBL(END)
-
+ 
 /* Abnormal termination */
-
+ 
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC007002 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
-
+ 
 END:
              DLTOVR     FILE(*ALL)
-
+ 
              RCLACTGRP  ACTGRP(*ELIGIBLE)
              MONMSG     MSGID(CPF0000)
-
+ 
              ENDPGM

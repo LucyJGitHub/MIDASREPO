@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039009           Date 26May16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039009           Date 26May16               *
       *                 MD038714           Date 09May16               *
       *                 MD037915           Date 24Feb16               *
       *                 CLE164             Date 18Aug14               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039009 - Validation Changes on Auto-Settle indicator       *
       *             of Manual Repayments for PDCL with auto settle    *

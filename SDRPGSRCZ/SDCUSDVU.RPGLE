@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052465           Date 10Jan19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD052465           Date 10Jan19               *      
+      *                 CSD102             Date 08Jan19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD023188           Date 20Sep18               *
       *                 MD051305           Date 19Jun18               *
@@ -147,6 +148,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD052465 - Not possible to capture mandatory US TIN for      *
       *             FATCA reporting                                   *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1071,6 +1073,7 @@
      D CGL032          S              1A                                                    AR728530
      D CSD090          S              1A                                                      CSD090
      D CGL132          S              1A                                                      CGL132
+     D CER050          S              1                                                       CER050
                                                                                               CER059
      D DfltScrn1       S              1A   INZ('N')                                           CER059
      D Idy             S              3P 0 INZ(0)                                             CER059
@@ -3824,6 +3827,10 @@
      C                   MOVEL     ADDDBEXT      V_ADBEXT                                     CER059
      C                   MOVEL     ADDDRIGR      V_ADRIGR                                     CER070
      C                   MOVEL     ADDDRECH      V_ADRECH                                     CER071
+                                                                                              CER050
+     C                   If        CER050 = 'Y'                                               CER050
+     C                   movel     ADDDAPRC      V_ADAPRC                                     CER050
+     C                   Endif                                                                CER050
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Set Service fees Fields                                                              CSD079
@@ -6994,6 +7001,20 @@
      C                   ENDIF                                                              MD030956
       *                                                                                     MD030956
                                                                                               CGL132
+      ** Check if CER050 is switched on                                                       CER050
+                                                                                              CER050
+     C                   CALLB     'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       @RTCD                                        CER050
+     C                   PARM      '*VERIFY'     @OPTN                                        CER050
+     C                   PARM      'CER050'      @SARD                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+                                                                                              CER050
+     C     @RTCD         Ifeq      *BLANK                                                     CER050
+     C                   Eval      CER050 = 'Y'                                               CER050
+     C                   Else                                                                 CER050
+     C                   eval      CER050 = 'N'                                               CER050
+     C                   Endif                                                                CER050
+                                                                                              CER050
       /COPY WNCPYSRC,SDCUSDVU03
      C                   ENDSR
                                                                                              BUG5082

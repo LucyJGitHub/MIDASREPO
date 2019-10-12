@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD052465           Date 10Jan19               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD052465           Date 10Jan19               *      
+      *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036375           Date 02Nov15               *
       *                 MD036356           Date 02Nov15               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052465 - Not possible to capture mandatory US TIN for      *
       *             FATCA reporting                                   *
       *  MD040876 - CRS MQ (Recompile)                                *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034449           Date 24Jan19               *
-      *  Prev Amend No. MD044083           Date 12Feb19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD034449           Date 24Jan19               *      
+      *                 MD044083           Date 12Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028338           Date 25Nov14               *
       *                 CLE134             Date 01Aug12               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Correct negative discount amount display          *
       *           - Applied for MD052515                              *
       *  MD044083 - Issue 2: Spread rate showing incorrect value on   *

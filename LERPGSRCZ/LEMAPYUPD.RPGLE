@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054035           Date 03Sep19               *
-      *  Prev Amend No. MD054317           Date 09Sep19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054035           Date 03Sep19               *
+      *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD047554           Date 11Oct17               *
       *                 MD051892           Date 22Sep18               *
@@ -117,6 +118,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *       
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *

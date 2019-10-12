@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 CLE071             Date 18Jul18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD024398           Date 11May14               *
       *                 MD025467           Date 08May14               *
@@ -58,7 +57,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -982,34 +980,11 @@
  
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   MOVE      FEFCCY        ZCCY
-      *                                                                                     MD054317
-      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
-      *                                                                                     MD054317
-     C                   MOVE      FEFCCY        WKCCY             3                        MD054317
-      *                                                                                     MD054317
-     C     CLE031        IFEQ      'Y'                                                      MD054317
-      *                                                                                     MD054317
-     C     PTFI          IFEQ      'P'                                                      MD054317
-     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FEPSCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ELSE                                                               MD054317
-     C     FESCCY        IFNE      *BLANKS                                                  MD054317
-     C                   MOVE      FESCCY        WKCCY                                      MD054317
-     C                   ENDIF                                                              MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   ENDIF                                                              MD054317
-      *                                                                                     MD054317
-     C                   MOVE      WKCCY         ZCCY                                       MD054317
-     C                   MOVE      WKCCY         @CURR                                      MD054317
-     C                   MOVE      WKCCY         @CYCD                                      MD054317
  
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    @OPTN
-     C**********         PARM      FEFCCY        @CURR             3                        MD054317
-     C                   PARM                    @CURR             3                        MD054317
+     C                   PARM      FEFCCY        @CURR             3
      C     SDCURR        PARM      SDCURR        DSSDY
  
      C                   Z-ADD     A6TXND        ZNRDYS
@@ -1029,8 +1004,7 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @CUSN             6
      C**********         PARM                    @ACCD             4                          CGL029
-     C**********         PARM      FEFCCY        @CYCD             3                 244719 MD054317
-     C                   PARM                    @CYCD             3                        MD054317
+     C                   PARM      FEFCCY        @CYCD             3                          244719
      C                   PARM                    @ACCD            10                          CGL029
      C                   PARM                    @ACSN             2
      C                   PARM      FEOURS        @NONB             2
@@ -1814,20 +1788,6 @@
      C                   ELSE                                                                 CLE134
      C                   MOVEL     'N'           CLE134            1                          CLE134
      C                   ENDIF                                                                CLE134
-      *                                                                                     MD054317
-      ** CLE031 - Lending Enhancements                                                      MD054317
-      *                                                                                     MD054317
-     C                   CALL      'AOSARDR0'                                               MD054317
-     C                   PARM      *BLANKS       @RTCD                                      MD054317
-     C                   PARM      '*KEY    '    @OPTN                                      MD054317
-     C                   PARM      'CLE031'      @SARD                                      MD054317
-     C     SCSARD        PARM      SCSARD        DSFDY                                      MD054317
-      *                                                                                     MD054317
-     C     @RTCD         IFEQ      *BLANKS                                                  MD054317
-     C                   MOVEL     'Y'           CLE031                                     MD054317
-     C                   ELSE                                                               MD054317
-     C                   MOVEL     'N'           CLE031            1                        MD054317
-     C                   ENDIF                                                              MD054317
  
       **If*the*user*is*connected*via*a*browser,*the*job*user*name*is*QUSER -          CAP084 BUG6318
       **their*user*name*is*stored*in*ZMUSER                                           CAP084 BUG6318

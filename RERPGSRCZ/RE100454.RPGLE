@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046682           Date 24Jul17               *
+      *  Last Amend No. CER050             Date 16Jun19               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046682           Date 24Jul17               *
       *                 CGL165             Date 17Feb15               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD046682 - Display 'CASH MANAGEMENT' only if CRE008 is on.   *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *

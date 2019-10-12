@@ -17,13 +17,17 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. MD054479           Date 27Sep19               *
-      *  Prev Amend No. MD054107           Date 11Sep19               *
+      *  Last Amend No. MD054544           Date 04Oct19               *
+      *  Prev Amend No. MD054479           Date 27Sep19               *
+      *                 MD054107           Date 11Sep19               *
       *                 MD054017           Date 04Sep19               *
       *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054544 - Cashflow is incorrect for CALL LOAN after         *
+      *             authorising the amendment on Maturity Date and    *
+      *             Next Interest Payment Date                        *
       *  MD054479 - Correction on CashFlow for MMLoans / MMDeposits   *
       *  MD054107 - No APR Recalculation on Deal Amendment            *
       *  MD054017-Change on validation of System Value "APR Formula"  *
@@ -2512,8 +2516,9 @@ tina C                   ENDIF
      C                   ELSE
      C                   MOVE      'O'           IOIND
      C                   ENDIF
-     C     HDTYP         Ifeq      'CL'
-     C     HDTYP         oreq      'LN'
+     C*****HDTYP         Ifeq      'CL'                                                     MD054544
+     C*****HDTYP         oreq      'LN'                                                     MD054544
+     C     HDTYP         IFEQ      'LN'                                                     MD054544
      C*****HDTYP         OREQ      'DL'                                            MD054107 MD054479
      C*****HDTYP         OREQ      'TI'                                            MD054107 MD054479
      C*****HDTYP         OREQ      'IP'                                            MD054107 MD054479

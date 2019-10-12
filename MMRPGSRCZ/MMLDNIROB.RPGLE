@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -76,6 +77,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
@@ -645,6 +648,9 @@
       *
       * Deal in file format
      C                   PARM                    DlFilFmt
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
      C/COPY WNCPYSRC,MMLDNIHC08
       *
       * OUTPUTS

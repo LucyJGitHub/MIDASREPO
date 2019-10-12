@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -64,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
@@ -535,8 +538,10 @@
      C**********         EVAL      Buffer2 = %subst(FIDTScnRpt:754)                   BUG9827 CSF011
      C**********         EVAL      Buffer2 = %SUBST(Filler2:606)                       CSF011 CDL096
      C**********         EVAL      Buffer2 = %SUBST(Filler2:572)                       CDL096 CGL165
-     C                   EVAL      Buffer2 = %SUBST(Filler2:568)                              CGL165
+     C**********         EVAL      Buffer2 = %SUBST(Filler2:568)                     CGL165 MD054028
+     C                   EVAL      Buffer2 = %SUBST(Filler2:357)                            MD054028
      C                                       + TranQExt                                       CSF011
+     C                                       + DDAPRC + DDAPRR                              MD054028
      C                                       + FIDTScnRpt                                     CSF011
      C**********         EVAL      BufferEx2 = RatDateDS + PayDateDS                 CDL033 BUG10943
      C**********                              + RegData                            BUG10563 BUG10943
@@ -1068,6 +1073,9 @@
      C                   PARM      *BLANK        ReturnCode       10
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
  
       * OUTPUTS
       * (Current) Deal in screen format
@@ -1081,9 +1089,12 @@
                                                                                               239400
       *                                                                                       CER050
      C     DDAPRC        IFEQ      'N'                                                        CER050
-     C     DDAPRR        ANDNE     *Blanks                                                    CER050
+     C     DDAPRC        OREQ      *Blanks                                                  MD054028
+     C*****DDAPRR*       ANDNE     *Blanks                                           CER050 MD054028
+     C     DDAPRR        IFNE      *Blanks                                                  MD054028
      C                   MOVE      *Blanks       DDAPRR                                       CER050
      C                   ENDIF                                                                CER050
+     C                   ENDIF                                                              MD054028
       *                                                                                       CER050
      C                   ENDSR
       **********************************************************************

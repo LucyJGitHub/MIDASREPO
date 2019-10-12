@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD051532           Date 13Jul18               *
       *                 MD051299           Date 19Jun18               *
       *                 MD044880           Date 15Jan18               *
@@ -64,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051532 - BOE details changed after authorisation           *
@@ -316,7 +319,8 @@
      D FillerBuf       S           5096A                                                    MD041996
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
-     D FillerBufEx2    S           5915A                                                    MD044880
+     D***FillerBufEx2    S           5915A                                         MD044880 MD054028
+     D FillerBufEx2    S           5914A                                                    MD054028
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -449,6 +453,7 @@
      C**********                             + Filler65                            MD051299 MD051532
      C                                       + ExtData                                      MD051532
      C                                       + CrsdDets                                     MD051299
+     C                                       + DDAPRC                                       MD054028
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -874,6 +879,8 @@
                                                                                              BUG4452
       ** FX Margin Trading                                                                   BUG4452
      C                   PARM                    CFX001                                      BUG4452
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
       * OUTPUTS
       * Customer - screen formats
      C                   PARM                    NewCuPrim

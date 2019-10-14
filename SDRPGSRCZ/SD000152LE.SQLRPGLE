@@ -16,8 +16,15 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
+<<<<<<< HEAD
+      *  Last Amend No. MD054178           Date 15Oct19               *
+      *  Prev Amend No. MD042142A          Date 15Oct19               *
+      *                 MD054551           Date 14Oct19               *
+      *                 MD054189           Date 03Sep19               *
+=======
       *  Last Amend No. MD054551           Date 14Oct19               *
       *  Prev Amend No. MD054189           Date 03Sep19               *
+>>>>>>> branch 'bugfix/MD-54551' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 MD052107           Date 02Jul19               *
       *                 MD051081           Date 29May18               *
       *                 MD042142           Date 08May18               *
@@ -27,6 +34,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
+      *  MD054178 - Add Reversed Transactions as blocker to nostro    *
+      *             account closure.                                  *
+      *  MD042142A - Remove Matured Nostro Transfers as blocker to    *
+      *              nostro account closure.                          *
+      *            - Applied for MD-54178.                            *
+=======
+>>>>>>> branch 'bugfix/MD-54551' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD054551 -  SRFacility subroutine not invoked                *
       *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
       *              Pay/Receive Settlement Leg                       *
@@ -223,12 +238,14 @@
      C+ select LNRF, LTYP, SUTP, VDAT, MDAT, PONS, RONS from CLOANCL                        MD054189
      C+ where CCY = :YyCcy and
      C+       PONS = :XxNost and
-     C+       RECI = 'D' and
+     C********RECI = 'D' and                                                                MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C********PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )                                MD038440A
      C+       PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )  or                            MD038440A
      C+       CCY = :YyCcy and                                                             MD038440A
      C+       RONS = :XxNost and                                                           MD038440A
-     C+       RECI = 'D' and                                                               MD038440A
+     C********RECI = 'D' and                                                                MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C+       PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )
      C+ order by
      C**********+       LNRF                                                                MD052107
@@ -350,12 +367,14 @@
      C+ select LNRF, LTYP, SUTP, VDAT, MDAT, PONS, RONS from CLOANCL                        MD054189
      C+ where CCY = :YyCcy and
      C+       RONS = :XxNost and
-     C+       RECI = 'D' and
+     C********RECI = 'D' and                                                                MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C********PTYP in (66, 67, 69, 72)                                                     MD038440A
      C+       PTYP in (66, 67, 69, 72)   or                                                MD038440A
      C+       CCY = :YyCcy and                                                             MD038440A
      C+       PONS = :XxNost and                                                           MD038440A
-     C+       RECI = 'D' and                                                               MD038440A
+     C********RECI = 'D' and                                                                MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C+       PTYP in (66, 67, 69, 72)                                                     MD038440A
      C+ order by
      C**********+       LNRF                                                                MD052107
@@ -484,8 +503,10 @@
      C**********+ select FELOAN, FEFSEQ, FEFCOD from LEFEED                                 MD052107
      C+ select FEFACL, FELOAN, FEFSEQ, FEFCOD from LEFEED                                   MD052107
      C+ where FEFCCY = :YyCcy and
+     C+       FERECI <> 'M' and                                                            MD042142A
      C+       RONS = :XxNost or
      C+       FEFCCY = :YyCcy and
+     C+       FERECI <> 'M' and                                                            MD042142A
      C+       FEOURS = :XxNost
      C+ order by
      C**********+       FELOAN                                                              MD052107

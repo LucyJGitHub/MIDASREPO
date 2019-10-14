@@ -52,7 +52,7 @@
 
       ** RE Interest Sub-types file
      FREINT     IF   E           K DISK    INFSR(*PSSR)
-       *****FREIAC     IF   E           K DISK    INFSR(*PSSR)                      MD053611 MD054211
+      *****FREIAC     IF   E           K DISK    INFSR(*PSSR)                      MD053611 MD054211
      FREIACXX   IF   E           K DISK    INFSR(*PSSR)                                     MD054211
       *****F                                     IGNORE(REIACAF)                            MD053611
       *****F                                     IGNORE(REIACZF)                            MD053611

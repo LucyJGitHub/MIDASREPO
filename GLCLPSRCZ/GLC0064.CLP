@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1049762          Date 29Oct12              */
+/*       Last Amend No. 261705             Date 08Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1049762          Date 29Oct12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       261705 - Add extracts for Start and End dates. Apply 258051.*/
+/*              - Applied for MD054159.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1049762 - Avoid I/O operation was applied to closed file. */
 /*                   (Child:AR1049763)                               */
@@ -124,7 +127,8 @@
  
 /** Call Extract Program                  */
              RCLRSC     LVL(*CALLER)                                                   /*AR1049762*/
-             CALL       PGM(CG4520) PARM(&W0RTN &W0CMT)
+/**********  CALL       PGM(CG4520) PARM(&W0RTN &W0CMT) */                               /*261705*/
+             CALL       PGM(CG4520) PARM(&W0RTN &W0CMT &SDAT &EDAT)                      /*261705*/
  
 /** Reclaim resource                      */
              RCLRSC

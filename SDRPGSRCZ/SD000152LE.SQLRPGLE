@@ -27,7 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
-      *              Pay/Receive Settlement Leg                       *
+      *              Pay/Receive Settlement Leg.                      *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD051081 - Program loop, semi colon missing                  *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *

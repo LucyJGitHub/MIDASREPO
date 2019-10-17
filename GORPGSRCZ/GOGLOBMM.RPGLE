@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CTI006             Date 31Mar14               *
       *                 AR1096788          Date 18Mar13               *
       *                 CGP017             Date 06Aug12               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165    - Dual Withholding Tax (Recompile)                 *
       *  CTI006    - Trade Finance BF Midas 2.2 Interface             *
@@ -44,10 +46,10 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -64,32 +66,32 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
- 
- 
+
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
+
      D CLE025          S              1                                                       CLE025
      D PSARD           S              6                                                       CLE025
      D PRTCD           S              7                                                       CLE025
      D POPTN           S              7                                                       CLE025
      D CAS009          S              1                                                       CAS011
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       * Recover before and after image
- 
+
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
- 
+
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
- 
- 
+
+
       * Global Updates - BEFORE/AFTER image
       * TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
      C     TRGEVENT      IFEQ      '1'
@@ -98,17 +100,17 @@
      C     TRGEVENT      IFEQ      '2'
      C                   MOVEL     *BLANK        I#AIMG
      C                   ENDIF
- 
+
      C                   MOVEL     O#ZONE        I#ZONE                         * ERROR MESSAGE
      C                   MOVEL     'Y'           I#TRAP
- 
+
       * Determine updates
- 
+
      C                   EXSR      DET_UPDATES
- 
+
      C                   MOVEL     'B'           I#BFAF
      C                   DO        2
- 
+
      C     P_Before      IFEQ      'Y'
      C     I#BFAF        ANDEQ     'B'
      C     P_After       OREQ      'Y'
@@ -133,12 +135,12 @@
      C                   EXSR      GLOB_MMDLFEED                                              CAS011
      C                   ENDIF                                                                CAS011
      C                   ENDIF
- 
+
      C                   MOVEL     'A'           I#BFAF
      C                   ENDDO
- 
+
      C                   RETURN
- 
+
       /SPACE 5                                                                               BUG3644
       *****************************************************************                      BUG3644
       * Global Updates - Money Market Deposit and Loan Deals                                 BUG3644
@@ -184,7 +186,7 @@
       * Determine Updates
       *****************************************************************
      C     DET_UPDATES   BEGSR
- 
+
      C                   CALL      'GPDETGUPD'
      C                   PARM                    I#ZONE           10
      C                   PARM      PFLNAME       I#FILE           10
@@ -192,7 +194,7 @@
      C                   PARM                    I#AIMG
      C                   PARM      'N'           P_Before          1
      C                   PARM      'N'           P_After           1
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5                                                                                CLE025
@@ -266,14 +268,14 @@
      C                   ELSE                                                                 CAS011
      C                   MOVE      'N'           CAS009                                       CAS011
      C                   ENDIF                                                                CAS011
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

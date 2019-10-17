@@ -16,8 +16,11 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD047554           Date 11Oct17               *      
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054035           Date 03Sep19               *
+      *                 MD054317           Date 09Sep19               *      
+      *                 MD047554           Date 11Oct17               *      
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR943686           Date 23Sep16               *
       *                 MD040830           Date 14Sep16               *
@@ -82,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054035 - Prevent file locking of LEFEED                    *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *      
+      *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
       *             with recalculated amount based on newly inserted, *
       *             amended, or reversed RE. Check the change of the  *
@@ -210,6 +216,11 @@
      FLEFEEDL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       *
+     FLEFEEDL0  UF   E           K DISK    INFSR(*PSSR)                                     MD054035
+     F                                     COMMIT                                           MD054035
+     F                                     RENAME(LEFEEDF:LEFEEDX)                          MD054035
+     F                                     PREFIX(X_)                                       MD054035
+      *                                                                                     MD054035
      FLEFELAL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** RE Settled Transaction Index File by Transaction Reference ID                        CRE020
@@ -3412,7 +3423,8 @@ B001 C     RPCHTP        IFEQ      'I'
      C**********         Z-ADD     0             WFLOAN                                       CLE148
      C                   MOVEL     *BLANKS       WFLOAN                                       CLE148
      C     WKFEE         SETLL     LEFEEDL1
-     C     WKFEE         READE     LEFEEDL1                               19
+     C*****WKFEE         READE     LEFEEDL1                               19                MD054035
+     C     WKFEE         READE (N) LEFEEDL1                               19                MD054035
       *
       ***  Do while an associated fee exists
       *
@@ -3434,7 +3446,30 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVE      FEFCCY        ZCCY              3
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   Z-ADD     1             Y                 3 0
-     C     FEFCCY        LOOKUP    CYA(Y)                                 20
+      *                                                                                     MD054317
+      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
+      *                                                                                     MD054317
+     C                   MOVE      FEFCCY        WKCCY             3                        MD054317
+      *                                                                                     MD054317
+     C     CLE031        IFEQ      'Y'                                                      MD054317
+      *                                                                                     MD054317
+     C     PTFI          IFEQ      'P'                                                      MD054317
+     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FEPSCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ELSE                                                               MD054317
+     C     FESCCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FESCCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   MOVE      WKCCY         ZCCY                                       MD054317
+     C                   MOVE      WKCCY         @CURR                                      MD054317
+      *                                                                                     MD054317
+     C*****FEFCCY        LOOKUP    CYA(Y)                                 20                MD054317
+     C     WKCCY         LOOKUP    CYA(Y)                                 20                MD054317
      C                   MOVE      *OFF          *IN20
      C                   MOVE      TND(Y)        ZNRDYS
       *
@@ -3450,7 +3485,8 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @CUSN             6
-     C                   PARM      FEFCCY        @CURR             3
+     C**********         PARM      FEFCCY        @CURR             3                        MD054317
+     C                   PARM                    @CURR             3                        MD054317
      C**********         PARM                    @ACCD             4                          CGL029
      C                   PARM                    @ACCD                                        CGL029
      C                   PARM                    @ACSN             2
@@ -3493,6 +3529,11 @@ B001 C     RPCHTP        IFEQ      'I'
       ** Set Telex Notice date to day number
       *
      C                   Z-ADD     ZDYNBR        TXDT              5 0
+      *                                                                                     MD054035
+     C                   MOVEL     FECNUM        WFCNUMX                                    MD054035
+     C                   MOVEL     FEFACL        WFFACLX                                    MD054035
+     C                   MOVEL     FELOAN        WFLOANX                                    MD054035
+     C                   MOVEL     FEFSEQ        WFSEQNX                                    MD054035
       *
       ***  If next payment date is before or equals to Telex Notice date
       ***  and Next Payment Telex indicator is set to 'Y'
@@ -3502,9 +3543,15 @@ B001 C     RPCHTP        IFEQ      'I'
       *
       ***  Update Fees file
       *
-     C                   MOVE      'A'           FESWRI
-     C                   Eval      FELCHD = BJRDNB                                            243154
-     C                   UPDATE    LEFEEDF
+     C     WKFEEX        CHAIN     LEFEEDL0                                                 MD054035
+     C                   IF        %FOUND(LEFEEDL0)                                         MD054035
+     C**********         MOVE      'A'           FESWRI                                     MD054035
+     C**********         Eval      FELCHD = BJRDNB                                   243154 MD054035
+     C**********         UPDATE    LEFEEDF                                                  MD054035
+     C                   MOVE      'A'           X_FESWRI                                   MD054035
+     C                   EVAL      X_FELCHD = BJRDNB                                        MD054035
+     C                   UPDATE    LEFEEDX                                                  MD054035
+     C                   ENDIF                                                              MD054035
      C                   ELSE
       *
       ***  If end date is before or equals to Telex Notice date and End
@@ -3515,15 +3562,22 @@ B001 C     RPCHTP        IFEQ      'I'
       *
       ***  Update Fees file
       *
-     C                   MOVE      'A'           FESWRI
-     C                   Eval      FELCHD = BJRDNB                                            243154
-     C                   UPDATE    LEFEEDF
+     C     WKFEEX        CHAIN     LEFEEDL0                                                 MD054035
+     C                   IF        %FOUND(LEFEEDL0)                                         MD054035
+     C**********         MOVE      'A'           FESWRI                                     MD054035
+     C**********         Eval      FELCHD = BJRDNB                                   243154 MD054035
+     C**********         UPDATE    LEFEEDF                                                  MD054035
+     C                   MOVE      'A'           X_FESWRI                                   MD054035
+     C                   EVAL      X_FELCHD = BJRDNB                                        MD054035
+     C                   UPDATE    LEFEEDX                                                  MD054035
+     C                   ENDIF                                                              MD054035
      C                   ENDIF
      C                   ENDIF
       *
      C                   ENDIF
       *
-     C     WKFEE         READE     LEFEEDL1                               19
+     C*****WKFEE         READE     LEFEEDL1                               19                MD054035
+     C     WKFEE         READE (N) LEFEEDL1                               19                MD054035
      C                   ENDDO
       *                                                                                       CLE073
       ** Check if the loan has an associated fee                                              CLE073
@@ -3892,7 +3946,8 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   Z-ADD     0             WFFACL                                       CLE073
      C                   MOVEL     RPLNRF        WFLOAN                                       CLE073
      C     WKFEE         SETLL     LEFEEDL1                                                   CLE073
-     C     WKFEE         READE     LEFEEDL1                               19                  CLE073
+     C*****WKFEE         READE     LEFEEDL1                               19         CLE073 MD054035
+     C     WKFEE         READE (N) LEFEEDL1                               19                MD054035
       *                                                                                       CLE073
       ** Do while an associated fee exists                                                    CLE073
       *                                                                                       CLE073
@@ -3917,7 +3972,30 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVE      FEFCCY        ZCCY                                         CLE073
      C                   Z-ADD     BJRDNB        ZDAYNO                                       CLE073
      C                   Z-ADD     1             X                 3 0                        CLE073
-     C     FEFCCY        LOOKUP    CYA(X)                                 69                  CLE073
+      *                                                                                     MD054317
+      ** If CLE031 is on then use correct currency to access AONOSTR0                       MD054317
+      *                                                                                     MD054317
+     C                   MOVE      FEFCCY        WKCCY                                      MD054317
+      *                                                                                     MD054317
+     C     CLE031        IFEQ      'Y'                                                      MD054317
+      *                                                                                     MD054317
+     C     PTFI          IFEQ      'P'                                                      MD054317
+     C     FEPSCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FEPSCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ELSE                                                               MD054317
+     C     FESCCY        IFNE      *BLANKS                                                  MD054317
+     C                   MOVE      FESCCY        WKCCY                                      MD054317
+     C                   ENDIF                                                              MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   ENDIF                                                              MD054317
+      *                                                                                     MD054317
+     C                   MOVE      WKCCY         ZCCY                                       MD054317
+     C                   MOVE      WKCCY         @CURR                                      MD054317
+      *                                                                                     MD054317
+     C*****FEFCCY        LOOKUP    CYA(X)                                 69         CLE073 MD054317
+     C     WKCCY         LOOKUP    CYA(X)                                 69                MD054317
      C                   MOVE      *OFF          *IN69                                        CLE073
      C                   MOVE      TND(X)        ZNRDYS                                       CLE073
       *                                                                                       CLE073
@@ -3933,7 +4011,8 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   PARM      *BLANKS       @RtCd                                        CLE073
      C                   PARM      '*KEY   '     @Optn                                        CLE073
      C                   PARM                    @Cusn             6                          CLE073
-     C                   PARM      FEFCCY        @Curr             3                          CLE073
+     C**********         PARM      FEFCCY        @Curr             3                 CLE073 MD054317
+     C                   PARM                    @Curr             3                        MD054317
      C                   PARM                    @Accd                                        CLE073
      C                   PARM                    @Acsn             2                          CLE073
      C                   PARM      FEOURS        @Nonb             2                          CLE073
@@ -3972,6 +4051,11 @@ B001 C     RPCHTP        IFEQ      'I'
       ** Set Telex Notice date to day number                                                  CLE073
       *                                                                                       CLE073
      C                   Z-ADD     ZDYNBR        TXDT              5 0                        CLE073
+      *                                                                                     MD054035
+     C                   MOVEL     FECNUM        WFCNUMX                                    MD054035
+     C                   MOVEL     FEFACL        WFFACLX                                    MD054035
+     C                   MOVEL     FELOAN        WFLOANX                                    MD054035
+     C                   MOVEL     FEFSEQ        WFSEQNX                                    MD054035
       *                                                                                       CLE073
       ** If next payment date is before or equals to Telex Notice date                        CLE073
       ** and Next Payment Telex indicator is set to 'Y'                                       CLE073
@@ -3981,8 +4065,13 @@ B001 C     RPCHTP        IFEQ      'I'
       *                                                                                       CLE073
       ** Update Fees file                                                                     CLE073
       *                                                                                       CLE073
-     C                   MOVE      'A'           FESWRI                                       CLE073
-     C                   UPDATE    LEFEEDF                                                    CLE073
+     C     WKFEEX        CHAIN     LEFEEDL0                                                 MD054035
+     C                   IF        %FOUND(LEFEEDL0)                                         MD054035
+     C**********         MOVE      'A'           FESWRI                              CLE073 MD054035
+     C**********         UPDATE    LEFEEDF                                           CLE073 MD054035
+     C                   MOVE      'A'           X_FESWRI                                   MD054035
+     C                   UPDATE    LEFEEDX                                                  MD054035
+     C                   ENDIF                                                              MD054035
      C                   ELSE                                                                 CLE073
       *                                                                                       CLE073
       ** If end date is before or equals to Telex Notice date and End                         CLE073
@@ -3993,14 +4082,20 @@ B001 C     RPCHTP        IFEQ      'I'
       *                                                                                       CLE073
       ** Update Fees file                                                                     CLE073
       *                                                                                       CLE073
-     C                   MOVE      'A'           FESWRI                                       CLE073
-     C                   UPDATE    LEFEEDF                                                    CLE073
+     C     WKFEEX        CHAIN     LEFEEDL0                                                 MD054035
+     C                   IF        %FOUND(LEFEEDL0)                                         MD054035
+     C**********         MOVE      'A'           FESWRI                              CLE073 MD054035
+     C**********         UPDATE    LEFEEDF                                           CLE073 MD054035
+     C                   MOVE      'A'           X_FESWRI                                   MD054035
+     C                   UPDATE    LEFEEDX                                                  MD054035
+     C                   ENDIF                                                              MD054035
      C                   ENDIF                                                                CLE073
      C                   ENDIF                                                                CLE073
       *                                                                                       CLE073
      C                   ENDIF                                                                CLE073
       *                                                                                       CLE073
-     C     WKFEE         READE     LEFEEDL1                               19                  CLE073
+     C*****WKFEE         READE     LEFEEDL1                               19         CLE073 MD054035
+     C     WKFEE         READE (N) LEFEEDL1                               19                MD054035
      C                   ENDDO                                                                CLE073
       *                                                                                       CLE073
      C                   ENDSR                                                                CLE073
@@ -4170,6 +4265,12 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   KFLD                    WFFACL            5 0
      C**********         KFLD                    WFLOAN            6 0                        CLE148
      C                   KFLD                    WFLOAN            6                          CLE148
+      *                                                                                     MD054035
+     C     WKFEEX        KLIST                                                              MD054035
+     C                   KFLD                    WFCNUMX           6                        MD054035
+     C                   KFLD                    WFFACLX           5 0                      MD054035
+     C                   KFLD                    WFLOANX           6                        MD054035
+     C                   KFLD                    WFSEQNX           2 0                      MD054035
       *                                                                                       CRE020
       ** Midas RE Settled Transaction Index File Key List                                     CRE020
       *                                                                                       CRE020

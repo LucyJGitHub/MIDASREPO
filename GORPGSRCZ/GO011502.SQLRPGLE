@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 MD020205 *CREATE   Date 24Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD020205 - Continuous CoB run time improvement               *
@@ -109,4 +111,4 @@
      C                   ENDSR
 
 **  CPY@
-(c) Finastra International Limited 2012
+(c) Misys International Banking Systems Ltd. 2012

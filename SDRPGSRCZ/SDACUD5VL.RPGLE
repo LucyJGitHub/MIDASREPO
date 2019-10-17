@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD048703           Date 23Nov17               *
-      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD048703           Date 23Nov17               *
+      *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 MD026629           Date 09May14               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD048703 - Cannot amend Base II Past Due Customer field      *
       *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -143,6 +145,8 @@
      D***TranWFill                  1316                                                    MD048703
      D  TranWFill                  1425                                                     MD048703
      D  TranWDets5                         LIKE(TrnDets5)
+     D  TranWBASEL                    1                                                     CER050
+     D  TranWAPR                      1                                                     CER050
  
       ** Transaction Details OK indicators
      D OKTrnDets5    E DS                  EXTNAME(SDEACU5PD)

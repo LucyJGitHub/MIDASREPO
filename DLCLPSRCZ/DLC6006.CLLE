@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DL APR Trigger Program for DEAMSDI')            */
+/*********************************************************************/
+/*                                                                   */
+/*        Midas     - Dealing Module                                 */
+/*                                                                   */
+/*       DLC6006 - Midas DL APR Trigger Program for DEAMSDI          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. CER050   *Create   Date 16Jun19              */
+/*                                                                   */
+/*********************************************************************/
+/*       CER050 - Annualised Percentage Rate                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&QPARM1 &QPARM2)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2016')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&QPARM1) TYPE(*CHAR) LEN(5000)
+             DCL        VAR(&QPARM2) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CER050) TYPE(*CHAR) LEN(1) VALUE('N')
+
+/**   GLOBAL MONITOR MESSAGE                                    */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/**   CHECK FOR SWITCHABLE FEATURE CER050 AND CONDITION ALL     */
+/**   SUBSEQUENT PROCESSING ON IT                               */
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CER050')
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CER050) VALUE('Y'))
+
+             IF         COND(&CER050 = 'Y') THEN(DO)
+
+             SNDPGMMSG  MSG('DLC6006 - APR TRIGGER PROGRAM FOR   +
+                          DEAMSDI') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(00000000)
+
+/** CREATE DATA AREA LDA                                       */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+/** SUBMIT THE TRIGGER PROGRAM TO BATCH                        */
+
+             SBMJOB     CMD(CALL DL6006 PARM(&QPARM1 &QPARM2)) +
+                        JOB(DLC6006) JOBD(MBATCH) +
+                        USER(*JOBD) RTGDTA(*JOBD) +
+                        INLLIBL(*JOBD) MSGQ(MOPERQ) +
+                        OUTQ(*JOBD)
+
+/**   DATABASE ERROR PROCESSING                                */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/** ABNORMAL TERMINATION - BATCH JOB                          */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('APR TRIGGER PROGRAM FOR DEAMSDI ENDED +
+                          ABNORMALLY') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+             ENDDO
+
+END:
+                  ENDPGM

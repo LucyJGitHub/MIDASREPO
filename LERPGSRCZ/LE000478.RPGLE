@@ -22,8 +22,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD053837           Date 13Sep19               *      
+      *                 CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD028099           Date 27Oct14               *
       *                 CGL132             Date 01May13               *
@@ -39,6 +41,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  MD053837 - Inconsistency in Basel II initial date and        *
+      *             classification for fees. Create separate codes    *
+      *             that retrieve loan details by facility for origin *
+      *             fee. Pattern codes from origin loan in SR/XRCLOAF.*
+      *           - Remove KF_BRCA as key for CLOAF as loans of diff  *
+      *             branch with facility are not retrieved.           *
+      *           - Use event control date instead of rundate as class*
+      *             is not incremented on ANWD COB.                   *      
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -116,7 +127,7 @@
      D KF_FCUS         S                   LIKE(F_FCUS)
      D KF_FTYP         S                   LIKE(F_FTYP)
      D KF_FSEQ         S                   LIKE(F_FSEQ)
-     D KF_BRCA         S                   LIKE(F_BRCA)
+     D*KF_BRCA**       S                   LIKE(F_BRCA)                                     MD053837
 
      D KH_LNRF         S                   LIKE(H_LNRF)
      D KH_VDAT         S                   LIKE(H_VDAT)
@@ -162,6 +173,9 @@
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Currency Details
 
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)                                MD053837
+      ** General Ledger details                                                             MD053837
+      *                                                                                     MD053837
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short data structure for access objects
 
@@ -575,7 +589,8 @@
      C                   IF        BPRMTL      = 'A'                                          263079
      C                   IF        O_RCAT      < 9             AND
      C                             DSRCD(O_RCAT+1) <> *BLANKS  AND
-     C                             BJRDNB     >= O_RCSD + O_RCDY
+     C**********                   BJRDNB     >= O_RCSD + O_RCDY                            MD053837
+     C                             WECD       >= O_RCSD + O_RCDY                            MD053837
      C                   EVAL      O_RCSD      = O_RCSD + O_RCDY
      C                   EVAL      O_RCAT     += 1
      C                   EVAL      O_RCDY      = DSRCE(O_RCAT)
@@ -677,7 +692,8 @@
      C                   IF        BPMTDL      = 'A'                                          263079
      C                   IF        O_BCAT      < 9             AND
      C                             DSBCD(O_BCAT+1) <> *BLANKS  AND
-     C                             BJRDNB     >= O_BCSD + O_BCDY
+     C**********                   BJRDNB     >= O_BCSD + O_BCDY                            MD053837
+     C                             WECD       >= O_BCSD + O_BCDY                            MD053837
 
      C                   IF        BPLCCY     <> *BLANKS       AND
      C                             BPAMNT     <> 0
@@ -807,7 +823,8 @@
      C                   IF        BPRMTL      = 'A'                                          263079
      C                   IF        O_FERCAT    < 9             AND
      C                             DSRCD(O_FERCAT+1) <> *BLANKS  AND
-     C                             BJRDNB     >= O_FERCSD + O_FERCDY
+     C**********                   BJRDNB     >= O_FERCSD + O_FERCDY                        MD053837
+     C                             WECD       >= O_FERCSD + O_FERCDY                        MD053837
      C                   EVAL      O_FERCSD    = O_FERCSD + O_FERCDY
      C                   EVAL      O_FERCAT   += 1
      C                   EVAL      O_FERCDY    = DSRCE(O_FERCAT)
@@ -908,7 +925,8 @@
      C                   IF        BPMTDL      = 'A'                                          263079
      C                   IF        O_FEBCAT    < 9               AND
      C                             DSBCD(O_FEBCAT+1) <> *BLANKS  AND
-     C                             BJRDNB     >= O_FEBCSD + O_FEBCDY
+     C**********                   BJRDNB     >= O_FEBCSD + O_FEBCDY                        MD053837
+     C                             WECD       >= O_FEBCSD + O_FEBCDY                        MD053837
 
      C                   IF        BPLCCY     <> *BLANKS       AND
      C                             BPAMNT     <> 0
@@ -944,13 +962,15 @@
       ** Initialisation
 
      C                   EVAL      DSCPAM_T    = 0
+      *                                                                                     MD053837
+     C                   IF        W#TYPE = '*LOANBAS'                                      MD053837
 
       ** Retrieve All Loans for a Facility and Accumalate Principal
 
      C                   EVAL      KF_FCUS     = O_FCUS
      C                   EVAL      KF_FTYP     = O_FTYP
      C                   EVAL      KF_FSEQ     = O_FSEQ
-     C                   EVAL      KF_BRCA     = O_BRCA
+     C**********         EVAL      KF_BRCA     = O_BRCA                                     MD053837
      C     KCLOAF        SETLL     CLOAF
      C     KCLOAF        READE(E)  CLOAF
 
@@ -978,6 +998,54 @@
 
      C     KCLOAF        READE(E)  CLOAF
      C                   ENDDO
+      *                                                                                     MD053837
+     C                   ENDIF                                                              MD053837
+      *                                                                                     MD053837
+     C                   IF        W#TYPE = '*FEEBAS'                                       MD053837
+      *                                                                                     MD053837
+     C                   IF        O_FEFACL   <> 0                                          MD053837
+     C                   EVAL      KF_FCUS     = O_FECNUM                                   MD053837
+     C                   MOVEL     O_FEFACL      KF_FTYP                                    MD053837
+     C                   MOVE      O_FEFACL      KF_FSEQ                                    MD053837
+     C                   ELSE                                                               MD053837
+     C                   EVAL      KP_LNRF     = O_FELOAN                                   MD053837
+     C     KCLOAN        CHAIN(E)  CLOAN                                                    MD053837
+     C                   IF        %FOUND(CLOAN)                                            MD053837
+     C                   EVAL      KF_FCUS     = P_FCUS                                     MD053837
+     C                   EVAL      KF_FTYP     = P_FTYP                                     MD053837
+     C                   EVAL      KF_FSEQ     = P_FSEQ                                     MD053837
+     C                   ENDIF                                                              MD053837
+     C                   ENDIF                                                              MD053837
+      *                                                                                     MD053837
+     C     KCLOAF        SETLL     CLOAF                                                    MD053837
+     C     KCLOAF        READE(E)  CLOAF                                                    MD053837
+      *                                                                                     MD053837
+     C                   DOW       NOT %EOF(CLOAF)                                          MD053837
+     C                   IF        F_LNRF      = O_FEPLNR      AND                          MD053837
+     C                             F_RECI      = 'D'                                        MD053837
+     C                   IF        BPLCCY      = F_CCY                                      MD053837
+     C                   EVAL      DSCPAM_T   += F_CPAM                                     MD053837
+      *                                                                                     MD053837
+     C                   ELSE                                                               MD053837
+     C                   EVAL      @CYCD       = F_CCY                                      MD053837
+     C                   EXSR      XRSDCURR                                                 MD053837
+      *                                                                                     MD053837
+     C                   EVAL      DSRATE1     = A6SPRT                                     MD053837
+     C                   EVAL      DSMDIN1     = A6MDIN                                     MD053837
+     C                   EVAL      DSCYDP1     = A6NBDP                                     MD053837
+      *                                                                                     MD053837
+     C                   IF        DSMDIN1     = 'M'                                        MD053837
+     C                   EVAL      DSRATE1     = 1/DSRATE1                                  MD053837
+     C                   ENDIF                                                              MD053837
+      *                                                                                     MD053837
+     C                   EVAL      DSCPAM_T   += F_CPAM * (DSRATE1 / DSRATE2)               MD053837
+     C                   ENDIF                                                              MD053837
+     C                   ENDIF                                                              MD053837
+      *                                                                                     MD053837
+     C     KCLOAF        READE(E)  CLOAF                                                    MD053837
+     C                   ENDDO                                                              MD053837
+      *                                                                                     MD053837
+     C                   ENDIF                                                              MD053837
 
      C                   ENDSR
       *****************************************************************
@@ -1238,6 +1306,31 @@
      C                   IF        DSMDIN2     = 'M'
      C                   EVAL      DSRATE2     = 1/DSRATE2
      C                   ENDIF
+      *                                                                                     MD053837
+      ** Access General Ledger details                                                      MD053837
+      *                                                                                     MD053837
+     C                   CALL      'AOGELRR0'                                               MD053837
+     C                   PARM      '*MSG   '     @RTCD                                      MD053837
+     C                   PARM      '*FIRST '     @OPTN                                      MD053837
+     C     SDGELR        PARM      SDGELR        DSFDY                                      MD053837
+      *                                                                                     MD053837
+     C     @RTCD         IFNE      *BLANKS                                                  MD053837
+     C     *LOCK         IN        LDA                                                      MD053837
+     C                   EVAL      DBKEY       = '*FIRST'                                   MD053837
+     C                   EVAL      DBFILE      = 'SDGELRPD'                                 MD053837
+     C                   EVAL      DBASE       = 003                                        MD053837
+     C                   OUT       LDA                                                      MD053837
+     C                   EXSR      *PSSR                                                    MD053837
+     C                   ENDIF                                                              MD053837
+      *                                                                                     MD053837
+      ** Set up event control date                                                          MD053837
+      *                                                                                     MD053837
+     C                   Z-ADD     BJDNWD        WECD              5 0                      MD053837
+     C                   SUB       1             WECD                                       MD053837
+      *                                                                                     MD053837
+     C     BKAPDT        IFLE      WECD                                                     MD053837
+     C                   Z-ADD     BKAPDT        WECD                                       MD053837
+     C                   ENDIF                                                              MD053837
 
       ** - Set Basel II Classification Period Description & Days Arrays
 
@@ -1631,7 +1724,7 @@
      C                   KFLD                    KF_FCUS
      C                   KFLD                    KF_FTYP
      C                   KFLD                    KF_FSEQ
-     C                   KFLD                    KF_BRCA
+     C**********         KFLD                    KF_BRCA                                    MD053837
 
      C     KCLOANL4      KLIST
      C**********         KFLD                    Ko_RECI                                      263411

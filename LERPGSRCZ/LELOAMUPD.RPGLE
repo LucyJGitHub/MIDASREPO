@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050018           Date 05Nov18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD050018           Date 05Nov18               *
       *                 MD047554           Date 11Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 AR848765           Date 30Jun15               *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
       *             for Input Cycle Principal Increase Events to PDCL *

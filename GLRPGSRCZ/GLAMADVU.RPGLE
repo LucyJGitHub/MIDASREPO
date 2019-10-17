@@ -34,8 +34,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD041837           Date 16Jun19               *
+      *                 CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD051247           Date 17Jul18               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -137,6 +140,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  MD041837 - Tax indicator is not defaulted anymore with       *
+      *             CER050.                                           *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD101 - Password Encryption                                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051247 - SP15_CUSD API issue                               *
@@ -443,6 +451,7 @@
       * Incoming Transaction
      D AccnInMast    E DS                  EXTNAME(GLAMADPD)
      D  AcnOthDet             84    213                                                       249660
+     D  AccIn130             177    253                                                     MD041837
      D AccnInDebi    E DS                  EXTNAME(GLAMDIPD)
      D AccnInCred    E DS                  EXTNAME(GLAMCIPD)
      D AccnInComm    E DS                  EXTNAME(GLAMCOPD)
@@ -823,6 +832,14 @@
       ** Flag to indicate whether defaulting is required                                      240312
      D DefaultFlag     S              1A                                                      240312
  
+      ** APR Fields                                                                         MD054028
+     D CER050          S              1A                                                    MD054028
+     D DDAPRC          S              1A                                                    MD054028
+     D DDAPDR          S              8A                                                    MD054028
+     D DDAPCR          S              8A                                                    MD054028
+     D @DDAPRC         S              1A                                                    MD054028
+     D @DDAPDR         S              8A                                                    MD054028
+     D @DDAPCR         S              8A                                                    MD054028
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
      D  I#PORS                 1      1
@@ -897,6 +914,27 @@
      C/COPY OFCPYSRCZ,CRE101_040                                                              CRE101
      C                   EVAL      WAPFOTranID = APFOTRANID + APFOASOCID                    AR971184
      C                   EVAL      FOTRID =  APFOTRANID + APFOASOCID                        AR971184
+      ** ExtData Buffer Pointer                                                             MD054028
+     C                   Z-ADD     1             eBfp              4 0                      MD054028
+     C                   MOVEL     'GLAMEXPD'    FileName                                   MD054028
+     C                   EXSR      GETRCDLN                                                 MD054028
+     C                   ADD       RecordLen     eBfp                                       MD054028
+      ** CER050 Fields                                                                      MD054028
+     C                   IF        CER050 = 'Y'                                             MD054028
+     C                   EVAL      DDAPRC = %SUBST(Extdata500:eBfp:1)                       MD054028
+     C                   ADD       1             eBfp                                       MD054028
+     C                   IF        DDAPRC = 'Y'                                             MD054028
+     C                   EVAL      DDAPDR = %SUBST(Extdata500:eBfp:8)                       MD054028
+     C                   ADD       8             eBfp                                       MD054028
+     C                   EVAL      DDAPCR = %SUBST(Extdata500:eBfp:8)                       MD054028
+     C                   ADD       8             eBfp                                       MD054028
+     C                   ELSE                                                               MD054028
+     C                   EVAL      DDAPDR = *BLANKS                                         MD054028
+     C                   ADD       8             eBfp                                       MD054028
+     C                   EVAL      DDAPCR = *BLANKS                                         MD054028
+     C                   ADD       8             eBfp                                       MD054028
+     C                   ENDIF                                                              MD054028
+     C                   ENDIF                                                              MD054028
       *                                                                                       249660
       * Only default field values if called from the initial screen                           249660
      C                   Eval      DefaultFlag = 'N'                                          249660
@@ -930,7 +968,8 @@
       *
      C                   Eval      TIx = Ix                                                   238839
      C     Ix            IFNE      0
-     C     BLANKCHK      Ifeq      *Blanks                                                    249966
+     C*****BLANKCHK      Ifeq      *Blanks                                           249966 MD041837
+     C     AccIn130      Ifeq      *Blanks                                                  MD041837
      C     DDACTN        ANDEQ     'I'                                                      AR801992
      C                   MOVE      *Blanks       AcnOthDet                                    249660
      C                   Endif                                                                249966
@@ -1089,6 +1128,24 @@
  
      C                   SETON                                        LR
  
+     C     DDAPRC        Ifeq      'N'                                                        CER050
+     C     DDAPCR        Ifne      *Blanks                                                    CER050
+     C                   Move      *Blanks       DDAPCR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDAPDR        Ifne      *Blanks                                                    CER050
+     C                   Move      *Blanks       DDAPDR                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
+     C     DDAPRC        Ifeq      'Y'                                                        CER050
+     C     DDAPCR        Ifeq      *Blanks                                                    CER050
+     C     @DDAPCR       andne     *Blanks                                                    CER050
+     C                   Move      @DDAPCR       DDAPCR                                       CER050
+     C                   Endif                                                                CER050
+     C     DDAPDR        Ifeq      *Blanks                                                    CER050
+     C     @DDAPDR       andne     *Blanks                                                    CER050
+     C                   Move      @DDAPDR       DDAPDR                                       CER050
+     C                   Endif                                                                CER050
+     C                   Endif                                                                CER050
       ** Please ensure that when setting up the buffer, new core fields                      BUG6218
       ** are added before the data structure ExtData                                         BUG6218
                                                                                              BUG6218
@@ -1123,6 +1180,9 @@
      C/COPY OFCPYSRCZ,CRE101_020                                                              CRE101
      C                                           + InfData                                    CRE015
      C                                           + ExtData                                  MD044880
+     C                                           + DDAPRC                                   MD054028
+     C                                           + DDAPDR                                   MD054028
+     C                                           + DDAPCR                                   MD054028
      C**********                                 + FillerBOE                       MD043890 MD044880
      C                                           + AccnInPena2                                CRE015
      C                                           + RegData                                  MD044880
@@ -1784,6 +1844,10 @@
  
       * For Amends, convert the Account to screen format
  
+     C                   IF        CER050 = 'Y'                                             MD054028
+     C                   MOVE      DDAPRC        V_BXAPRC                                   MD054028
+     C                   ENDIF                                                              MD054028
+      *                                                                                     MD054028
      C                   CALLB     'GLAMADCVT'
       *
       * INPUTS
@@ -1807,6 +1871,10 @@
       * Retail charges details
      C                   PARM                    R_FACH
      C                   PARM                    R_TSTMC
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       * Output parameters
       *
@@ -1845,6 +1913,9 @@
      C                   PARM      *BLANK        DDCEXG1           8
      C                   PARM      *BLANK        DDDRMG1          12
      C                   PARM      *BLANK        DDCRMG1          12
+      *                                                                                     MD054028
+     C                   MOVE      DDAPCR        @DDAPCR           8                        MD054028
+     C                   MOVE      DDAPDR        @DDAPDR           8                        MD054028
  
      C                   IF        LLN007 = 'Y'                                             MD044880
      C                   CALLB     'GLAMADCVT1'                                             MD044880
@@ -2012,6 +2083,10 @@
      C                   PARM                    AUTHRQ            1
       * Authorisation Mode
      C                   PARM                    AUTHMD            1
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       * Ensure first individual alternate address field is read if error encountered.
      C                   Z-ADD     1             I                 3 0
@@ -2624,7 +2699,8 @@
       ** Initialise screen fields to default values:
       ** if called from initial screen                                                        240312
      C                   If        DefaultFlag = 'Y'                                          240312
-     C                             and Blankchk = *BLANKS                                     249660
+     C**********                   and Blankchk = *BLANKS                            249660 MD041837
+     C                             and AccIn130 = *BLANKS                                   MD041837
       ***Test rightmost 130 characters of screen, if blank then default.               BUG553 240312
      C******             MOVE      AccnInMast    BLANKCHK        130                   BUG553 240312
      C*****BLANKCHK      IFEQ      *BLANKS                                             BUG553 237341
@@ -3014,7 +3090,8 @@
       ** - if called from initial screen                                                      240312
      C                   MOVE      AccnInMast    BLANKCHK        130                          240366
      C                   If        DefaultFlag = 'Y'                                          240312
-     C                             and Blankchk = *BLANKS                                     240366
+     C**********                   and Blankchk = *BLANKS                            240366 MD041837
+     C                             and AccIn130 = *BLANKS                                   MD041837
       ** Test rightmost 130 characters of screen, if blank then default.                      BUG553
      C******             MOVE      AccnInMast    BLANKCHK                              BUG553 240312
      C*****BLANKCHK      IFEQ      *BLANKS                                             BUG553 240312
@@ -3205,6 +3282,9 @@
       *****************************************************************                       BUG553
      C     SRCVTACC      BEGSR                                                                BUG553
       *                                                                                       BUG553
+     C                   IF        CER050 = 'Y'                                             MD054028
+     C                   MOVE      DDAPRC        V_BXAPRC                                   MD054028
+     C                   ENDIF                                                              MD054028
       * Call program to fill screen fields with data from master files                        BUG553
       *                                                                                       BUG553
      C                   CALLB     'GLAMADCVT'                                                BUG553
@@ -3229,6 +3309,10 @@
       * Retail Details                                                                        BUG553
      C                   PARM                    R_FACH                                       BUG553
      C                   PARM                    R_TSTMC                                      BUG553
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC                                     MD054028
+     C                   PARM                    DDAPDR                                     MD054028
+     C                   PARM                    DDAPCR                                     MD054028
       * OUTPUTS                                                                               BUG553
       * Account - screen formats                                                              BUG553
      C                   PARM                    NewAcPrim                                    BUG553
@@ -3262,6 +3346,9 @@
      C                   PARM                    DDCEXG1           8                          BUG553
      C                   PARM                    DDDRMG1          12                          BUG553
      C                   PARM                    DDCRMG1          12                          BUG553
+      *                                                                                     MD054028
+     C                   MOVE      DDAPCR        @DDAPCR                                    MD054028
+     C                   MOVE      DDAPDR        @DDAPDR                                    MD054028
       *                                                                                       BUG553
       * Update 'Current' Account with Account in Screen Format                                BUG553
       *                                                                                       BUG553
@@ -3321,6 +3408,25 @@
      C                   ENDSR                                                                CSF011
       *****************************************************************                       CSF011
       /EJECT                                                                                  CSF011
+      ****************************************************************                      MD054028
+      *  Get Record Lengths of Transaction Data Blocks               *                      MD054028
+      ****************************************************************                      MD054028
+     C     GETRCDLN      BEGSR                                                              MD054028
+                                                                                            MD054028
+     C                   CALLB     'UTGETRCDLN'                                             MD054028
+     C                   PARM                    ReturnCode       10                        MD054028
+     C                   PARM      *ZERO         RecordLen         5 0                      MD054028
+     C                   PARM                    FileName         10                        MD054028
+     C                   PARM      '*LIBL     '  FileLib          10                        MD054028
+                                                                                            MD054028
+      ** If file not found (or any other error) shut down the program                       MD054028
+     C     ReturnCode    Ifne      *Blanks                                                  MD054028
+     C                   EXSR      *pssr                                                    MD054028
+     C                   EndIf                                                              MD054028
+                                                                                            MD054028
+     C                   ENDSR                                                              MD054028
+      *****************************************************************                     MD054028
+      /EJECT                                                                                MD054028
       *****************************************************************
       *                                                               *
       * *INZSR - Program Initialisation routine                       *
@@ -4000,6 +4106,20 @@
      C                   EVAL      CAP205 = 'Y'                                             MD044546
      C                   ENDIF                                                              MD044546
       *                                                                                     MD044546
+      ** Check if CER050 is ON                                                              MD054028
+      *                                                                                     MD054028
+     C                   CALLB     'AOSARDR0'                                               MD054028
+     C                   PARM      *BLANKS       @RTCD                                      MD054028
+     C                   PARM      '*VERIFY'     @OPTN                                      MD054028
+     C                   PARM      'CER050'      @SARD                                      MD054028
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD054028
+                                                                                            MD054028
+     C     @RTCD         IFEQ      *BLANK                                                   MD054028
+     C                   EVAL      CER050 = 'Y'                                             MD054028
+     C                   ELSE                                                               MD054028
+     C                   EVAL      CER050 = 'N'                                             MD054028
+     C                   ENDIF                                                              MD054028
+      *                                                                                     MD054028
      C/COPY OFCPYSRCZ,CRE101_009                                                              CRE101
      C/COPY WNCPYSRC,GLH00652
       **  Define key list to access ACCPTFR

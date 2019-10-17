@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054095           Date 15Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with     *
+      *             zero rate                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -619,6 +622,7 @@
      D PCurSet10       S            200A                                                      CRE020
      D WSysVal01       S              1A                                                      CRE020
 
+     D #0EINR          S             12A                                                    MD054095
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2229,13 +2233,15 @@
 
      C                   BITOFF    '01234567'    UDNSI
 
-     C                   IF        RPUEINR <> *ZEROS
+     C**********         IF        RPUEINR <> *ZEROS                                        MD054095
+     C                   IF        RPUEINR <> *ZEROS OR #0EINR <> *BLANKS                   MD054095
      C                   BITON     '0'           UDNSI
      C                   ENDIF
 
      C                   BITOFF    '01234567'    TDNSI
 
-     C                   IF        RPTEINR <> *ZEROS
+     C**********         IF        RPTEINR <> *ZEROS                                        MD054095
+     C                   IF        RPTEINR <> *ZEROS OR #0EINR <> *BLANKS                   MD054095
      C                   BITON     '0'           TDNSI
      C                   ENDIF
 
@@ -3486,6 +3492,7 @@
      C                   PARM                    CDE001
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CAP056                                       CAP056
+     C                   PARM                    #0EINR                                     MD054095
 
      C     *LIKE         DEFINE    UEINR         WkUEINR
      C     *LIKE         DEFINE    TEINR         WkTEINR

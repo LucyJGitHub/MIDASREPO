@@ -1212,7 +1212,7 @@
       *
      C                   Eval      %subst(MFLD :2:6)   = ZMDATE
      C                   Eval      %subst(MFLD :8:3)   = A6SWCY
-     C**********         Eval      %subst(MFLD :11:15) = ZSAMNT
+     C**********         Eval      %subst(MFLD :11:15) = ZSAMNT                             MD052633
      C                   Eval      %subst(MFLD :11:17) = ZSAMNT                             MD052633
      C                   Eval      CTRC    = WCrLf
 

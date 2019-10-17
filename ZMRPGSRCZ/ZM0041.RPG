@@ -1,339 +1,339 @@
-000100191008     H        1
-000101191008      *****************************************************************
-000102191008/*STD *  RPGBASE                                                      *
-000103191008/*EXI *  TEXT('Convert MIDAS amount to SWIFT format for MT940/950')  *
-000104191008     F*****************************************************************
-000105191008     F*                                                               *
-000106191008     F*  Midas - MESSAGE MANAGEMENT UTILITIES.                        *
-000107191008     F*                                                               *
-000108191008     F*  ZM0041 - AMOUNT CONVERSION.                                  *
-000109191008     F*                                                               *
-000110191008      *  (c) Misys International Banking Systems Ltd. 2019            *
-000111191008      *                                                               *
-000112191008      *  Last Amend No. MD052633 *CREATE   Date 08Oct19               *
-000113191008     F*---------------------------------------------------------------*
-000114191008     F*                                                               *
-000115191008     F*  MD052633 - MT940's closing balance figures is 1 digit short -*
-000116191008     F*             Increase the length of ZAMNT and ZSAMNT to handle *
-000117191008     F*             numeric size of (15,0).                           *
-000118191008     F*           - Applied for MD-53975                              *
-000120191008     F*                                                               *
-000121191008     F*****************************************************************
-000122191008     F* PURPOSE.                                                     *
-000123191008     F*                                                              *
-000124191008     F*  To convert an  amount (ZAMNT) (15,0) to SWIFT               *
-000125191008     F*  input format (ZSAMNT) (17A).                                *
-000126191008     F*                                                              *
-000127191008     F*  1.A decimal comma is inserted dependant on the number of    *
-000128191008     F*    decimal places returned from the access to sdcurrpd.      *
-000129191008     F*  2.Leading zeros must be dropped.                            *
-000130191008     F*  3.The decimal comma must have at least one leading digit.   *
-000131191008     F*                                                              *
-000132191008     F****************************************************************
-000133191008     F*                                                              *
-000134191008     F* FUNCTION OF INDICATORS.                                      *
-000135191008     F*                                                              *
-000136191008     F* 90  -  0 Decimal places from sdcurrpd.                       *
-000137191008     F* 91  -  1 Decimal place from sdcurrpd.                        *
-000138191008     F* 92  -  2 Decimal places from sdcurrpd.                       *
-000139191008     F* 93  -  3 Decimal places from sdcurrpd.                       *
-000140191008     F* 94  -  Used in the blank of leading zeros.                   *
-000141191008     F* 95  -  Used to end the blank of leading zeros.               *
-000142191008     F*                                                              *
-000143191008     F****************************************************************
-000144191008     F/COPY WNCPYSRC,ZM0040F001
-000145191008     E*
-000146191008     E** COPYRIGHT STATEMENT ARRAY.
-000147191008     E*
-000148191008     E                    CPY@    1   1 80
-000149191008     E*
-000150191008     E** ARRAY USED IN CONVERSION.
-000151191008     E*
-000152191008     E                    ZAA        17  1
-000153191008      /EJECT
-000154191008     E****************************************************************
-000155191008     I*
-000156191008     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
-000157191008     I*
-000158191008     ICPYR@#      DS
-000159191008     I                                        1  80 CPY@
-000160191008     I                                        1  20 CPY@##
-000161191008     I* Program data structure( to check the number of parameters)
-000162191008     I           SDS
-000163191008     I                                     *PARMS   WPARM
-000164191008     IRUNDAT      DS
-000165191008     I                                        1   7 MRDT
-000166191008     I                                    P   8  100RDNB
-000167191008     I                                       11  11 SUC
-000168191008     I                                       12  12 DFF
-000169191008     I                                       13  13 MBIN
-000170191008     I*
-000171191008     I** External Data structure for Currency Details.
-000172191008     I*
-000173191008     I/COPY WNCPYSRC,ZM0040I001
-000174191008     ISDCURR    E DSSDCURRPD
-000175191008     I*
-000176191008     I** 1st DS for access program , short data structure.
-000177191008     I*
-000178191008     IDSFDY     E DSDSFDY
-000179191008     I*
-000180191008     I** 2nd DS for access program , long data structure.
-000181191008     I*
-000182191008     IDSSDY     E DSDSSDY
-000183191008     I*
-000184191008     I****************************************************************
-000185191008     C*
-000186191008     C**  Entry of currency and amount
-000187191008     C*
-000188191008     C           *ENTRY    PLIST
-000189191008     C                     PARM           ZAMNT  150
-000190191008     C                     PARM           ZCCY    3
-000191191008     C                     PARM           ZSAMNT 17
-000192191008     C                     PARM           ZSCCY   3
-000193191008     C                     PARM           ZERR    1
-000194191008     C                     PARM           ZSWDPC  1
-000195191008     C*
-000196191008     C                     SETOF                     909192
-000197191008     C                     SETOF                     939495
-000198191008     C                     MOVE *BLANKS   ZSAMNT
-000199191008     C                     MOVE *BLANKS   ZSCCY
-000200191008     C                     MOVE *BLANKS   ZERR
-000201191008      *
-000202191008      ** Get Rundate - Rundate  *
-000203191008      *
-000204191008     C           *NAMVAR   DEFN           RUNDAT
-000205191008     C                     IN   RUNDAT
-000206191008      *
-000207191008      ** Control if feature 'Swift decimal places' is on.
-000208191008      *
-000209191008     C                     CALL 'AOSARDR0'
-000210191008     C                     PARM '       ' @RTCD   7
-000211191008     C                     PARM '*VERIFY' @OPTN   7
-000212191008     C                     PARM 'CSW020'  @SARD   6
-000213191008     C           @RTCD     IFEQ *BLANK
-000214191008     C                     MOVE 'Y'       CSW020  1
-000215191008     C                     ENDIF
-000216191008     C*
-000217191008     C*
-000218191008     C** To determine the number of decimal places for the currency and
-000219191008     C** to obtain the swift currency by accessing sdcurrpd (the currency)
-000220191008     C** details file), using the midas currency as a key and handling any
-000221191008     C** database errors in the program.
-000222191008     C*
-000223191008     C                     CALL 'AOCURRR0'
-000224191008     C                     PARM *BLANKS   @RTCD   7
-000225191008     C                     PARM '*KEY'    @OPTN   7
-000226191008     C                     PARM ZCCY      @CCY    3
-000227191008     C           SDCURR    PARM SDCURR    DSSDY
-000228191008     C*
-000229191008     C** To deal with data base errors.
-000230191008     C*
-000231191008     C           @RTCD     IFNE *BLANKS
-000232191008     C                     MOVE '1'       ZERR
-000233191008     C                     END
-000234191008     C*
-000235191008     C** Only do the following processing if there has not been a
-000236191008     C** database error.
-000237191008     C*
-000238191008     C           @RTCD     IFEQ *BLANKS
-000239191008     C*
-000240191008     C** To move the currency field names.
-000241191008     C*
-000242191008     C                     MOVE A6SWCY    ZSCCY
-000243191008     C                     MOVE A6NBDP    ZCDP    10
-000244191008     C*
-000245191008     C** Need to adjust amount if the Swift Decimal Places is
-000246191008     C** different to the normal number of Decimal Places and the
-000247191008     C** effective date has been reached.
-000248191008     C*
-000249191008     C           CSW020    IFEQ 'Y'
-000250191008     C           A6NBDP    ANDNEA6SWDP
-000251191008     C           A6SWDT    ANDLERDNB
-000252191008     C*
-000253191008     C           WPARM     IFEQ 6
-000254191008     C           ZSWDPC    ANDNE'N'
-000255191008     C           WPARM     OREQ 5
-000256191008      *
-000257191008     C* CHECK THE DIFFERENCE OF DECIMAL TO HAVE THE CORRECT AMOUNT
-000258191008      *
-000259191008     C           A6SWDP    IFLT ZCDP
-000260191008     C           ZCDP      SUB  A6SWDP    X       10
-000261191008     C                     ELSE
-000262191008     C           A6SWDP    SUB  ZCDP      X
-000263191008     C                     ENDIF
-000264191008      *
-000265191008     C           X         IFEQ 1
-000266191008     C                     Z-ADD10        Y       40
-000267191008     C                     ENDIF
-000268191008     C           X         IFEQ 2
-000269191008     C                     Z-ADD100       Y
-000270191008     C                     ENDIF
-000271191008     C           X         IFEQ 3
-000272191008     C                     Z-ADD1000      Y
-000273191008     C                     ENDIF
-000274191008     C           X         IFEQ 4
-000275191008     C                     Z-ADD10000     Y
-000276191008     C                     ENDIF
-000277191008      *
-000278191008     C           A6SWDP    IFLT ZCDP
-000279191008     C           ZAMNT     DIV  Y         ZAMNT
-000280191008     C                     ELSE
-000281191008     C           ZAMNT     MULT Y         ZAMNT
-000282191008     C                     ENDIF
-000283191008      *
-000284191008     C                     Z-ADDA6SWDP    ZCDP
-000285191008     C*
-000286191008     C                     ENDIF
-000287191008     C                     ENDIF
-000288191008     C/COPY WNCPYSRC,ZM0040C001
-000289191008     C*
-000290191008     C** To obtain the number of currency decimal places.
-000291191008     C*  No decimal places.
-000292191008     C           ZCDP      IFEQ 0
-000293191008     C                     MOVE '1'       *IN90
-000294191008     C*
-000295191008     C/COPY WNCPYSRC,ZM0040CCP2
-000296191008     C*
-000297191008     C                     END
-000298191008     C*  One decimal place.
-000299191008     C           ZCDP      IFEQ 1
-000300191008     C                     MOVE '1'       *IN91
-000301191008     C                     END
-000302191008     C*  Two decimal places.
-000303191008     C           ZCDP      IFEQ 2
-000304191008     C                     MOVE '1'       *IN92
-000305191008     C                     END
-000306191008     C*  Three decimal places.
-000307191008     C           ZCDP      IFEQ 3
-000308191008     C                     MOVE '1'       *IN93
-000309191008     C                     END
-000310191008     C*
-000311191008     C/COPY WNCPYSRC,ZM0040CCP1
-000312191008     C*
-000313191008     C*
-000314191008     C** Ensure amount field is positive before processing
-000315191008     C*
-000316191008     C           ZAMNT     IFLT 0
-000317191008     C           ZAMNT     MULT -1        ZAMNT
-000318191008     C                     END
-000319191008     C*
-000320191008     C** To move the midas amount to the 17A field including the decimal
-000321191008     C** comma. H16 is a holding field for the amount.
-000322191008     C*
-000323191008     C*
-000324191008     C/COPY WNCPYSRC,ZM0040CCP3
-000325191008     C*
-000326191008     C                     MOVE ZAMNT     H16    16
-000327191008     C*
-000328191008     C/COPY WNCPYSRC,ZM0040CCP4
-000329191008     C*
-000330191008     C*
-000331191008     C** For no decimal places. *in90 =1. The decimal comma is placed at
-000332191008     C** the end of the amount.
-000333191008     C*
-000334191008     C           *IN90     IFEQ '1'
-000335191008     C                     MOVELH16       ZAAL   17
-000336191008     C                     MOVE ','       ZAAL
-000337191008     C                     END
-000338191008     C*
-000339191008     C** For one decimal place. *in91 = 1. The amount field is split
-000340191008     C** to enable the comma to be inserted one digit before the end.
-000341191008     C** H1 is a holding field.
-000342191008     C*
-000343191008     C           *IN91     IFEQ '1'
-000344191008     C                     MOVE H16       H1      1
-000345191008     C                     MOVE ','       H16
-000346191008     C                     MOVELH16       ZAAL
-000347191008     C                     MOVE H1        ZAAL
-000348191008     C                     END
-000349191008     C*
-000350191008     C** For two decimal places. *in92 = 1. The amount field is split
-000351191008     C** to enable the comma to be inserted two digits before the end.
-000352191008     C** H2 and H3 are holding fields.
-000353191008     C*
-000354191008     C           *IN92     IFEQ '1'
-000355191008     C                     MOVE H16       H2      2
-000356191008     C                     MOVELH16       H14    14
-000357191008     C                     MOVE H2        H3      3
-000358191008     C                     MOVEL','       H3
-000359191008     C                     MOVELH14       ZAAL
-000360191008     C                     MOVE H3        ZAAL
-000361191008     C                     END
-000362191008     C*
-000363191008     C** For three decimal places. *in93 = 1. The amount field is split
-000364191008     C** to enable the comma to be inserted three digits before the end.
-000365191008     C** H2 , H3 and H4 are holding fields.
-000366191008     C*
-000367191008     C           *IN93     IFEQ '1'
-000368191008     C                     MOVE H16       H3
-000369191008     C                     MOVELH16       H13    13
-000370191008     C                     MOVE H3        H4      4
-000371191008     C                     MOVEL','       H4
-000372191008     C                     MOVELH13       ZAAL
-000373191008     C                     MOVE H4        ZAAL
-000374191008     C                     END
-000375191008     C*
-000376191008     C** Blank out all leading zeros leaving at least one leading
-000377191008     C** integer.  Any remaining leading zeros are dropped,except
-000378191008     C** if there is one directly proceeding the decimal comma.
-000379191008     C** This is retained.
-000380191008     C*
-000381191008     C                     MOVEAZAAL      ZAA
-000382191008     C                     Z-ADD1         ZA      20
-000383191008     C                     SETOF                     95
-000384191008     C                     MOVE '1'       *IN94
-000385191008     C*
-000386191008     C           *IN94     DOUEQ'0'
-000387191008     C*
-000388191008     C           ZAA,ZA    IFEQ '0'
-000389191008     C           ZAA,ZA    OREQ ' '
-000390191008     C                     MOVE '1'       *IN94
-000391191008     C                     ELSE
-000392191008     C                     MOVE '0'       *IN94
-000393191008     C                     END
-000394191008     C*
-000395191008     C           *IN94     IFEQ '1'
-000396191008     C                     MOVE ' '       ZAA,ZA
-000397191008     C                     ADD  1         ZA
-000398191008     C                     END
-000399191008     C*
-000400191008     C           *IN94     IFEQ '0'
-000401191008     C           ZAA,ZA    ANDEQ','
-000402191008     C                     MOVE '1'       *IN95
-000403191008     C                     END
-000404191008     C*
-000405191008     C           ZA        IFEQ 16
-000406191008     C           ZCDP      ANDNE0
-000407191008     C           ZAA,ZA    IFEQ ','
-000408191008     C           ZCDP      ANDEQ1
-000409191008     C                     ELSE
-000410191008     C                     MOVE '0'       *IN94
-000411191008     C                     SUB  1         ZA
-000412191008     C                     MOVE ','       ZAA,ZA
-000413191008     C                     END
-000414191008     C                     END
-000415191008     C*
-000416191008     C                     END
-000417191008     C*
-000418191008     C           *IN95     IFEQ '1'
-000419191008     C           ZA        SUB  1         ZA
-000420191008     C                     MOVE '0'       ZAA,ZA
-000421191008     C                     END
-000422191008     C*
-000423191008     C** Move to a 15A SWIFT format field for output.
-000424191008     C*
-000425191008     C                     MOVEAZAA,ZA    ZSAMNT 17
-000426191008     C*
-000427191008     C** 'End' for the database error.
-000428191008     C*
-000429191008     C/COPY WNCPYSRC,ZM0040C002
-000430191008     C                     END
-000431191008     C*
-000432191008     C** Termination Processing.
-000433191008     C*
-000434191008     C                     SETON                     LR
-000435191008     C                     RETRN
-000436191008     C*
-000437191008     C*****************************************************************
-000438191008** CPY@
-000439191008(c) Misys International Banking Systems Ltd. 2019
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Convert MIDAS amount to SWIFT format for MT940/950')  *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MANAGEMENT UTILITIES.                        *
+     F*                                                               *
+     F*  ZM0041 - AMOUNT CONVERSION.                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2019            *
+      *                                                               *
+      *  Last Amend No. MD052633 *CREATE   Date 08Oct19               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  MD052633 - MT940's closing balance figures is 1 digit short -*
+     F*             Increase the length of ZAMNT and ZSAMNT to handle *
+     F*             numeric size of (15,0).                           *
+     F*           - Applied for MD-53975                              *
+     F*                                                               *
+     F*****************************************************************
+     F* PURPOSE.                                                     *
+     F*                                                              *
+     F*  To convert an  amount (ZAMNT) (15,0) to SWIFT               *
+     F*  input format (ZSAMNT) (17A).                                *
+     F*                                                              *
+     F*  1.A decimal comma is inserted dependant on the number of    *
+     F*    decimal places returned from the access to sdcurrpd.      *
+     F*  2.Leading zeros must be dropped.                            *
+     F*  3.The decimal comma must have at least one leading digit.   *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F* FUNCTION OF INDICATORS.                                      *
+     F*                                                              *
+     F* 90  -  0 Decimal places from sdcurrpd.                       *
+     F* 91  -  1 Decimal place from sdcurrpd.                        *
+     F* 92  -  2 Decimal places from sdcurrpd.                       *
+     F* 93  -  3 Decimal places from sdcurrpd.                       *
+     F* 94  -  Used in the blank of leading zeros.                   *
+     F* 95  -  Used to end the blank of leading zeros.               *
+     F*                                                              *
+     F****************************************************************
+     F/COPY WNCPYSRC,ZM0040F001
+     E*
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY USED IN CONVERSION.
+     E*
+     E                    ZAA        17  1
+      /EJECT
+     E****************************************************************
+     I*
+     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I* Program data structure( to check the number of parameters)
+     I           SDS
+     I                                     *PARMS   WPARM
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     I*
+     I** External Data structure for Currency Details.
+     I*
+     I/COPY WNCPYSRC,ZM0040I001
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** 1st DS for access program , short data structure.
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** 2nd DS for access program , long data structure.
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I****************************************************************
+     C*
+     C**  Entry of currency and amount
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZAMNT  150
+     C                     PARM           ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM           ZERR    1
+     C                     PARM           ZSWDPC  1
+     C*
+     C                     SETOF                     909192
+     C                     SETOF                     939495
+     C                     MOVE *BLANKS   ZSAMNT
+     C                     MOVE *BLANKS   ZSCCY
+     C                     MOVE *BLANKS   ZERR
+      *
+      ** Get Rundate - Rundate  *
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Control if feature 'Swift decimal places' is on.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CSW020'  @SARD   6
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSW020  1
+     C                     ENDIF
+     C*
+     C*
+     C** To determine the number of decimal places for the currency and
+     C** to obtain the swift currency by accessing sdcurrpd (the currency)
+     C** details file), using the midas currency as a key and handling any
+     C** database errors in the program.
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM ZCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** To deal with data base errors.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       ZERR
+     C                     END
+     C*
+     C** Only do the following processing if there has not been a
+     C** database error.
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C*
+     C** To move the currency field names.
+     C*
+     C                     MOVE A6SWCY    ZSCCY
+     C                     MOVE A6NBDP    ZCDP    10
+     C*
+     C** Need to adjust amount if the Swift Decimal Places is
+     C** different to the normal number of Decimal Places and the
+     C** effective date has been reached.
+     C*
+     C           CSW020    IFEQ 'Y'
+     C           A6NBDP    ANDNEA6SWDP
+     C           A6SWDT    ANDLERDNB
+     C*
+     C           WPARM     IFEQ 6
+     C           ZSWDPC    ANDNE'N'
+     C           WPARM     OREQ 5
+      *
+     C* CHECK THE DIFFERENCE OF DECIMAL TO HAVE THE CORRECT AMOUNT
+      *
+     C           A6SWDP    IFLT ZCDP
+     C           ZCDP      SUB  A6SWDP    X       10
+     C                     ELSE
+     C           A6SWDP    SUB  ZCDP      X
+     C                     ENDIF
+      *
+     C           X         IFEQ 1
+     C                     Z-ADD10        Y       40
+     C                     ENDIF
+     C           X         IFEQ 2
+     C                     Z-ADD100       Y
+     C                     ENDIF
+     C           X         IFEQ 3
+     C                     Z-ADD1000      Y
+     C                     ENDIF
+     C           X         IFEQ 4
+     C                     Z-ADD10000     Y
+     C                     ENDIF
+      *
+     C           A6SWDP    IFLT ZCDP
+     C           ZAMNT     DIV  Y         ZAMNT
+     C                     ELSE
+     C           ZAMNT     MULT Y         ZAMNT
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SWDP    ZCDP
+     C*
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,ZM0040C001
+     C*
+     C** To obtain the number of currency decimal places.
+     C*  No decimal places.
+     C           ZCDP      IFEQ 0
+     C                     MOVE '1'       *IN90
+     C*
+     C/COPY WNCPYSRC,ZM0040CCP2
+     C*
+     C                     END
+     C*  One decimal place.
+     C           ZCDP      IFEQ 1
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*  Two decimal places.
+     C           ZCDP      IFEQ 2
+     C                     MOVE '1'       *IN92
+     C                     END
+     C*  Three decimal places.
+     C           ZCDP      IFEQ 3
+     C                     MOVE '1'       *IN93
+     C                     END
+     C*
+     C/COPY WNCPYSRC,ZM0040CCP1
+     C*
+     C*
+     C** Ensure amount field is positive before processing
+     C*
+     C           ZAMNT     IFLT 0
+     C           ZAMNT     MULT -1        ZAMNT
+     C                     END
+     C*
+     C** To move the midas amount to the 17A field including the decimal
+     C** comma. H16 is a holding field for the amount.
+     C*
+     C*
+     C/COPY WNCPYSRC,ZM0040CCP3
+     C*
+     C                     MOVE ZAMNT     H16    16
+     C*
+     C/COPY WNCPYSRC,ZM0040CCP4
+     C*
+     C*
+     C** For no decimal places. *in90 =1. The decimal comma is placed at
+     C** the end of the amount.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVELH16       ZAAL   17
+     C                     MOVE ','       ZAAL
+     C                     END
+     C*
+     C** For one decimal place. *in91 = 1. The amount field is split
+     C** to enable the comma to be inserted one digit before the end.
+     C** H1 is a holding field.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVE H16       H1      1
+     C                     MOVE ','       H16
+     C                     MOVELH16       ZAAL
+     C                     MOVE H1        ZAAL
+     C                     END
+     C*
+     C** For two decimal places. *in92 = 1. The amount field is split
+     C** to enable the comma to be inserted two digits before the end.
+     C** H2 and H3 are holding fields.
+     C*
+     C           *IN92     IFEQ '1'
+     C                     MOVE H16       H2      2
+     C                     MOVELH16       H14    14
+     C                     MOVE H2        H3      3
+     C                     MOVEL','       H3
+     C                     MOVELH14       ZAAL
+     C                     MOVE H3        ZAAL
+     C                     END
+     C*
+     C** For three decimal places. *in93 = 1. The amount field is split
+     C** to enable the comma to be inserted three digits before the end.
+     C** H2 , H3 and H4 are holding fields.
+     C*
+     C           *IN93     IFEQ '1'
+     C                     MOVE H16       H3
+     C                     MOVELH16       H13    13
+     C                     MOVE H3        H4      4
+     C                     MOVEL','       H4
+     C                     MOVELH13       ZAAL
+     C                     MOVE H4        ZAAL
+     C                     END
+     C*
+     C** Blank out all leading zeros leaving at least one leading
+     C** integer.  Any remaining leading zeros are dropped,except
+     C** if there is one directly proceeding the decimal comma.
+     C** This is retained.
+     C*
+     C                     MOVEAZAAL      ZAA
+     C                     Z-ADD1         ZA      20
+     C                     SETOF                     95
+     C                     MOVE '1'       *IN94
+     C*
+     C           *IN94     DOUEQ'0'
+     C*
+     C           ZAA,ZA    IFEQ '0'
+     C           ZAA,ZA    OREQ ' '
+     C                     MOVE '1'       *IN94
+     C                     ELSE
+     C                     MOVE '0'       *IN94
+     C                     END
+     C*
+     C           *IN94     IFEQ '1'
+     C                     MOVE ' '       ZAA,ZA
+     C                     ADD  1         ZA
+     C                     END
+     C*
+     C           *IN94     IFEQ '0'
+     C           ZAA,ZA    ANDEQ','
+     C                     MOVE '1'       *IN95
+     C                     END
+     C*
+     C           ZA        IFEQ 16
+     C           ZCDP      ANDNE0
+     C           ZAA,ZA    IFEQ ','
+     C           ZCDP      ANDEQ1
+     C                     ELSE
+     C                     MOVE '0'       *IN94
+     C                     SUB  1         ZA
+     C                     MOVE ','       ZAA,ZA
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN95     IFEQ '1'
+     C           ZA        SUB  1         ZA
+     C                     MOVE '0'       ZAA,ZA
+     C                     END
+     C*
+     C** Move to a 15A SWIFT format field for output.
+     C*
+     C                     MOVEAZAA,ZA    ZSAMNT 17
+     C*
+     C** 'End' for the database error.
+     C*
+     C/COPY WNCPYSRC,ZM0040C002
+     C                     END
+     C*
+     C** Termination Processing.
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2019

@@ -28,7 +28,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
-      *              Pay/Receive Settlement Leg.                      *
+      *              Pay/Receive Settlement Leg                       *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142A - Cannot close Nostro Account.                     *
       *            - Applied for MD052616.                            *

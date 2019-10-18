@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD038717           Date 18Oct19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CGL132             Date 01May13               *
       *                 CLE134             Date 01Aug12               *
@@ -22,6 +23,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038717 - Not able to link Non-Account Holder to Retail     *
+      *             Account                                           *
+      *           - Applied for MD050220                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -966,7 +970,8 @@
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C     PCust         PARM      DDAUTH        PCust
-     C                   PARM      SDNAHO        DSSDY
+     C**********         PARM      SDNAHO        DSSDY                                      MD038717
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD038717
       *
      C                   IF        PRtCd <> *BLANKS
       *
@@ -1086,12 +1091,14 @@
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C     PCust         PARM      DDAUTH        PCust
-     C                   PARM      SDNAHO        DSSDY
+     C**********         PARM      SDNAHO        DSSDY                                      MD038717
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD038717
       *
      C                   IF        PRtCd = *BLANKS
      C                   IF        NHBTHT = *BLANKS OR
      C                             NHZIPC = *BLANKS OR NHCTYD = *BLANKS
-     C                   EVAL      PMsgId = 'USR9938'
+     C**********         EVAL      PMsgId = 'USR9938'                                       MD038717
+     C                   EVAL      PMsgId = 'USS0906'                                       MD038717
      C                   EVAL      PMsgFile = 'SDUSRMSG'
      C                   EXSR      SRSndMsg
      C                   EVAL      WErr  = *ON

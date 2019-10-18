@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 15Oct19               *
+      *  Last Amend No. MD054095           Date 17Oct19               *
       *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -623,6 +623,7 @@
      D WSysVal01       S              1A                                                      CRE020
 
      D #0EINR          S             12A                                                    MD054095
+     D OurTheirInd     S              1A                                                    MD054095
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2232,16 +2233,25 @@
       ** Non-Static Indicators
 
      C                   BITOFF    '01234567'    UDNSI
+     C                   IF        DTYP = 'RP' AND BYSL = 'B' OR                            MD054095
+     C                             DTYP = 'RR' AND BYSL = 'B' OR                            MD054095
+     C                             DTYP = 'RF' AND BYSL = 'S'                               MD054095
+     C                   EVAL      OurTheirInd = 'T'                                        MD054095
+     C                   ELSE                                                               MD054095
+     C                   EVAL      OurTheirInd = 'O'                                        MD054095
+     C                   ENDIF                                                              MD054095
 
      C**********         IF        RPUEINR <> *ZEROS                                        MD054095
-     C                   IF        RPUEINR <> *ZEROS OR #0EINR <> *BLANKS                   MD054095
+     C                   IF        RPUEINR <> *ZEROS OR (#0EINR <> *BLANKS AND              MD054095
+     C                                                      OurTheirInd = 'O')              MD054095
      C                   BITON     '0'           UDNSI
      C                   ENDIF
 
      C                   BITOFF    '01234567'    TDNSI
 
      C**********         IF        RPTEINR <> *ZEROS                                        MD054095
-     C                   IF        RPTEINR <> *ZEROS OR #0EINR <> *BLANKS                   MD054095
+     C                   IF        RPTEINR <> *ZEROS OR (#0EINR <> *BLANKS AND              MD054095
+     C                                                      OurTheirInd = 'T')              MD054095
      C                   BITON     '0'           TDNSI
      C                   ENDIF
 

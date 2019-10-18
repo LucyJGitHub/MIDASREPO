@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD052008           Date 05Oct18               *
-      *  Prev Amend No. MD051940           Date 21Sep18               *   
+      *  Last Amend No. MD054244           Date 09Sep19               *
+      *  Prev Amend No. MD052008           Date 05Oct18               *
+      *                 MD051940           Date 21Sep18               *
       *                 MD049363           Date 19Sep18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -56,6 +57,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054244 - Generation of additional B-repayment key will     *
+      *             only apply to same currency even if CLE031 is on. *
       *  MD052008 - Rounding off issue on PDCL amount using           *
       *             settlement account with partial balance           *
       *  MD051940 - PDCL X, Y, Z amount is incorrect as a result of   *
@@ -1029,6 +1032,10 @@
      C                   ENDIF                                                              MD052008
                                                                                             MD052008
      C                   IF        w@Pdamt <> wRepaym
+     C                             AND CLE031 <> 'Y'                                        MD054244
+     C                             OR w@Pdamt <> wRepaym                                    MD054244
+     C                             AND CLE031 = 'Y'                                         MD054244
+     C                             AND (WCCY1 = *BLANKS OR WCCY2 = *BLANKS)                 MD054244
      C                   EVAL      EAMT = WRepaym - W@Pdamt
       *
      C                   IF        w@OEAMT < 0
@@ -1177,6 +1184,10 @@
                                                                                             MD052008
      C                   EVAL      W@Totak = W@Pdamt + W@Avail
      C                   IF        w@Totak <> wRepaym
+     C                             AND CLE031 <> 'Y'                                        MD054244
+     C                             OR w@Totak <> wRepaym                                    MD054244
+     C                             AND CLE031 = 'Y'                                         MD054244
+     C                             AND (WCCY1 = *BLANKS OR WCCY2 = *BLANKS)                 MD054244
      C                   EVAL      EAMT = WRepaym - W@Totak
       *
      C                   IF        w@OEAMT < 0

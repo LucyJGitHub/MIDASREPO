@@ -159,7 +159,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054035 - Prevent file locking of LEFEED                    *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *      

@@ -402,7 +402,7 @@
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY'        POptn
      C                   PARM      DDAUTH        PCust
-     C**********         PARM      SDNAHO        DSSDY                                      MD050220
+     C*****SDNAHO        PARM      SDNAHO        DSSDY                                      MD050220
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD050220
       *
      C                   IF        PRtcd = *BLANKS
@@ -1099,11 +1099,7 @@
      C                   IF        NHBTHT = *BLANKS OR
      C                             NHZIPC = *BLANKS OR NHCTYD = *BLANKS
      C**********         EVAL      PMsgId = 'USR9938'                                       MD038717
-<<<<<<< HEAD
-     C                   EVAL      PMsgId = 'USS0934'                                       MD038717
-=======
      C                   EVAL      PMsgId = 'USS0906'                                       MD038717
->>>>>>> refs/remotes/origin/bugfix/MDSC-30426
      C                   EVAL      PMsgFile = 'SDUSRMSG'
      C                   EXSR      SRSndMsg
      C                   EVAL      WErr  = *ON

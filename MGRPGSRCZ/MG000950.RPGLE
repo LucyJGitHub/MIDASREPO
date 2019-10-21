@@ -18,8 +18,12 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. MD021108A          Date 16Jul13               *
+<<<<<<< Upstream, based on branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  Prev Amend No. CMG006             Date 15Oct19               *
       *                 MD052633           Date 08Oct19               *
+=======
+      *  Prev Amend No. MD052633           Date 08Oct19               *
+>>>>>>> 2ff3446  [MDSC-30431] Fix Merge of MD-53366
       *                 MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
       *                 MD042041           Date 21Oct16               *
@@ -56,8 +60,11 @@
       *  MD021108A - Problem in generating MT950. Use rundate for tags*
       *              60M and 62M.                                     *
       *            - Applied for MD-53366                             *
+<<<<<<< Upstream, based on branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
       *           Identification.                                     *
+=======
+>>>>>>> 2ff3446  [MDSC-30431] Fix Merge of MD-53366
       *  MD052633 - MT940's closing balance figures is 1 digit short -*
       *             Increase the length of ZAMNT and ZSAMNT to handle *
       *             numeric size of (15,0).                           *

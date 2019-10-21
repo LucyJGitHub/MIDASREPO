@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050220           Date 18Oct19               *
+      *  Prev Amend No. MD038717           Date 18Oct19               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CGL132             Date 01May13               *
       *                 CLE134             Date 01Aug12               *
@@ -22,6 +24,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050220 - Change parameters for 'AONAHOR0' used DSLDY data  *
+      *             structure in place of DSSDY.                      *
+      *  MD038717 - Not able to link Non-Account Holder to Retail     *
+      *             Account (Recompile)                               *
+      *           - Applied for MD050220                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -398,7 +405,8 @@
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY'        POptn
      C                   PARM      DDAUTH        PCust
-     C     SDNAHO        PARM      SDNAHO        DSSDY
+     C*****SDNAHO        PARM      SDNAHO        DSSDY                                      MD050220
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD050220
       *
      C                   IF        PRtcd = *BLANKS
      C                   EVAL      DDAUSN = NHSHNM
@@ -966,7 +974,8 @@
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C     PCust         PARM      DDAUTH        PCust
-     C                   PARM      SDNAHO        DSSDY
+     C**********         PARM      SDNAHO        DSSDY                                      MD038717
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD038717
       *
      C                   IF        PRtCd <> *BLANKS
       *
@@ -1086,7 +1095,8 @@
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C     PCust         PARM      DDAUTH        PCust
-     C                   PARM      SDNAHO        DSSDY
+     C**********         PARM      SDNAHO        DSSDY                                      MD038717
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD038717
       *
      C                   IF        PRtCd = *BLANKS
      C                   IF        NHBTHT = *BLANKS OR

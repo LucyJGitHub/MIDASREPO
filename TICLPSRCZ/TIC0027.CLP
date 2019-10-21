@@ -9,18 +9,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR861029           Date 09Sep19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC017             Date 14Feb03              */
+/*                      CSC017             Date 14Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CTI001  *CREATE    Date 03Oct97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR861029 - Error in setting up of library list due to its   */
+/*                  long length. Increase the size of the variables  */
+/*                  involved. (Child: AR861030)                      */
+/*                - Applied for MD054158.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC017 - Change to 250 library list.                        */
 /*       CTI001 - Requirements clarification for Midas/TI Interface  */
@@ -45,7 +50,8 @@
              DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(2764)                     /*CSC017*/
              DCL        VAR(&QLFDJOBD) TYPE(*CHAR) LEN(20)
              DCL        VAR(&LEN) TYPE(*CHAR) LEN(4)
-             DCL        VAR(&PARM) TYPE(*CHAR) LEN(1000)
+/**********  DCL        VAR(&PARM) TYPE(*CHAR) LEN(1000)             */                 /*AR861029*/
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(9999)                                /*AR861029*/
              DCL        VAR(&ERRCDE) TYPE(*CHAR) LEN(4)
              DCL        VAR(&OFFSET) TYPE(*DEC) LEN(9 0)
              DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(9 0)
@@ -59,6 +65,7 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
  
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES)                                /*AR861029*/
              RTVJOBA    TYPE(&JOBTYPE)
              CHGJOB     SWS(XXXXXX00)
  
@@ -95,7 +102,8 @@
              CHGVAR     VAR(&PREFIX) VALUE(%SST(&MNEM 1 2))
              CHGVAR     VAR(&XLIB) VALUE(&PREFIX *TCAT 'XLIB')
              CHGVAR     VAR(&QLFDJOBD) VALUE('TIJOBD    ' *CAT &XLIB)
-             CHGVAR     VAR(%BIN(&LEN 1 4)) VALUE(1000)
+/**********  CHGVAR     VAR(%BIN(&LEN 1 4)) VALUE(1000)              */                 /*AR861029*/
+             CHGVAR     VAR(%BIN(&LEN 1 4)) VALUE(9999)                                 /*AR861029*/
              CHGVAR     VAR(%BIN(&ERRCDE 1 4)) VALUE(0)
              CALL       PGM(QWDRJOBD) PARM(&PARM &LEN JOBD0100 +
                           &QLFDJOBD &ERRCDE)

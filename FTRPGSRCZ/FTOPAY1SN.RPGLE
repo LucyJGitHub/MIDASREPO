@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054130           Date 28Aug19               *
-      *  Prev Amend No. MD052529           Date 12Feb19               *
+      *  Last Amend No. MD054131           Date 13Sep19               *
+      *  Prev Amend No. MD054130           Date 28Aug19               *
+      *                 MD052529           Date 12Feb19               *
       *                 MD050619           Date 24Apr18               *
       *                 MD050574           Date 20Apr18               *
       *                 MD046248           Date 27Oct17               *
@@ -170,6 +171,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054131 - Ordering Institution work fields values will be   *
+      *             passed to Ordering Bank line fields only when     *
+      *             action is Insert.                                 *
       *  MD054130 - Default Ordering Customer line 1 with 'MT202'     *
       *             keyword if incoming pay MT202 message has no      *
       *             field 50.                                         *
@@ -2260,7 +2264,8 @@
      C**********         Movel     WOTOPORB5     OTOPORB5                              256919 262930
      C**********         Endif                                                         256919 262930
       *                                                                                     MD022446
-     C                   If        OTOPMSGR > 0                                             MD022446
+     C**********         If        OTOPMSGR > 0                                    MD022446 MD054131
+     C                   IF        OTOPMSGR > 0 AND SACTION = 'I'                           MD054131
      C                   Movel     WOTOPORBT     OTOPORBT                                   MD022446
      C                   Movel     WOTOPORB1     OTOPORB1                                   MD022446
      C                   Movel     WOTOPORB2     OTOPORB2                                   MD022446

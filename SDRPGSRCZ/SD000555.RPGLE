@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 MD026905A          Date 24Jun14               *
@@ -22,6 +23,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for PF/SDCUSTXC            *
       *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD049553           Date 31Jan18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD049553           Date 31Jan18               *
       *                 MD049179           Date 05Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -386,6 +387,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -1201,7 +1203,8 @@
      F***DL0170FMCF  F     784            WORKSTN                                  BUG22873 BUG23096
      F***DL0170FMCF  F     785            WORKSTN                                  BUG23096 BUG23325
      F***DL0170FMCF  F     770            WORKSTN                                    BUG23325 CDL099
-     FDL0170FMCF  F     777            WORKSTN                                                CDL099
+     F***DL0170FMCF  F     777            WORKSTN                                      CDL099 CER050
+     FDL0170FMCF  F     786            WORKSTN                                                CER050
      F/COPY WNCPYSRC,DL0170F004
 0014 F*
 0015 F*EALS***IF**F*****400**6AI*****2 DISK                               S01104
@@ -1278,6 +1281,7 @@
       *                                                                                     BUG23325
      FSDCSINLDIF  E           K        DISK         KINFSR *PSSR                            BUG23325
      FMMDEAMLLIF  E           K        DISK                                                 AR782758
+     FDLAPRHI0IF  E           K        DISK         KINFSR *PSSR                     	      CER050
      F/COPY WNCPYSRC,DL0170F003
      F*****************************************************************   S01184
      F*
@@ -2877,9 +2881,15 @@
       *                                                                   S01199
      C/COPY WNCPYSRC,DL0170C060
      C                     EXSR REFRAT                                    CDL049
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR APRRAT                                                        CER050
+     C                     ENDIF                                                              CER050
      C                     MOVE *OFF      *IN57                                               CER001
      C                     READ DL0170FM                 48               S01199
      C                     EXSR RSTRAT                                    CDL049
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR RSTAPR                                                        CER050
+     C                     ENDIF                                                              CER050
       *                                                                   BUG4427
      C           DNUM      IFNE DDDLNO                                    BUG4427
      C           DNUM      ANDNE*BLANKS                                   BUG4427
@@ -6187,6 +6197,9 @@
       *                                                                   CDL008
      C                     ENDIF                                          CEU003
      C           SCRIND    IFEQ 'LN'                                      CEU003
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR APRRAT                                                        CER050
+     C                     ENDIF                                                              CER050
      C                     MOVE WIN16     *IN16                           CEU003
      C*                                                                   CEU015
      C* Use *IN25 as temporary screen condition                           CEU015
@@ -6194,6 +6207,9 @@
      C                     MOVE *IN25     SAVEIN  1                       CEU015
      C                     MOVE *ON       *IN25                           CEU015
      C                     ENDIF                                          CEU015
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR RSTAPR                                                        CER050
+     C                     ENDIF                                                              CER050
      C*                                                                   CEU015
      C*                                                                   CEU015
       ** If CGL011 is installed, show 'COLLATERAL' if Collateral flag     CGL011
@@ -6325,6 +6341,9 @@
      C                     MOVE *BLANK    COLF                            CGL011
      C                     ENDIF                                          CEU003
      C                     EXSR REFRAT                                    CDL049
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR APRRAT                                                        CER050
+     C                     ENDIF                                                              CER050
      C           SCRIND    IFEQ 'BT'                                      CEU003
      C           WINKH     ANDNE'1'                                                           CAS009
      C                     EXCPTDRNABT                                    CEU003
@@ -6334,6 +6353,9 @@
      C                     EXCPTDRNASL                                    CEU003
      C                     ENDIF                                          CEU003
      C                     EXSR RSTRAT                                    CDL049
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR RSTAPR                                                        CER050
+     C                     ENDIF                                                              CER050
       *                                                                   CAC001
      C           INTC      IFEQ *BLANKS                                   CAC001
      C                     MOVEL'NO '     INTCF   3                       CAC001
@@ -7362,6 +7384,19 @@
      C           CDL019    IFEQ 'Y'                                       CDL019
      C                     MOVE FSFBRT    DDFBRT                          CDL019
      C                     ENDIF                                          CDL019
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+     C                     MOVE APRC      DDAPRR  1                                           CER050
+     C           DNUMI     CHAINDLAPRHI0             99                                       CER050
+     C           *IN99     IFEQ *OFF                                                          CER050
+     C                     MOVE IAPRR     ZFLD15                                              CER050
+     C                     Z-ADD2         ZDECS                                               CER050
+     C                     EXSR ZSEDIT                                                        CER050
+     C                     MOVE ZOUT21    DDAPRP                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
       *                                                                   CDL019
       *** Set CDL020 field  if feature  is enabled                        CDL020
       *                                                                   CDL020
@@ -11169,6 +11204,20 @@
      C                     ELSE                                                               CAS009
      C                     MOVE 'N'       CAS009                                              CAS009
      C                     ENDIF                                                              CAS009
+      *                                                                                       CER050
+      ** Access AOSARDR0 and check if CER050 is installed                                     CER050
+      *                                                                                       CER050
+     C                     CALL 'AOSARDR0'                                                    CER050
+     C                     PARM *BLANKS   PRTCD                                               CER050
+     C                     PARM '*VERIFY' POPTN                                               CER050
+     C                     PARM 'CER050'  PSARD                                               CER050
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER050
+      *                                                                                       CER050
+     C           PRTCD     IFEQ *BLANKS                                                       CER050
+     C                     MOVEL'Y'       CER050  1                                           CER050
+     C                     ELSE                                                               CER050
+     C                     MOVEL'N'       CER050                                              CER050
+     C                     ENDIF                                                              CER050
       *                                                                                       CER043
       ** Access AOSARDR0 and check if CER043 is installed                                     CER043
       *                                                                                       CER043
@@ -11507,6 +11556,11 @@
      C           CDL019    IFEQ 'Y'                                       CDL019
      C                     MOVE *BLANKS   DDFBRT  1                       CDL019
      C                     ENDIF                                          CDL019
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     CLEARDDAPRR                                                        CER050
+     C                     CLEARDDAPRP                                                        CER050
+     C                     ENDIF                                                              CER050
       *                                                                   CDL020
       ** Blank out if CDL020 is switched on                               CDL020
       *                                                                   CDL020
@@ -13716,6 +13770,11 @@
      C                     Z-ADDA6NBDP    NUMDEC                          CEU015
      C                     ENDIF                                          CEU015
      C                     ENDIF                                          CEU015
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR APRRAT                                                        CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C                     Z-ADDNUMDEC    @@CDP                           CEU015
       *                                                                   CEU015
      C                     Z-ADDHKAMNP    @@IAMT           *1             082179
@@ -13774,6 +13833,11 @@
      C                     ENDIF                                          CDL019
      C                     ENDIF                                          CDL019
       *                                                                   CDL016
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     MOVE 'Y'       SCREE2                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C* Use *IN25 as temporary screen condition                           CEU015
      C           CEU015    IFEQ 'Y'                                       CEU015
      C                     MOVE *IN25     SAVEIN  1                       CEU015
@@ -13837,6 +13901,11 @@
       ** Restore saved value of Indicator 76.                             CGL011
       *                                                                   CGL011
      C                     MOVE WIN76     *IN76                           CGL011
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     EXSR RSTAPR                                                        CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
       *                                                                                       CER020
       ** If CER020 is installed populate the additional fields                                CER020
       ** - original deal number, initial start date and final maturity                        CER020
@@ -17077,6 +17146,41 @@
      C                     ENDIF                                                              CDL033
       *                                                                                       CDL033
      C                     ENDIF                                                              CDL033
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+     C           *INKN     IFEQ *ON                                                           CER050
+     C                     MOVE 'Y'       @F14    1                                           CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE *BLANKS   @F14                                                CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C           DNUMI     IFNE 0                                                             CER050
+     C           DNUM      ANDEQ'000000'                                                      CER050
+      *                                                                                       CER050
+      ** and if D Type deals are found                                                        CER050
+     C           *IN15     ANDNE'1'                                                           CER050
+      *                                                                                       CER050
+      ** and if F3 is not pressed                                                             CER050
+     C           *INKC     ANDNE'1'                                                           CER050
+      *                                                                                       CER050
+      ** and if *IN83 or *IN84 or *IN85 are *ON i.e.                                          CER050
+      *   forward rate agreement                                                              CER050
+      *   interest rate swap                                                                  CER050
+      *   cross currency interest rate swap                                                   CER050
+     C           *INKN     ANDNE'1'                                                           CER050
+      *                                                                                       CER050
+     C           DNUMI     ORNE 0                                                             CER050
+     C           DNUM      ANDEQ'000000'                                                      CER050
+      *                                                                                       CER050
+      ** and if D Type deals are found                                                        CER050
+     C           *IN15     ANDNE'1'                                                           CER050
+     C           *INKC     ANDNE'1'                                                           CER050
+      *                                                                                       CER050
+     C           *INKN     OREQ *ON                                                           CER050
+     C           @F14      ANDEQ*BLANK                                                        CER050
+     C           *INKC     ANDNE'1'                                                           CER050
+      *                                                                                       CER050
       *                                                                   132729
      C                     CALL 'WN0010'                                  132729
      C*                                                                   132729
@@ -17106,6 +17210,9 @@
       ** Zeroise deal no. to prompt user for new request.                                     CDL033
       *                                                                                       CDL033
      C                     Z-ADD*ZEROS    DNUMA                                               CDL033
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+     C                     ENDIF                                                              CER050
       *                                                                                       CDL033
      C                     ELSE                                                               CDL033
       *                                                                                       CDL033
@@ -19324,6 +19431,32 @@
      C                     ENDIF                                          CDL049
       *                                                                   CDL049
      C                     ENDSR                                          CDL049
+     *****************************************************************                        CER050
+      *  APRRAT - Format Annualised Percentage Rate                   *                       CER050
+      *****************************************************************                       CER050
+     C           APRRAT    BEGSR                                                              CER050
+      *                                                                                       CER050
+     C                     MOVE *IN36     SVIN36  1                                           CER050
+     C                     MOVE *ON       *IN36                                               CER050
+     C                     MOVE *BLANKS   DDAPRR                                              CER050
+     C                     MOVE APRC      DDAPRR                                              CER050
+      *                                                                                       CER050
+     C           DNUMI     CHAINDLAPRHI0             99                                       CER050
+     C           *IN99     IFEQ *OFF                                                          CER050
+     C                     MOVE IAPRR     ZFLD15                                              CER050
+     C                     Z-ADD2         ZDECS                                               CER050
+     C                     EXSR ZSEDIT                                                        CER050
+     C                     MOVE ZOUT21    DDAPRP  8                                           CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDSR                                                              CER050
+      *****************************************************************                       CER050
+      *  RSTAPR - Format Annualised Percentage Rate                   *                       CER050
+      *****************************************************************                       CER050
+     C           RSTAPR    BEGSR                                                              CER050
+     C**********           MOVE *ON       *IN36                                               CER050
+     C                     MOVE SVIN36    *IN36                                               CER050
+     C                     ENDSR                                                              CER050
       *****************************************************************                       234688
       /EJECT                                                                                  234688
       *****************************************************************                       234688
@@ -26172,6 +26305,8 @@
      O                         DDFBRT    39                               CDL019
      O                         DDAIR     51                               CDL020
      O                 54      DDREFR    65                                                   CDL049
+     O                         DDAPRR    66                                                   CER050
+     O                         DDAPRP    74                                                   CER050
       *                                                                   CDL016
       *                                                                                       CAS009
      O        E                DRADIF                                                         CAS009

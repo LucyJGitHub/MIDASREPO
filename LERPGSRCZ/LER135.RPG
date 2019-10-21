@@ -22,8 +22,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD052410           Date 16May19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054318           Date 10Sep19               *
+      *                 MD053946           Date 17Jul19               *
+      *                 MD051883           Date 04Apr19               *
+      *                 261205A            Date 20Aug19               *
+      *                 MD053295           Date 13Apr19               *
+      *                 MD052410           Date 16May19               *
       *                 MD052952           Date 25Mar19               *
       *                 MD050139           Date 23Mar18               *
       *                 MD050111           Date 17Apr18               *
@@ -274,11 +279,22 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  MD054318 - Back-valued repayment does not generate a reversal*
+      *             for accrual. Applied fix MD-52410                 *
+      *  MD053946 - Cross ccy settlement entries not generated for    *
+      *             calculated loan fee, auto settle ‘C’ and settled  *
+      *             against nostro account                            *
+      *  MD051883 - CLE031: Changes to Value Date Account Keys        *
+      *  261205A - Incorrect lending fee accrual for calc basis 6.    *
+      *            Consider the decimal numbers of INT6DY if fee has  *
+      *            calculation basis 6.                               *
+      *          - Applied for MD053920 (Data structure only)         *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
       *  MD052410 - Back-valued repayment does not generate a reversal*
-      *             for accrual.                                      *      
+      *             for accrual.                                      *
       *  MD052952 - LE Fees Type 06 Calculated on Facility Amount     *
       *             and not Undrawn Amount.                           *
       *           - WKPIND not set before executing subroutine ACCRUE *
@@ -286,12 +302,12 @@
       *            introduced by CLE071.                              *
       *  MD050139 - AOSARDR0 called every time causing performance    *
       *             issue. Recompile due to changes in /COPY          *
-      *             ZFREQ/ZFRQ*.                                      *      
+      *             ZFREQ/ZFRQ*.                                      *
       *  MD050111 - Component LEC0701 failed due to DBERR 18. CLE148  *
       *             introduced alphanumeric loan numbers and as such  *
       *             can no longer test for facility with 'F' in 1st   *
       *             character in LNFRA. Test with blank instead since *
-      *             loan reference can never contain blanks.          *      
+      *             loan reference can never contain blanks.          *
       *  MD051940 - PDCL X, Y, Z amount is incorrect as a result of   *
       *             conversion rounding error.                        *
       *  MD051969 - Accrual account key was considered as a repayment *
@@ -1929,6 +1945,12 @@
      I                                    P   9  125HIFRT3                                   BUG8762
      I                                    P  13  165HIFRT4                                   BUG8762
      I                                    P  17  205HIFRT5                                   BUG8762
+      *                                                                                      261205A
+      ** NUMBER OF DAYS DATA STRUCTURE                                                       261205A
+      *                                                                                      261205A
+     I            DS                                                                         261205A
+     I                                        1  159WDAYS                                    261205A
+     I                                        1   60WDAYSP                                   261205A
      I            DS                                                                        MD031473
       ** Loan Fee Amounts Data structure                                                    MD031473
      I                                    P   1  300@HLAMT                                  MD031473
@@ -6995,6 +7017,8 @@
       *
      C           GENKEY    BEGSR
      C/COPY WNCPYSRC,LEH00691
+     C                     MOVEL'Y'       GENKY   1                                         MD051883
+     C                     MOVEL'Y'       FCTYFL  1                                         MD051883
       *                                                                                     AR567790
       ** Clear LKOSAC to prevent the field to contain                                       AR567790
       ** the previous account key LKOSAC                                                    AR567790
@@ -7572,10 +7596,20 @@
      C                     WRITELKEYF2DF                                                      CLE134
      C                     CLEARLKOTHA                                                      MD051242
      C                     ELSE                                                             AR217562
+     C           WRKPRC    IFEQ 'Y'                                                         MD051883
+     C           AKY,4     ANDEQ'R'                                                         MD051883
+     C                     MOVE 'V'       AKY,10                                            MD051883
+     C                     MOVEAAKY       LKAKEY                                            MD051883
+     C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF                                                    AR217562
      C                     ENDIF                                                            AR217562
       *                                                                                     AR217562
      C                     ELSE                                                               CLE134
+     C           WRKPRC    IFEQ 'Y'                                                         MD051883
+     C           AKY,4     ANDEQ'R'                                                         MD051883
+     C                     MOVE 'V'       AKY,10                                            MD051883
+     C                     MOVEAAKY       LKAKEY                                            MD051883
+     C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF
      C                     ENDIF                                                              CLE134
      C/COPY WNCPYSRC,LEH01204
@@ -7721,6 +7755,7 @@
      C***/COPY*WNCPYSRC,LEH00990***                                                           CFC006
      C/COPY WNCPYSRC,LEH00990                                                               MD020563
      C           SUPFLG    IFNE 'Y'                                                           CFC006
+     C                     Z-ADDLKEAMT    EAMT0                                             MD051883
      C                     WRITELER135A3
      C***/COPY*WNCPYSRC,LEH00991***                                                           CFC006
      C/COPY WNCPYSRC,LEH00991                                                               MD020563
@@ -7770,6 +7805,11 @@
      C           CLE134    ANDEQ'Y'                                                         MD051969
      C********** FEAUTO    ANDEQ'Y'                                                MD051242 MD051969
      C           FEAUTO    ANDNE'C'                                                         MD051959
+     C           CLE031    OREQ 'Y'                                                         MD053946
+     C           *IN61     ANDEQ'1'                                                         MD053946
+     C           CLE134    ANDEQ'Y'                                                         MD053946
+     C           FEAUTO    ANDEQ'C'                                                         MD053946
+     C           OATYP     ANDEQ'N'                                                         MD053946
      C                     EXSR SETTLE                                                        CLE031
      C                     ENDIF                                                              CLE031
       *                                                                                       CLE034
@@ -7793,6 +7833,7 @@
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C                     MOVE *BLANKS   WATYPE                                              CLE134
+     C                     MOVEL'N'       GENKY                                             MD051883
       *
      C                     ENDSR
       *
@@ -11204,6 +11245,29 @@
      C                     WRITELKEYFEDF                                                      CLE031
      C                     EXSR PRTEVT                                                        CLE031
      C                     END                                                                CLE031
+     C           GENKY     IFEQ 'Y'                                                         MD051883
+     C                     MOVE AKY,7     SAV7    1                                         MD051883
+     C                     MOVE AKY,10    SAV10   1                                         MD051883
+     C           FCTYFL    IFEQ 'Y'                                                         MD051883
+     C                     MOVE AKY,4     SAV4    1                                         MD051883
+     C                     MOVE 'R'       AKY,4                                             MD051883
+     C                     ELSE                                                             MD051883
+     C                     MOVE AKY,3     SAV3    1                                         MD051883
+     C                     MOVE 'R'       AKY,3                                             MD051883
+     C                     ENDIF                                                            MD051883
+     C                     MOVE ' '       AKY,7                                             MD051883
+     C                     MOVE 'J'       AKY,10                                            MD051883
+     C                     MOVEAAKY       LKAKEY                                            MD051883
+     C                     WRITELKEYFEDF                                                    MD051883
+     C                     MOVE SAV7      AKY,7                                             MD051883
+     C                     MOVE SAV10     AKY,10                                            MD051883
+     C           FCTYFL    IFEQ 'Y'                                                         MD051883
+     C                     MOVE SAV4      AKY,4                                             MD051883
+     C                     ELSE                                                             MD051883
+     C                     MOVE SAV3      AKY,3                                             MD051883
+     C                     ENDIF                                                            MD051883
+     C                     EXSR PRTEVT                                                      MD051883
+     C                     ENDIF                                                            MD051883
       *                                                                                       CLE031
      C           WRKFCY    IFEQ BJCYCD                                                        CLE031
      C                     Z-ADDWRKAMT    BASAMT                                              CLE031
@@ -12534,6 +12598,8 @@
       *****************************************************************                       CLE073
       *                                                                                       CLE073
      C           GENKYL    BEGSR                                                              CLE073
+     C                     MOVEL'Y'       GENKY                                             MD051883
+     C                     MOVEL'N'       FCTYFL                                            MD051883
       *                                                                                       CLE073
       ** Ignore if key amount zero.                                                           CLE073
       *                                                                                       CLE073
@@ -12979,9 +13045,19 @@
      C                     WRITELKEYF2DF                                                      CLE134
      C                     CLEARLKOTHA                                                      MD051242
      C                     ELSE                                                             AR217562
+     C           WRKPRC    IFEQ 'Y'                                                         MD051883
+     C           AKY,3     ANDEQ'R'                                                         MD051883
+     C                     MOVE 'V'       AKY,10                                            MD051883
+     C                     MOVEAAKY       LKAKEY                                            MD051883
+     C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF                                                    AR217562
      C                     ENDIF                                                            AR217562
      C                     ELSE                                                               CLE134
+     C           WRKPRC    IFEQ 'Y'                                                         MD051883
+     C           AKY,3     ANDEQ'R'                                                         MD051883
+     C                     MOVE 'V'       AKY,10                                            MD051883
+     C                     MOVEAAKY       LKAKEY                                            MD051883
+     C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF                                                      CLE073
      C                     ENDIF                                                              CLE134
       *                                                                                       CLE073
@@ -13125,6 +13201,7 @@
      C***/COPY*WNCPYSRC,LEH01003***                                                           CFC006
      C/COPY WNCPYSRC,LEH01003                                                               MD020563
      C           SUPFLG    IFNE 'Y'                                                           CFC006
+     C                     Z-ADDLKEAMT    EAMT0                                             MD051883
      C                     WRITELER135A3                                                      CLE073
      C***/COPY*WNCPYSRC,LEH01004***                                                           CFC006
      C/COPY WNCPYSRC,LEH01004                                                               MD020563
@@ -13175,6 +13252,11 @@
      C           CLE134    ANDEQ'Y'                                                         MD051242
      C********** FEAUTO    ANDEQ'Y'                                                MD051242 MD051969
      C           FEAUTO    ANDNE'C'                                                         MD051969
+     C           CLE031    OREQ 'Y'                                                         MD053946
+     C           *IN61     ANDEQ'1'                                                         MD053946
+     C           CLE134    ANDEQ'Y'                                                         MD053946
+     C           FEAUTO    ANDEQ'C'                                                         MD053946
+     C           OATYP     ANDEQ'N'                                                         MD053946
      C                     EXSR SETTLE                                                      MD051242
      C                     ENDIF                                                            MD051242
       *                                                                                     MD051242
@@ -13183,6 +13265,7 @@
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C                     MOVE *BLANKS   WATYPE                                              CLE134
+     C                     MOVEL'N'       GENKY                                             MD051883
       *                                                                                       CLE134
      C                     ENDSR                                                              CLE073
       *                                                                                       CLE073

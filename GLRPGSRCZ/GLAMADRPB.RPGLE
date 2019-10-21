@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -96,7 +98,7 @@
      F***APILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                      CSC011 CGL029
      FAPILOGL1  UF   E           K DISK    INFSR(*PSSR) USROPN                                CGL029
      F                                     COMMIT                                             CSC011
- 
+
      F/COPY WNCPYSRC,GLAMADPF01
      FGLIAMADY0 UF   E           K DISK    INFSR(*PSSR)                                      LLN022A
      F                                     RENAME(GLIAMADD0 : IAMADD0)                       LLN022A
@@ -121,38 +123,38 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -160,7 +162,7 @@
                                                                                 CAP014
      D InvAc         E DS                  EXTNAME(GLIAMADPD)                   CAP014
      D InvExt        E DS                  EXTNAME(GLAMRXPD)                                  CER001
- 
+
      D* Account Number
      D**ACNUMB**       DS            22                                                       CGL029
      D  ACNUMB         DS            28                                                       CGL029
@@ -176,10 +178,10 @@
      D  ACACOD                16     25                                                       CGL029
      D  FLD3                  26     26                                                       CGL029
      D  ACACSQ                27     28                                                       CGL029
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
                                                                                               CSC011
@@ -195,10 +197,10 @@
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WCMTJOBS               4    103A                                                      CSC022
       ** Commitment Control dataarea                                                          CSC022
- 
+
      D ErrorText       S             52    DIM(1) CTDATA PERRCD(1)
       ** Array containing messages
- 
+
       ** Array to hold commitment jobs name                                                   CSC022
      D WCMT            S             10A   DIM(10)                                            CSC022
                                                                                               CSC022
@@ -206,17 +208,17 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Fields defined for Enhancement CSC011                                                CSC011
      D CSC011          S              1A                                                      CSC011
      D KMsgType        S              8A                                                      CSC011
      D KFrntOffID      S             20A                                                      CSC011
      D KFrntAscID      S             20A                                                      CGL029
      D KTimeStamp      S                   LIKE(@TMESTPSEL)                                   CSC011
- 
+
       ** Fields for enhancement CSC022                                                        CSC022
      D CSC022          S              1A   INZ('N')                                           CSC022
      D WCmtSk          S              1A                                                      CSC022

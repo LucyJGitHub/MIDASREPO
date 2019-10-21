@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -82,7 +84,7 @@
       *  CDE002 - Data Export - CCRM Revenue Analysis.                *
       *                                                               *
       *****************************************************************
- 
+
      FHISTS     IF   E           K DISK
      F                                     INCLUDE(HISTSHPF: HISTSHQF)
      F                                     PREFIX(H_)
@@ -92,7 +94,7 @@
      FDEHPOSNPD O    E           K DISK
      FDEHEVNTPD O    E           K DISK
      FDEHCASHPD O    E           K DISK
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -110,39 +112,39 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
+
       *
       **  Loan types
      D TABSEQ          S              2  0 DIM(12) CTDATA PERRCD(1)
      D TABTYP          S             18    DIM(12) ALT(TABSEQ)
- 
- 
+
+
       * Power array
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)              POWERS OF 10
- 
- 
+
+
      D LOANCL        E DS                  EXTNAME(CLOANCL) PREFIX(CL_)
- 
+
      D LOANCK        E DS                  EXTNAME(CLOANCK) PREFIX(CK_)
- 
+
      D HISTHM        E DS                  EXTNAME(HISTSHM) PREFIX(HM_)
- 
+
      D HISTHN        E DS                  EXTNAME(HISTSHN) PREFIX(HN_)
- 
- 
+
+
      D W#TABT          DS
      D  W#TYP                  1      1
      D  W#ASLI                 2      2
      D  W#TDES                 3     18
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -153,16 +155,16 @@
       ** External DS for BASE RATE HISTORY details
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** Extract Control Data
- 
+
      D*WKLOANREF       S              6  0 INZ(*ZEROS)                                        CLE148
      D WKLOANREF       S              6    INZ(*BLANKS)                                       CLE148
      D WKLOANREFA      S              6    INZ(*BLANKS)
      D WKLOANREFB      S              6    INZ(*BLANKS)
       ** Declared Variables - Work Loan Reference
- 
+
      D WKTREF          S             13    INZ(*BLANKS)
       ** Declared Variable - Work Transaction Reference
       *
@@ -225,12 +227,12 @@
       * reference is the Mirror Loan Number).
       *
      C                   MOVEL     CL_LNRF       T#TREF
- 
+
      C                   IF        CL_PTYP = 66 or
      C                             CL_PTYP = 67 or
      C                             CL_PTYP = 69 or
      C                             CL_PTYP = 72
- 
+
       * For parts sold, CL_OLNO holds the Sale of Loan Number.
       * For parts purchased, CL_OLNO holds the Original Borrower.
       * Set CL_OLNO to always hold the Original Borrower for use later.
@@ -238,9 +240,9 @@
      C**********         EVAL      WKLOANREF = CL_OLNO                                        CSD027
      C                   MOVEL     CL_OLNO       WKLOANREF                                    CSD027
      C     WKLOANREF     CHAIN     CLOANCLF                           99
- 
+
      C                   IF        *IN99 = '0'
- 
+
      C**********         IF        SL_MLNR <> 0                                               CLE148
      C                   IF        SL_MLNR <> *BLANKS                                         CLE148
      C                   EVAL      WKLOANREF = SL_MLNR
@@ -248,16 +250,16 @@
      C                   ELSE
      C                   EVAL      CL_OLNO = SL_CNUM
      C                   ENDIF
- 
+
      C                   MOVE      WKLOANREF     WKLOANREFA
      C                   MOVE      CL_LNRF       WKLOANREFB
      C                   EVAL      WKTREF = WKLOANREFA + '/' + WKLOANREFB
      C                   MOVEL     WKTREF        T#TREF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Transaction Type
      C                   MOVEL     CL_LTYP       T#TRTP
       *
@@ -286,20 +288,20 @@
       * with recourse, then use original borrower)
       *
      C                   MOVEL     CL_CNUM       T#CPTY
- 
+
      C                   IF        CL_PTYP = 66 or
      C                             CL_PTYP = 67 or
      C                             CL_PTYP = 69 or
      C                             CL_PTYP = 72
- 
+
      C                   IF        CL_RCSI = 'Y' and
      C**********                   CL_OLNO <> 0                                               CSD027
      C                             CL_OLNO <> *BLANKS                                         CSD027
      C                   EVAL      T#CPTY = CL_OLNO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Risk Customer (normally transaction customer unless part purchased
       * or part sold without recourse, then use original borrower)
       *
@@ -309,27 +311,27 @@
      C                             CL_PTYP = 65 or
      C                             CL_PTYP = 68 or
      C                             CL_PTYP = 71
- 
+
      C**********         IF        CL_OLNO <> 0                                               CSD027
      C                   IF        CL_OLNO <> *BLANKS                                         CSD027
      C                   EVAL      T#RCST = CL_OLNO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        CL_PTYP = 66 or
      C                             CL_PTYP = 67 or
      C                             CL_PTYP = 69 or
      C                             CL_PTYP = 72
- 
+
      C                   IF        CL_RCSI <> 'Y' and
      C**********                   CL_OLNO <> 0                                               CSD027
      C                             CL_OLNO <> *BLANKS                                         CSD027
      C                   EVAL      T#RCST = CL_OLNO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Local industry
      C                   MOVEL     CL_LIND       T#LICD
       *
@@ -473,7 +475,7 @@
      C                             CL_MARG = 0 and                                            208221
      C                             CL_PTYP < 70 and                                           208221
      C                             P#FSGN = *BLANK
- 
+
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN           7
      C                   PARM      '*KEY   '     @OPTION           7
@@ -481,13 +483,13 @@
      C                   PARM      DERDFR        @DEFFUNRT         2 0
      C                   PARM      P#IACD        @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
- 
+
      C                   IF        @RETURN = *BLANKS
      C                   EVAL      P#FSRP = G0CBSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Cost of Funds Rate
      C                   SELECT
       *
@@ -781,14 +783,14 @@
       * funding rate
      C                   Z-ADD     H_FSRP        E#FSRP
      C                   MOVE      H_FRCF        E#CRCH
- 
+
       * if rate and chg ind not set, refer to Historic Base Rates file
       ** only when margin has not been set                                                    208221
      C                   IF        E#FSRP = 0 AND
      C                             CL_MARG = 0 and                                            208221
      C                             CL_PTYP < 70 and                                           208221
      C                             E#CRCH = *BLANK
- 
+
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN
      C                   PARM      '*KEY   '     @OPTION
@@ -796,14 +798,14 @@
      C                   PARM      DERDFR        @DEFFUNRT
      C                   PARM      E#PRDT        @HISTDATE
      C     SDBSHS        PARM      SDBSHS        DSFDY
- 
+
      C                   IF        @RETURN = *BLANKS
      C                   EVAL      E#FSRP = G0CBSR
      C                   EVAL      E#CRCH = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   END
       *
       * A base rate code change
@@ -863,7 +865,7 @@
      C                             CL_MARG = 0 and                                            208221
      C                             CL_PTYP < 70 and                                           208221
      C                             E#FSGN = *BLANK
- 
+
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN
      C                   PARM      '*KEY   '     @OPTION
@@ -871,14 +873,14 @@
      C                   PARM      DERDFR        @DEFFUNRT
      C                   PARM      E#PRDT        @HISTDATE
      C     SDBSHS        PARM      SDBSHS        DSFDY
- 
+
      C                   IF        @RETURN = *BLANKS
      C                   EVAL      E#FSRP = G0CBSR
      C                   EVAL      E#CRCH = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     H_CALC        IFNE      0
      C                   MOVE      'Y'           E#IRCH
      C                   MOVE      'Y'           E#CRCH
@@ -902,7 +904,7 @@
       * A Multi-currency Rollover
       *
      C     H_AMTP        IFEQ      'MC'
- 
+
      C                   MOVEL     'RO'          E#EVTP
      C                   Z-ADD     H_BRTT        E#BRTT
      C                   Z-ADD     H_BRTE        E#BRTE
@@ -917,12 +919,12 @@
      C                   EXSR      ACSCCY
      C                   EVAL      E#NCDP = A6NBDP
      C                   EVAL      E#NMDP = A6NBDP
- 
+
      C                   IF        E#FSRP = 0 AND
      C                             CL_MARG = 0 and                                            208221
      C                             CL_PTYP < 70 and                                           208221
      C                             E#FSGN = *BLANK
- 
+
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN
      C                   PARM      '*KEY   '     @OPTION
@@ -930,35 +932,35 @@
      C                   PARM      DERDFR        @DEFFUNRT
      C                   PARM      E#PRDT        @HISTDATE
      C     SDBSHS        PARM      SDBSHS        DSFDY
- 
+
      C                   IF        @RETURN = *BLANKS
      C                   EVAL      E#FSRP = G0CBSR
      C                   EVAL      E#CRCH = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     H_CALC        IFNE      0
      C                   MOVE      'Y'           E#IRCH
      C                   MOVE      'Y'           E#CRCH
- 
+
      C                   CALLB     'DECVTICDL'
      C                   PARM                    W#RTCD
      C                   PARM                    W#ERMS
      C                   PARM                    W#ICBS
      C                   PARM                    W#ICMT
- 
+
      C                   IF        W#RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DECVTICDL'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      E#ICMT = W#ICMT
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Import history event
       *
      C     E#EVTP        IFNE      *BLANK
@@ -1065,10 +1067,10 @@
      C                   KFLD                    CL_LNRF
       *
       * Get extract control data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C                   IN        DEEXTCTL
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

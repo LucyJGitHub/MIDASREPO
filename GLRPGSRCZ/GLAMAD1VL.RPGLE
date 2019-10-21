@@ -10,9 +10,11 @@
       *  GLAMAD1VL -  Account Master Details Validation               *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
-      *                                                               *	
-      *  Last Amend No. AR1021393          Date 13Nov18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                                                               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 AR1021393          Date 13Nov18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 CGL165             Date 23Feb15               *
       *                 CER069             Date 03Jul14               *
@@ -81,6 +83,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  CER050 - Annualised Percentage Rate                          *
       *  AR1021393 - Wrong balances on account statement. If stmt freq*
       *              changed from non-'E' to 'E', issue warning msg   *
       *              RE72060. (Child: AR1021396)                      *
@@ -334,6 +339,7 @@
      D  DDIBANOK                      1A                                        CFT004
      D  DD24COK                       1A                                                    BUG24157
      D  DDEFDTOK                      1A                                                      CRE075
+     D  DDAprcOK                      1A                                                      CER050
  
      D KCNUM           S                   LIKE(DDCUSN)                                     BUG16622
      D KCCY            S                   LIKE(DDCCY)                                      BUG16622
@@ -460,6 +466,7 @@
      D CER069          S              1A                                                      CER069
      D CGL165          S              1A                                                      CGL165
      D CGL184          S              1A                                                      CGL184
+     D CER050          S              1A                                                      CER050
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -764,6 +771,11 @@
      C                   ENDIF                                                              BUG16622
       *
      C/COPY OFCPYSRCZ,CGL123_003                                                              CGL123
+      *                                                                                       CER050
+      ** Validate APR Flag                                                                    CER050
+     C                   If        CER050 =  'Y'                                              CER050
+     C                   EXSR      SRVAPRF                                                    CER050
+     C                   EndIf                                                                CER050
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -2171,6 +2183,50 @@
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
+      *****************************************************************                       CER050
+     C/EJECT                                                                                  CER050
+      *****************************************************************                       CER050
+      ** SRVAPRF - Validate APR Flag                                                          CER050
+      *****************************************************************                       CER050
+     C     SRVAPRF       BEGSR                                                                CER050
+                                                                                              CER050
+      * Reset variables updated by each module                                                CER050
+                                                                                              CER050
+     C                   EXSR      RESETERRS                                                  CER050
+      *                                                                                       CER050
+     C                   CALL      'GLVAPRF'                                                  CER050
+      *                                                                                       CER050
+      * INPUTS                                                                                CER050
+      *                                                                                       CER050
+      ** Return Code                                                                          CER050
+     C                   Parm                    RetCodeOut                                   CER050
+      *                                                                                       CER050
+      ** APR Screen fields                                                                    CER050
+     C                   Parm                    DDCUSN                                       CER050
+     C                   Parm                    DDAPRC                                       CER050
+      *                                                                                       CER050
+      * OUTPUTS                                                                               CER050
+      *                                                                                       CER050
+      * Error fields/message IDs/message data (arrays) from/to caller                         CER050
+     C                   PARM                    FldNamXAr                                    CER050
+     C                   PARM                    MsgIDXAr                                     CER050
+     C                   PARM                    MsgDtaXAr                                    CER050
+     C                   PARM                    Idx                                          CER050
+      *                                                                                       CER050
+      * Warning fields/message IDs/message data (arrays) from/to caller                       CER050
+     C                   PARM                    WFldNmXar                                    CER050
+     C                   PARM                    WMsgIdXar                                    CER050
+     C                   PARM                    WMsgDtXAr                                    CER050
+     C                   PARM                    WIdx                                         CER050
+      *                                                                                       CER050
+      ** APR - Ok                                                                             CER050
+     C                   Parm                    DDAPRCOK                                     CER050
+                                                                                              CER050
+      * Update error info with that returned from the validation module                       CER050
+                                                                                              CER050
+     C                   EXSR      UPDATERRS                                                  CER050
+      *                                                                                       CER050
+     C                   ENDSR                                                                CER050
       *****************************************************************
      C/EJECT                                                                                  CUT009
       /COPY WNCPYSRC,GLAMAD1V42                                                               CUT009
@@ -2287,6 +2343,9 @@
      C                   EVAL      AMEFDT = WWEfDt                                            CRE075
      C                   ENDIF                                                                CRE075
                                                                                               CRE075
+     C                   If        CER050 = 'Y'                                               CER050
+     C                   Eval      BXAPRC = DDAPRC                                            CER050
+     C                   EndIf                                                                CER050
      C                   ENDSR
       *****************************************************************                     BUG22747
       /EJECT                                                                                BUG22747
@@ -2412,6 +2471,10 @@
      C                   PARM                    AUTHRQ            1                          CSD012
       * Authorisation Mode                                                                    CSD012
      C                   PARM                    AUTHMD            1                          CSD012
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       **  GET ZMUSER to access default branch.
       *
@@ -2707,6 +2770,19 @@
      C                   EVAL      CGL184 = 'Y'                                               CGL184
      C                   ENDIF                                                                CGL184
       *                                                                                       262025
+      ** Check if CER050 is installed.                                                        CER050
+                                                                                              CER050
+     C                   CALLB     'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       PRtCd                                        CER050
+     C                   PARM      '*VERIFY'     POptn                                        CER050
+     C                   PARM      'CER050'      PSard                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+                                                                                              CER050
+     C                   Eval      CER050 = 'N'                                               CER050
+     C                   If        PRtCd = *Blanks                                            CER050
+     C                   Eval      CER050 = 'Y'                                               CER050
+     C                   Endif                                                                CER050
+                                                                                              CER050
      C     KLActx        KLIST                                                                CER048
      C                   KFLD                    KFCusn                                       CER048
      C                   KFLD                    KFCtax                                       CER048

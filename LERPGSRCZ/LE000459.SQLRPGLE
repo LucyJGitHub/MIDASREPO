@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD036674           Date 26Nov15               *      
-      *  Prev Amend No. MD051931           Date 23Sep18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054326           Date 18Sep19               *      
+      *                 MD036674           Date 26Nov15               *
+      *                 MD051931           Date 23Sep18               *
       *                 MD051946           Date 23Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
@@ -39,8 +41,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  MD054326 - Repayment amount debited from settlement account  *
+      *             showed discrepancy against balance check          *
+      *             on LEC000496 report (Recompile)                   *      
       *  MD036674 - CLE164 Downgrade Performance Issues               *
-      *           - Applied for MD-48954                              *      
+      *           - Applied for MD-48954                              *
       *  MD051931 - Oustanding PDCL Z amount not paid but has         *
       *             sufficient balance                                *
       *  MD051946 - LEACCTPD amount was converted first then reduced  *

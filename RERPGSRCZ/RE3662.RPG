@@ -16,8 +16,10 @@
      F*         to it in the various Migration Data Libraries         *
      F*         must be recompiled.                                   *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR836982           Date 16May14               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. AR666241           Date 12Aug19               *      
+      *                 MD046248           Date 27Oct17               *
+      *                 AR836982           Date 16May14               *
       *                 CER071             Date 01Aug16               *
       *                 MD035448           Date 01Dec15               *
       *                 MD031299           Date 27Feb15               *
@@ -157,6 +159,12 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  AR666241 - Discrepancy in RE3810 report due HISB being       *
+      *             updated twice with WHT. Caused by CDL013.         *
+      *             Apply 216656 to ensure HISB is updated once       *
+      *             (Child: AR666242)                                 *
+      *           - Applied for MD054157.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR836982 - REC62N failed dur to inseted account with back-   *
       *             valued rate change date. To avoid REC62N failure, *
@@ -6022,6 +6030,7 @@
       *                                                                                       CDL013
       ** If CDL013 installed, calculate WHT amount                                            CDL013
      C           CDL013    IFEQ '1'                                                           CDL013
+     C           KVDATE    ANDEQCNCID                                                       AR666241
       *                                                                                       CDL013
      C                     Z-ADDCAIC      WINTC                                               CDL013
      C                     Z-ADDDAIC      WINTD                                               CDL013
@@ -6754,22 +6763,22 @@
      C                     END                             - E1
      C*
      C           SCCI      IFEQ 'Y'                        - B1
-      *                                                                                       CDL013
-      ** If CDL013 installed, calculate WHT amount                                            CDL013
-     C           CDL013    IFEQ '1'                                                           CDL013
-      *                                                                                       CDL013
-     C                     Z-ADDWCAIC     WINTC                                               CDL013
-     C                     Z-ADDWDAIC     WINTD                                               CDL013
-     C                     EXSR #ECALC                                                        CDL013
-      *                                                                                       CDL013
-      ** If CDL013 NOT installed                                                              CDL013
-     C                     ELSE                                                               CDL013
+      **********                                                                     CDL013 AR666241
+      ***If*CDL013*installed,*calculate*WHT*amount*********************              CDL013 AR666241
+     C********** CDL013    IFEQ '1'                                                  CDL013 AR666241
+      **********                                                                     CDL013 AR666241
+     C**********           Z-ADDWCAIC     WINTC                                      CDL013 AR666241
+     C**********           Z-ADDWDAIC     WINTD                                      CDL013 AR666241
+     C**********           EXSR #ECALC                                               CDL013 AR666241
+      **********                                                                     CDL013 AR666241
+      ***If*CDL013*NOT*installed***************************************              CDL013 AR666241
+     C**********           ELSE                                                      CDL013 AR666241
      C*                                                                   S01408
      C/COPY WNCPYSRC,RE3662CCP9                                           S01408
      C*                                                                   S01408
      C                     SUB  WCAIC     WHISB
       *                                                                                       CDL013
-     C                     ENDIF                                                              CDL013
+     C**********           ENDIF                                                     CDL013 AR666241
      C*                                                                   S01408
      C/COPY WNCPYSRC,RE3662CP10                                           S01408
      C*                                                                   S01408
@@ -9638,6 +9647,9 @@
       *                                                                                       CDL013
       ** Otherwise, calculate WHT amount                                                      CDL013
      C                     ELSE                                                               CDL013
+      *                                                                                     AR666241
+     C                     ADD  CSGACI    WINTC                                             AR666241
+     C                     ADD  CSGADI    WINTD                                             AR666241
       *                                                                                       CDL013
       ** If Retail Netting of Debit Interest is 'Y',                                          CDL013
       ** Taxable amount = Credit Acrrued Int - Debit Acrrued Int                              CDL013
@@ -9775,6 +9787,9 @@
      C                     Z-ADD0         WTXAMT                                              CDL013
      C                     Z-ADD0         WWHT                                                CDL013
      C                     ENDIF                                                              CDL013
+      *                                                                                     AR666241
+     C                     SUB  CSGACI    WINTC                                             AR666241
+     C                     SUB  CSGADI    WINTD                                             AR666241
       *                                                                                       CDL013
       ** Update history balance                                                               CDL013
      C                     SUB  WINTC     WHISB                                               CDL013

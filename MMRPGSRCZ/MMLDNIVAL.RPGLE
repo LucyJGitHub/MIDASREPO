@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050209           Date 27Feb19               *
-      *  Prev Amend No. MD047719           Date 24Jul18               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD047719           Date 24Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 MD037869A          Date 28Mar16               *
@@ -154,6 +155,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD050209 - Removed Interest Payment Frequency Validation     *
       *  MD047719 - Pass 'Action Code' as parameter to MMVTOIT for    *
       *             validation purposes. Apply fix for MD-51582.      *
@@ -673,6 +677,7 @@
      D  DDRDMTOK                      1A                                                      CRE073
      D  DDRDFDOK                      1A                                                      CRE073
      D  DDAIROK                       1A                                                    AR876535
+     D  DDAprcOk                      1A                                                      CER050
 
       ** Error flags from Dates validation routine
      D ErrDealDat      S              1A   INZ('N')
@@ -829,6 +834,7 @@
      D WMsgDtaErr      S                   DIM(ArrayMax)                                      CDL096
      D                                     LIKE(FldNameArr)                                   CDL096
      D CER069          S              1A                                                    MD030409
+     D CER050          S              1A                                                      CER050
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -4211,6 +4217,58 @@
                                                                                              BUG5169
      C                   ENDIF                                                               BUG5169
 
+      *  *-------------------------------------------*                                        CER050
+      *  * Validate APR Details if CER050 on         *                                        CER050
+      *  *-------------------------------------------*                                        CER050
+     C                   If        CER050 = 'Y'                                               CER050
+                                                                                              CER050
+     C                   Exsr      RESETERRS                                                  CER050
+                                                                                              CER050
+     C                   Call      'MMVAPRF'                                                  CER050
+      *                                                                                       CER050
+      * INPUTS                                                                                CER050
+      ** Return Code                                                                          CER050
+     C                   PARM                    ReturnCode                                   CER050
+      *                                                                                       CER050
+     C                   PARM      DDAPRC        P_APRC            1                          CER050
+     C                   PARM      BBCUST        P_Cust                                       CER050
+     C                   PARM      DDTYPE        P_DType                                      CER050
+     C                   PARM      DDSTYP        P_DSType                                     CER050
+     C                   PARM      DDACTN        P_ACTN            1                          CER050
+     C                   PARM                    MSG1                                         CER050
+     C                   PARM                    WMSGID1                                      CER050
+                                                                                              CER050
+     C     MSG1          IFNE      *BLANK                                                     CER050
+     C                   ADD       1             Idx                                          CER050
+     C                   EVAL      FldNameArr(Idx) = 'DDAPRC'                                 CER050
+     C                   EVAL      MsgIDArr(Idx) = MSG1                                       CER050
+     C                   ELSE                                                                 CER050
+     C                   EVAL      DDAprcOK = 'Y'                                             CER050
+     C     DDAPRC        IFEQ      *BLANK                                                     CER050
+     C                   EVAL      DDAPRC = P_APRC                                            CER050
+     C                   ENDIF                                                                CER050
+     C     DDAPRC        IFNE      'Y'                                                        CER050
+     C     DDAPRC        ANDNE     'N'                                                        CER050
+     C     DDAPRC        ANDNE     *Blanks                                                    CER050
+     C                   EVAL      DDAPRC = P_APRC                                            CER050
+     C                   ENDIF                                                                CER050
+     C                   ENDIF                                                                CER050
+                                                                                              CER050
+     C     WMSGID1       IFNE      *BLANK                                                     CER050
+     C                   ADD       1             WIdx                                         CER050
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAPRC'                                CER050
+     C                   EVAL      WMsgIDArr(WIdx) = WMSGID1                                  CER050
+     C                   EVAL      WarnGlobal = 'Y'                                           CER050
+     C                   ENDIF                                                                CER050
+                                                                                              CER050
+      ** Use the return code's value to set the field's OK flag                               CER050
+     C                   CALLB     'ZASETOKFLG'                                               CER050
+     C                   PARM                    DDAprcOK                                     CER050
+     C                   PARM                    ReturnCode                                   CER050
+     C                   PARM                    WarnGlobal                                   CER050
+                                                                                              CER050
+     C                   EndIf                                                                CER050
+                                                                                              CER050
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -4253,6 +4311,8 @@
      C                   PARM                    PayNostro
      C                   PARM                    FrontOffice                    CPB002
      C                   PARM                    ExtData                        CAP004
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPRR            8                        MD054028
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -5109,6 +5169,17 @@
      C                   EVAL      CER069 = 'N'                                             MD030409
      C                   ENDIF                                                              MD030409
                                                                                             MD030409
+                                                                                              CER050
+     C                   CallB     'AOSARDR0'                                                 CER050
+     C                   Parm      *Blanks       PRTCD             7                          CER050
+     C                   Parm      '*VERIFY'     POPTN             7                          CER050
+     C                   Parm      'CER050'      PSARD             6                          CER050
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
+      *                                                                                       CER050
+     C                   Move      'N'           CER050                                       CER050
+     C                   If        PRtcd = *Blanks                                            CER050
+     C                   Eval      CER050 = 'Y'                                               CER050
+     C                   Endif                                                                CER050
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
@@ -5357,6 +5428,11 @@
      C                   MOVEL     DDTXC1        IKTXC1                                       CGL165
      C                   MOVEL     DDTXC2        IKTXC2                                       CGL165
      C                   ENDIF                                                                CGL165
+                                                                                              CER050
+     C                   If        CER050 = 'Y'                                               CER050
+     C                   Movel     DDAPRC        IKAPRC                                       CER050
+     C                   Endif                                                                CER050
+                                                                                              CER050
      C                   ENDSR
       *****************************************************************                       CRE073
       /EJECT                                                                                  CRE073

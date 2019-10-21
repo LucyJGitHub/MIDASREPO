@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD043624           Date 23Jan17               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend NO. MD052465           Date 10Jan19               *
+      *  Prev Amend No. MD043624           Date 23Jan17               *
+      *                 MD046248           Date 05Feb18               *
       *                 MD042805           Date 05Jun17               *
       *                 MD036356           Date 20Oct15               *
       *                 MD035388           Date 20Oct15               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052465 - Not possible to capture mandatory US TIN for      *
+      *             FATCA reporting                                   *
       *  MD043624 - FATCA Information Complete Flag value not         *
       *             being saved                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -140,6 +143,42 @@
       ** Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
+      **  Short DS for access programs                                                      MD052465
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD052465
+     D TranInCRDD    E DS                  EXTNAME(SDCRDDPD)                                MD052465
+     D                                     PREFIX(CR)                                       MD052465
+                                                                                            MD052465
+     D PCrsdSDS        DS                                                                   MD052465
+     D  PCrsdS                      223A   DIM(30)                                          MD052465
+     D PCRSDT          DS                                                                   MD052465
+     D  DDCTRR                 1      2                                                     MD052465
+     D  DDREPT2                3      3                                                     MD052465
+     D  DDREPU                 4     13                                                     MD052465
+     D  DDREPD                14     19                                                     MD052465
+     D  DDREPM                20     25                                                     MD052465
+     D  DDREP1                26     89                                                     MD052465
+     D  DDREP2                90    153                                                     MD052465
+     D  DDEVD1               154    155                                                     MD052465
+     D  DDEVS1               156    158                                                     MD052465
+     D  DDEVD2               159    160                                                     MD052465
+     D  DDEVS2               161    163                                                     MD052465
+     D  DDEVD3               164    165                                                     MD052465
+     D  DDEVS3               166    168                                                     MD052465
+     D  DDEVD4               169    170                                                     MD052465
+     D  DDEVS4               171    173                                                     MD052465
+     D  DDEVD5               174    175                                                     MD052465
+     D  DDEVS5               176    178                                                     MD052465
+     D  DDTINN               179    203                                                     MD052465
+     D  DDEFFD               204    209                                                     MD052465
+     D  DDEXPD               210    215                                                     MD052465
+     D  DDCODO               216    216                                                     MD052465
+     D  DDJACM               217    217                                                     MD052465
+     D  DDMAIL2              218    218                                                     MD052465
+     D  DDPHON2              219    219                                                     MD052465
+     D  DDRPAY               220    220                                                     MD052465
+     D  DDCRSA               221    221                                                     MD052465
+     D  DDTINS               222    222                                                     MD052465
+     D  DDAUHO               223    223                                                     MD052465
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -172,6 +211,11 @@
      D PPTNC5          S              2A                                                    MD026693
      D PPTIN5          S             25A                                                    MD026693
      D WCTAX           S              2A                                                    MD026693
+     D X               S              2S 0                                                  MD052465
+     D PRTCD           S              7A                                                    MD052465
+     D POPTN           S              7A                                                    MD052465
+     D PSARD           S              6A                                                    MD052465
+     D CGL157          S              1A                                                    MD052465
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -270,6 +314,22 @@
      C                   MOVEL     PPTIN1        DDUTIN                                    MD026753A
      C                   ENDIF                                                             MD026753A
      C                   ENDIF                                                             MD026753A
+      *                                                                                     MD052465
+      ** Default US TIN in FATCA Information                                                MD052465
+      *                                                                                     MD052465
+     C                   IF        CGL157 = 'Y'                                             MD052465
+     C                   EVAL      PCrsdSDS = *BLANKS                                       MD052465
+     C                   EVAL      PCrsdSDS = TranInCRDD                                    MD052465
+     C                   EVAL      X = 1                                                    MD052465
+     C                   DOW       X <= 30                                                  MD052465
+     C                   EVAL      PCRSDT = PCrsdS(X)                                       MD052465
+     C                   IF        DDCTRR = 'US'                                            MD052465
+     C                   EVAL      DDUTIN = DDCTRR + DDTINN                                 MD052465
+     C                   LEAVE                                                              MD052465
+     C                   ENDIF                                                              MD052465
+     C                   EVAL      X = X + 1                                                MD052465
+     C                   ENDDO                                                              MD052465
+     C                   ENDIF                                                              MD052465
 
      C**********         IF        DDINFC = 'Y' AND                                         MD026997
      C**********                   DDINFCO = ' ' OR                                         MD026997
@@ -864,6 +924,7 @@
      C                   PARM                    DDAUSV            1                        MD027560
      C                   PARM                    PHasIndicia       1                        MD035388
      C                   PARM                    POrigin           1                        MD035388
+     C                   PARM                    TranInCRDD                                 MD052465
 
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
@@ -920,6 +981,29 @@
      C**********         OUT       LDA                                                     MD026693A
      C**********         EXSR      *PSSR                                                   MD026693A
      C**********         ENDIF                                                             MD026693A
+      *                                                                                     MD052465
+      ** Check if switchable feature CGL157 is switched on.                                 MD052465
+      *                                                                                     MD052465
+     C                   CALL      'AOSARDR0'                                               MD052465
+     C                   PARM      *BLANKS       PRTCD                                      MD052465
+     C                   PARM      '*VERIFY'     POPTN                                      MD052465
+     C                   PARM      'CGL157'      PSARD                                      MD052465
+      *                                                                                     MD052465
+      ** Database error                                                                     MD052465
+      *                                                                                     MD052465
+     C     PRTCD         IFNE      *BLANKS                                                  MD052465
+     C     PRTCD         ANDNE     '*NRF   '                                                MD052465
+     C                   MOVEL     'CGL157'      DBKEY                                      MD052465
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD052465
+     C                   MOVEL     '001'         DBASE                                      MD052465
+     C                   EXSR      *PSSR                                                    MD052465
+     C                   ENDIF                                                              MD052465
+                                                                                            MD052465
+     C     PRTCD         IFEQ      *BLANK                                                   MD052465
+     C                   MOVE      'Y'           CGL157                                     MD052465
+     C                   ELSE                                                               MD052465
+     C                   MOVE      'N'           CGL157                                     MD052465
+     C                   ENDIF                                                              MD052465
 
      C/COPY ZACPYSRC,DBFIELDS
 

@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054538           Date 08Oct19               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -79,6 +82,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054538 - Buffer issue on Rollover Maintenance              *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
@@ -510,6 +517,7 @@
      D ddRDFDOK        S              1A                                                      CRE073
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
+     D CER050          S              1A   INZ('N')                                         MD054538
                                                                                              CSF011A
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -540,6 +548,14 @@
      C                   MOVEL     Trans500      TranIn
      C**********         MOVEL     Infdata500    Infdata                                     CSF011A
      C                   MOVEL     Extdata500    Extdata
+     C                   IF        CER050 = 'Y'                                             MD054538
+     C                   EVAL      DDAPRC = %SUBST(Buffer:2310)                             MD054538
+     C                   IF        DDAPRC = 'Y'                                             MD054538
+     C                   EVAL      DDAPRR = %SUBST(Buffer:2311)                             MD054538
+     C                   ELSE                                                               MD054538
+     C                   EVAL      DDAPRR = *BLANKS                                         MD054538
+     C                   ENDIF                                                              MD054538
+     C                   ENDIF                                                              MD054538
 
       ** Generate a timestamp for this transaction
      C                   CALLB     'ZAGENTMSTM'
@@ -619,7 +635,10 @@
      C                   EVAL                    Buffer = TranIN                             BUG7154
      C**********                                 + InfData + InRecSttmt                      CSF011A
      C                                           + InRecSttmt                                CSF011A
-     C                                           + InPaySttmt + ExtData
+     C**********                                 + InPaySttmt + ExtData                     MD054538
+     C                                           + InPaySttmt                               MD054538
+     C                                           + DDAPRC + DDAPRR                          MD054538
+     C                                           + ExtData                                  MD054538
 
      C                   RETURN
 
@@ -894,6 +913,27 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CRE073
      C                   MOVE      'Y'           CRE073                                       CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                     MD054538
+      ** Access SAR details file to determine if CER050 is installed                        MD054538
+      *                                                                                     MD054538
+     C                   CALL      'AOSARDR0'                                               MD054538
+     C                   PARM      *BLANKS       @RTCD                                      MD054538
+     C                   PARM      '*VERIFY'     @OPTN                                      MD054538
+     C                   PARM      'CER050'      @SARD                                      MD054538
+      *                                                                                     MD054538
+      * DATABASE ERROR                                                                      MD054538
+      *                                                                                     MD054538
+     C     @RTCD         IFNE      *BLANKS                                                  MD054538
+     C     @RTCD         ANDNE     '*NRF   '                                                MD054538
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD054538
+     C                   MOVEL     '911'         DBASE                                      MD054538
+     C                   MOVEL     @RTCD         DBKEY                                      MD054538
+     C                   EXSR      *PSSR                                                    MD054538
+     C                   ENDIF                                                              MD054538
+      *                                                                                     MD054538
+     C     @RTCD         IFEQ      *BLANKS                                                  MD054538
+     C                   MOVE      'Y'           CER050                                     MD054538
+     C                   ENDIF                                                              MD054538
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1223,6 +1263,9 @@
      C                   PARM                    ReturnCode
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
+      *                                                                         MD054028
+     C                   PARM                    DDAPRC            1            MD054028
+     C                   PARM                    DDAPRR            8            MD054028
 
       * OUTPUTS
       * (Current) Deal in screen format

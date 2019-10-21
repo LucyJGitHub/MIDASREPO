@@ -24,7 +24,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD038717 - Not able to link Non-Account Holder to Retail     *
-      *             Account                                           *
+      *             Account.                                          *
       *           - Applied for MD050220                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *

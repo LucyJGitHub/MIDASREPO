@@ -17,11 +17,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-<<<<<<< HEAD
       *  Last Amend No. MD021108A          Date 21Oct19               *
-=======
-      *  Last Amend No. MD021108A          Date 16Jul13               *
->>>>>>> refs/remotes/origin/bugfix/MDSC-30431
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
       *                 MD042041           Date 21Oct16               *

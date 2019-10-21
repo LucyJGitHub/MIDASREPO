@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052633           Date 08Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD021108A          Date 16Jul13               *
+      *  Prev Amend No. MD052633           Date 08Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
       *                 MD042041           Date 21Oct16               *
       *                 MD024641           Date 10Feb14               *
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021108A - Problem in generating MT950. Use rundate for tags*
+      *              60M and 62M.                                     *
+      *            - Applied for MD-53366                             *
       *  MD052633 - MT940's closing balance figures is 1 digit short -*
       *             Increase the length of ZAMNT and ZSAMNT to handle *
       *             numeric size of (15,0).                           *
@@ -787,7 +791,8 @@
      C                   Else
      C                   Eval      MTAG = ':60M:'
      C                   Z-add     WPrvCBAL      ZAMT
-     C                   Z-add     WPrvCDate     ZMDAY
+     C**********         Z-add     WPrvCDate     ZMDAY                                     MD021108A
+     C                   Z-add     BJRDNB        ZMDAY                                     MD021108A
       /COPY OFCPYSRCZ,CGL146_097                                                             CGL146A
      C                   Endif
       *
@@ -1031,7 +1036,8 @@
       *
      C                   Eval      MTAG = ':62M:'
      C                   Z-add     PageClBal     ZAMT
-     C                   Z-add     PageClDate    ZMDAY
+     C**********         Z-add     PageClDate    ZMDAY                                     MD021108A
+     C                   Z-add     BJRDNB        ZMDAY                                     MD021108A
       /COPY OFCPYSRCZ,CGL146_097                                                             CGL146A
       *
       *  Record occurence number for later update if last page

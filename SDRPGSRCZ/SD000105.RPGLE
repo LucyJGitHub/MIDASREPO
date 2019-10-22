@@ -25,7 +25,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD050220 - Change parameters for 'AONAHOR0' used DSLDY data  *
-      *             structure in place of DSSDY.                      *
+      *             structure in place of DSSDY                       *
       *  MD038717 - Not able to link Non-Account Holder to Retail     *
       *             Account (Recompile)                               *
       *           - Applied for MD050220                              *
@@ -1101,7 +1101,8 @@
      C                   IF        PRtCd = *BLANKS
      C                   IF        NHBTHT = *BLANKS OR
      C                             NHZIPC = *BLANKS OR NHCTYD = *BLANKS
-     C                   EVAL      PMsgId = 'USR9938'
+     C**********         EVAL      PMsgId = 'USR9938'                                       MD038717
+     C                   EVAL      PMsgId = 'USS0906'                                       MD038717
      C                   EVAL      PMsgFile = 'SDUSRMSG'
      C                   EXSR      SRSndMsg
      C                   EVAL      WErr  = *ON

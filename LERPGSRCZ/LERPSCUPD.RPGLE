@@ -85,9 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054035 - Prevent file locking of LEFEED                    *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *      
-      *  MD054035 - Prevent file locking of LEFEED                    *
+      *  MD054317 - PDCL X not generated for freq based repayment     *            
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
       *             with recalculated amount based on newly inserted, *
       *             amended, or reversed RE. Check the change of the  *

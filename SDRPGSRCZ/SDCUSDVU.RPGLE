@@ -32,9 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD052465           Date 10Jan19               *      
+      *  Last Amend No. MD054610           Date 18Oct10               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD052465           Date 10Jan19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD023188           Date 20Sep18               *
@@ -149,11 +150,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054610 - Added the parameter TranInCRDD to SDFTCS5VL call  *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD052465 - Not possible to capture mandatory US TIN for      *
-      *             FATCA reporting                                   *      
+      *             FATCA reporting                                   *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD023188 - European tax status disappears after re-inserting *
@@ -5903,6 +5905,7 @@
      C                   PARM                    PAPARM                                     MD042692
      C                   PARM                    V_CUAHArr                                  MD045238
      C                   PARM                    CurCuCRSH                                    CGL157
+     C                   PARM                    TranInCRDD                                 MD054610
                                                                                               CGL132
       ** OUTPUTS                                                                              CGL132
       ** FATCA Customer Details OK inds                                                       CGL132

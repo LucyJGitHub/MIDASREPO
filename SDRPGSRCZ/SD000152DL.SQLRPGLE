@@ -17,8 +17,9 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD054189           Date 03Sep19               *
-      *  Prev Amend No. MD052107           Date 02Jul19               *
+      *  Last Amend No. MD054178           Date 15Oct19               *
+      *  Prev Amend No. MD054189           Date 03Sep19               *
+      *                 MD052107           Date 02Jul19               *
       *                 MD042142A          Date 13Jan19               *
       *                 MD042142           Date 08May18               *
       *                 MD038440A          Date 08May18               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054178 - Add Reversed Transactions as blocker to nostro    *
+      *             account closure.                                  *
       *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
       *              Pay/Receive Settlement Leg                       *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
@@ -243,12 +246,14 @@
      C+ select DLNO, DTYP, DLST, VDAT, MDAT, PONS, RONS from DEALSDC                        MD054189
      C+ where CCY = :YyCcy and
      C+       PONS = :XxNost and
-     C+       RECI = 'D' and
+     C********RECI = 'D' and                                                                MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C********DTYP in ('IT', 'TD', 'CI', 'CD' )                                            MD038440A
      C+       DTYP in ('IT', 'TD', 'CI', 'CD' )  or                                        MD038440A
      C+       CCY = :YyCcy and                                                             MD038440A
      C+       RONS = :XxNost and                                                           MD038440A
-     C+       RECI = 'D' and                                                               MD038440A
+     C********RECI = 'D' and                                                      MD038440A MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C+       DTYP in ('IT', 'TD', 'CI', 'CD' )                                            MD038440A
      C+ order by
      C**********+       DLNO                                                                MD052107
@@ -375,12 +380,14 @@
      C+ select DLNO, DTYP, DLST, VDAT, MDAT, PONS, RONS from DEALSDC                        MD054189
      C+ where CCY = :YyCcy and
      C+       RONS = :XxNost and
-     C+       RECI = 'D' and
+     C********RECI = 'D' and                                                      MD038440A MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C********DTYP in ('CF', 'CL' , 'DL', 'IP', 'TI' )                                     MD038440A
      C+       DTYP in ('CF', 'CL' , 'DL', 'IP', 'TI' ) or                                  MD038440A
      C+       CCY = :YyCcy and                                                             MD038440A
      C+       PONS = :XxNost and                                                           MD038440A
-     C+       RECI = 'D' and                                                               MD038440A
+     C********RECI = 'D' and                                                      MD038440A MD054178
+     C+       RECI in ('D', 'R') and                                                        MD054178
      C+       DTYP in ('CF', 'CL' , 'DL', 'IP', 'TI' )                                     MD038440A
      C+ order by
      C**********+       DLNO                                                                MD052107
@@ -518,10 +525,12 @@
      C+ select DLNO, DTYP, DLST from DEALSDB
      C+ where PUCY = :YyCcy and
      C+       RONS = :XxNost and
-     C+       RECI = 'D' or
+     C********RECI = 'D' or                                                                 MD054178
+     C+       RECI in ('D', 'R') or                                                         MD054178
      C+       SLCY = :YyCcy and
      C+       PONS = :XxNost and
-     C+       RECI = 'D'
+     C********RECI = 'D' or                                                                 MD054178
+     C+       RECI in ('D', 'R')                                                            MD054178
      C+ order by
      C**********+       DLNO                                                                MD052107
      C+       DLNO, DTYP, DLST                                                              MD052107
@@ -607,11 +616,13 @@
      C+ where UCUCY = :YyCcy and
      C**********+       RONS = :XxNost and                                                  MD042142
      C+       PONS = :XxNost and                                                            MD042142
-     C+       RECI = 'D'  or
+     C********RECI = 'D'  or                                                                MD054178
+     C+       RECI in ('D', 'R') or                                                         MD054178
      C+       TCUCY = :YyCcy and
      C**********+       RONS = :XxNost and                                                  MD042142
      C+       PONS = :XxNost and                                                            MD042142
-     C+       RECI = 'D'
+     C********RECI = 'D'  or                                                                MD054178
+     C+       RECI in ('D', 'R')                                                            MD054178
      C+ order by
      C**********+       DLNO                                                                MD052107
      C+       DLNO, DTYP, DLST                                                              MD052107
@@ -785,10 +796,12 @@
      C+ select DLNO, DTYP, DLST from DEALSDD
      C+ where CCY = :YyCcy and
      C+       RONS = :XxNost and
-     C+       RECI = 'D'  or
+     C********RECI = 'D'  or                                                                MD054178
+     C+       RECI in ('D', 'R') or                                                         MD054178
      C+       CCY = :YyCcy and
      C+       PONS = :XxNost and
-     C+       RECI = 'D'
+     C********RECI = 'D'  or                                                                MD054178
+     C+       RECI in ('D', 'R')                                                            MD054178
      C+ order by
      C**********+       DLNO                                                                MD052107
      C+       DLNO, DTYP, DLST                                                              MD052107

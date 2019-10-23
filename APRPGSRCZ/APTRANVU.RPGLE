@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052075           Date 07Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
       *                 MD050345           Date 04Apr18               *
@@ -218,6 +219,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension                           *
@@ -795,6 +798,7 @@
      D @ACTRV          S              1                                                     AR910559
      D @DEPI           S              1                                                     MD030621
      D AuthUsers       S             20                                                       CFT163
+     D P_SIGN          S              1                                                     MD054354
 
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
@@ -2944,6 +2948,9 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
+      ** Add P_Sign                                                                         MD054354
+     C     1             SUBST     BUFFER:Bfp    P_SIGN                                     MD054354
+     C                   ADD       1             Bfp                                        MD054354
 
      C                   CALL      'LEFESTVU'
 
@@ -2956,6 +2963,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    PaySttmt
      C                   PARM                    RecSttmt
      C                   PARM                    InfData                                      CAP086
+     C                   PARM                    P_SIGN                                     MD054354
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD026969A          Date 23Oct19               *
+      *                 MD026969           Date 23Oct19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE073             Date 13May08               *
@@ -33,6 +36,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
+      *  MD026969A - Further modifications.                           *
+      *           - Applied for MD054354                              *
+      *  MD026969 - New Processing for Fee Settlement.                *
+      *           - Applied for MD054354                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -64,13 +73,14 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
- 
+
+     FLEFZASL2  IF   E           K DISK    INFSR(*PSSR)                                    MD026969A
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,52 +92,55 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
+      ** Zero Past Due Fee Settlement                                                       MD054354
+     D PDFeeSttmt      C                   Const('ZeroPDFeeSettlements')                    MD054354
+                                                                                            MD054354
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Fee Settlement Details in screen format
      D FEST          E DS                  EXTNAME(LEFESTPD)
- 
+
       ***Fee*Settlement Details in file format                                                CAP084
       ** Current Fee Settlement Details in file format                                        CAP084
      D LEFESTFmt     E DS                  EXTNAME(LEFEEAD)                                   CAP084
@@ -135,63 +148,88 @@
       ** Valid Fee Settlement Details in file format                                          CAP084
      D VFEST         E DS                  EXTNAME(LEVFESTPD)
      D QQOURS1       E                     EXTFLD(QQOURS)                                     CGL029
- 
+
       ** Saved Valid Fee Settlement Details in file format                                    CAP084
      D SAVFEST       E DS                  EXTNAME(LEVFESTPD) PREFIX(SV)                      CAP084
                                                                                               CAP084
       ** Fee Settlement Details OK indicator
      D FEST_OK       E DS                  EXTNAME(LEEFESTPD)
- 
- 
+
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SAR Details                                                          CLE106
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE106
                                                                                               CLE106
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * DS for calculating PC reference
      D LEALLO        E DS                  EXTNAME(LEALLO)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D CLE106          S              1A                                                      CLE106
- 
+     D WKSADJ          S             13  0 INZ(0)                                          MD026969A
+     D W#CNUM          S              6A                                                   MD026969A
+     D W#FACL          S              5S 0                                                 MD026969A
+     D W#FSEQ          S              2S 0                                                 MD026969A
+
      D PRTCD           S              7A                                                      CLE148
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
- 
+
+     D PSysVal01       S             20A                                                    MD054354
+     D PCurSet01       S            200A                                                    MD054354
+     D PSysVal02       S             20A                                                    MD054354
+     D PCurSet02       S            200A                                                    MD054354
+     D PSysVal03       S             20A                                                    MD054354
+     D PCurSet03       S            200A                                                    MD054354
+     D PSysVal04       S             20A                                                    MD054354
+     D PCurSet04       S            200A                                                    MD054354
+     D PSysVal05       S             20A                                                    MD054354
+     D PCurSet05       S            200A                                                    MD054354
+     D PSysVal06       S             20A                                                    MD054354
+     D PCurSet06       S            200A                                                    MD054354
+     D PSysVal07       S             20A                                                    MD054354
+     D PCurSet07       S            200A                                                    MD054354
+     D PSysVal08       S             20A                                                    MD054354
+     D PCurSet08       S            200A                                                    MD054354
+     D PSysVal09       S             20A                                                    MD054354
+     D PCurSet09       S            200A                                                    MD054354
+     D PSysVal10       S             20A                                                    MD054354
+     D PCurSet10       S            200A                                                    MD054354
+                                                                                            MD054354
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Clear output fields
- 
+
      C                   Z-ADD     *ZERO         W#SADJ
      C                   MOVEL     *BLANK        S#SADE
- 
+
      C                   MOVEL     *ALL'Y'       FEST_OK
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIDArr
@@ -223,23 +261,23 @@
      C     S#TYPEok      ANDNE     'N'
      C                   EXSR      VLSADJTYPE
      C                   ENDIF
- 
+
       * Edit Settlement Amount
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      W#SADJ        ZFLD15
      C                   Z-ADD     FecyNBDP      ZDECS
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        S#SADE
- 
+
       * Set fields on insert and amend
- 
+
      C     S#ACTN        IFEQ      'I'
      C     S#ACTN        OREQ      'A'
      C     S#ACTN        OREQ      'D'
      C                   EXSR      SETF_IA
      C                   ENDIF
- 
+
      C     ENDVAL        TAG
       *
      C********           MOVEL     S#ACTN        STTYLC                                       CAP084
@@ -251,30 +289,30 @@
       * Validate Settlement Amount
       *****************************************************************
      C     VLSADJ        BEGSR
- 
+
       * If amount not defined, set it to fee amount past due
- 
+
      C     S#SADJ        IFEQ      *BLANKS
      C     S#TYPE        IFEQ      'F'                                                        CAP084
      C     S#TYPE        OREQ      'W'                                                        CAP084
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      W#CPAM        ZFIELD
      C                   Z-ADD     FecyNBDP      ZADEC
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        S#SADJ
- 
+
      C                   ENDIF                                                                CAP084
      C                   ENDIF
- 
+
       * It must be a valid amount
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#SADJ        ZFIELD
      C                   Z-ADD     FecyNBDP      ZADEC
      C     13            SUB       ZADEC         ZADIG
      C                   EXSR      ZALIGN
- 
+
      C     ZALIGNok      IFNE      'Y'
      C                   MOVE      'N'           S#SADJok
      C                   ADD       1             Ix
@@ -290,7 +328,39 @@
      C                   MOVEL     'LER0191'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
+     C                   IF        PDFeeSet = 'Y'                                           MD054354
+      *                                                                                    MD026969A
+      ** Must exist in new file if W#CPAM = 0 and Partial settlement                       MD026969A
+      ** and settlement amount should match the adjustment amount                          MD026969A
+      *                                                                                    MD026969A
+     C                   MOVEL     S#CSSN        W#CNUM                                    MD026969A
+     C                   MOVEL     S#FACT        W#FACL                                    MD026969A
+     C                   MOVE      S#FCNO        W#FACL                                    MD026969A
+     C                   MOVE      S#FSEQ        W#FSEQ                                    MD026969A
+     C     S#TYPE        IFEQ      'P'                                                     MD026969A
+     C     S#ACTN        ANDNE     'X'                                                     MD026969A
+     C     S#ACTN        ANDNE     'D'                                                     MD026969A
+     C     W#CPAM        ANDEQ     0                                                       MD026969A
+     C     S#SADJok      ANDNE     'N'                                                     MD026969A
+     C     K#FZAS        CHAIN(N)  LEFZASL2                                                MD026969A
+     C                   IF        %FOUND(LEFZASL2)                                        MD026969A
+     C                   IF        P_SIGN = '-'                                             MD054354
+     C                   Z-SUB     W#SADJ        WKSADJ                                    MD026969A
+     C                   ELSE                                                              MD026969A
+     C                   Z-ADD     W#SADJ        WKSADJ                                    MD026969A
+     C                   ENDIF                                                             MD026969A
+     C                   IF        WKSADJ <> FZAMTP                                        MD026969A
+     C                   MOVE      'N'           S#SADJok                                  MD026969A
+     C                   ADD       1             Ix                                        MD026969A
+     C                   MOVEL     'S#SADJ    '  FldNameArr(Ix)                            MD026969A
+     C                   MOVEL     'LER0418'     MsgIdArr(Ix)                              MD026969A
+     C                   ENDIF                                                             MD026969A
+     C                   ENDIF                                                             MD026969A
+     C                   ENDIF                                                             MD026969A
+      *                                                                                    MD026969A
+     C                   ENDIF                                                              MD054354
+      *                                                                                     MD054354
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -298,9 +368,9 @@
       * Validate Type
       *****************************************************************
      C     VLTYPE        BEGSR
- 
+
       * Type must be write off, full or partial settlement
- 
+
      C     S#TYPE        IFNE      'W'
      C     S#TYPE        ANDNE     'F'
      C     S#TYPE        ANDNE     'P'
@@ -309,7 +379,21 @@
      C                   MOVEL     'S#TYPE    '  FldNameArr(Ix)
      C                   MOVEL     'LER0078'     MsgIdArr(Ix)
      C                   ENDIF
- 
+      *                                                                                     MD026969
+      ** If W#CPAM is zero, type should be Partial (insert and amend)                       MD026969
+      *                                                                                     MD026969
+     C     S#TYPE        IFNE      'P'                                                      MD026969
+     C     S#ACTN        ANDNE     'X'                                                      MD026969
+     C     S#ACTN        ANDNE     'D'                                                      MD026969
+     C     W#CPAM        ANDEQ     0                                                        MD026969
+     C     S#TYPEok      ANDNE     'N'                                                      MD026969
+     C     PDFeeSet      ANDEQ     'Y'                                                      MD054354
+     C                   MOVE      'N'           S#TYPEok                                   MD026969
+     C                   ADD       1             Ix                                         MD026969
+     C                   MOVEL     'S#TYPE    '  FldNameArr(Ix)                             MD026969
+     C                   MOVEL     'LER0417'     MsgIdArr(Ix)                               MD026969
+     C                   ENDIF                                                              MD026969
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -317,13 +401,13 @@
       * Validate Settlement Amount & Type
       *****************************************************************
      C     VLSADJTYPE    BEGSR
- 
+
       ** For full settlement, issue a warning message if
       ** not the full fee amount past due is being settled
- 
+
      C                   SELECT
      C     S#TYPE        WHENEQ    'F'
- 
+
      C     W#SADJ        IFNE      W#CPAM
      C                   MOVE      'W'           S#SADJok
      C                   ADD       1             Wx
@@ -334,33 +418,37 @@
      C                   MOVEL     'LER0181'     WMsgIDArr(Wx)
      C                   ENDIF
      C                   ENDIF
- 
+
       ** For partial settlement, an amount less than the amount
       ** due must be entered
- 
+
      C     S#TYPE        WHENEQ    'P'
- 
+
      C     W#SADJ        IFGE      W#CPAM
+     C     PDFeeSet      ANDNE     'Y'                                                      MD054354
+     C     W#SADJ        ORGE      W#CPAM                                                   MD054354
+     C     W#CPAM        ANDNE     0                                                        MD026969
+     C     PDFeeSet      ANDEQ     'Y'                                                      MD054354
      C                   MOVE      'N'           S#SADJok
      C                   ADD       1             Ix
      C                   MOVEL     'S#SADJ    '  FldNameArr(Ix)
      C                   MOVEL     'LER0079'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       ** For write offs, the amount to be written off
       ** must not be greater than the amount due
- 
+
      C     S#TYPE        WHENEQ    'W'
- 
+
      C     W#SADJ        IFGT      W#CPAM
      C                   MOVE      'N'           S#SADJok
      C                   ADD       1             Ix
      C                   MOVEL     'S#SADJ    '  FldNameArr(Ix)
      C                   MOVEL     'LER0080'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -368,44 +456,44 @@
       * SETF_IA  : Set fields on insert and amend and delete          *
       *****************************************************************
      C     SETF_IA       BEGSR
- 
+
       ** Record Id
      C                   MOVE      'S'           STRECI
- 
+
       ** Settlement amount
      C                   MOVE      W#SADJ        STSADJ
- 
+
       ** Write off-full-partial amount
      C                   MOVE      S#TYPE        STTYPE
- 
+
       ** Action
      C                   MOVE      S#ACTN        STACTN
- 
+
       ** Branch code - alpha
      C                   MOVE      FcbrBranch    STBRCA
- 
+
       ** Customer number
      C                   MOVEL     S#CSSN        STCNUM
- 
+
       ** Facility
      C                   MOVEL     S#FACT        STFACL
      C                   MOVE      S#FCNO        STFACL
- 
+
       ** Facility sequence number
      C                   MOVE      S#FSEQ        STFSEQ
                                                                                               CLE073
       ** Loan                                                                                 CLE073
      C                   MOVE      S#LOAN        STLOAN                                       CLE073
- 
+
       ** Value date
      C                   MOVE      W#VDAT        STVDAT
- 
+
       ** Settlement settlement due date
      C                   MOVE      W#SADD        STSADD
- 
+
      ** Participant Fee Indicator
      C                   MOVE      W#PTFI        STPTFI
- 
+
       ** Currency code
      C                   MOVE      S#FCCY        STFCCY
       *                                                                                       CAP084
@@ -414,13 +502,13 @@
      C                   Z-ADD     0             STREXR                                       CAP084
      C                   Z-ADD     0             STPEXR                                       CAP084
      C                   ENDIF                                                                CAP084
- 
+
       ** Settlement Allocation                                                                CLE034
                                                                                               CLE034
      C                   EVAL      STSTAL = S#STAL                                            CLE034
                                                                                               CLE034
       ** PC Transaction Reference
- 
+
      C     P#MODE        IFEQ      'B'
      C     F5TNRF        ANDNE     *BLANK
      C     CLE106        OREQ      'Y'                                                        CLE106
@@ -451,30 +539,30 @@
      C**********         OUT       LEALLO                                                     CLE148
      C                   ENDIF
      C                   ENDIF
- 
+
       ** PC Originating Branch
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F5PCOB        STPCOB
      C                   ELSE
      C                   MOVE      *BLANKS       STPCOB
      C                   ENDIF
- 
+
       ** Transact.no of last update
- 
+
      C                   EXSR      ZTNLU1
      C                   Z-ADD     NATN          STTNLU
- 
+
       ** Last swift confirmation seq.
- 
+
      C                   Z-ADD     0             STLSWC
- 
+
       ** Last swift sequence
- 
+
      C                   Z-ADD     0             STLSWS
- 
+
       ** Input, authorise, amend user
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F5IUSR        STIUSR
      C                   MOVE      F5XUSR        STXUSR
@@ -492,7 +580,18 @@
      C***********        ENDIF                                                         CAP084 223947
      C                   ENDIF
      C                   ENDIF
- 
+      *                                                                                     MD026969
+      ** Settlement Amount sign                                                             MD026969
+      *                                                                                     MD026969
+     C                   IF        PDFeeSet = 'Y'                                           MD054354
+     C                   IF        P_SIGN = *BLANK                                          MD054354
+     C                   MOVE      '+'           STSIGN                                     MD026969
+     C                   MOVE      '+'           P_SIGN                                     MD026969
+     C                   ELSE                                                               MD026969
+     C                   MOVE      P_SIGN        STSIGN                                     MD054354
+     C                   ENDIF                                                              MD026969
+     C                   ENDIF                                                              MD054354
+
      C                   ENDSR
       *****************************************************************                       CAP084
       /SPACE 5                                                                                CAP084
@@ -603,11 +702,11 @@
      C/SPACE 5
       *****************************************************************
      C     ZTNLU1        BEGSR
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM                    RetCodeOut
      C                   PARM                    NATN              5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -615,36 +714,36 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Fee Settlement Details in screen format
      C                   PARM                    FEST
- 
+
       * Fee currency and decimal places
      C*******            PARM                    S#FCCY            3                          CAP084
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement settlement due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -658,7 +757,7 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * Front Office Inputs (if mode = 'B')
      C                   PARM                    F5PCOB            3
      C                   PARM                    F5TNRF           15
@@ -666,9 +765,10 @@
      C                   PARM                    F5XUSR           10
      C                   PARM                    F5AUSR           10
      C                   PARM                    LEFESTFmt                                    CAP084
+     C                   PARM                    P_SIGN            1                        MD054354
       *
       * OUTPUTS
- 
+
       * Status                                                                                CAP084
      C                   PARM                    S#STAT           10                          CAP084
       * Fee Type                                                                              CAP084
@@ -683,10 +783,10 @@
      C                   PARM                    FEST_OK
       * Settlement amount
      C                   PARM                    W#SADJ           13 0
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       *
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -700,10 +800,10 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       * Valid Fee Settlements
      C                   PARM                    VFEST
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -732,15 +832,51 @@
      C                   IF        @RTCD = *Blanks                                            CLE106
      C                   EVAL      CLE106 = 'Y'                                               CLE106
      C                   ENDIF                                                                CLE106
- 
+
+      ** Check for Zero Past Due Fee Settlement system value                                MD054354
+     C                   CALLB     'AOSVALR0'                                               MD054354
+     C                   PARM      *BLANKS       PRtCd             7                        MD054354
+     C                   PARM      PDFeeSttmt    PSysVal01                                  MD054354
+     C                   PARM      *BLANKS       PCurSet01                                  MD054354
+     C                   PARM      *BLANKS       PSysVal02                                  MD054354
+     C                   PARM      *BLANKS       PCurSet02                                  MD054354
+     C                   PARM      *BLANKS       PSysVal03                                  MD054354
+     C                   PARM      *BLANKS       PCurSet03                                  MD054354
+     C                   PARM      *BLANKS       PSysVal04                                  MD054354
+     C                   PARM      *BLANKS       PCurSet04                                  MD054354
+     C                   PARM      *BLANKS       PSysVal05                                  MD054354
+     C                   PARM      *BLANKS       PCurSet05                                  MD054354
+     C                   PARM      *BLANKS       PSysVal06                                  MD054354
+     C                   PARM      *BLANKS       PCurSet06                                  MD054354
+     C                   PARM      *BLANKS       PSysVal07                                  MD054354
+     C                   PARM      *BLANKS       PCurSet07                                  MD054354
+     C                   PARM      *BLANKS       PSysVal08                                  MD054354
+     C                   PARM      *BLANKS       PCurSet08                                  MD054354
+     C                   PARM      *BLANKS       PSysVal09                                  MD054354
+     C                   PARM      *BLANKS       PCurSet09                                  MD054354
+     C                   PARM      *BLANKS       PSysVal10                                  MD054354
+     C                   PARM      *BLANKS       PCurSet10                                  MD054354
+                                                                                            MD054354
+     C                   If        PRtCd <> *Blanks                                         MD054354
+     C                   Eval      DBFile = 'SDSVALPD'                                      MD054354
+     C                   Eval      DBase = 906                                              MD054354
+     C                   Eval      DBKey = '*KEY    '                                       MD054354
+     C                   ExSR      *PSSR                                                    MD054354
+     C                   EndIf                                                              MD054354
+     C                   MOVEL     PCurSet01     PDFeeSet          1                        MD054354
+      *                                                                                     MD054354
+     C     K#FZAS        KLIST                                                             MD026969A
+     C                   KFLD                    W#CNUM                                    MD026969A
+     C                   KFLD                    W#FACL                                    MD026969A
+     C                   KFLD                    W#FSEQ                                    MD026969A
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -83,17 +86,17 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Fee settlements
      FLEFEEAXX  UF A E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     COMMIT
- 
+
       ** Fee settlements trailer
      FLEFEEAZ   UF A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
@@ -106,7 +109,7 @@
      FSDCWHTL1  IF   E           K DISK                                                      BUG3760
       ** Compliance Watch Hit List by Function Type/Identifier/Branch                        BUG3760
       *                                                                                      BUG3760
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -118,89 +121,89 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D OVRDBF1         C                   'OVRDBF FILE(LEFEEAXX)-
      D                                       TOFILE(LEFEEAL2) SHARE(*NO)'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Watch List Description Compiled Time Array                                          BUG3760
      DWLARR            S             35    DIM(26) CTDATA PERRCD(2)                          BUG3760
                                                                                              BUG3760
       ** Fee Settlement Details in file format
      D LEFEEAD       E DS                  EXTNAME(LEFEEAD)
- 
+
       ** Valid Fee Settlement Details in file format
      D LEVFESTPD     E DS                  EXTNAME(LEVFESTPD)
      D  LEVFESTOURS  E                     EXTFLD(QQOURS)                                     CGL029
      D**LEVFESTEXT****       772    892                                                CGL029 TDA043
      D**LEVFESTEXT****       771    911                                                TDA043 CAP086
      D  LEVFESTEXT           771    912                                                       CAP086
- 
+
       * File Receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
- 
+
       * File Payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
- 
+
       ** Fee Settlement Details OK indicator
      D FEST_OK       E DS                  EXTNAME(LEEFESTPD)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Customer lending details
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)                                    BUG3760
       ***  First DS for access programs, LONG data structure.                                BUG3760
                                                                                              BUG3760
@@ -219,31 +222,31 @@
       ** Data structure for 2st parameter of SDCWLCHK                                        BUG3760
                                                                                              BUG3760
      D PString         DS         30000                                                      BUG3760
- 
+
       ** Before image of update to LE position files
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
       ** After image of update to LE position files
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
       ** Work file of update to LE position files
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
                                                                                               CAP084
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                     CAP084
       ** Java user information                                                                CAP084
- 
+
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ** Midas API Message Header Format Definition
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CSC011          S              1A   INZ('N')
      D TRANSDTL        S           5800A
      D WTimestamp      S             26A
@@ -259,7 +262,7 @@
      D RunBefore2      S              1A                                                      CAP084
      D CSD015          S              1A                                                     BUG3760
      D CCF001          S              1A   INZ('N')                                          BUG3760
- 
+
       ** CRE020 Variables                                                                     CRE020
      D CRE020          S              1A                                                      CRE020
      D KRefNo          S             30A                                                      CRE020
@@ -349,17 +352,17 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -387,50 +390,50 @@
      C                   MOVE      *BLANK        WMsgDtaArr
      C                   Z-ADD     0             Wx
      C                   ENDIF                                                               BUG4478
- 
+
       * Initialise loan number (always 0)                                                     CAP084
      C                   IF        CLE073  <> 'Y'                                             CLE073
      C*********          Z-ADD     0             STLOAN                                CAP084 CLE148
      C                   MOVEL     *BLANKS       STLOAN                                       CLE148
      C                   ENDIF                                                                CLE073
- 
+
       * Set up the key fields to the fee settlements file
- 
+
      C                   MOVEL     STCNUM        K#CNUM
      C                   MOVEL     STFACL        K#FACL
      C**********         Z-ADD     STLOAN        K#LOAN                                       CLE148
      C                   MOVEL     STLOAN        K#LOAN                                       CLE148
      C                   MOVEL     STFSEQ        K#FSEQ
      C                   Z-ADD     STVDAT        K#VDAT
- 
+
      C                   SELECT
- 
+
       **  Write fee settlement record
       **  ===========================
- 
+
      C     S#ACTN        WHENEQ    'I'
      C                   EXSR      WRITER
- 
+
       **  Amend fee settlement record
       **  ===========================
- 
+
      C     S#ACTN        WHENEQ    'A'
      C                   EXSR      AMENDR
- 
+
       **  Authorise fee settlement record
       **  ===============================
- 
+
      C     S#ACTN        WHENEQ    'X'
      C                   EXSR      AUTHOR
- 
+
       **  Delete fee settlement record
       **  ============================
- 
+
      C     S#ACTN        WHENEQ    'D'
      C                   EXSR      DELETR
       *
      C                   ENDSL
- 
+
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
                                                                                               CRE020
      C                   IF        CRE020 = 'Y' AND                                           CRE020
@@ -456,22 +459,23 @@
                                                                                               CRE020
       ** If 24x7 Midas Availability is installed, write to the standard
       ** log file when support system is active
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
       ** Setup Fee settlement support log
- 
+
      C                   CALLB     'LEFESTLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    S#ACTN
      C                   PARM                    LEFEEAD
      C                   PARM                    TRANSDTL
- 
+     C                   PARM                    P_SIGN            1                        MD054354
+
       ** Write to support database log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'LEFEST'
                                                                                               CAP084
       * Use the job user name or remote (java) user name as appropriate                       CAP084
@@ -496,7 +500,7 @@
      C                                       W@STFSEQ + W@STVDAT                              CLE073
      C                   ENDIF                                                                CLE073
      C                   EVAL      PADealNo = *BLANKS
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -504,22 +508,22 @@
      C                   PARM      *BLANKS       WTimestamp
      C                   PARM                    PDealNo
      C                   PARM                    PADealNo
- 
+
      C                   ENDIF
- 
+
       ** If error occured,
- 
+
      C                   IF        RetCodeOut <> *BLANKS
- 
+
      C                   EVAL      RetCodeIn = '*ERROR'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Update the trailer if no errors
       **  Else report an error
- 
+
      C     Ix            IFEQ      0
      C                   EXSR      UPDTRL
      C                   ELSE
@@ -529,23 +533,23 @@
      C                   ENDIF
       *
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       * WRITER   : Write fee settlement record                        *
       *****************************************************************
      C     WRITER        BEGSR
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Access settlement record
- 
+
      C     FEESK         CHAIN     LEFEEADF                           70
- 
+
       ** End in error if record has been updated by another workstation
- 
+
      C     *IN70         IFEQ      *OFF
      C                   MOVE      'N'           S#SADJOK
      C                   ADD       1             Ix
@@ -554,16 +558,16 @@
      C                   MOVEL     '*RECUPD   '  RetCodeIn
      C                   GOTO      EWRITER
      C                   ENDIF
- 
+
      C                   MOVEL     LEVFESTPD     LEFEEAD
      C                   MOVE      LEVFESTEXT    LEFEEAD                                      CGL029
      C                   EVAL      STMP  = TimeStamp
- 
+
       * Status is authorised if CLE002 is not installed or if
       * authorisation of fee settlement/adjustment is not allowed
       * Otherwise, it will just be complete
       * Transactions in batch mode are always authorised
- 
+
      C     CLE002        IFEQ      'N'
      C     BPFSAU        OREQ      'N'
      C     P#MODE        OREQ      'B'
@@ -573,7 +577,7 @@
      C                   ELSE
      C                   MOVE      'C'           SSTS
      C                   ENDIF
- 
+
       * User
      C     P#MODE        IFEQ      'B'
      C     IUSR          IFEQ      *BLANKS
@@ -588,7 +592,7 @@
      C                   MOVE      PsUser        IUSR
      C                   EndIf                                                                CAP084
      C                   ENDIF
- 
+
       * Participant fee indicator
      C     CLE004        IFEQ      'Y'
      C                   MOVE      W#PTFI        PTFI
@@ -599,9 +603,9 @@
      C                   IF        W#PTFI <> 'I'                                              244273
      C                   EXSR      SETTLEINS                                                  244273
      C                   ENDIF                                                                244273
- 
+
       * If CLE009 is installed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRSWRI
      C                   ENDIF
@@ -623,19 +627,19 @@
      C                   IF        CAP086 = 'Y'                                               CAP086
      C                   EVAL      AUTH = STAUTH                                              CAP086
      C                   ENDIF                                                                CAP086
- 
+
       * Write a record to settlement file
- 
+
      C                   WRITE     LEFEEADF
       *
       ** Update shadow files for non-write off fee settlements
- 
+
      C     STTYPE        IFNE      'W'
      C                   CLEAR                   Z#BSTS
      C                   MOVEL     LEFEEAD       Z#ASTS
      C                   EXSR      SRSHDW
      C                   ENDIF
- 
+
      C     EWRITER       ENDSR
       *****************************************************************
       /SPACE 5
@@ -643,9 +647,9 @@
       * AMENDR   : Amend fee settlement record                        *
       *****************************************************************
      C     AMENDR        BEGSR
- 
+
       * Access the record
- 
+
      C     FEESK         CHAIN     LEFEEADF                           80
       *
      C     *IN80         IFEQ      *ON
@@ -659,24 +663,24 @@
      C                   GOTO      EAMENDR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Set 'before status' of record (used in shadow updates)
- 
+
      C                   MOVEL     LEFEEAD       Z#BSTS
- 
+
      C                   MOVEL     LEVFESTPD     LEFEEAD
      C                   MOVE      LEVFESTEXT    LEFEEAD                                      CGL029
      C                   EVAL      STMP = TimeStamp
- 
+
       * Status will be authorised if CLE002 is not installed
       * or if authorisation of fee settlement/adjustment is not allowed
       * Otherwise, it could be complete or requring re-authorisation
       * Transactions in batch mode are always authorised
- 
+
      C     CLE002        IFEQ      'N'
      C     BPFSAU        OREQ      'N'
      C     P#MODE        OREQ      'B'
@@ -691,7 +695,7 @@
      C                   MOVE      'C'           SSTS
      C                   ENDIF
      C                   ENDIF
- 
+
       * User
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F5AUSR        AUSR
@@ -710,18 +714,18 @@
      C                   IF        W#PTFI <> 'I'                                              244273
      C                   EXSR      SETTLEINS                                                  244273
      C                   ENDIF                                                                244273
- 
+
       * If CLE009 is installed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRSWRI
      C                   ENDIF
- 
+
       * Settlement instructions
- 
+
      C     W#PTFI        IFNE      'I'
      C                   ENDIF
- 
+
                                                                                              BUG3760
       ** If Compliance Watch is installed, and entry watch list checking                     BUG3760
       ** is being applied, perform Compliance Watch processing for amend mode                BUG3760
@@ -771,18 +775,18 @@
      C                   IF        CAP086 = 'Y'                                               CAP086
      C                   EVAL      AUTH = STAUTH                                              CAP086
      C                   ENDIF                                                                CAP086
- 
+
       ** Update fee settlement/adjustment file
- 
+
      C                   UPDATE    LEFEEADF
- 
+
       ** Update shadow files for non-write off fee settlements
- 
+
      C     STTYPE        IFNE      'W'
      C                   MOVEL     LEFEEAD       Z#ASTS
      C                   EXSR      SRSHDW
      C                   ENDIF
- 
+
      C     EAMENDR       ENDSR
       *****************************************************************
       /SPACE 5
@@ -790,9 +794,9 @@
       * AUTHOR   : Authorise fee settlement record                    *
       *****************************************************************
      C     AUTHOR        BEGSR
- 
+
       * Access the record
- 
+
      C     FEESK         CHAIN     LEFEEADF                           80
       *
      C     *IN80         IFEQ      *ON
@@ -804,17 +808,17 @@
      C                   MOVEL     '*RECUPD   '  RetCodeIn
      C                   GOTO      EAUTHOR
      C                   ENDIF
- 
+
       * Action
      C                   MOVE      S#ACTN        FAACTN
- 
+
       * TNLU
      C                   EXSR      ZTNLU1
      C                   Z-ADD     NATN          FATNLU
- 
+
       * Status will be authorised
      C                   MOVE      'A'           SSTS
- 
+
       * User
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F5XUSR        XUSR
@@ -827,18 +831,18 @@
      C                   MOVE      PsUser        XUSR
      C                   EndIf                                                                CAP084
      C                   ENDIF
- 
+
       * PC reference
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F5TNRF        PCRF
      C                   ENDIF
- 
+
       * If CLE009 is installed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRSWRI
      C                   ENDIF
- 
+
                                                                                              BUG3760
       ** If Compliance Watch is installed, and entry watch list checking                     BUG3760
       ** is being applied, perform Compliance Watch processing.                              BUG3760
@@ -884,10 +888,10 @@
      C                   ENDIF                                                               BUG3760
                                                                                              BUG3760
       ** Update fee settlement/adjustment file
- 
+
      C                   UPDATE    LEFEEADF
      C/COPY WNCPYSRC,LEH01187
- 
+
      C     EAUTHOR       ENDSR
       *****************************************************************
       /SPACE 5
@@ -895,9 +899,9 @@
       * DELETR   : Delete fee settlement record                       *
       *****************************************************************
      C     DELETR        BEGSR
- 
+
       * Access the record
- 
+
      C     FEESK         CHAIN     LEFEEADF                           80
       *
      C     *IN80         IFEQ      *ON
@@ -911,31 +915,31 @@
      C                   GOTO      EDELETR
      C                   ENDIF
      C                   ENDIF
- 
+
       * Set 'before status' of record (used in shadow updates)
- 
+
      C                   MOVEL     LEFEEAD       Z#BSTS
- 
+
       * Record ID
      C                   MOVE      '*'           FARECI
- 
+
       * Action
      C                   MOVE      S#ACTN        FAACTN
- 
+
       * TNLU
      C                   EXSR      ZTNLU1
      C                   Z-ADD     NATN          FATNLU
- 
+
       * Status is authorised
      C                   MOVE      'A'           SSTS
- 
+
       * PC reference
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F5TNRF        PCRF
      C                   ENDIF
- 
+
       * If CLE009 is installed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRSWRI
      C                   ENDIF
@@ -982,19 +986,19 @@
      C                   ENDIF                                                               BUG3760
                                                                                              BUG3760
      C                   ENDIF                                                               BUG3760
- 
+
       ** Update fee settlement/adjustment file
- 
+
      C                   UPDATE    LEFEEADF
- 
+
       ** Update shadow files for non-write off fee settlements
- 
+
      C     STTYPE        IFNE      'W'
      C                   MOVEL     LEFEEAD       Z#ASTS
      C                   EXSR      SRSHDW
      C                   ENDIF
      C/COPY WNCPYSRC,LEH01188
- 
+
      C     EDELETR       ENDSR
       *****************************************************************
       /SPACE 5
@@ -1002,39 +1006,39 @@
       * UPDTRL   : Update trailer                                     *
       *****************************************************************
      C     UPDTRL        BEGSR
- 
+
       * Update trailer LEFEEAZ
- 
+
      C     1             CHAIN     LEFEEAZ                            80
- 
+
       *
      C                   SELECT
- 
+
       **  Inserts
      C     S#ACTN        WHENEQ    'I'
       *
      C                   ADD       1             FANINT
      C                   ADD       1             FANORE
- 
+
       **  Amend
      C     S#ACTN        WHENEQ    'A'
- 
+
      C                   ADD       1             FANAMD
- 
+
       **  Delete
      C     S#ACTN        WHENEQ    'D'
- 
+
      C                   ADD       1             FANDEL
- 
+
      C                   ENDSL
- 
+
      C     *IN80         IFEQ      *OFF
      C                   UPDATE    LEFEEAZF
      C                   ELSE
      C                   MOVE      'Z'           FARECI
      C                   WRITE     LEFEEAZF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1042,16 +1046,16 @@
       * SETTLEINS: Settlement instructions                            *
       *****************************************************************
      C     SETTLEINS     BEGSR
- 
+
       ** Receive Settlement details
- 
+
      C     W#PTFI        IFEQ      *BLANK
- 
+
      C                   MOVE      FLRSTM        FAMETH
      C                   MOVE      FLRONS        FAOURS
      C                   MOVEL     FLRIBN        FATHER
      C                   MOVE      FLROBR        FAOSBR
- 
+
      C                   MOVE      FLRSTM        RSTM
      C                   MOVE      FLRONS        RONS
      C                   MOVEL     FLRIBN        RIBN
@@ -1065,14 +1069,14 @@
      C                   Z-ADD     FLREXR        FAREXR                                       CLE031
      C                   MOVE      FLREXI        FAREXI                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ** Payment Settlement details
- 
+
      C                   ELSE
      C     W#PTFI        IFEQ      'P'
      C     W#PTFI        OREQ      'S'                                                        CLE106
      C     W#PTFI        OREQ      'R'                                                        CLE106
- 
+
      C                   MOVE      FLPSTM        FAMETH
      C                   MOVE      FLPONS        FAOURS
      C                   MOVE      FLPIBN        FATHER
@@ -1119,11 +1123,11 @@
      C/SPACE 5
       *****************************************************************
      C     ZTNLU1        BEGSR
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM                    RetCodeOut
      C                   PARM                    NATN              5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1193,7 +1197,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1201,21 +1205,21 @@
       * SRSHDW   : Update shadow files (PRONO, MEMOS, OLPOS and RSACMTPD)
       *****************************************************************
      C     SRSHDW        BEGSR
- 
+
       *  Suppress rollback in batch mode
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVE      '*LEBTCH'     P@RTCD
      C                   ELSE
      C                   MOVE      *BLANKS       P@RTCD
      C                   ENDIF
- 
+
      C                   CALL      'AOOUFAU0'
      C                   PARM                    P@RTCD            7
      C                   PARM                    Z#BSTS
      C                   PARM                    Z#ASTS
      C                   PARM                    Z#WSTS
- 
+
      C     P@RTCD        IFEQ      '*ERROR*'
      C                   MOVEL     'AOOUFAU0'    DBFILE
      C                   MOVEL     '800'         DBASE
@@ -1223,7 +1227,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C/COPY WNCPYSRC,LEH01189
- 
+
      C                   ENDSR
       *****************************************************************                       CRE020
       /EJECT                                                                                  CRE020
@@ -1409,47 +1413,47 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Action Code
      C                   PARM                    S#ACTN            1
- 
+
       * Fee Settlement Details in file format
      C                   PARM                    LEVFESTPD
- 
+
       * File Receive instructions
      C                   PARM                    F_REC
- 
+
       * File Payment instructions
      C                   PARM                    F_PAY
- 
+
       * Fee currency
      C                   PARM                    S#FCCY            3
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement amount
      C                   PARM                    W#SADJ           13 0
- 
+
       * Settlement adjustment due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * TNLU of fee settlement record on LEFEEAD
      C                   PARM                    H#TNLU            5 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -1463,7 +1467,7 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * Front office inputs (if mode = 'B')
      C                   PARM                    F5PCOB            3
      C                   PARM                    F5TNRF           15
@@ -1488,7 +1492,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -1504,23 +1508,23 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CLE002 - Lending Authorisations - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      'CLE002'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CLE002
      C                   ELSE
      C                   MOVEL     'N'           CLE002            1
      C                   ENDIF
- 
+
       ** Retrieve customer lending data, if CLE002 is Installed
- 
+
      C     CLE002        IFEQ      'Y'
       *
      C                   CALL      'AOCLNDR0'
@@ -1537,63 +1541,63 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if CLE004 - Customer Lending Syndications - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      'CLE004'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CLE004
      C                   ELSE
      C                   MOVEL     'N'           CLE004            1
      C                   ENDIF
- 
+
       ** Check if CLE009 - Customer Lending Enhancements - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANK        @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      'CLE007'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      'CLE009'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE009            1
      C                   ELSE
      C                   MOVE      'N'           CLE009
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IN        SDSTAT                                                    BUG3760
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
- 
+
      C                   IN        SC24X7
      C**********         IN        SDSTAT                                                    BUG3760
- 
+
      C                   ELSE
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> '*NRF'
      C                   MOVEL     '*ERROR '     RetCodeIn
      C                   EVAL      DBKEY = 'CSC011'
@@ -1601,7 +1605,7 @@
      C                   EVAL      DBASE = 905
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CRE020
       ** Check if CRE020 is enabled.                                                          CRE020
@@ -1686,7 +1690,7 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ** Check if CSD015 enhancement is installed.                                           BUG3760
                                                                                              BUG3760
      C                   CALLB     'AOSARDR0'                                                BUG3760
@@ -1841,15 +1845,15 @@
       **If*the*user*is*connected*via*a*browser,*the*job*user*name*is*QUSER*-          CAP084 BUG7029
       **the*actual*user*name*is*stored*in*ZMUSER                                      CAP084 BUG7029
      C**********         IN        ZMUSER                                             CAP084 BUG7029
- 
+
      C     *LIKE         DEFINE    FACNUM        K#CNUM
      C     *LIKE         DEFINE    FAFACL        K#FACL
      C     *LIKE         DEFINE    FALOAN        K#LOAN
      C     *LIKE         DEFINE    FAFSEQ        K#FSEQ
      C     *LIKE         DEFINE    FAVDAT        K#VDAT
- 
+
       * Key lists
- 
+
      C     FEESK         KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACL
@@ -1863,7 +1867,7 @@
      C                   KFLD                    KRefNo                                       CRE020
      C                   KFLD                    KPrgMn                                       CRE020
      C                   KFLD                    KSeqNo                                       CRE020
- 
+
       *                                                                                      BUG3760
       ** Compliance Watch Hit List Key.                                                      BUG3760
       *                                                                                      BUG3760
@@ -1873,7 +1877,7 @@
      C                   KFLD                    KBranch                                     BUG3760
       *                                                                                      BUG3760
       ** OVRDBF LEFEEAL2 to LEFEEAXX then OPEN LEFEEAXX
- 
+
      C                   EVAL      LENGTH = %SIZE(OVRDBF1)
      C                   CALL      'QCMDEXC'
      C                   PARM      OVRDBF1       QCMD             70
@@ -1884,9 +1888,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

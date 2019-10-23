@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD026969           Date 23Oct19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR943686           Date 23Sep16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -54,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
+      *  MD026969 - New Processing for Fee Settlement.                *
+      *           - Applied for MD054354                              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR943686 - CLE031. System generating wrong projected move-   *
       *             ments. Populate settlement details field with     *
@@ -594,6 +600,12 @@
      C                   MOVEL     FALOAN        ##LOAN                                       CLE148
      C                   Z-ADD     FAFSEQ        ##FSEQ                         * fac seq
      C                   Z-ADD     FASADJ        ##SADJ           15 0          * adjustment
+     C     FATYPE        IFEQ      'P'                                                      MD026969
+     C     FALOAN        ANDEQ     *BLANKS                                                  MD054354
+     C     FASIGN        IFEQ      '-'                                                      MD026969
+     C                   Z-SUB     FASADJ        ##SADJ                                     MD026969
+     C                   ENDIF                                                              MD026969
+     C                   ENDIF                                                              MD026969
       *                                                                   CEU004
       **  Move Settlement Currency to ##CCY if CEU004 is switched on      CEU004
       *                                                                   CEU004

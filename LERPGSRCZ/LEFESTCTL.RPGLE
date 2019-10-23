@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CLE148             Date 23Jul12               *
@@ -58,6 +59,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -92,7 +95,7 @@
       **   =======                               
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Valid Transaction file
      FLEVFESTPD UF A E             DISK    INFSR(*pssr)
      F                                     PREFIX(V_)
@@ -100,17 +103,17 @@
       * Invalid Transactions
      FLEIFESTPD UF A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
      FLEVFESTL0 IF   E           K DISK    RENAME(LEVFESTD0:LEVFESTCHK)
      F                                     INFSR(*PSSR)
      FLEVFESTL1 IF   E           K DISK    RENAME(LEVFESTD0:LEVFESTCK1)
      F                                     INFSR(*PSSR)
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LEFESTC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       **   Automatically included D-specs        
@@ -129,90 +132,90 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
       *  Array for job name                                                                   CSC022
      D ARRJBNAM        S             10A   DIM(10)                                            CSC022
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming Transaction
      D TranInFEST    E DS                  EXTNAME(LEFESTPD)
- 
+
       * Valid Fee Settlement Details layout
      D ValidFEST     E DS                  EXTNAME(LEVFESTPD)
      D                                     PREFIX(V_)
      D  ValidREC             124    192
      D  ValidPAY             193    751
- 
+
       * (Current) Transaction record in file Format
      D FESTFilFmt    E DS                  EXTNAME(LEFEEAD)
      D  FESTFilREC           124    192
      D  FESTFilPAY           193    751
- 
+
       * (Current) Transaction in Screen Format - Main Details
      D CurTrFEST     E DS                  EXTNAME(LEFESTPD)
      D                                     PREFIX(@)
- 
+
       * Error indicators
      D OKTrFEST      E DS                  EXTNAME(LEEFESTPD)
                                                                                               CAP086
@@ -220,7 +223,7 @@
                                                                                               CAP086
      D InfData       E DS                  EXTNAME(LELEIFPD)                                  CAP086
      D                                     PREFIX(IF_)                                        CAP086
- 
+
       ***Data*structure*for*passing*a*parameter*to*synon*screen                               CAP084
       ***handling*program.************************************                                CAP084
      D****** TranSETLIAB   E DS                  EXTNAME(SETLIAB)                             CAP084
@@ -244,21 +247,21 @@
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)                        CAP084
       * FRA/IRS Settlement Instructions - Current                                             CAP084
       * (needed as a parameter only)                                                          CAP084
- 
+
       * File Receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
- 
+
       * File Payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
                                                                                               CAP084
       * File Fra/irs instructions                                                             CAP084
      D F_FRI         E DS                  EXTNAME(SDESFFPD)                                  CAP084
       * (needed as a parameter only)                                                          CAP084
- 
+
       ***Data*structure for passing a parameter to synon screen                               CAP084
       ***handling program.                                                                    CAP084
      D******TranSETLIAZ   E DS                  EXTNAME(SETLIAZ)                              CAP084
- 
+
       *                                                                                       CSC022
      D SCCMTJOB      E DS           256    DTAARA(SCCMTJOB)                                   CSC022
       ** Midas SC Jobs handling commitment control data area                                  CSC022
@@ -272,18 +275,18 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access programs - long data structure
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      DWtran            DS            20
       * For WTRANID
      DWtran1                   1      6
@@ -343,7 +346,7 @@
       ** Flags to indicate whether FRA/IRS instruction fields are valid                       CAP084
      D OKFRAInsDS      DS            22                                                       CAP084
       * (needed as a parameter only)                                                          CAP084
- 
+
       ** +--------------------------------------+                                             CSC022
       **   Use of Indicator                                                                   CSC022
       **   ================                                                                   CSC022
@@ -355,16 +358,16 @@
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D***** Trans5002       S            500A                                                 CAP084
@@ -373,21 +376,21 @@
       ** Field (500A) to receive the incoming Extra Data                                      CAP086
                                                                                               CAP086
      D InfData5001     S            500A                                                      CAP086
- 
+
       ** Indices for arrays used to set up corresponding sequence numbers
       ** for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D Object          S             10A   INZ('LEFESTUPC')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A
@@ -396,12 +399,12 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D CSC011          S              1A   INZ('N')
      D CAP086          S              1A   INZ('N')                                           CAP086
      D WProcDate       S                   LIKE(BJRDNB)                                       CAP084
@@ -416,7 +419,7 @@
                                                                                               CSD095
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
- 
+
      D CSC022          S              1A   INZ('N')                                           CSC022
       ** Counter variable                                                                     CSC022
      D WCMT01          S              1A                                                      CSC022
@@ -427,7 +430,7 @@
      D ClrPgmMsgQ      S              1A   INZ('Y')
       ** Override Database Table
      D ##OX1           S              1    DIM(50) CTDATA PERRCD(50)
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepFEST         S              1A   INZ('N')
@@ -435,14 +438,14 @@
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
       /COPY WNCPYSRC,LEFESTC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -452,9 +455,9 @@
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,LEFESTC003
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -463,32 +466,32 @@
      C******             MOVEL     Trans5002     TranSETLIAB                                  CAP084
      C******             MOVEL     Trans5003     TranSETLIAZ                                  CAP084
      C                   EVAL      Infdata = Infdata5001                                      CAP086
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,LEFESTC004
- 
+
       *  Set user field depending on action
      C                   SELECT
- 
+
      C                   WHEN         S#ACTN = 'I'
      C                   EVAL         F5IUSR = APMIDUSR
      C                   WHEN         S#ACTN = 'X'
      C                   EVAL         F5XUSR = APMIDUSR
      C                   WHEN         S#ACTN = 'A'
      C                   EVAL         F5AUSR = APMIDUSR
- 
+
      C                   ENDSL
- 
+
       *  Check if valid fee settlement details exists
- 
+
      C                   EXSR      ChkValFEST
       *
       *  If valid FEST details does exist (even after delay), fail this input
@@ -496,9 +499,9 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       *  Check if valid Transaction exists for Midas Transaction Number
- 
+
      C                   EXSR      ChkValMiFs
       *
       *  If valid Transaction does exist (even after delay), fail this input
@@ -506,30 +509,30 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       * Reset variables again in case the details have been corrupted
       * by previous chain to valid Transaction details file.
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,LEFESTC005
- 
+
       *  Validate Action Code
- 
+
      C                   EXSR      ValidateAc
       *
       /COPY WNCPYSRC,LEFESTC006
- 
+
       *  If error in validation of action code, fail this input
       *
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       *  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN         S#ACTN = 'I'
       *  Processing for Inserts
       /COPY WNCPYSRC,LEFESTC007
@@ -537,7 +540,7 @@
 c    C                   EXSR      DftSettmts                                                 CAP084
      C                   EXSR      ValidateSt
       /COPY WNCPYSRC,LEFESTC008
- 
+
      C                   WHEN         S#ACTN = 'A'
      C                             OR S#ACTN = 'D'
       *  Processing for Amends or Changes
@@ -547,63 +550,63 @@ c    C                   EXSR      DftSettmts                                   
       * the replacement character must be replaced with the corresponding
       * character from the original transaction.
      C                   IF        S#ACTN = 'A' AND GHSUBS <> *BLANK
- 
+
      C     GHSUBS        SCAN      TranInFEST                             99
      C                   IF        *in99
      C                   EVAL      RepFEST = 'Y'
      C                   ENDIF
- 
+
       ** If any of the flags set above is true, do the data
       ** substution subroutine.
      C                   IF        RepFEST = 'Y'
      C                   EXSR      DtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "if S#ACTN = 'A' AND GHSUBS <> *blank")
- 
+
      C                   EXSR      SetupAmd
       /COPY WNCPYSRC,LEFESTC010
      C                   EXSR      ValidateTr
      C                   EXSR      ValidateSt
       /COPY WNCPYSRC,LEFESTC011
- 
+
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       *  Check for exception error from any program lower in the stack
       *  If error detected, send message to system operator and
       *  return to calling program without updating database or
       *  prompting the database update program
      C                   IN        APDUMP
       /COPY WNCPYSRC,LEFESTC012
- 
+
      C                   IF        ARERRMOD <> *BLANK
      C                   EVAL      MQErrlong  = *blank
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError          28
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM      *BLANK        MQReturn         10
      C                   PARM                    MQErrlong       132
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   MOVEL     ARERRMOD      APRETCODE
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARERRMOD = *BLANK
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
- 
+
       *  Processing for Error checking/write to database
       /COPY WNCPYSRC,LEFESTC013
      C                   EXSR      CheckWrite
       /COPY WNCPYSRC,LEFESTC014
- 
+
       *  If valid, send data queue entry to prompt DB update program
      C                   IF        Idx = 0
      C                   EVAL      ObjType = '*DTAARA'
@@ -618,25 +621,25 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM      *BLANK        Return
- 
+
      C                   IF        RETURN = *BLANK
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,LEFESTC015
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       ********************************************************************
@@ -645,12 +648,12 @@ c    C                   EXSR      DftSettmts                                   
       *                                                                  *
       ********************************************************************
      C     ChkValFEST    BEGSR
- 
+
      C     APFOTranID    CHAIN     LEVFESTL0                          99
- 
+
       * If record found...
      C                   IF        *IN99 = *OFF
- 
+
       * ..delay, then repeat check
      C**********         CALLB     'ZACDELAY'                                                 247549
      C                   Z-ADD     1             COUNT             2 0                        247549
@@ -658,10 +661,10 @@ c    C                   EXSR      DftSettmts                                   
      C     COUNT         ANDLE     10                                                         247549
      C                   ADD       1             COUNT                                        247549
      C                   CALLB     'ZACDELAY1'                                                247549
- 
+
      C     APFOTranID    CHAIN     LEVFESTL0                          99
      C                   END                                                                  247549
- 
+
       * Error if still present
      C                   IF        *IN99 = *OFF
      C                   ADD       1             Idx
@@ -669,7 +672,7 @@ c    C                   EXSR      DftSettmts                                   
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -679,9 +682,9 @@ c    C                   EXSR      DftSettmts                                   
       *    Settlements exists for Midas Transaction number            *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkValMiFs    BEGSR
- 
+
       * Check for Transaction on Valid file
      C                   MOVEL     S#CSSN        K#CNUM
      C                   MOVEL     S#FACT        K#FACL
@@ -694,12 +697,12 @@ c    C                   EXSR      DftSettmts                                   
      C                   ENDIF                                                                CLE073
      C                   MOVE      S#FSEQ        K#FSEQ
      C                   MOVE      S#VDAT        K#VDAT
- 
+
      C     KFSTL1        CHAIN     LEVFESTL1                          99
- 
+
       * If record found...
      C                   IF        *IN99 = *OFF
- 
+
       * ..delay, then repeat check
      C**********         CALLB     'ZACDELAY'                                                 247549
      C                   Z-ADD     1             COUNT             2 0                        247549
@@ -707,17 +710,17 @@ c    C                   EXSR      DftSettmts                                   
      C     COUNT         ANDLE     10                                                         247549
      C                   ADD       1             COUNT                                        247549
      C                   CALLB     'ZACDELAY1'                                                247549
- 
+
      C     KFSTL1        CHAIN     LEVFESTL1                          99
      C                   END                                                                  247549
- 
+
       * Error if still present
      C                   IF        *IN99 = *OFF
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDLOAN'
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -753,11 +756,11 @@ c    C                   EXSR      DftSettmts                                   
      C                   MOVEL     ' '           P#MODE
      C                   ENDIF
      C                   ENDIF
- 
+
       * Validate action code versus transaction IDs supplied
       * The Transaction in file format from the mm database is retrieved
       * as well.
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'LEFESTRTV'
       *
@@ -781,10 +784,10 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    S#LOAN            6                          CLE073
       *
       * OUTPUTS
- 
+
       * Fee Settlement Details in file format
      C                   PARM                    FESTFilFmt
- 
+
       * Action, customer, facility type, facility number,
       * fee sequence number and value date OK indicators
      C                   PARM                    S#ACTNok
@@ -794,32 +797,32 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    S#FSEQok
      C                   PARM                    S#VDATok
      C                   PARM                    S#LOANok          1                          CLE073
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
- 
+
       * Fee currency and decimal places
      C                   PARM                    S#FCCY            3
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Fee type, fee code, fee narrative, fee amount due/past due
      C                   PARM                    S#FTYP           10
      C                   PARM                    S#FCOD            2
      C                   PARM                    S#FENV           20
      C                   PARM                    S#DUPD           18
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement settlement due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -848,7 +851,7 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx              3 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -859,14 +862,14 @@ c    C                   EXSR      DftSettmts                                   
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For Amends, put the complete (pre-existing) Transaction into the Valid
       *  file record - fields in this will be updated during processing
- 
+
      C                   MOVEL     FESTFilFmt    ValidFEST
- 
+
       * For Amends, convert the Fee Settlement transaction to screen format
- 
+
      C                   CALLB     'LEFESTCVT'
       * Inputs
       *
@@ -880,26 +883,28 @@ c    C                   EXSR      DftSettmts                                   
       *
       * Fee Settlement Transaction Details - screen formats
      C                   PARM                    CurTrFEST
- 
+
       * Customer details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Fee currency and decimal places
      C*******            PARM                    S#FCCY            3                          CAP084
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Value date (alpha)
      C                   PARM                    S#VDTA            7
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       * Record status
      C                   PARM                    S#STAT           10
- 
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -909,9 +914,9 @@ c    C                   EXSR      DftSettmts                                   
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate Fees Settlement Transaction details
- 
+
      C                   EXSR      ValdTrFEST
       *
       *  If error in validation, fail this input
@@ -919,7 +924,7 @@ c    C                   EXSR      DftSettmts                                   
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /SPACE 5
@@ -1134,7 +1139,7 @@ c    C                   EXSR      DftSettmts                                   
      C*********          ELSE                                                                 CAP084
      C*********          EXSR      SET_SC2FL                                                  CAP084
      C*********          ENDIF                                                                CAP084
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1240,36 +1245,35 @@ c    C                   EXSR      DftSettmts                                   
       *                                                               *
       *****************************************************************
      C     ValdTrFEST    BEGSR
- 
+
      C                   CALLB     'LEFESTVAL'
- 
+
       * Inputs
- 
+
       * Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
       ** Fees Settlement Transaction Details
      C                   PARM                    TranInFEST
- 
+
       * Fee currency and decimal places
      C*******            PARM                    S#FCCY            3                          CAP084
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement settlement due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -1283,13 +1287,15 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * Front Office Inputs (if mode = 'B')
      C                   PARM                    F5PCOB            3
      C                   PARM                    F5TNRF           15
      C                   PARM                    F5IUSR           10
      C                   PARM                    F5XUSR           10
      C                   PARM                    F5AUSR           10
+     C                   PARM                    FESTFilFmt                                 MD054354
+     C                   PARM                    P_SIGN                                     MD054354
       * Outputs
       *
       * Status                                                                                CAP084
@@ -1304,31 +1310,31 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    S#DUPD           18                          CAP084
       ** Fees Settlement  Transaction Details OK inds
      C                   PARM                    OKTrFEST
- 
+
       * Settlement amount
      C                   PARM                    W#SADJ           13 0
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx              3 0
- 
+
       * Valid Fee Settlements Transaction (DS) from/to caller
      C                   PARM                    ValidFEST
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1338,9 +1344,9 @@ c    C                   EXSR      DftSettmts                                   
       *    sending of messages/writing to the database                *
       *                                                               *
       *****************************************************************
- 
+
      C     CheckWrite    BEGSR
- 
+
       *  If no errors were found:
       *     - set up additional data
       *     - write a record to the Valid file
@@ -1382,16 +1388,16 @@ c    C                   EXSR      DftSettmts                                   
 ††††† ** ¶ or not).  It is shown in the above form for clarity.       ¶
 ††††† ** ¶                                                            ¶
 ††††† ** +------------------------------------------------------------+
- 
+
      C                   IF        Idx = 0
- 
+
      C                   EXSR      SETUPVALID
      C                   WRITE     LEVFESTD0
- 
+
      C                   EXSR      CallMsgHdl
- 
+
      C                   ENDIF
- 
+
      C     Idx           IFGT      0
      C                   EXSR      SETUPINVAL
       *
@@ -1399,23 +1405,23 @@ c    C                   EXSR      DftSettmts                                   
      C                   IF        APRprLocn = 'B'
       *
       * Get next repair number if back office repair
- 
+
      C                   CALL      'LEC0215'
      C                   PARM                    XREPN
- 
+
      C                   WRITE     LEIFESTD0
- 
+
       ** Write all invalid records to the support log file
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
      C                   EVAL      TRANSDTL = TranInFEST +
      C                             InPaySttmt +                                               CAP084
      C                             InRecSttmt                                                 CAP084
      C*********                               TranSETLIAB +                                   CAP084
      C*********                               TranSETLIAZ                                     CAP084
- 
+
      C                   EVAL      APTGTTYPE  = 'LEFEST'
      C                   IF        S#FACT  <> *BLANKS                                         CLE073
      C                   EVAL      PDealNo = S#CSSN + S#FACT +
@@ -1425,7 +1431,7 @@ c    C                   EXSR      DftSettmts                                   
      C                   EVAL      PDealNo = S#CSSN + S#LOAN +                                CLE073
      C                                       S#FSEQ + S#VDAT                                  CLE073
      C                   ENDIF                                                                CLE073
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    HeadIn
@@ -1433,9 +1439,9 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    Timestamp
      C                   PARM                    PDealNo
      C                   PARM      *BLANKS       PADealNo
- 
+
       ** Database error
- 
+
      C                   IF        RetCodeOut <> *BLanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PDealNo
@@ -1444,24 +1450,24 @@ c    C                   EXSR      DftSettmts                                   
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDIF
- 
+
      C                   EXSR      CallMsgHdl
- 
+
      C                   ENDIF
- 
+
      C     CSC022        IFEQ      'N'                                                        CSC022
      C     WCMT01        OREQ      'N'                                                        CSC022
      C     CSC022        ANDEQ     'Y'                                                        CSC022
      C                   COMMIT
      C                   ENDIF                                                                CSC022
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1471,21 +1477,21 @@ c    C                   EXSR      DftSettmts                                   
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrFEST
- 
+
      C                   MOVE      *ALL'Y'       OKTrFEST
- 
+
      C                   CLEAR                   ValidFEST
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1495,9 +1501,9 @@ c    C                   EXSR      DftSettmts                                   
       *      invalid file record.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPINVAL    BEGSR
- 
+
       * Include Header fields that need to be o/p to the Invalid files
      C                   EVAL      DDFRNT     = APFOTranID
      C                   EVAL      DDAFRT     = APFOAsocID
@@ -1509,12 +1515,12 @@ c    C                   EXSR      DftSettmts                                   
      C                   IF        CAP086 = 'Y'                                               CAP086
      C                   EVAL      F5AUTH = IF_AUTH                                           CAP086
      C                   ENDIF                                                                CAP086
- 
+
      C                   EVAL      TranStatus = 'F'
- 
+
       /COPY WNCPYSRC,LEFESTC016
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1523,9 +1529,9 @@ c    C                   EXSR      DftSettmts                                   
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Set Valid file field(s) that are needed for all Action Codes
       * Include Header fields that need to be o/p to the Valid file
       * If there is no front office ID, use the PCREF created by LEASGNVAL.
@@ -1543,12 +1549,12 @@ c    C                   EXSR      DftSettmts                                   
      C                   IF        CAP086 = 'Y'                                               CAP086
      C                   EVAL      STAUTH = IF_AUTH                                           CAP086
      C                   ENDIF                                                                CAP086
- 
+
      C                   EVAL      TranStatus = 'S'
- 
+
       /COPY WNCPYSRC,LEFESTC017
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1556,33 +1562,33 @@ c    C                   EXSR      DftSettmts                                   
       * CallMsgHdl - Call the Message Handling module                 *
       *                                                               *
       *****************************************************************
- 
+
      C     CallMsgHdl    BEGSR
- 
+
       ** Set up an array of sequence numbers that correspond to the fields
       **  with errors
- 
+
      C                   Z-ADD     1             Ix
      C                   DO        ArrayMax
- 
+
      C                   IF        FldNameArr(Ix) <> *blanks
- 
+
      C                   Z-ADD     1             Iy
      C     FldNameArr(Ix)LOOKUP    FieldArr(Iy)                           20
      C                   EVAL      FldNoArr(Ix) = FldSeqArr(Iy)
- 
+
      C                   ELSE
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             Ix
- 
+
      C                   ENDDO
- 
+
      C                   RESET                   ReturnCode
- 
+
       ** Setup WTRANSID through data structure
      C                   MOVE      K#CNUM        Wtran1
      C                   IF        K#FACL <> 0
@@ -1597,7 +1603,7 @@ c    C                   EXSR      DftSettmts                                   
      C                   MOVE      K#FSEQ        Wtran4
      C                   MOVEL     K#VDAT        Wtran5
      C                   EVAL      WTRANSID = Wtran
- 
+
      C                   CALLB     'ZAMSGHNDLE'
       ** Return code (10A, returned to this procedure)
      C                   PARM                    ReturnCode
@@ -1643,9 +1649,9 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    MsgFArray
       ** Whether or not to clear the program message queue (1A)
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1653,9 +1659,9 @@ c    C                   EXSR      DftSettmts                                   
       * DtaSubs - Data Substitution                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DtaSubs       BEGSR
- 
+
       ** Convert file fields to screen format
      C                   RESET                   RetCodeIn
      C                   CALLB     'LEFESTCVT'
@@ -1668,30 +1674,32 @@ c    C                   EXSR      DftSettmts                                   
       * Output parameters
       * Fee Settlement Transaction Details - screen formats
      C                   PARM                    CurTrFEST
- 
+
       * Customer details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Fee currency and decimal places
      C*******            PARM                    S#FCCY            3                          CAP084
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Value date (alpha)
      C                   PARM                    S#VDTA            7
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       * Record status
      C                   PARM                    S#STAT           10
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
- 
+
      C                   IF        RepFEST = 'Y'
- 
+
      C                   CLEAR                   IncData
      C                   CLEAR                   CurData
      C                   RESET                   ReturnCode
@@ -1704,13 +1712,13 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM      TranInFEST    IncData        2000
       * Current Data
      C                   PARM      CurTrFEST     CurData        2000
- 
+
      C                   MOVEL     IncDATA       TranInFEST
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
      C/COPY ZACPYSRC,PSSR_ILE
@@ -1722,7 +1730,7 @@ c    C                   EXSR      DftSettmts                                   
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1734,16 +1742,17 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM                    InPaySttmt                                   CAP084
      C                   PARM                    InRecSttmt                                   CAP084
      C                   PARM                    InFraSttmt                                   CAP084
+     C                   PARM                    P_SIGN                                     MD054354
       ** Ultimate calling Program/Module/Procedure
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
      C                   EVAL      #MsgFile     = 'LERMSGF'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
       *  Set up the Module ID, used to make the Transaction number unique
      C                   EVAL      ModuleID = 'LE'
       *
@@ -1753,41 +1762,41 @@ c    C                   EXSR      DftSettmts                                   
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APFESTDTQ'
- 
+
      C* Override LEFESTLR
      C                   Z-ADD     50            MESLEN           15 5
      C                   CALL      'QCMDEXC'
      C                   PARM                    ##OX1
      C                   PARM                    MESLEN
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C                   ELSE
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> '*NRF'
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'CSC011'
@@ -1796,7 +1805,7 @@ c    C                   EXSR      DftSettmts                                   
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CAP084
       ** If 24X7 Midas availability is installed and support system is                        CAP084
@@ -1808,26 +1817,26 @@ c    C                   EXSR      DftSettmts                                   
      C                   ELSE                                                                 CAP084
      C                   EVAL      WProcDate = BJRDNB                                         CAP084
      C                   ENDIF                                                                CAP084
- 
+
       ** Key lists
- 
+
       ** Key list for file LEVFESTL1
      C     *LIKE         DEFINE    STCNUM        K#CNUM
      C     *LIKE         DEFINE    STFACL        K#FACL
      C     *LIKE         DEFINE    STLOAN        K#LOAN
      C     *LIKE         DEFINE    STFSEQ        K#FSEQ
      C     *LIKE         DEFINE    STVDAT        K#VDAT
- 
+
      C     KFSTL1        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACL
      C                   KFLD                    K#LOAN
      C                   KFLD                    K#FSEQ
      C                   KFLD                    K#VDAT
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LEFESTC018
- 
+
       * Determine if CSC022 is switched on                                                    CSC022
                                                                                               CSC022
      C                   CALLB     'AOSARDR0'                                                 CSC022

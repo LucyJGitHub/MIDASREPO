@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -65,13 +68,13 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FLEFEEDL0  IF   E           K DISK    PREFIX(F_)                                         CLE106
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -83,80 +86,80 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D FESTScnFmt    E DS                  EXTNAME(LEFESTPD)
       * Fee settlement in screen format
- 
+
      D FES2ScnFmt    E DS                  EXTNAME(LEFES2PD)                                  CLE106
       * Fee settlement 2 in screen format                                                     CLE106
                                                                                               CLE106
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       * Receive settlement instructions in screen format
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       * Pay settlement instructions in screen format
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS settlement instructions in screen format
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
       ** Fee settlement in file format
      D FESTFilFmt    E DS                  EXTNAME(LEVFESTPD)
      D***FESTFilRec           124    192                                                      TCA094
      D***FESTFilPay           193    751                                                      TCA094
      D  FESTFilRec           138    192                                                       TCA094
      D  FESTFilPay           207    751                                                       TCA094
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
      D***FLREC                  1     69                                                      TCA094
      D  FLREC                 21     75                                                       TCA094
       * Receive settlement instructions in file format
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D***FLPAY                  1    559                                                      TCA094
      D  FLPAY                 21    565                                                       TCA094
       * Pay settlement instructions in file format
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       * FRA/IRS settlement instructions in file format
- 
+
       **-----------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       **-----------------------------------------------------------------------
- 
+
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                               CLE148
       * External DS for SAR details                                                           CLE148
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE148
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
                                                                                              BUG9518
@@ -206,9 +209,9 @@
       *                                                                                       CLE148
      D wLoanAlpha      S              1A                                                      CLE148
      D @ERRDTA         S              2A                                                      CLE148
- 
+
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -231,12 +234,12 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       ** Determine if CLE106 (Lending Enhancements)                                           CLE106
                                                                                               CLE106
      C                   MOVE      'N'           CLE106                                       CLE106
@@ -341,7 +344,7 @@
                                                                                               CLE148
       * Hook to enable non-core Message files to be included
      D/COPY WNCPYSRC,LEFESTVM01
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   FESTFilFmt
      C                   If        AuthComp = 'Y'
@@ -349,7 +352,7 @@
      C                   Else
      C                   MOVEL     'E'           DDACTN
      C                   EndIf
- 
+
      C                   If        FwdBck = 'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -362,7 +365,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   EndIf
      C                   EndIf
- 
+
      C                   If        @RDFWD = 'Y' or
      C                             @RDBCK = 'Y'
      C                   EXSR      LEFESTRED
@@ -409,16 +412,16 @@
      C                   EXSR      LEFESTCVT
      C                   EXSR      ZASETINCVT
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   If        @ERRMS <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDCNUM'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   MOVEL     @ERRDTA       MsgDtaArr(1)                                 CLE148
      C                   EndIf
- 
+
      C                   EXSR      SrCustName                                                 CSF011
                                                                                               CSF011
       * Build buffer with required output
@@ -428,7 +431,8 @@
      C                   EVAL                   Buffer = FESTScnfmt + FES2ScnFmt              CLE106
      C**********                                 + ##RECS + ##PAYS                    CLE106 BUG9518
      C                                           + ##RECS + ##PAYS + InfData                 BUG9518
- 
+     C                                           + P_SIGN                                   MD054354
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -442,13 +446,13 @@
       * Mode = '*FRONT' (Front Office Transaction Interface)
       * Mode = '      ' (Not Front Office Transaction Interface)
      C                   PARM      '      '      ModeofOp          6
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Action code
      C                   PARM                    DDACTN            1
- 
+
       * Fee settlement reference:
       * Customer, facility, loan, sequence, value date
      C                   PARM                    DDCNUM            6
@@ -460,19 +464,19 @@
       *
       * Front Office Transaction ID
      C                   PARM                    DDFRNT           20
- 
+
       * Read forwards
      C                   PARM                    @RDFWD            1
- 
+
       * Read backwards
      C                   PARM                    @RDBCK            1
- 
+
       * Output Parameters :
       * Error meassage
      C                   PARM                    wLoanAlpha                                   CLE148
      C                   PARM                    @ERRMS            7
      C                   PARM      *BLANK        @ERRDTA                                      CLE148
- 
+
       * Fee settlement read:
       * Customer, facility, loan, sequence, value date
      C                   PARM                    @CNRED            6
@@ -490,7 +494,7 @@
       /EJECT
       **********************************************************************
      C     LEFESTRTV     BEGSR
- 
+
      C                   RESET                   ReturnCode
      C                   MOVEL     DDCNUM        DDCSSN
       *
@@ -499,13 +503,13 @@
       * Inputs
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
       * Mode
      C                   PARM      ' '           P#MODE            1
- 
+
       * Response Code
      C                   PARM      'S'           RESPMODE          1
- 
+
       * Action, customer, facility type, facility number,
       * fee sequence number and value date
      C                   PARM                    DDACTN
@@ -523,7 +527,7 @@
      C                   PARM                    ##PAYS                                       258669
      C                   PARM                    ##RECF                                       258669
      C                   PARM                    ##PAYF                                       258669
- 
+
       * Action, customer, facility type, facility number,
       * fee sequence number and value date OK indicators
      C                   PARM                    S#ACTNok          1
@@ -533,32 +537,32 @@
      C                   PARM                    S#FSEQok          1
      C                   PARM                    S#VDATok          1
      C                   PARM                    S#LOANok          1                          CLE073
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
- 
+
       * Fee currency and decimal places
      C                   PARM                    S#FCCY            3
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Fee type, fee code, fee narrative, fee amount due/past due
      C                   PARM                    S#FTYP           10
      C                   PARM                    S#FCOD            2
      C                   PARM                    S#FENV           20
      C                   PARM                    S#DUPD           18
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement adjustment due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -585,19 +589,19 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Save Value date
      C                   MOVEL     W#VDAT        @DTRED
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     LEFESTCVT     BEGSR
- 
+
      C                   RESET                   ReturnCode
       *
      C                   CALLB     'LEFESTCVT'
@@ -613,25 +617,27 @@
       *
       * Fee Settlement Details in screen format
      C                   PARM                    FESTScnFmt
- 
+
       * Customer details
      C                   PARM                    S#CNUM
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Fee currency and decimal places
      C                   PARM                    FecyNBDP
- 
+
       * Value date (alpha)
      C                   PARM                    S#VDTA            7
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       * Record status
      C                   PARM                    S#STAT           10
- 
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
+
      C                   ENDSR
       **********************************************************************
       /EJECT

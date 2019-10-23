@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -74,12 +77,12 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -91,80 +94,80 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D TRANFilFmt    E DS                  EXTNAME(LEVFESTPD)
       ** Midas LE API FEST File Record
- 
+
       ** Fee Settlement Details in file format
      D LEFEEADFmt    E DS                  EXTNAME(LEFEEAD)
      D LEFEEADOURS   E                     EXTFLD(QQOURS)                                     CGL029
- 
+
      D FESTScnFmt    E DS                  EXTNAME(LEFESTPD)
       ** Midas LE API FEST Format Definition File
- 
+
      D PAYFilFmt     E DS                  EXTNAME(SDESFPPD)
       ** Midas SD File Extended Settlement Instruction - Pay
- 
+
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
       ** Midas SD Screen Extended Settlement Instruction - Pay
- 
+
      D RECFilFmt     E DS                  EXTNAME(SDESFRPD)
       ** Midas SD File Extended Settlement Instruction - Receive
- 
+
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
       ** Midas SD Screen Extended Settlement Instruction - Receive
- 
+
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
       ** Midas SD File Extended Settlement Instruction - FRA/IRS
- 
+
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
       ** Midas SD Screen Extended Settlement Instruction - FRA/IRS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** Midas SD Dealing Data
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PACTN           S              1A
      D PRTCD           S              7A
      D POPTN           S              7A
@@ -173,23 +176,23 @@
      D TRANSDTL        S           5800A
      D InTrCcy         S              3A                                                     CSF011A
      D InTpCcy         S              3A                                                     CSF011A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Convert file fields into screen format
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -202,19 +205,19 @@
       *                                                               *
       *****************************************************************
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
      C
      C                   EVAL      S#ACTN = PACTN
- 
+
       ** Process Lending Fee Settlements
- 
+
      C                   EXSR      SRSETD
- 
+
      C                   CALLB     'LEFESTCVT'
- 
+
      C                   PARM                    RetCodeOut
- 
+
       ** Fee Settlement Details in file format
      C                   PARM                    LEFEEADFmt
       *
@@ -223,32 +226,34 @@
       *
       * Fee Settlement Details in screen format
      C                   PARM                    FESTScnFmt
- 
+
       * Customer details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Fee currency and decimal places
      C*******            PARM                    S#FCCY            3                          CAP084
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Value date (alpha)
      C                   PARM                    S#VDTA            7
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       * Record status
      C                   PARM                    S#STAT           10
- 
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
      C                   PARM                    PAYFilFmt
      C                   PARM                    RECFilFmt
      C                   PARM      *BLANKS       FRIRFilFmt
@@ -257,14 +262,14 @@
      C                   PARM      *BLANKS       FRIRScnFmt
      C                   PARM      S#FCCY        InTrCcy                                     CSF011A
      C                   PARM      S#FCCY        InTpCcy                                     CSF011A
- 
+
      C                   EVAL      TRANSDTL = FESTScnFmt + RECScnFmt +
      C                                        PAYScnFmt
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -277,9 +282,9 @@
       *                                                               *
       *****************************************************************
      C     SRSETD        BEGSR
- 
+
       ** Payment Fields
- 
+
      C                   EVAL      FLPSTM = STPSTM
      C                   EVAL      FLPONS = STPONS
      C                   EVAL      FLPIBN = STPIBN
@@ -307,9 +312,9 @@
      C                   EVAL      FLCVMR = STCVMR
      C                   EVAL      FLPSCY = STSCCY
      C                   EVAL      FLIC72 = STICCY
- 
+
       ** Receipt Fields
- 
+
      C                   EVAL      FLRSTM = STRSTM
      C                   EVAL      FLRONS = STRONS
      C                   EVAL      FLRIBN = STRIBN
@@ -327,9 +332,9 @@
      C                   MOVE      STSCCY        FLRSCY                                       CLE031
      C                   MOVE      STPSCY        FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -341,38 +346,40 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Action Code
      C                   PARM                    PACTN
- 
+
       ** Midas LE Valid Fees Settlements file record
      C                   PARM                    LEFEEADFmt
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Data Replication Details Screen Format
      C                   PARM                    TRANSDTL
- 
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANK
      C                   MOVEL     '*ERROR '     RetCodeIn
      C                   EVAL      DBKEY = POPTN
@@ -392,12 +399,12 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

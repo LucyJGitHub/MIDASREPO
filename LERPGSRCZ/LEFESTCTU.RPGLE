@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE073             Date 13May08               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -68,54 +71,54 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FLEIFESTPD O  A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
      FAPILSETPD O  A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
      FZATRNERRPDO  A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       ** Fee Settlement Details in screen format
      D FEST          E DS                  EXTNAME(LEFESTPD)
- 
+
       ** Fee Settlement Details OK indicator
      D FEST_OK       E DS                  EXTNAME(LEEFESTPD)
- 
+
       ** Fee Settlement Details in file format
      D LEFEEADFmt    E DS                  EXTNAME(LEFEEAD)
      D***LefeeaREC            124    192                                                      CGL029
@@ -124,7 +127,7 @@
      D  LefeeaREC2           138    192                                                       CGL029
      D  LefeeaPAY1           193    194                                                       CGL029
      D  LefeeaPAY2           207    751                                                       CGL029
- 
+
       ** New Fee Settle ment Details in file format
      D LEVFESTPD     E DS                  EXTNAME(LEVFESTPD)
      D***LEVFESTREC           124    192                                                      CGL029
@@ -140,46 +143,46 @@
                                                                                               258669
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)                                  258669
       * Pay settlement instructions in screen format                                          258669
- 
+
       * File Receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
      D***FLREC**                1     69                                                      CGL029
      D  FLREC1                 1      2                                                       CGL029
      D  FLREC2                21     75                                                       CGL029
- 
+
       * File Payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY1                 1      2                                                       CGL029
      D  FLPAY2                21    565                                                       CGL029
- 
+
       ** Current Fee Settlement Details in screen format
      D C_FEST        E DS                  EXTNAME(LEFESTPD)
      D                                     PREFIX(C_)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Data structure for passing a parameter to synon screen
       ** handling program.
      D SETLIB        E DS                  EXTNAME(SETLIAB) INZ
      D SETLIBRONS    E                     EXTFLD(QQRONS)                                     CGL029
      D SETLIBPONS    E                     EXTFLD(QQPONS)                                     CGL029
- 
+
       ** Data structure for passing a parameter to synon screen
       ** handling program.
      D SETLIZ        E DS                  EXTNAME(SETLIAZ)
                                                                                               222373
      D Tran@PARM3    E DS                  EXTNAME(SDSETLPD)                                  222373
- 
+
       ** IN Message Format
      D P#INMF        E DS                  EXTNAME(LEF5MFPD)
      D P#INMFRONS    E                     EXTFLD(QQRONS)                                     CGL029
      D P#INMFPONS    E                     EXTFLD(QQPONS)                                     CGL029
- 
+
       ** OUT Message Format
      D P#OUMF        E DS                  EXTNAME(LEF6MFPD)
                                                                                               CAP084
@@ -188,7 +191,7 @@
                                                                                               CAP084
       ** SD data area                                                                         CAP084
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CAP084
- 
+
       ** EXTERNAL DS FOR SAR DETAILS                                                          CAP084
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAP084
                                                                                               CAP084
@@ -197,55 +200,55 @@
      D PRTCD           S              7A                                                      CAP084
      D POPTN           S              7A                                                      CAP084
      D PSARD           S              6A                                                      CAP084
- 
+
       /SPACE 5
- 
+
       * Initialisation
      C                   EXSR      INITPR
- 
+
       ** Map incoming data into the screen fields
- 
+
      C                   EXSR      MAPFLD
- 
+
       ** Validate action code
- 
+
      C                   EXSR      ValidateAc
- 
+
       *  If error in validation of action code, fail this input
- 
+
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       *  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
       * Inserts
       * =======
- 
+
      C     S#ACTN        WHENEQ    'I'
- 
+
      C                   EXSR      ValidateTR
- 
+
      C                   EXSR      ValidateSt
- 
+
       *  Amends
       *  ======
- 
+
      C     S#ACTN        WHENEQ    'A'
- 
+
      C                   EXSR      ValidateTR
- 
+
      C                   EXSR      ValdateAmd
- 
+
      C                   EXSR      ValidateSt
- 
+
       *  Deletions
       *  =========
- 
+
      C     S#ACTN        WHENEQ    'D'
- 
+
      C**********         MOVEL     LefeeaREC     F_REC                                        CGL029
      C**********         MOVEL     LefeeaPAY     F_PAY                                        CGL029
      C                   MOVEL     LefeeaREC1    FLREC1                                       CGL029
@@ -269,12 +272,12 @@
      C                   MOVE      FASCCY        FLRSCY                                       CLE031
      C                   MOVE      FAPSCY        FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       *  Authorisations
       *  ==============
- 
+
      C     S#ACTN        WHENEQ    'X'
- 
+
      C**********         MOVEL     LefeeaREC     F_REC                                        CGL029
      C**********         MOVEL     LefeeaPAY     F_PAY                                        CGL029
      C                   MOVEL     LefeeaREC1    FLREC1                                       CGL029
@@ -298,34 +301,34 @@
      C                   MOVE      FASCCY        FLRSCY                                       CLE031
      C                   MOVE      FAPSCY        FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   ENDSL
- 
+
      C     INVALID       TAG
- 
+
       ** Do updates for this transaction
       ** according to whether it is valid or invalid
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      UPDAT_VAL
      C                   ENDIF
      C     Idx           IFNE      0
      C                   EXSR      UPDAT_INVAL
      C                   ENDIF
- 
+
       **  Terminate program
- 
+
      C                   SETON                                        LR
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
       **  Map the input data read from the transmitted message.
       *****************************************************************
      C     MAPFLD        BEGSR
- 
+
      C                   MOVEL     F5FIL3        RPLOC             1
       *
       ** Fee settlement details
@@ -430,9 +433,9 @@
       * Setup the settlement screen fields (SETLIAB/SETLIAZ)
       *****************************************************************
      C     SETUP_SSCR    BEGSR
- 
+
       ** Set action, customer, currencies and branch for settlement screen
- 
+
      C                   MOVE      S#ACTN        PMACTC
      C                   MOVE      'LEND'        PMCPGM
      C                   MOVEL     S#CNUM        PMCSNM
@@ -447,13 +450,13 @@
      C                   MOVE      *BLANKS       PMERCD
      C******             Z-ADD     BJRDNB        PMRUND                                       CAP084
      C                   Z-ADD     WProcDate     PMRUND                                       CAP084
- 
+
       ** Set settlement details valid flag
- 
+
      C                   MOVE      'N'           PMSDTV
- 
+
       ** Move settlement file fields to screen fields
- 
+
      C                   EXSR      SET_FL2SC
       *
      C                   ENDSR
@@ -463,17 +466,17 @@
       * Move settlement file fields to screen fields (SETLIAB/SETLIAZ)*
       *****************************************************************
      C     SET_FL2SC     BEGSR
- 
+
      C                   CALLB     'LESTFL2SC'
       *
       * INPUTS
       *
       * Return Code
      C                   PARM                    RetCodeIn
- 
+
       * File Receive instructions
      C                   PARM                    F_REC
- 
+
       * File Payment instructions
      C                   PARM                    F_PAY
       *
@@ -482,7 +485,7 @@
       * Screen receive and payment instructions
      C                   PARM                    SETLIB
      C                   PARM                    SETLIZ
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -490,19 +493,19 @@
       * Validate the action
       *****************************************************************
      C     ValidateAc    BEGSR
- 
+
      C                   CALLB     'LEFESTRTV'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response Code
      C                   PARM      ' '           RESPMODE          1
- 
+
       * Action, customer, facility type, facility number,
       * fee sequence number and value date
      C                   PARM                    S#ACTN            1
@@ -512,17 +515,17 @@
      C                   PARM                    S#FSEQ            2
      C                   PARM                    S#VDAT            6
      C                   PARM                    S#LOAN            6                          CLE073
- 
+
       *
       * OUTPUTS
- 
+
       * Fee Settlement Details in file format
      C                   PARM                    LEFEEADFmt
      C                   PARM                    ##RECS                                       258669
      C                   PARM                    ##PAYS                                       258669
      C                   PARM                    F_REC                                        258669
      C                   PARM                    F_PAY                                        258669
- 
+
       * Action, customer, facility type, facility number,
       * fee sequence number and value date OK indicators
      C                   PARM                    S#ACTNok          1
@@ -532,32 +535,32 @@
      C                   PARM                    S#FSEQok          1
      C                   PARM                    S#VDATok          1
      C                   PARM                    S#LOANok          1                          CLE073
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
- 
+
       * Fee currency and decimal places
      C                   PARM                    S#FCCY            3
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Fee type, fee code, fee narrative, fee amount due/past due
      C                   PARM                    S#FTYP           10
      C                   PARM                    S#FCOD            2
      C                   PARM                    S#FENV           20
      C                   PARM                    S#DUPD           18
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement adjustment due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -586,11 +589,11 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
- 
+
       ** TNLU used in 'record updated by another WS' checking
- 
+
      C                   Z-ADD     FATNLU        H#TNLU
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -598,36 +601,36 @@
       * Validate transaction
       *****************************************************************
      C     ValidateTr    BEGSR
- 
+
      C                   CALLB     'LEFESTVAL'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Fee Settlement Details in screen format
      C                   PARM                    FEST
- 
+
       * Fee currency and decimal places
      C*******            PARM                    S#FCCY            3                          CAP084
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement settlement due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -641,13 +644,15 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * Front Office Inputs (if mode = 'B')
      C                   PARM                    F5PCOB            3
      C                   PARM                    F5TNRF           15
      C                   PARM                    F5IUSR           10
      C                   PARM                    F5XUSR           10
      C                   PARM                    F5AUSR           10
+     C                   PARM                    LEFEEADFmt                                 MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
       *
       * OUTPUTS
       * Status                                                                                CAP084
@@ -662,13 +667,13 @@
      C                   PARM                    S#DUPD           18                          CAP084
       * Field OK flags
      C                   PARM                    FEST_OK
- 
+
       * Settlement amount
      C                   PARM                    W#SADJ           13 0
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       *
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -682,10 +687,10 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
- 
+
       * Valid Fee Settlements
      C                   PARM                    LEVFESTPD
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -693,31 +698,31 @@
       * Validate settlement instructions
       *****************************************************************
      C     ValidateSt    BEGSR
- 
+
       ** Setup the settlement screen fields (SETLIAB/SETLIAZ)
- 
+
      C                   EXSR      SETUP_SSCR
- 
+
       ** Call extended settlements input
- 
+
      C                   CALL      'SD2410'
      C                   PARM                    SETLIB
      C                   PARM                    SETLIZ
      C                   PARM                    Tran@PARM3                                   222373
- 
+
       ** Terminate program if database error returned
- 
+
      C     PMDBSE        IFNE      *ZERO
      C                   MOVEL     PMDBFL        DBFILE
      C                   Z-ADD     PMDBSE        DBASE
      C                   MOVEL     PMDBKY        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If there are errors in the settlement screen
       ** log them
       ** Otherwise, update the file fields with the screen fields
- 
+
      C     PMERCD        IFNE      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '*ANY'
@@ -726,7 +731,7 @@
      C                   EXSR      SET_SC2FL
      C                   EXSR      SETTLEINS
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -734,29 +739,29 @@
       * Move settlement screen fields to file fields                  *
       *****************************************************************
      C     SET_SC2FL     BEGSR
- 
+
      C                   CALLB     'LESTSC2FL'
       *
       * INPUTS
       *
       * Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Screen receive and payment instructions
      C                   PARM                    SETLIB
      C                   PARM                    SETLIZ
       *
       * OUTPUTS
       *
- 
+
       * File Receive instructions
      C                   PARM                    F_REC
- 
+
       * File Payment instructions
      C                   PARM                    F_PAY
- 
+
       ** Funding Participant settlement instructions
- 
+
      C**********         MOVEL     F_REC         LEVFESTREC                                   CGL029
      C**********         MOVEL     F_PAY         LEVFESTPAY                                   CGL029
      C                   MOVEL     FLREC1        LEVFESTREC1                                  CGL029
@@ -787,16 +792,16 @@
       * SETTLEINS: Settlement instructions                            *
       *****************************************************************
      C     SETTLEINS     BEGSR
- 
+
       ** Receive Settlement details
- 
+
      C     W#PTFI        IFEQ      *BLANK
- 
+
      C                   MOVE      FLRSTM        STMETH
      C                   MOVE      FLRONS        STOURS
      C                   MOVEL     FLRIBN        STTHER
      C                   MOVE      FLROBR        STOSBR
- 
+
      C                   MOVE      FLRSTM        STRSTM
      C                   MOVE      FLRONS        STRONS
      C                   MOVEL     FLRIBN        STRIBN
@@ -810,14 +815,14 @@
      C                   Z-ADD     FLREXR        STREXR                                       CLE031
      C                   MOVE      FLREXI        STREXI                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ** Payment Settlement details
- 
+
      C                   ELSE
      C     W#PTFI        IFEQ      'P'
      C     W#PTFI        OREQ      'S'                                                        CLE106
      C     W#PTFI        OREQ      'R'                                                        CLE106
- 
+
      C                   MOVE      FLPSTM        STMETH
      C                   MOVE      FLPONS        STOURS
      C                   MOVE      FLPIBN        STTHER
@@ -866,11 +871,11 @@
       * Validate amendments
       *****************************************************************
      C     ValdateAmd    BEGSR
- 
+
       ** This subroutine calls a procedure which checks whether it
       ** was valid to amend any of the fields which have been
       ** changed.
- 
+
      C                   CALLB     'LEFESTCVT'
       *
       * INPUTS
@@ -885,26 +890,28 @@
       *
       * Fee Settlement Details in screen format
      C                   PARM                    C_FEST
- 
+
       * Customer details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Fee currency and decimal places
      C*******            PARM                    S#FCCY            3                          CAP084
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Value date (alpha)
      C                   PARM                    S#VDTA            7
- 
+
       * Settlement amount edited
      C                   PARM                    S#SADE           19
- 
+
       * Record status
      C                   PARM                    S#STAT           10
- 
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
+
      C                   CALLB     'LEFESTAMD'
       *
       * INPUTS
@@ -939,16 +946,16 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'N'           ResetErrs         1
- 
+
       ** If any errors overwrite previous error information
- 
+
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
      C                   MOVEA     AmFldNamAr    FldNameArr
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -956,13 +963,13 @@
       * Updates - if invalid transaction
       *****************************************************************
      C     UPDAT_INVAL   BEGSR
- 
+
       ** If repair in back-office
- 
+
      C     RPLOC         IFEQ      'B'
- 
+
       ** Write to the invalid (repair) files
- 
+
      C                   CALL      'LEC0215'
      C                   PARM                    XREPN
      C                   CALLB     'ZAGENTMSTM'
@@ -970,15 +977,15 @@
      C                   WRITE     LEIFESTD0
      C                   WRITE     APILSETD0
      C                   EXSR      W_ZATRNERR
- 
+
       ** Commit the database changes
- 
+
      C                   COMMIT
- 
+
      C                   ENDIF
- 
+
       ** Get the text for the first error message
- 
+
      C                   MOVEL     MsgIDArr(1)   ZAMSID
      C     ZAMSID        IFNE      *BLANK
      C                   CALL      'Y2RVMGC'                            9999
@@ -988,9 +995,9 @@
      C                   PARM      *BLANK        ZAMSDA          132
      C                   PARM      *BLANK        ZAMSTX          132
      C                   ENDIF
- 
+
       ** Set up the returned message format
- 
+
      C                   MOVE      F5MSGT        F6MSGT
      C                   MOVE      F5TRUS        F6TRUS
      C                   MOVE      F5TRWS        F6TRWS
@@ -1009,7 +1016,7 @@
      C                   MOVE      F5SEQR        F6SEQR
      C                   MOVE      F5VDTC        F6VDTC
      C                   MOVE      F5LOAN        F6LOAN                                       CLE073
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1017,28 +1024,28 @@
       * Updates - if valid transaction
       *****************************************************************
      C     UPDAT_VAL     BEGSR
- 
+
       ** Update the database
- 
+
      C                   EXSR      UPD_DBASE
- 
+
       ** If there were errors, rollback any database changes and increment
       ** the error index by 1 to drive the 'invalid' record processing
- 
+
      C     RetCodeOut    IFNE      *BLANK
- 
+
      C                   ADD       1             Idx
- 
+
      C                   ROLBK
- 
+
      C                   ELSE
- 
+
       ** Commit the database changes
- 
+
      C                   COMMIT
- 
+
       ** Set up the returned message format
- 
+
      C                   MOVE      F5MSGT        F6MSGT
      C                   MOVE      F5TRUS        F6TRUS
      C                   MOVE      F5TRWS        F6TRWS
@@ -1054,9 +1061,9 @@
      C                   MOVE      F5SEQR        F6SEQR
      C                   MOVE      F5VDTC        F6VDTC
      C                   MOVE      F5LOAN        F6LOAN                                       CLE073
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1071,40 +1078,40 @@
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeOut
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Action Code
      C                   PARM                    S#ACTN            1
- 
+
       * Fee Settlement Details in file format
      C                   PARM                    LEVFESTPD
- 
+
       * File Receive instructions
      C                   PARM                    F_REC
- 
+
       * File Payment instructions
      C                   PARM                    F_PAY
- 
+
       * Fee currency
      C                   PARM                    S#FCCY            3
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement amount
      C                   PARM                    W#SADJ           13 0
- 
+
       * Settlement adjustment due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * TNLU of fee settlement record on LEFEEAD
      C                   PARM                    H#TNLU            5 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -1118,7 +1125,7 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * Front office inputs (if mode = 'B')
      C                   PARM                    F5PCOB            3
      C                   PARM                    F5TNRF           15
@@ -1151,16 +1158,16 @@
       * Write to the transaction errors file                          *
       *****************************************************************
      C     W_ZATRNERR    BEGSR
- 
+
      C                   MOVE      XREPN         ##REPN            5
      C                   EVAL      ABFOTRNID  = 'LE' + ##REPN
      C                   EVAL      ABMIDASMOD = 'LE'
      C                   EVAL      ABMSGFILE  = ZAMSGF
      C                   EVAL      ABTMESTMP  = XTMST
- 
+
       *  Do while error messages found
       *  Write error messages to file
- 
+
      C                   Z-ADD     1             #C                2 0
      C     #C            DOWLE     ArrayMax
      C     FldNameArr(#C)ANDNE     *BLANKS
@@ -1169,7 +1176,7 @@
      C                   WRITE     ZATRNERRD0
      C                   ADD       1             #C
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1196,7 +1203,7 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     'LERMSGF '    ZAMSGF
                                                                                               CAP084
       ** Check if CSC011 is installed                                                         CAP084

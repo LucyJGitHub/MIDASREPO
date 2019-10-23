@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD020934           Date 11May19              */
-/*       Prev Amend No. MD052961           Date 18Mar19              */
+/*       Last Amend No. MD026969           Date 23Oct19              */
+/*       Prev Amend No. MD020934           Date 11May19              */
+/*                      MD052961           Date 18Mar19              */
 /*                      MD049309           Date 14Feb18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD027396           Date 19Aug14              */
@@ -37,6 +38,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD026969 - New Processing for Fee Settlement.               */
+/*                - Applied for MD054354                             */
 /*       MD020934 - COB component LERC135 failed due to CDL045.      */
 /*                  Amend length of field &EXTLIB from 8 to 10 to    */
 /*                  avoid truncated library name which causes error. */
@@ -76,13 +79,13 @@
 /*       BH3479 - Correction to posting of payment date fee accruals */
 /*                                                                   */
 /*********************************************************************/
- 
+
 /**********PGM  PARM(&CNAM &CSEQ)           */                                            /*CLE139*/
 /*PGM  PARM(&CNAM &CSEQ &CCAP) */                                                  /*CLE139 CLE134*/
              PGM        PARM(&CNAM &CSEQ &CCAP &RERUN)                                    /*CLE134*/
- 
+
 /* Declare the variables for rerun checking */
- 
+
      DCL VAR(&CNAM) TYPE(*CHAR) LEN(10)
      DCL VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
      DCL VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -205,11 +208,11 @@
      CLRPFM     FILE(LEPK2ZZ)                                                             /*CLE134*/
      CLRPFM     FILE(LEPK2HH)                                                             /*CLE134*/
      ENDDO                                                                                /*CLE134*/
- 
+
 /* Check the current status of this component */
- 
+
      CALL PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
      IF COND(&STAT *EQ 'Y') THEN(DO)
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
              CPYF       FROMFILE(XLEFEAM) TOFILE(LEFEAM) +
@@ -225,7 +228,7 @@
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(LEPK2ZZ))                                                  /*CLE134*/
              ENDDO                                                                        /*CLE134*/
- 
+
             CPYF FROMFILE(XLEFEED) TOFILE(LEFEED) MBROPT(*REPLACE)
             MONMSG MSGID(CPF2817) CMPDTA(CPF2869) +
                    EXEC(CLRPFM FILE(LEFEED))
@@ -249,6 +252,9 @@
             MONMSG MSGID(CPF2817) CMPDTA(CPF2869) +
                    EXEC(CLRPFM FILE(LOAMSZ1))                                             /*CLE139*/
              ENDDO                                                                        /*CLE134*/
+            CPYF FROMFILE(XLEFZASPD) TOFILE(LEFZASPD) MBROPT(*REPLACE)                  /*MD026969*/
+            MONMSG MSGID(CPF2817) CMPDTA(CPF2869) +
+                   EXEC(CLRPFM FILE(LEFZASPD))                                          /*MD026969*/
 /*/COPY WNCPYSRC,LEH01177                                            */
                                                                       /*153736*/
     IF  COND(&CLE005 *EQ 'Y') THEN(DO)                                /*153736*/
@@ -260,7 +266,7 @@
      CPYF       FROMFILE(XPSTTOM) TOFILE(PSTTOM) MBROPT(*REPLACE) /*BH3479*/
      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO +
                 CMDLBL(NEXT))                                     /*BH3479*/
- 
+
      IF  COND(&CLE007 *EQ 'Y') THEN(DO)                               /*CLE007*/
      CPYF        FROMFILE(XLEPXTAA) TOFILE(LEPXTAA) MBROPT(*REPLACE)  /*CLE007*/
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(LEPXTAA)) /*CLE007*/
@@ -290,7 +296,7 @@
                           MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CLE134*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CLE134*/
              ENDDO                                                                        /*CLE134*/
- 
+
      CLRPFM XPSTTOM                                                                     /*MD027396*/
      CPYF       FROMFILE(LEFEED) TOFILE(XLEFEED) MBROPT(*REPLACE)
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLEFEED))
@@ -308,6 +314,8 @@
      CPYF       FROMFILE(LOAMSZ1) TOFILE(XLOAMSZ1) MBROPT(*REPLACE)                       /*CLE139*/
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLOAMSZ1))                    /*CLE139*/
              ENDDO                                                                        /*CLE134*/
+     CPYF       FROMFILE(LEFZASPD) TOFILE(XLEFZASPD) MBROPT(*REPLACE)                   /*MD026969*/
+     MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLEFZASPD))                 /*MD026969*/
 /*/COPY WNCPYSRC,LEH01178                                            */
                                                                       /*153736*/
     IF  COND(&CLE005 *EQ 'Y') THEN(DO)                                /*153736*/
@@ -326,26 +334,26 @@
     MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XLEPXTAC)) /*CLE007*/
     ENDDO                                                             /*CLE007*/
                                                                       /*CLE007*/
- 
+
 /* Set the status to failed (&STAT = Y) in case the program fails */
- 
+
      CHGVAR VAR(&STAT) VALUE('Y')
      CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If there are any account keys from yesterday run the RPG to      BH3479*/
 /* copy the account keys and to report them as being for posting    BH3479*/
 /* today                                                            BH3479*/
- 
+
      CPYF       FROMFILE(PSTTOM) TOFILE(XPSTTOM) MBROPT(*REPLACE) /*BH3479*/
      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO +
                 CMDLBL(NEXT))                                     /*BH3479*/
- 
+
      ENDDO
- 
+
              IF         COND(&RERUN *NE 'NEWCOB') THEN(DO)                                /*CLE134*/
              IF         COND(&CSEQ *NE 3) THEN(DO)                                      /*AR996830*/
             CALL LER134                                           /*BH3479*/
- 
+
      IF COND(%SWITCH(XXXXXX00)) THEN(DO)                          /*BH3479*/
                                                                   /*BH3479*/
        IF         COND(&CLE134 *EQ 'Y') THEN(DO)                                          /*CLE134*/
@@ -358,19 +366,19 @@
             SNDPGMMSG  MSG('Job terminated, database in error.') +
                                         TOMSGQ(MOPERQ MRUNQ)      /*BH3479*/
      GOTO END                                                     /*BH3479*/
- 
+
      ENDDO                                                        /*BH3479*/
              ENDDO                                                                      /*AR996830*/
              ENDDO                                                                        /*CLE134*/
- 
+
  NEXT:
- 
+
 /****Clear*PF/LEFEAM*before*calling*LER135*****************************/           /*216123 245803*/
 /*           CLRPFM     LEFEAM                                        */           /*216123 245803*/
   /* Clear PF/LEFEAM before calling LER135 */                                            /*243496B*/
              CLRPFM     LEFEAM                                                           /*243496B*/
   /* Call Fee Accruals & account Key Generation Program */
- 
+
 /**********  OPNQRYF    FILE((LEFEED)) OPTION(*ALL) QRYSLT(&SLC) */              /*CLE134 MD052961*/
 
              OPNQRYF    FILE((LEFEED)) OPTION(*ALL) QRYSLT(&SLC) +
@@ -385,18 +393,18 @@
              CALL       PGM(LER135) PARM(&CCAP &RERUN)                                 /*AR1055539*/
              CLOF       OPNID(LEFEED)                                                     /*CLE134*/
 /*/COPY WNCPYSRC,LEH01139                                            */
- 
+
   /* IF ERROR SEND MSG      */
- 
+
      IF COND(%SWITCH(XXXXXX11)) THEN(DO)
- 
+
 /***********SNDPGMMSG  MSG('Job terminated, database in error.') +/*  /*CLE007*/
 /***DBERR:*     SNDPGMMSG  MSG('Job terminated, database in error.') +*/                /*MD049309*/
 /**********               TOMSGQ(MOPERQ MRUNQ)                       */          /*CLE007 MD049309*/
  DBERR:      ROLLBACK                                                                   /*MD049309*/
              SNDPGMMSG  MSG('Job terminated, database in error.') +
                           TOMSGQ(MOPERQ MRUNQ)                                          /*MD049309*/
- 
+
      ENDDO
      ELSE CMD(DO)
                                                                                           /*CDL045*/
@@ -438,7 +446,7 @@
              ENDDO                                                                        /*CDL045*/
                                                                                           /*CDL045*/
          ENDDO                                                                            /*CDL045*/
- 
+
 /* If the component has completed successfully reset the status field */
      COMMIT                                                                             /*MD049309*/
      IF COND(&CLE007 *NE 'Y') THEN(DO)                                /*CLE007*/
@@ -447,12 +455,12 @@
      CHGVAR VAR(&STAT) VALUE('N')
      CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 /*/COPY WNCPYSRC,LEH01136                                            */
- 
+
      ENDDO
- 
+
 END:
      ENDCMTCTL                                                                          /*MD049309*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 ENDPGM

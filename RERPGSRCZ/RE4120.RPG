@@ -19,8 +19,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD050865           Date 05Jun18               *
+      *  Prev Amend No. MD046354           Date 03Oct17               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 MD042577           Date 28Nov16               *
       *                 218877             Date 26Aug15               *
       *                 MD042745           Date 20Nov16               *
@@ -98,6 +100,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD050865 - Include window processing for Retail Teller System*
+      *             transaction screens.                              *
+      *           - Recompiled over changes in RE4120GDTA and         *
+      *             RE4120MOV1.                                       *
+      *  MD046354 - Add window processing for Retail Teller System    *
+      *             transaction screens.                              *
+      *           - Standardise window processing to allow calls to   *
+      *             local windows as well as core windows.            *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD042577 - Create screen format for each option in order to  *
@@ -544,6 +554,8 @@
      I                                       62  81 WBYNM                 CRT002
      I                                       82 105 WTCNO                 CRT002
      I                                      106 155 WEMSG                 CRT002
+     I                                      156 158 WFCOD                                   MD046354
+     I/COPY QWINDSRC,RE4120GDTA                                                             MD046354
       *                                                                   CRT002
      I/COPY WNCPYSRC,RE4120I002
      I            DS                                                      CRT002
@@ -775,6 +787,9 @@
      ISDTCHG    E DSSDTCHGPD
      I** Default Charges Transaction Type Details
      I*
+     ISDMMOD    E DSSDMMODPD                                                                MD046354
+     I* Modules Details                                                                     MD046354
+     I*                                                                                     MD046354
      IDSFDY     E DSDSFDY
       *First DS for Access Programs, short data structure
       *
@@ -892,7 +907,8 @@
       *                                                                   CRT002
       **  Display and validate window details                             CRT002
       *                                                                   CRT002
-     C           PFNCD     IFEQ '0JX'                                     CRT002
+     C********** PFNCD     IFEQ '0JX'                                                CRT002 MD046354
+     C           BGWDPR    IFEQ 'Y'                                                         MD046354
      C           *IN51     ANDEQ'0'                                       CRT002
      C           *IN50     ANDEQ'0'                                       CRT002
      C                     EXSR DSPWND                                    CRT002
@@ -4014,9 +4030,11 @@
       *                                                                   CRT002
      C                     CLEARDATA                                      CRT002
      C                     MOVELPMODE     WMODE                           CRT002
+     C                     MOVELPFNCD     WFCOD                                             MD046354
      C                     MOVELSSCCY     WSCCY                           CRT002
      C                     MOVELSSAMT     WSAMT                           CRT002
      C                     MOVELPTLBC     WTLBC                           CRT002
+     C/COPY QWINDSRC,RE4120MOV1                                                             MD046354
       *                                                                   CRT002
      C           PMODE     IFEQ 'P'                                       CRT002
      C                     CLEAR@RANR2                                    CRT002
@@ -5553,6 +5571,11 @@
      C                     MOVEL'Y'       CCG016                                              CCG016
      C                     END                                                                CCG016
       *                                                                                       CCG016
+     C                     CALL 'AOMMODR0'                                                  MD046354
+     C                     PARM '*MSG    '@RTCD                                             MD046354
+     C                     PARM '*FIRST  '@OPTN                                             MD046354
+     C           SDMMOD    PARM SDMMOD    DSFDY                                             MD046354
+      *                                                                                     MD046354
      C                     ENDSR
       *****************************************************************
       /EJECT

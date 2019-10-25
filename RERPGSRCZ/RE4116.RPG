@@ -18,8 +18,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD050865           Date 05Jun18               *
+      *  Prev Amend No. MD046354           Date 03Oct17               *
+      *                 CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
@@ -147,6 +149,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD050865 - Include window processing for Retail Teller System*
+      *             transaction screens.                              *
+      *           - Recompiled over changes in RE4116GDTA and         *
+      *             RE4116MOV1.                                       *
+      *  MD046354 - Add window processing for Retail Teller System    *
+      *             transaction screens.                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  MD050139- AOSARDR0 called every time causing performance     *
@@ -1078,6 +1086,9 @@
      ISDTCHG    E DSSDTCHGPD
      I** Default Charges Transaction Type Details
      I*
+     ISDMMOD    E DSSDMMODPD                                                                MD046354
+     I* Modules Details                                                                     MD046354
+     I*                                                                                     MD046354
      I*                                                                   CCB002
      IDSMEMS    E DSMEMOS                                                 CCB002
      I** External data structure for MEMOS Details                        CCB002
@@ -1177,6 +1188,8 @@
      I*                                                                   S01408
      I/COPY WNCPYSRC,RE4116IIP2                                           S01408
      I*                                                                   S01408
+     I/COPY QWINDSRC,RE4116GDTA                                                             MD046354
+     I*                                                                                     MD046354
      IMUSER     E DSMUSERDD                                                                   CRT026
      I** External data structure for User Details                                             CRT026
      I** Renamed fields in PF/MUSERDD                                                         CRT026
@@ -2219,6 +2232,23 @@
      C           @SKIP     IFEQ 'N'                                                           249968
      C*                                                                   S01408
      C/COPY WNCPYSRC,RE4116CCP1                                           S01408
+     C           BGWDPR    IFEQ 'Y'                                                         MD046354
+     C/COPY QWINDSRC,RE4116MOV1                                                             MD046354
+     C                     CALL 'WN0010'                                                    MD046354
+     C                     PARM 'RE4116'  PPGM   10                                         MD046354
+     C                     PARM *BLANKS   PKEY    2                                         MD046354
+     C                     PARM 'I'       PACTN   1                                         MD046354
+     C                     PARM           PDATA                                             MD046354
+     C                     PARM *BLANKS   PRTRN   7                                         MD046354
+     C                     PARM *BLANKS   PSPAR 256                                         MD046354
+     C                     ENDIF                                                            MD046354
+      *                                                                                     MD046354
+     C           PRTRN     IFEQ 'Y2U9999'                                                   MD046354
+     C                     MOVE '1'       *INKC                                             MD046354
+     C                     EXSR LAST                                                        MD046354
+     C                     ENDIF                                                            MD046354
+      *                                                                                     MD046354
+     C           PRTRN     IFNE 'USR0790'                                                   MD046354
      C*                                                                   S01408
       *
      C                     EXSR UPDATE
@@ -2272,6 +2302,7 @@
      C*                                                                   S01408
       *
      C                     END
+     C                     END                                                              MD046354
      C/COPY WNCPYSRC,RE4116C021
       *
      C                     ENDSR
@@ -5863,6 +5894,11 @@ c     **  If CRE081 is OFF                                                      
      C                     MOVE 'Y'       CRE081                                              CRE081
      C                     ENDIF                                                              CRE081
       *                                                                                       CRE081
+     C                     CALL 'AOMMODR0'                                                  MD046354
+     C                     PARM '*MSG    '@RTCD                                             MD046354
+     C                     PARM '*FIRST  '@OPTN                                             MD046354
+     C           SDMMOD    PARM SDMMOD    DSFDY                                             MD046354
+      *                                                                                     MD046354
      C/COPY WNCPYSRC,REH00172
      C                     ENDSR
       *****************************************************************

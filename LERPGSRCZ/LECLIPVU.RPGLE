@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD036838A          Date 29Oct19               *
+      *  Prev Amend No. MD036838           Date 29Oct19               *
+      *                 MD030274           Date 29Oct19               *
+      *                 MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD053143           Date 04Apr19               *
       *                 MD052478           Date 15Jan19               *
@@ -139,6 +142,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036838A - Move ZASETINVAL call to ensure that settlement   *
+      *              will have correct values.                        *
+      *            - Applied for MD053956.                            *
+      *  MD036838 - Call ZASETINVAL for C_PAY to have similar details *
+      *             with ##PAYS.                                      *
+      *           - Applied for MD053956. Modified fix by removing    *
+      *             checking of ##PPAY or ##PREC for error message    *
+      *             LEL0700/LEL0701.                                  *
+      *  MD030274 - If System Value LoanStartStlInsAmd = 'Y', do not  *
+      *             pay settlement for LOAN or receipt settlement for *
+      *             PTSO.  Patterned after 230526.                    *
+      *           - Applied for MD053956.                             *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -873,6 +888,7 @@
       ** Work variables                          r                                            241519
      D WPARM           S             20A   INZ('LoanCustOriginPurch')                         241519
      D WPARM2          S             20A   INZ('PDCLBlockDebit')                           AR1078092
+     D WPARM3          S             20A   INZ('LoanStartStlInsAmd')                        MD030274
      D WBLKACCT        S              1A                                                   AR1078092
      D WMSGID          S              7A                                                   AR1078092
      D WX0             S              3P 0                                                 AR1078092
@@ -2024,7 +2040,7 @@
       ** Customer Loans Primary Details OK inds                                              BUG3721
      C                   PARM                    ClilFilFmt                                  BUG3721
      C                   PARM                    TranInPrim                                  BUG3721
-     C                   PARM                    OKClPrim                                           
+     C                   PARM                    OKClPrim
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
 
@@ -2235,37 +2251,41 @@
      C     CL_VDAT       IFLT      BJRDNB
      C     CL_ORED       ANDLT     BJRDNB
      C     LoanType      IFEQ      'PTSO'
+     C     STARAM        Ifeq      'N'                                                      MD030274
      C                   MOVEL     'Y'           ##PREC
+     C                   Endif                                                              MD030274
      C                   ELSE
+     C     STARAM        Ifeq      'N'                                                      MD030274
      C                   MOVEL     'Y'           ##PPAY
+     C                   Endif                                                              MD030274
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
 
-     C                   IF        ##PPAY = 'Y' AND ##PAYS <> C_Pay
-     C                             AND DDACTN <> 'X'                                         BUG4473
-      *                                                                                      BUG6010
-      ** Allow amendment of the settlement details.                                          BUG6010
-      *                                                                                      BUG6010
-     C                   EVAL      WIdx = WIdx + 1                                           BUG6010
-     C                   EVAL      WFldNamArr(WIdx) = 'DDPSTM'                               BUG6010
-     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0700'                               BUG6010
+     C**********         IF        ##PPAY = 'Y' AND ##PAYS <> C_Pay                         MD036838
+     C**********                   AND DDACTN <> 'X'                                BUG4473 MD036838
+      *****************************************************************             BUG6010 MD036838
+      ***Allow*amendment*of*the*settlement*details.********************             BUG6010 MD036838
+      *****************************************************************             BUG6010 MD036838
+     C**********         EVAL      WIdx = WIdx + 1                                  BUG6010 MD036838
+     C**********         EVAL      WFldNamArr(WIdx) = 'DDPSTM'                      BUG6010 MD036838
+     C**********         EVAL      WMsgIDArr(WIdx) = 'LEL0700'                      BUG6010 MD036838
      C**********         ADD       1             Idx                                         BUG6010
      C**********         EVAL      FldNameArr(Idx) = 'DDPSTM'                                BUG6010
      C**********         MOVEL     'LEL0677'     MsgIDArr(Idx)                               BUG6010
      C**********         GOTO      INVALID                                                   BUG6010
-     C                   ENDIF
+     C**********         ENDIF                                                              MD036838
 
-     C                   IF        ##PREC = 'Y' AND ##RECS <> C_Rec
-     C                             AND DDACTN <> 'X'                                         BUG4473
-     C                   EVAL      WIdx = WIdx + 1                                           BUG6010
-     C                   EVAL      WFldNamArr(WIdx) = 'DDRSTM'                               BUG6010
-     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0701'                               BUG6010
+     C**********         IF        ##PREC = 'Y' AND ##RECS <> C_Rec                         MD036838
+     C**********                   AND DDACTN <> 'X'                                BUG4473 MD036838
+     C**********         EVAL      WIdx = WIdx + 1                                  BUG6010 MD036838
+     C**********         EVAL      WFldNamArr(WIdx) = 'DDRSTM'                      BUG6010 MD036838
+     C**********         EVAL      WMsgIDArr(WIdx) = 'LEL0701'                      BUG6010 MD036838
      C**********         ADD       1             Idx                                         BUG6010
      C**********         EVAL      FldNameArr(Idx) = 'DDRSTM'                                BUG6010
      C**********         MOVEL     'LEL0678'     MsgIDArr(Idx)                               BUG6010
      C**********         GOTO      INVALID                                                   BUG6010
-     C                   ENDIF
+     C**********         ENDIF                                                              MD036838
       **********                                                                     AR314017 CLE164
      C**********         IF        CLE134 = 'Y'                                      AR314017 CLE164
       **********                                                                     AR314017 CLE164
@@ -2470,6 +2490,42 @@
      C                   OUT       LEFCLY                                                     CLE168
      C                   ENDIF                                                                CLE168
       *                                                                                       CLE168
+      *                                                                                    MD036838A
+      ** Call ZASETINVAL for C_PAY                                                         MD036838A
+      *                                                                                    MD036838A
+     C                   CALLB     'ZASETINVAL'                                            MD036838A
+     C                   PARM                    ReturnCode                                MD036838A
+     C                   PARM      'LEND'        ##CALP                                    MD036838A
+     C                   PARM      DDCURR        ##PCCY                                    MD036838A
+     C                   PARM      DDCURR        ##RCCY                                    MD036838A
+     C                   PARM      WWCUST        ##CSNM                                    MD036838A
+     C                   PARM      DDLTYP        ##TTYP                                    MD036838A
+     C                   PARM      *BLANKS       ##FFND                                    MD036838A
+     C                   PARM      DDBRCA        ##BRCA                                    MD036838A
+     C                   PARM                    ##DATR                                    MD036838A
+     C                   PARM                    ##DATP                                    MD036838A
+     C                   PARM                    C_PAY                                     MD036838A
+     C                   PARM                    C_REC                                     MD036838A
+     C                   PARM                    C_FRA                                     MD036838A
+     C                   PARM      DDACTN        ##ACTN                                    MD036838A
+     C                   PARM                    ##PPAY                                    MD036838A
+     C                   PARM                    ##PREC                                    MD036838A
+     C                   PARM                    OKPayInsDS                                MD036838A
+     C                   PARM                    OKRecInsDS                                MD036838A
+     C                   PARM                    OKFRAInsDS                                MD036838A
+     C                   PARM                    FldNameArr                                MD036838A
+     C                   PARM                    MsgIDArr                                  MD036838A
+     C                   PARM                    Idx                                       MD036838A
+     C                   PARM                    WFldNamArr                                MD036838A
+     C                   PARM                    WMsgIdArr                                 MD036838A
+     C                   PARM                    WMsgDtaArr                                MD036838A
+     C                   PARM                    WIdx                                      MD036838A
+     C                   PARM                    ##PAYF                                    MD036838A
+     C                   PARM                    ##RECF                                    MD036838A
+     C                   PARM                    ##FRIF                                    MD036838A
+     C                   PARM      DDACTN        ##ACTN                                    MD036838A
+     C                   PARM      '1ST'         ##ValIter                                 MD036838A
+      *                                                                                    MD036838A
      C                   CALLB     'ZASETINVAL'
 
       * Return Code
@@ -2533,7 +2589,22 @@
      C                   PARM      DDACTN        ##ACTN            1
       * Validation Iteration
      C                   PARM      '1ST'         ##ValIter         3
-
+      *                                                                                     MD036838
+      ** Move validation here.                                                              MD036838
+      *                                                                                     MD036838
+     C                   IF        ##PAYS <> C_Pay AND DDACTN <> 'X'                        MD036838
+     C                                                                                      MD036838
+     C                   EVAL      WIdx = WIdx + 1                                          MD036838
+     C                   EVAL      WFldNamArr(WIdx) = 'DDPSTM'                              MD036838
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0700'                              MD036838
+     C                   ENDIF                                                              MD036838
+                                                                                            MD036838
+     C                   IF        ##RECS <> C_Rec  AND DDACTN <> 'X'                       MD036838
+     C                                                                                      MD036838
+     C                   EVAL      WIdx = WIdx + 1                                          MD036838
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRSTM'                              MD036838
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0701'                              MD036838
+     C                   ENDIF                                                              MD036838
       ** Check and override blocked account                                                AR1078092
      C**********         IF        CLE134 = 'Y'                                  AR1078092 MD034521A
      C**********                   AND WBLKACCT = 'Y'                            AR1078092 MD034521A
@@ -4217,6 +4288,12 @@
       ** Set up parameter so access object checks LoanCustOriginPurch                         241519
      C                   MOVEL     WPARM         SVALK1                                       241519
      C                   MOVEL     WPARM2        SVALK2                                    AR1078092
+      *                                                                                     MD030274
+      ** Check System Value: Loan St Dt Settl Instr Amendable After                         MD030274
+      **                     After Value Date                                               MD030274
+      ** Set up parameter so access object checks LoanStartStlInsAmd                        MD030274
+      *                                                                                     MD030274
+     C                   MOVEL     WPARM3        SVALK3                                     MD030274
       * Call Access object:                                                                   241519
      C                   CALL      'AOSVALR0'                                                 241519
      C                   PARM                    RTNCDE            7                          241519
@@ -4243,6 +4320,7 @@
       * If the system value is not found then default value to 'P'                            241519
      C     RTNCDE        IFNE      '        '                                                 241519
      C                   MOVE      'P'           PPCUST                                       241519
+     C                   Movel     'N'           STARAM                                     MD030274
      C                   ELSE                                                                 241519
       * Isolate the first character of SVAL1 which = 'P' or 'O'.                              241519
      C                   MOVEL     SVAL1         WRK01             1                          241519
@@ -4252,6 +4330,19 @@
      C                   MOVE      'P'           PPCUST                                       241519
      C                   ENDIF                                                                241519
      C                   MOVEL     SVAL2         WBLKACCT                                  AR1078092
+      *                                                                                     MD030274
+      ** Isolate the first character of SVAL3 which should contain the                      MD030274
+      ** value Y or N.                                                                      MD030274
+      *                                                                                     MD030274
+     C                   Movel     SVAL3         WRK03             1                        MD030274
+     C     WRK03         Ifeq      'Y'                                                      MD030274
+     C                   Movel     'Y'           STARAM            1                        MD030274
+     C                   Else                                                               MD030274
+      *                                                                                     MD030274
+      ** If STARAM = 'N', Start Settlement Instructions can't be amended                    MD030274
+      *                                                                                     MD030274
+     C                   Movel     'N'           STARAM                                     MD030274
+     C                   Endif                                                              MD030274
      C                   ENDIF                                                                241519
       *                                                                                       CER001
       ** Determine if ULX004 is switched on                                                   CER001

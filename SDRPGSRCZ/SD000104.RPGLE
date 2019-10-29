@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD053088           Date 23Oct19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD050212           Date 02Apr18               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027298           Date 06Aug14               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053088 - FATCA Allocation/Search Tool's object exclusive   *
+      *             lock cause crash                                  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -101,8 +104,9 @@
      F                                     COMMIT
       *
       ** FATCA Customer Type & Classification List File
-     FSDFTCLPD  UF A E             DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     FSDFTCLL0  UF A E             DISK    INFSR(*PSSR)                                     MD053088
+     F***SDFTCLPD  UF A E             DISK    INFSR(*PSSR)                                  MD053088
+     F**********                           COMMIT                                           MD053088
       *
       ** Midas SD FATCA Customer Type & Classification Report
      FSD000104P1O    E             PRINTER INFSR(*PSSR)

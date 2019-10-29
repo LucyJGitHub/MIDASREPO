@@ -1,0 +1,83 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD FATCA Customer Type/Class Allo Tool')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC000102 - FATCA Customer Type & Classification        */
+/*                  Allocation Subfile                               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. MD053088 *CREATE   Date 23Oct19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD053088 - FATCA Allocation/Search Tool's object exclusive  */
+/*                  lock causes crash                                */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2019')
+
+             DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
+
+/* Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDMSG     MSG('SDC000102 - FATCA Customer Type & Class Allocation +
+                          Tool') TOMSGQ(MRUNQ)
+
+             RTVJOBA    JOB(&JOBID)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDFTCLL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDFTCLPD)
+             MONMSG     MSGID(CPF0000)
+
+             CPYF       FROMFILE(SDFTCLPD) TOFILE(QTEMP/SDFTCLPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CLRPFM     FILE(QTEMP/SDFTCLPD)
+
+             CRTDUPOBJ  OBJ(SDFTCLL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDFTCLL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DMLIB/&JOBID)
+
+/* Call the tool */
+             CALL       PGM(SD000102)
+
+             GOTO       CMDLBL(END)
+
+ERROR:
+             SNDMSG     MSG('FATCA Customer Type & Class Allocation Tool Ended +
+                          Abnormally') TOMSGQ(MOPERQ MRUNQ)
+
+END:
+             DLTF       FILE(QTEMP/SDFTCLL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDFTCLPD)
+             MONMSG     MSGID(CPF0000)
+
+             ENDPGM

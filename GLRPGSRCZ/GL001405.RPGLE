@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051746           Date 03May19               *
-      *  Prev Amend No. AR589183           Date 03May19               *
+      *  Last Amend No. MD054662           Date 30Oct19               *
+      *  Prev Amend No. MD051746           Date 03May19               *
+      *                 AR589183           Date 03May19               *
       *                 AR740400           Date 03May19               *
       *                 MD051723           Date 17Sep18               *
       *                 MD046248           Date 27Oct17               *
@@ -32,6 +33,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054662 - Emergency fix for case 02186832                   *
+      *             Messages requested for current date are not       *
+      *             processed (job GLC001415 is not submitted)        *
       *  MD051746 - Added COB Start Date in validating MT941/MT942    *
       *             requests                                          *
       *  AR589183 - Wrong status of scheduled MT941/MT942. Process    *
@@ -335,9 +339,10 @@
       ** Requests expired.
 
      C
-     C     MRRDTE        IFLE      WkStartDate                                              MD051746
+     C*****MRRDTE        IFLE      WkStartDate                                     MD051746 MD054662
      C                   IF        MRSRTIM <= WkExpTime                         Request Expired
      C                             AND MRSRTIM <> 'IMED'                        Not Immediate Req.
+     C                             AND MRRDTE <= WkStartDate                                MD054662
      C                   EVAL      MRSTAT = 'EXPIRED'
      C                   ELSE
 
@@ -390,7 +395,7 @@
      C                   ENDSL
 
      C                   ENDIF
-     C                   ENDIF                                                              MD051746
+     C**********         ENDIF                                                     MD051746 MD054662
 
      C                   ENDIF
 

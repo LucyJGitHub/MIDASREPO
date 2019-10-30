@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD036838A          Date 29Oct19               *
-      *  Prev Amend No. MD036838           Date 29Oct19               *
+      *  Last Amend No. MD053956           Date 29Oct19               *
+      *  Prev Amend No. MD036838A          Date 29Oct19               *
+      *                 MD036838           Date 29Oct19               *
       *                 MD030274           Date 29Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -142,6 +143,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053956 - Modified fix MD036838 by removing  checking of    *
+      *             ##PPAY or ##PREC for warning message LEL0700/0701.*
       *  MD036838A - Move ZASETINVAL call to ensure that settlement   *
       *              will have correct values.                        *
       *            - Applied for MD053956.                            *
@@ -2592,14 +2595,14 @@
       *                                                                                     MD036838
       ** Move validation here.                                                              MD036838
       *                                                                                     MD036838
-     C                   IF        ##PAYS <> C_Pay AND DDACTN <> 'X'                        MD036838
+     C                   IF        ##PAYS <> C_Pay AND DDACTN <> 'X'                        MD053956
      C                                                                                      MD036838
      C                   EVAL      WIdx = WIdx + 1                                          MD036838
      C                   EVAL      WFldNamArr(WIdx) = 'DDPSTM'                              MD036838
      C                   EVAL      WMsgIDArr(WIdx) = 'LEL0700'                              MD036838
      C                   ENDIF                                                              MD036838
                                                                                             MD036838
-     C                   IF        ##RECS <> C_Rec  AND DDACTN <> 'X'                       MD036838
+     C                   IF        ##RECS <> C_Rec  AND DDACTN <> 'X'                       MD053956
      C                                                                                      MD036838
      C                   EVAL      WIdx = WIdx + 1                                          MD036838
      C                   EVAL      WFldNamArr(WIdx) = 'DDRSTM'                              MD036838

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026854           Date 29May14               *
+      *  Last Amend No. MD053634           Date 21Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026854           Date 29May14               *
       *                 MD026755           Date 16May14               *
       *                 MD026780           Date 08May14               *
       *                 CGL132             Date 01May13               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053634 - Requested Customer “Authority Holders Link Report *
+      *             for KWG$24c” not generated.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026854 - Alternative country of citizenship is missing in  *
       *             history of customer information                   *
@@ -123,6 +126,8 @@
                                                                                               CSD092
      D SDCUAH        E DS                  EXTNAME(SDCUAHPD)                                  CSD092
      D B_CUAH        E DS                  EXTNAME(SDCUAHPD) PREFIX(B_:2)                     CSD092
+     D VCUAHArr        DS                                                                   MD053634
+     D V_CUAHArr                           DIM(50) LIKE(SDVCUAH)                            MD053634
                                                                                               CSD092
       ** Switchable Feature Details Data Structure                                            CSD092
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD092
@@ -134,6 +139,10 @@
      D   DDHCUS                1      6
      D   DDHAUT                7     16
      D   DDHLTP               17     18
+     D CUAHKey         DS                                                                   MD053634
+     D   CBCUST                            LIKE(CACUST)                                     MD053634
+     D   CBAUTH                            LIKE(CAAUTH)                                     MD053634
+     D   CBLTYP                            LIKE(CALTYP)                                     MD053634
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -163,6 +172,7 @@
      D PELEC           S              1A                                                      CGL132
      D POptn           S              7A                                                      CSD092
      D PSARD           S              6A                                                      CSD092
+     D Idx             S              3S 0                                                  MD053634
       *
       ** Timestamp for the transaction
       *
@@ -190,10 +200,39 @@
       *
       ** Process record according to Last Change Type
       *
-     C     ACTYLC        CASEQ     'I'           SRInsert
-     C     ACTYLC        CASEQ     'A'           SRAmend
-     C     ACTYLC        CASEQ     'D'           SRDelete
-     C                   ENDCS
+     C*****ACTYLC        CASEQ     'I'           SRInsert                                   MD053634
+     C*****ACTYLC        CASEQ     'A'           SRAmend                                    MD053634
+     C*****ACTYLC        CASEQ     'D'           SRDelete                                   MD053634
+     C**********         ENDCS                                                              MD053634
+                                                                                            MD053634
+     C                   EXSR      SRDelete                                                 MD053634
+                                                                                            MD053634
+     C                   EVAL      Idx = 1                                                  MD053634
+     C                   DOW       Idx <= 50                                                MD053634
+     C                             AND V_CUAHArr(Idx) <> *BLANKS                            MD053634
+     C                   EVAL      SDVCUAH = V_CUAHArr(Idx)                                 MD053634
+     C                   EVAL      KFCust = ACCUST                                          MD053634
+     C                   EVAL      KFAuth = ACAUTH                                          MD053634
+     C                   EVAL      KFLtyp = ACLTYP                                          MD053634
+      *                                                                                     MD053634
+      ** Access Customer/Authority Details File                                             MD053634
+      *                                                                                     MD053634
+     C     KLCuAh        CHAIN     SDCUAHL0                                                 MD053634
+     C                   IF        NOT %FOUND(SDCUAHL0)                                     MD053634
+     C                   EXSR      SRInsert                                                 MD053634
+     C                   ELSE                                                               MD053634
+     C                   IF        ACPRG1 <> CAPRG1 or                                      MD053634
+     C                             ACPRG2 <> CAPRG2 or                                      MD053634
+     C                             ACPRG3 <> CAPRG3 or                                      MD053634
+     C                             ACPRG4 <> CAPRG4 or                                      MD053634
+     C                             ACTYPA <> CATYPA or                                      MD053634
+     C                             ACCINT <> CACINT or                                      MD053634
+     C                             ACPCNT <> CAPCNT                                         MD053634
+     C                   EXSR      SRAmend                                                  MD053634
+     C                   ENDIF                                                              MD053634
+     C                   ENDIF                                                              MD053634
+     C                   EVAL      Idx = Idx + 1                                            MD053634
+     C                   ENDDO                                                              MD053634
       *
       ** Return from Program
       *
@@ -213,20 +252,20 @@
       *
       ** Populate Key fields
       *
-     C                   EVAL      KFCust = ACCUST
-     C                   EVAL      KFAuth = ACAUTH
-     C                   EVAL      KFLtyp = ACLTYP
-      *
-      ** Access Customer/Authority Details File
-      *
-     C     KLCuAh        CHAIN     SDCUAHL0
-      *
-     C                   IF        %FOUND(SDCUAHL0)
-     C                   EVAL      DBKEY  = ACCUST
-     C                   EVAL      DBFILE = 'SDCUAHPD'
-     C                   EVAL      DBASE  = 001
-     C                   EXSR      SRErr
-     C                   ENDIF
+     C**********         EVAL      KFCust = ACCUST                                          MD053634
+     C**********         EVAL      KFAuth = ACAUTH                                          MD053634
+     C**********         EVAL      KFLtyp = ACLTYP                                          MD053634
+      **********                                                                            MD053634
+      ***Access*Customer/Authority*Details*File************************                     MD053634
+      **********                                                                            MD053634
+     C*****KLCuAh        CHAIN     SDCUAHL0                                                 MD053634
+      **********                                                                            MD053634
+     C**********         IF        %FOUND(SDCUAHL0)                                         MD053634
+     C**********         EVAL      DBKEY  = ACCUST                                          MD053634
+     C**********         EVAL      DBFILE = 'SDCUAHPD'                                      MD053634
+     C**********         EVAL      DBASE  = 001                                             MD053634
+     C**********         EXSR      SRErr                                                    MD053634
+     C**********         ENDIF                                                              MD053634
       *
       ** Set fields on Insert
       *
@@ -238,7 +277,8 @@
      C                   EVAL      CAPRG2 = ACPRG2
      C                   EVAL      CAPRG3 = ACPRG3
      C                   EVAL      CAPRG4 = ACPRG4
-     C                   EVAL      CATYLC = ACTYLC
+     C**********         EVAL      CATYLC = ACTYLC                                          MD053634
+     C                   EVAL      CATYLC = 'I'                                             MD053634
      C                   EVAL      CAFRNT = ACFRNT
      C                   EVAL      CAREPA = ACREPA
      C                   IF        ACCINT = ' '                                             MD026780
@@ -293,38 +333,39 @@
       *****************************************************************
      C     SRAmend       BEGSR
       *
-      ** If shadow key fields contain values, use it to Chain,
-      ** else Chain on file with the Key Fields from Valid File
-      *
-     C                   IF        UpdKey = *BLANKS
-      *
-     C                   EVAL      KFCust = ACCUST
-     C                   EVAL      KFAuth = ACAUTH
-     C                   EVAL      KFLTyp = ACLTYP
-      *
-     C                   ELSE
-      *
-     C                   EVAL      KFCust = DDHCUS
-     C                   EVAL      KFAuth = DDHAUT
-     C                   EVAL      KFLtyp = DDHLTP
-      *
-     C                   ENDIF
-      *
-      ** Access Customer/Authority Details File
-      *
-     C     KLCuAh        CHAIN     SDCUAHL0
-      *
-      ** If error in processing
-      *
-     C                   IF        NOT %FOUND(SDCUAHL0)
-      *
-     C                   EVAL      DBKEY  = ACCUST
-     C                   EVAL      DBFILE = 'SDCUAHPD'
-     C                   EVAL      DBASE = 002
-     C                   EXSR      SRErr
-      *
-     C                   ENDIF
-     C                   MOVE      B_CUAH        SDCUAH                                       CSD092
+      ***If*shadow*key*fields*contain*values,*use*it*to*Chain,*********                     MD053634
+      ***else*Chain*on*file*with*the*Key*Fields*from*Valid*File********                     MD053634
+      **********                                                                            MD053634
+     C**********         IF        UpdKey = *BLANKS                                         MD053634
+      **********                                                                            MD053634
+     C**********         EVAL      KFCust = ACCUST                                          MD053634
+     C**********         EVAL      KFAuth = ACAUTH                                          MD053634
+     C**********         EVAL      KFLTyp = ACLTYP                                          MD053634
+      **********                                                                            MD053634
+     C**********         ELSE                                                               MD053634
+      **********                                                                            MD053634
+     C**********         EVAL      KFCust = DDHCUS                                          MD053634
+     C**********         EVAL      KFAuth = DDHAUT                                          MD053634
+     C**********         EVAL      KFLtyp = DDHLTP                                          MD053634
+      **********                                                                            MD053634
+     C**********         ENDIF                                                              MD053634
+      **********                                                                            MD053634
+      ***Access*Customer/Authority*Details*File***********************                      MD053634
+      **********                                                                            MD053634
+     C*****KLCuAh        CHAIN     SDCUAHL0                                                 MD053634
+      **********                                                                            MD053634
+      ***If*error*in*processing***************************************                      MD053634
+      **********                                                                            MD053634
+     C**********         IF        NOT %FOUND(SDCUAHL0)                                     MD053634
+      **********                                                                            MD053634
+     C**********         EVAL      DBKEY  = ACCUST                                          MD053634
+     C**********         EVAL      DBFILE = 'SDCUAHPD'                                      MD053634
+     C**********         EVAL      DBASE = 002                                              MD053634
+     C**********         EXSR      SRErr                                                    MD053634
+      **********                                                                            MD053634
+     C**********         ENDIF                                                              MD053634
+     C**********         MOVE      B_CUAH        SDCUAH                              CSD092 MD053634
+     C                   EVAL      B_CUAH = SDCUAH                                          MD053634
       *
       ** Set fields on Amend
       *
@@ -336,7 +377,8 @@
      C                   EVAL      CAPRG2 = ACPRG2
      C                   EVAL      CAPRG3 = ACPRG3
      C                   EVAL      CAPRG4 = ACPRG4
-     C                   EVAL      CATYLC = ACTYLC
+     C**********         EVAL      CATYLC = ACTYLC                                          MD053634
+     C                   EVAL      CATYLC = 'A'                                             MD053634
      C                   EVAL      CAFRNT = ACFRNT
      C                   EVAL      CAREPA = ACREPA
      C                   IF        ACCINT = ' '                                             MD026780
@@ -393,38 +435,61 @@
       *
       ** Populate Key fields
       *
-     C                   EVAL      KFCust = ACCUST
-     C                   EVAL      KFAuth = ACAUTH
-     C                   EVAL      KFLtyp = ACLTYP
-                                                                                              CER059
-      ** Delete all records for a given customer                                              CER059
-                                                                                              CER059
-     C                   IF        KFAuth = *BLANKS                                           CER059
-     C                             AND KFLtyp = *BLANKS                                       CER059
-     C     KLcuAh        SETLL     SDCUAHL0                                                   CER059
-     C                   READ      SDCUAHL0                                                   CER059
-     C                   DOW       NOT %EOF(SDCUAHL0)                                         CER059
-     C                             AND KFCust =  CACUST                                       CER059
-     C                   DELETE    SDCUAHD0                                                   CER059
-     C                   READ      SDCUAHL0                                                   CER059
-     C                   ENDDO                                                                CER059
-                                                                                              CER059
-     C                   ELSE                                                                 CER059
-      *
-      ** Access Customer/Authority Details File
-      *
-     C     KLCuAh        CHAIN     SDCUAHL0
-      *
-     C                   IF        NOT %FOUND(SDCUAHL0)
-     C                   EVAL      DBKEY  = ACCUST
-     C                   EVAL      DBFILE = 'SDCUAHPD'
-     C                   EVAL      DBASE  = 003
-     C                   EXSR      SRErr
-     C                   ENDIF
-      *
-      ** Delete Transaction Detail
-      *
-     C                   DELETE    SDCUAHD0
+     C**********         EVAL      KFCust = ACCUST                                          MD053634
+     C**********         EVAL      KFAuth = ACAUTH                                          MD053634
+     C**********         EVAL      KFLtyp = ACLTYP                                          MD053634
+      **********                                                                     CER059 MD053634
+      ***Delete*all*records*for*a*given*customer**********************               CER059 MD053634
+      **********                                                                     CER059 MD053634
+     C**********         IF        KFAuth = *BLANKS                                  CER059 MD053634
+     C**********                   AND KFLtyp = *BLANKS                              CER059 MD053634
+     C*****KLcuAh        SETLL     SDCUAHL0                                          CER059 MD053634
+     C**********         READ      SDCUAHL0                                          CER059 MD053634
+     C**********         DOW       NOT %EOF(SDCUAHL0)                                CER059 MD053634
+     C**********                   AND KFCust =  CACUST                              CER059 MD053634
+     C**********         DELETE    SDCUAHD0                                          CER059 MD053634
+     C**********         READ      SDCUAHL0                                          CER059 MD053634
+     C**********         ENDDO                                                       CER059 MD053634
+      **********                                                                     CER059 MD053634
+     C**********         ELSE                                                        CER059 MD053634
+      **********                                                                            MD053634
+      ***Access*Customer/Authority Details File***********************                      MD053634
+      **********                                                                            MD053634
+     C*****KLCuAh        CHAIN     SDCUAHL0                                                 MD053634
+      **********                                                                            MD053634
+     C**********         IF        NOT %FOUND(SDCUAHL0)                                     MD053634
+     C**********         EVAL      DBKEY  = ACCUST                                          MD053634
+     C**********         EVAL      DBFILE = 'SDCUAHPD'                                      MD053634
+     C**********         EVAL      DBASE  = 003                                             MD053634
+     C**********         EXSR      SRErr                                                    MD053634
+     C**********         ENDIF                                                              MD053634
+      **********                                                                            MD053634
+      ***Delete*Transaction Detail************************************                      MD053634
+      **********                                                                            MD053634
+     C**********         DELETE    SDCUAHD0                                                 MD053634
+                                                                                            MD053634
+     C                   EVAL      KFCust = V_CUAHArr(1)                                    MD053634
+     C                   EVAL      KFAuth = *blanks                                         MD053634
+     C                   EVAL      KFLtyp = *blanks                                         MD053634
+     C     KLcuAh        SETLL     SDCUAHL0                                                 MD053634
+     C                   READ      SDCUAHL0                                                 MD053634
+     C                   DOW       NOT %EOF(SDCUAHL0)                                       MD053634
+     C                             AND KFCust =  CACUST                                     MD053634
+     C                   EVAL      CBCUST = CACUST                                          MD053634
+     C                   EVAL      CBAUTH = CAAUTH                                          MD053634
+     C                   EVAL      CBLTYP = CALTYP                                          MD053634
+      ** When record not found                                                              MD053634
+     C                   IF        %SCAN(CUAHKey:VCUAHArr) = 0                              MD053634
+     C                   EVAL      B_CUAH = SDCUAH                                          MD053634
+     C                   EVAL      CATYLC = 'D'                                             MD053634
+      *                                                                                     MD053634
+      ** Gernerate a Timestamp for the Transaction                                          MD053634
+      *                                                                                     MD053634
+     C                   CALLB     'ZAGENTMSTM'                                             MD053634
+     C                   PARM                    TimeStamp                                  MD053634
+      *                                                                                     MD053634
+     C                   MOVE      TimeStamp     CATMST                                     MD053634
+     C                   UPDATE    SDCUAHD0                                                 MD053634
       *
      C                   IF        CSD092 = 'Y'                                               CSD092
                                                                                               CSD092
@@ -438,8 +503,9 @@
      C                   PARM      *BLANKS       PAftFTCS                                     CGL132
      C                   PARM      *BLANKS       PBefJACC                                     CSD092
      C                   PARM      *BLANKS       PAftJACC                                     CSD092
-     C                   PARM      SDCUAH        PBefCUAH                                     CSD092
-     C                   PARM      *BLANKS       PAftCUAH                                     CSD092
+     C**********         PARM      SDCUAH        PBefCUAH                            CSD092 MD053634
+     C                   PARM      B_CUAH        PBefCUAH                                   MD053634
+     C                   PARM      *BLANKS       PAftCUAH                                     CSD092 
      C                   PARM      *BLANKS       PBefCUXC                                   MD026854
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
@@ -447,6 +513,8 @@
      C                   ENDIF                                                                CSD092
                                                                                               CSD092
      C                   ENDIF                                                                CER059
+     C                   READ      SDCUAHL0                                                 MD053634
+     C                   ENDDO                                                              MD053634
                                                                                               CER059
      C                   ENDSR
       *****************************************************************
@@ -465,8 +533,9 @@
      C     *ENTRY        PLIST
      C**********         PARM                    PRtCd                                      MD026755
      C                   PARM                    PRetCode                                   MD026755
-     C                   PARM                    UpdKey
-     C                   PARM                    SDVCUAH
+     C**********         PARM                    UpdKey                                     MD053634
+     C**********         PARM                    SDVCUAH                                    MD053634
+     C                   PARM                    VCUAHArr                                   MD053634
                                                                                               CSD092
       ** Check if CSD092 is enabled.                                                          CSD092
                                                                                               CSD092

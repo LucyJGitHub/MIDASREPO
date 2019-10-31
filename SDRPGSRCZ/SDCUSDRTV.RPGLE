@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052425           Date 22Aug19               *
+      *  Last Amend No. MD053634           Date 21Oct19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052425           Date 22Aug19               *
       *                 MD050457           Date 06Mar19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD041527           Date 22Sep16               *
@@ -147,6 +148,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053634 - Requested Customer “Authority Holders Link Report *
+      *             for KWG$24c” not generated.                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *
@@ -317,9 +320,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDCUSTLR  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDCMRKLR  IF   E           K DISK    INFSR (*PSSR)                                      CSD079
       ** Marketing Information   Retrieval index                                              CSD079
                                                                                               CSD079
@@ -358,23 +361,23 @@
                                                                                               CSD079
      FSDCUSDL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDCUSTD0:SDCUSFOI)
- 
+
      FSDCBRTLR  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDPBDSLR  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(A_)
      FSDTICSLR  IF   E           K DISK    INFSR(*PSSR)                                      BUG3362
      F                                     PREFIX(A_)                                        BUG3362
- 
+
       ** Global Customers X-Reference Retrieval index                                         CGP001
      FGPCUSTXL1 IF   E           K DISK    INFSR(*PSSR)                                       CGP001
                                                                                               CGP001
       * RTV : Customer Risk Weight Code Retrieval index
      FSDCRWCL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * RTV : Midas SD Message type descriptions retrieval
      FSDMTPYL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * RTV : Message Network Details   Retrieval index
      FSDNWRKL1  IF   E           K DISK    INFSR(*PSSR)
                                                                                               CSD012
@@ -447,7 +450,7 @@
       *                                                                                       CFT050
       ** Country codes                                                                        CFT050
      FSDCTRYL3  IF   E           K DISK    INFSR(*PSSR)                                       CFT050
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -459,39 +462,39 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -499,24 +502,24 @@
                                                                                               CGL132
      D SysVal1         C                   'FATCADftCLsNewCustNH'                             CGL132
      D SysVal2         C                   'FATCACountryofTax'                                CGL132
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS ICD retrieval
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     CGL132
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)                                  CSD079
       ** Data Structure for Portfolio Management Details                                      CSD079
- 
+
       ** External DS for Customer Details                                                   BUG23518
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG23518
      D                                     PREFIX(A)                                        BUG23518
@@ -592,7 +595,7 @@
      D TranInPrim    E DS                  EXTNAME(SDCUPRPD)                                  CFT050
      D                                     PREFIX(D)                                          CFT050
      D TranInSeco    E DS                  EXTNAME(SDCUSEPD)                                  CFT050
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
      D ZMUSER          DS
@@ -646,7 +649,7 @@
      D CrsdFilFmt    E DS                  EXTNAME(SDCRSHPD)                                  CGL157
      D PCrsdF          S            219A   DIM(30)                                            CGL177
                                                                                               CGL157
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -673,7 +676,7 @@
      D SVal9           S            200                                                       CGL132
      D SValK0          S             20                                                       CGL132
      D SVal10          S            200                                                       CGL132
- 
+
       ** For QUSRJOBI                                                                       BUG27866
      D WWRTRN          DS           187                                                     BUG27866
      D  WWJOB                  9     18                                                     BUG27866
@@ -758,7 +761,7 @@
      D   WDS1048              48     48
      D   WDS1049              49     49
      D   WDS1050              50     50
- 
+
      D @WCDS2          DS           200
      D   WDS2000               1    200
      D   WDS2001               1      1
@@ -811,7 +814,7 @@
      D   WDS2048              48     48
      D   WDS2049              49     49
      D   WDS2050              50     50
- 
+
      D @WCDS3          DS           200
      D   WDS3000               1    200
      D   WDS3001               1      1
@@ -864,7 +867,7 @@
      D   WDS3048              48     48
      D   WDS3049              49     49
      D   WDS3050              50     50
- 
+
      D @WCDS4          DS           200
      D   WDS4000               1    200
      D   WDS4001               1      1
@@ -917,7 +920,7 @@
      D   WDS4048              48     48
      D   WDS4049              49     49
      D   WDS4050              50     50
- 
+
      D @WCDS5          DS           200
      D   WDS5000               1    200
      D   WDS5001               1      1
@@ -970,7 +973,7 @@
      D   WDS5048              48     48
      D   WDS5049              49     49
      D   WDS5050              50     50
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
      D Idy             S              3P 0                                                    CER059
@@ -1002,7 +1005,7 @@
      D*CSD037***       S              1A   INZ('N')                                  CSD031 BUG13525
      D*WCustLR**       S              1A                                             CSD031 BUG13525
      D*WTyLC****       S              1A                                             CSD031 BUG13525
- 
+
       ** Parameters for calling AOSVALR0 (Midas System Value Access Object)                   CSD027
      D PRetCode        S              7A                                                      CSD027
      D PSysValK1       S             20A                                                      CSD027
@@ -1036,7 +1039,7 @@
      D PValid          S              6A                                                      CSD027
      D PCheckDigit     S              1A                                                      CSD027
      D W_SkipFlag      S              1A                                                    BUG11886
- 
+
       ** Work Variables for CSD079                                                            CSD079
      D ModeofOp        S              6A                                                      CSD079
      D RespMode        S              1A                                                      CSD079
@@ -1227,13 +1230,13 @@
      C     OKCUST        OREQ      'N'
      C                   RETURN
      C                   END
- 
+
      C     S01383        IFEQ      'Y'
       *
       * SET UP SDCBRTPD DETAILS IF BASE RATE TAX IS ON
       *
      C                   EXSR      RTVBRT
- 
+
      C                   ENDIF
       *
      C     BGN4ST        IFEQ      'Y'
@@ -1241,7 +1244,7 @@
       * SET UP SDPBDSPD DETAILS IF PRIVATE BANKING IS ON
       *
      C                   EXSR      RTVPRV
- 
+
      C                   ENDIF
       *                                                                                      BUG3362
       ** Retrieve Details for TI if CSD012 is ON                                             BUG3362
@@ -1583,7 +1586,7 @@
      C                   END
      C                   END
      C**********         ENDIF                                                       CSD031 BUG13525
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1607,7 +1610,7 @@
                                                                                               CSD031
      C**********         IF        PAccMde <> 'A'                                    CSD031 BUG13525
      C     DDACTN        IFEQ      'I'
- 
+
      C     *IN45         IFEQ      '0'
      C     XRECI         ANDEQ     'D'
      C                   MOVEL     'N'           OKCUST
@@ -1629,10 +1632,10 @@
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
      C                   MOVEL     'USR3855'     MsgIdArr(Ix)
      C                   END
- 
+
      C                   ENDIF
      C**********         ENDIF                                                       CSD031 BUG13525
- 
+
      C                   ENDSR
       *****************************************************************                       CGL132
       /EJECT                                                                                  CGL132
@@ -1792,7 +1795,7 @@
                                                                                               CSD031
      C**********         IF        PAccMde <> 'A'                                    CSD031 BUG13525
      C     DDACTN        IFEQ      'I'
- 
+
      C     *IN45         IFEQ      '0'
      C     A_PBRECI      ANDEQ     'D'
      C                   MOVEL     'N'           OKCUST
@@ -1814,10 +1817,10 @@
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
      C                   MOVEL     'USR3865'     MsgIdArr(Ix)
      C                   END
- 
+
      C                   ENDIF
      C**********         ENDIF                                                       CSD031 BUG13525
- 
+
      C                   ENDSR
       *****************************************************************
       * RTVTID - Retrieve TI Customer Details                                                BUG3362
@@ -1962,7 +1965,7 @@
       * IF NOT INSERT, UPDATE MIDAS CUSTOMER NUMBER
       *
      C                   MOVEL     BBCUST        DDCUSN
- 
+
      C                   END
                                                                                               CGL132
       ** Access FATCA customer with Front office transaction ID                               CGL132
@@ -3204,7 +3207,7 @@
      C                   END
      C*
      C                   END
- 
+
      C     EVALAD        ENDSR
       *****************************************************************                       CSD007
       * VALACC - VALIDATION OF ACTION CODE 'C'                                                CSD007
@@ -3311,7 +3314,7 @@
      C     WDS2031       IFEQ      'F'                                                      MD052425
      C                   MOVEL     '5049228'     MsgIdArr(Ix)                               MD052425
      C                   GOTO      EVALAC                                                   MD052425
-     C                   ENDIF                                                              MD052425     
+     C                   ENDIF                                                              MD052425
       *                                                                                     MD050457
       ** Customer defined on LEFEEDL1                                                       MD050457
       ** CASE: WRK.Customer Deln Flag 240 is Do not delete                                  MD050457
@@ -4302,6 +4305,7 @@
      C                   READ      SDCUAHLA                                                   CER059
      C                   DOW       NOT %EOF(SDCUAHLA)                                         CER059
      C                             AND DDCUSN = CACUST                                        CER059
+     C                   IF        CATYLC <> 'D'                                            MD053634
      C                   EVAL      AHAUTH  = CAAUTH                                           CER059
      C                   EVAL      AHLTYP  = CALTYP                                           CER059
      C                   EVAL      AHPRG1  = CAPRG1                                           CER059
@@ -4313,6 +4317,7 @@
      C                   EVAL      AHPCNT  = CAPCNT                                         MD026780
      C                   EVAL      CUAHArr(Idy) = TranInCUAH1                                 CER059
      C                   EVAL      Idy =Idy + 1                                               CER059
+     C                   ENDIF                                                              MD053634
      C                   READ      SDCUAHLA                                                   CER059
      C                   ENDDO                                                                CER059
      C                   EVAL      TranInCUAH = CUAHArrDS                                     CER059

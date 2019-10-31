@@ -344,7 +344,6 @@
      C                             AND MRSRTIM <> 'IMED'                        Not Immediate Req.
      C                             AND MRRDTE <= WkStartDate                                MD054662
      C                   EVAL      MRSTAT = 'EXPIRED'
-     C                             AND MRRDTE <= WkStartDate                                MD054662
      C                   ELSE
 
       ** Requests to submit.

@@ -145,12 +145,12 @@
       *
      C     BVTVDV        IFEQ      'T'
      C                   ADD       UDNT          CumulPosit
-     C*                  ADD       SNPT          CumulPosit
-     C*                  ADD       CDST          CumulPosit
+     C                   ADD       UDTP          CumulPosit
+     C                   ADD       UDTS          CumulPosit
      C                   ELSE
      C                   ADD       UDNV          CumulPosit
-     C*                  ADD       CNPV          CumulPosit
-     C*                  ADD       CNSV          CumulPosit
+     C                   ADD       UDPV          CumulPosit
+     C                   ADD       UDSV          CumulPosit
      C                   END
       *
      C                   END

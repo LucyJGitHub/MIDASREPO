@@ -10,11 +10,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054017           Date 03Sep19               *
-      *  Prev Amend No. CER050  *Create    Date 16Jun19               *
+      *  Last Amend No. MD054698           Date 31Oct19               *
+      *  Prev Amend No. MD054017           Date 03Sep19               *
+      *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054698 - CER050 REC376A 00001 failed during COB            *
       *  MD054017-Change on validation of System Value "APR Formula"  *
       *  CER050 - Annualised Percentage Rate                          *
       *           (including AR583105)                                *
@@ -470,6 +472,8 @@
       *
       *  PREPARE B/F BALANCE
      C     DRECI         IFEQ      'B'                                          - B1
+     C     DRECI         OREQ      'D'                                                      MD054698
+     C     DRECI         OREQ      'M'                                                      MD054698
      C                   Z-ADD     *ZEROS        HISB0
      C                   ELSE                                                   - X1
      C     DRECI         IFEQ      'S'                                          - B2
@@ -861,6 +865,8 @@
       *
       * PREPARE B/F BALANCE
      C     DRECI         IFEQ      'B'                                          - B1
+     C     DRECI         OREQ      'D'                                                      MD054698
+     C     DRECI         OREQ      'M'                                                      MD054698
      C                   Z-ADD     *ZEROS        HISB0
      C                   ELSE                                                   - X1
      C     DRECI         IFEQ      'S'                                          - B2

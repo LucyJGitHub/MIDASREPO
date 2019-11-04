@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. CMG009             Date 24Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG009 - MT942 without Forward Value Postings                *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -138,6 +140,9 @@
  
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  Data Structure for Bank Details.
+                                                                                              CMG009
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CMG009
+      **  Data Structure for Switchable features descriptions.                                CMG009
  
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  First DS for access programs, long data structure.
@@ -160,6 +165,7 @@
  
      D P@RTCD          S              7                                         Return code
      D P@OPTN          S              7                                         Option
+     D P@SARD          S              6                                                       CMG009
      D P@ACNO          S             10                                         Retail Acc. Number
      D P@CUSN          S              6                                         Customer Number
      D P@CURR          S              3                                         Currency
@@ -172,6 +178,7 @@
      D PrcAccnt        S              1                                         Process Account
      D PrcMvnt         S              1                                         Process Movement
      D WkNARR          S                   LIKE(GLPNAR)                         Posting Narrative
+     D CMG009          S              1                                         CMG009 flag   CMG009
  
       ** Input Specs
       ** -----------
@@ -289,6 +296,20 @@
      C                   EVAL      ReturnCode = 'Error'                         Return code
      C                   END                                                    End P@RTCD
  
+      ** Check if feature CMG009 (MT942 without Forward Value Postings) is installed          CMG009
+                                                                                              CMG009
+     C                   EVAL      CMG009 = 'N'                                               CMG009
+                                                                                              CMG009
+     C                   CALLB     'AOSARDR0'                                                 CMG009
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CMG009
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CMG009
+     C                   PARM      'CMG009 '     P@SARD                         Feature Ref.  CMG009
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG009
+                                                                                              CMG009
+     C                   IF        P@RTCD = *BLANKS                                           CMG009
+     C                   EVAL      CMG009 = 'Y'                                               CMG009
+     C                   ENDIF                                                                CMG009
+
       *    ---------     -----
      C     @RtvAccNo     ENDSR
  
@@ -306,6 +327,13 @@
      C                   GOTO      @UsedMvnt
      C                   ENDIF
  
+     C                   IF        CMG009 = 'Y'                                               CMG009
+     C                             AND  PTDT =  BJRDNB                                        CMG009
+     C                             AND  VUDT >  BJRDNB                                        CMG009
+     C                   EVAL      PrcMvnt = 'N'                                              CMG009
+     C                   GOTO      @UsedMvnt                                                  CMG009
+     C                   ENDIF                                                                CMG009
+
       **  This routine verifies if the movement has been already processed.
       **  In fact, the processing checks if the movement is in LF/GLFFAML0.
  

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039029           Date 13Jul16               *
+      *  Last Amend No. CMG009             Date 24Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039029           Date 13Jul16               *
       *                 MD036398           Date 02Nov15               *
       *                 MD034442           Date 14Jul15               *
       *                 MD032299           Date 23Mar15               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG009 - MT942 without Forward Value Postings                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039029 - No MT942 generated even if there are shadow       *
       *             postings, for e.g. from Batch Postings, because   *
@@ -267,6 +269,7 @@
  
      D PRCGLPN         S              1                                         UpdGLPOSTPD MD032299
      D PRCRSMN         S              1                                         UpdGLRSACPD MD032299
+     D CMG009          S              1                                         CMG009 flag   CMG009
       ** Input Specs
       ** -----------
  
@@ -414,6 +417,13 @@
      C                   GOTO      @UsedMvnt
      C                   ENDIF
  
+     C                   IF        CMG009 = 'Y'                                               CMG009
+     C                             AND  PTDT =  BJRDNB                                        CMG009
+     C                             AND  VUDT >  BJRDNB                                        CMG009
+     C                   EVAL      PrcMvnt = 'N'                                              CMG009
+     C                   GOTO      @UsedMvnt                                                  CMG009
+     C                   ENDIF                                                                CMG009
+
       **  This routine verifies if the movement has been already processed.
       **  In fact, the processing checks if the movement is in LF/GLRSACL0.
  
@@ -829,6 +839,19 @@ e1   C                   Endsl                                                  
      C                   EXSR      *PSSR                                                      CAP204
      C                   END                                                                  CAP204
       *                                                                                       CAP204
+      ** Check if feature CMG009 (MT942 without Forward Value Postings) is installed          CMG009
+                                                                                              CMG009
+     C                   EVAL      CMG009 = 'N'                                               CMG009
+                                                                                              CMG009
+     C                   CALLB     'AOSARDR0'                                                 CMG009
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CMG009
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CMG009
+     C                   PARM      'CMG009 '     P@SARD                         Feature Ref.  CMG009
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG009
+                                                                                              CMG009
+     C                   IF        P@RTCD = *BLANKS                                           CMG009
+     C                   EVAL      CMG009 = 'Y'                                               CMG009
+     C                   ENDIF                                                                CMG009
       ** Key List to access Movements LF/RSACMTL2
  
      C     KeyMvnt       KLIST

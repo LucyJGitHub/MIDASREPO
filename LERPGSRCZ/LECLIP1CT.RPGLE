@@ -15,10 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD046248           Date 27Oct17               *
-      *                 CLE141             Date 08Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -51,9 +49,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
@@ -99,9 +94,6 @@
       ** Ê =======                              Ê
       ** +--------------------------------------+
       *
-      **  LE Loan APR History File                                                            CER050
-     FLEAPRHI0  IF   E           K DISK                                                       CER050
-      *                                                                                       CER050
       *****************************************************************
       ** +--------------------------------------+
       ** Ê Automatically included D-specs       Ê
@@ -203,7 +195,6 @@
       *                                                                                       CER020
      D CER020          S              1A                                                      CER020
      D CLE143          S              1A                                                      CLE143
-     D CER050          S              1A                                                      CER050
       *
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
@@ -328,7 +319,6 @@
      C                   ELSE
      C                   MOVE      ZOUT20        DDCPAM
      C                   ENDIF
-     C                   Z-ADD     A6NBDP        LCcyNbdp          1 0                        CER050
       *                                                                                       CLE031
       ***  Facility Currency principal amount                                                 CLE031
       *                                                                                       CLE031
@@ -577,47 +567,6 @@
      C                   MOVE      ZDateFmt6     DDOCDT                                       CLE143
      C                   ENDIF                                                                CLE143
                                                                                               CLE143
-      *                                                                                       CER050
-      ** Populate Annualised Percentage Rate Details                                          CER050
-     C                   IF        CER050 = 'Y'                                               CER050
-     C                   MOVE      APRC          DDAPRC                                       CER050
-      ** Convert Premium Amount into screen field format thru ZSEDIT                          CER050
-     C                   MOVE      PREM          ZFLD15                                       CER050
-     C                   Z-ADD     LCcyNbdp      ZDECS                                        CER050
-     C*                  MOVE      *blanks       ZECODE                                       CER050
-     C                   CALL      'ZSEDIT'                                                   CER050
-      * INPUTS                                                                                CER050
-     C                   PARM                    ZFLD15           15 0                        CER050
-     C                   PARM                    ZDECS             1 0                        CER050
-     C                   PARM                    ZECODE            1                          CER050
-      * OUTPUTS                                                                               CER050
-     C                   PARM                    ZOUT21           21                          CER050
-     C                   MOVE      ZOUT21        DDPREM                                       CER050
-      ** If APR Calculation required flag is Y, format APR Rate into screen                   CER050
-      ** field format thru ZSEDIT                                                             CER050
-     C**********         IF        APRC = 'Y'                                                 CER050
-      ** retrieve APR Rate from LE Loan APR History File                                      CER050
-     C     LNRF          CHAIN     LEAPRHI0                           90                      CER050
-     C     *IN90         IFEQ      *OFF                                                       CER050
-     C     IAPRR         ANDNE     0                                                          CER050
-     C     100           MULT      IAPRR         ZFLD15                                       CER050
-     C                   Z-ADD     2             ZDECS                                        CER050
-     C*                  MOVE      *blanks       ZECODE                                       CER050
-     C                   CALL      'ZSEDIT'                                                   CER050
-      * INPUTS                                                                                CER050
-     C                   PARM                    ZFLD15           15 0                        CER050
-     C                   PARM                    ZDECS             1 0                        CER050
-     C                   PARM                    ZECODE            1                          CER050
-      * OUTPUTS                                                                               CER050
-     C                   PARM                    ZOUT21           21                          CER050
-     C                   MOVE      ZOUT21        DDAPRR                                       CER050
-     C                   ELSE                                                                 CER050
-     C                   MOVE      *BLANKS       DDAPRR                                       CER050
-     C                   ENDIF                                                                CER050
-     C**********         ENDIF                                                                CER050
-      *                                                                                       CER050
-     C                   ENDIF                                                                CER050
-      *                                                                                       CER050
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -717,10 +666,6 @@
       ***  Loan in file format CK
       *
      C                   PARM                    LoanFilFmtCK
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDPREM           15                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
       *
       ***  OUTPUT parameters
       *
@@ -777,19 +722,6 @@
                                                                                               CLE143
      C                   EVAL      CLE143 = 'N'                                               CLE143
      C                   ENDIF                                                                CLE143
-      *                                                                                       CER050
-      ** Check for Switchable Feature CER050                                                  CER050
-     C                   CALLB     'AOSARDR0'                                                 CER050
-     C                   PARM      *BLANKS       @RTCD                                        CER050
-     C                   PARM      '*VERIFY'     @OPTN                                        CER050
-     C                   PARM      'CER050'      PSard                                        CER050
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
-     C                   IF        @RTCD = *BLANKS                                            CER050
-     C                   EVAL      CER050 = 'Y'                                               CER050
-     C                   ELSE                                                                 CER050
-     C                   EVAL      CER050 = 'N'                                               CER050
-     C                   ENDIF                                                                CER050
-      *                                                                                       CER050
      C                   ENDSR
       *****************************************************************
       /EJECT

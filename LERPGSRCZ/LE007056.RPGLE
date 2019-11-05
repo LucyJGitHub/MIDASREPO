@@ -19,9 +19,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD051900           Date 19Sep18               *
-      *                 MD049363           Date 19Sep18               *
+      *  Last Amend No. MD051900           Date 19Sep18               *      
+      *  Prev Amend No. MD049363           Date 19Sep18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -34,9 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD051900 - Adjustment on MAPY from rounded up settlement     *
-      *             amount                                            *
+      *             amount                                            *      
       *  MD049363 - Percentage allocation error                       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD049745A - Corruption of Original currency of Loans and     *

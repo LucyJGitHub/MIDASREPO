@@ -13,9 +13,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE168             Date 26Feb18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CLE154             Date 06Aug12               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
@@ -36,7 +35,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *

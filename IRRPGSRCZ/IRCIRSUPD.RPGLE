@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD036601           Date 29Aug16               *
       *                 AR743357           Date 22Apr15               *
@@ -118,8 +117,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
-      *             rate                                              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -807,9 +804,6 @@
      D CAS008          S              1A                                                      CAS008
      D/COPY WNCPYSRC,IRH00069
                                                                                               CAS008
-      **
-     D SUEINR          S             12A                                                    MD054095
-     D STEINR          S             12A                                                    MD054095
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -2738,13 +2732,11 @@
       * Non-Static Indicators
      C                   BITOFF    '01234567'    UDNSI
      C     RXUEINR       IFNE      *ZEROS
-     C     SUEINR        ORNE      *BLANKS                                                  MD054095
      C                   BITON     '0'           UDNSI
      C                   END
       *
      C                   BITOFF    '01234567'    TDNSI
      C     RXTEINR       IFNE      *ZEROS
-     C     STEINR        ORNE      *BLANKS                                                  MD054095
      C                   BITON     '0'           TDNSI
      C                   END
                                                                                 151240
@@ -5618,8 +5610,6 @@
      C                   PARM                    ValExtSettM                                  CIR003
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CAP056                                       CAP056
-     C                   PARM                    SUEINR                                     MD054095
-     C                   PARM                    STEINR                                     MD054095
       *
      C     *LIKE         DEFINE    UEINR         ##UEINR
      C     *LIKE         DEFINE    TEINR         ##TEINR

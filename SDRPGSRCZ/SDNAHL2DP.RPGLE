@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD051432           Date 30Jun18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD051432           Date 30Jun18               *
       *                 MD050383           Date 18Apr18               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
@@ -48,10 +47,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
-      *             State Code is mandatory (even CER054 is OFF) and  *
-      *             mandatory "Industry Code" field is protected      *
-      *             (Recompile)                                       *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051432 - Remove TIN2 to TIN5 (Recompile)                   *
       *  MD050383 - Phone Number Country highlights an error even the *
@@ -851,25 +846,9 @@
      C                   EXSR      *PSSR                                                      CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER054
-      *                                                                                     MD052399
-      ** Set on Protect Indicator                                                           MD052399
-      *                                                                                     MD052399
-     C                   EVAL      *IN90 = *ON                                              MD052399
-     C                   EVAL      *IN91 = *ON                                              MD052399
-     C                   EVAL      *IN93 = *ON                                              MD052399
-      ** For CER048 is ON                                                                   MD052399
-     C                   IF        CER048 = 'Y'                                             MD052399
-      ** Set protect off for conditional fields
-     C                   EVAL      *IN90 = *OFF                                             MD052399
-     C                   IF        CER054 = 'N'                                             MD052399
-     C                   EVAL      *IN93 = *OFF                                             MD052399
-     C                   ENDIF                                                              MD052399
-     C                   ENDIF                                                              MD052399
 
      C                   IF        CER047 = 'Y' OR CER048 = 'Y'                             BUG23642
      C                   EVAL      *IN88 = *ON                                              BUG23642
-      ** Set protect off for optional fields                                                MD052399
-     C                   EVAL      *IN91 = *OFF                                             MD052399
      C                   ELSE                                                               BUG23642
      C                   EVAL      *IN88 = *OFF                                             BUG23642
      C                   ENDIF                                                              BUG23642

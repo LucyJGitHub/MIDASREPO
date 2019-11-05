@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052645           Date 29May19               *
-      *                 MD046248           Date 05Feb18               *
+      *  Last Amend No. MD052645           Date 29May19               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CER070             Date 24Nov14               *
@@ -62,7 +61,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052645 - Cannot enquire customer with 'N' Threshold Method *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *

@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
       *                 MD000091           Date 07May13               *
       *                 AR947093A          Date 04May12               *
       *                 AR947093           Date 26Apr12               *
@@ -31,7 +30,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050   - Annualised Percentage Rate (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165   - Dual Withholding Tax (Recompile)                  *
       *  MD000091 - Event Codes Substitution                          *
@@ -59,102 +57,102 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FREPRPNPD  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
-
+ 
       ** Standard D-specs
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
-
+ 
      D/COPY ZACPYSRC,PROCPARMS
-
+ 
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
-
+ 
      D/COPY ZACPYSRC,ERR_ARRAYS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** The maximum size of the appended error arrays
-
+ 
      D XArrayMax       C                   CONST(20)
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Event sequence array
-
+ 
      D ArrEvnt         S              1    DIM(26) CTDATA PERRCD(26)
       **********                                                                            BUG27488
       ***DB*override*command*                                                               BUG27488
       **********                                                                            BUG27488
      D***OVR1***         S              1    DIM(50) CTDATA PERRCD(50)                      BUG27488
-
+ 
       ** Array of Fields in error
-
+ 
      D FldNamXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of error message IDs
-
+ 
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of error message data
-
+ 
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** Array of Fields with warnings
-
+ 
      D WFldNmXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of warning message IDs
-
+ 
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of warning message data
-
+ 
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE073
      D  QQLCD        E                     EXTFLD(LCD)                                        CRE073
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D TranInMast    E DS                  EXTNAME(GLAMADPD)
      D TranInDebi    E DS                  EXTNAME(GLAMDIPD)
      D TranInCred    E DS                  EXTNAME(GLAMCIPD)
@@ -163,60 +161,60 @@
      D TranInPena    E DS                  EXTNAME(GLAMPPPD)
      D**ScnPenaRows           33   4166                                                       CRE073
      D  ScnPenaRows           33   5414                                                       CRE073
-
+ 
      D AccnFilFmt    E DS                  EXTNAME(ACCNTAB)
      D ValidAccn     E DS                  EXTNAME(GLVAMADPD)
      D ValidPena     E DS                  EXTNAME(GLVAMPPPD)
-
+ 
      D OKFlagsDS     E DS                  EXTNAME(GLEAMPPPD)
      D**OKPenaRows             6    941                                                       CRE073
      D  OKPenaRows             6   1149                                                       CRE073
-
+ 
       ** Array for screen definition
-
+ 
      D GLAMPR        E DS                  EXTNAME(GLAMPRPD)
      D ArrScnBuf       S                   DIM(26) LIKE(GLAMPR)
      D ArrSort         S                   DIM(26) LIKE(GLAMPR)
      D GLAM2PR       E DS                  EXTNAME(GLAMPRPD) PREFIX(S2:2)
-
+ 
       ** Array for file definition
-
+ 
      D REPRPN        E DS                  EXTNAME(REPRPNPD)
      D ArrFilBuf       S                   DIM(26) LIKE(REPRPN)
-
+ 
       ** Array for screen OK flags
-
+ 
      D GLEAMPR       E DS                  EXTNAME(GLEAMPRPD)
      D ArrOkBuf        S                   DIM(26) LIKE(GLEAMPR)
-
+ 
       ** Convert ddmmyy into separate components for start/work date
-
+ 
      D DTCVT           DS
      D  WDMY                   1      6  0
      D  WDAY                   1      2  0
      D  WMTH                   3      4  0
      D  WYEAR                  5      6  0
-
+ 
       ** Convert ddmmyy into separate components for given month
-
+ 
      D DTCVT2          DS
      D  GVNDMY                 1      6  0
      D  GVNDAY                 1      2  0
      D  GVNMTH                 3      4  0
      D  GVNYER                 5      6  0
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc
-
+ 
      D X               S              2  0
      D Y               S              2  0
      D Idx             S              3  0
      D WIdx            S              3  0
-
+ 
      D W#TotalSet      S              2  0
      D W#CEDE          S              5  0
      D W#MDAT          S              5  0
@@ -275,7 +273,7 @@
      D PRoundMthOK     S              1A   INZ('Y')                                           CRE073
      D PFracDecOK      S              1A   INZ('Y')                                           CRE073
      D PCOnSignOK      S              1A   INZ('Y')                                           CRE073
-
+ 
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -286,13 +284,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -301,31 +299,31 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
      C                   EXSR      SRInit
-
+ 
       ** Sort penalty events from input
-
+ 
      C                   EXSR      SRSort
-
+ 
       ** Load repeating fields in array
-
+ 
      C                   EXSR      SRLoadInput
-
+ 
       ** Validate input fields
-
+ 
      C                   EXSR      SRValidate
-
+ 
       ** Reload data from array to main file
-
+ 
      C                   EXSR      SRReload
-
+ 
       ** Setup affected dates in the screen display
-
+ 
      C                   IF        Idx = 0
      C                   EXSR      SRSetupHdr
      C                   ENDIF
-
+ 
      C                   RETURN
       *****************************************************************
      C/EJECT
@@ -335,20 +333,20 @@
       *                                                               *
       *****************************************************************
      C     SRSort        BEGSR
-
+ 
       ** Move screen row fields to array
-
+ 
      C                   MOVEA     ScnPenaRows   ArrSort
-
+ 
       ** Sort array in ascending order
-
+ 
      C                   SORTA     ArrSort
-
+ 
       ***Select*only*valid*events*for*processing**                                          BUG27484
       ** Select all non-blank term and notice details                                       BUG27484
-
+ 
      C                   EVAL      ArrScnBuf = *BLANKS
-
+ 
      C                   EVAL      Y = *ZERO
      C                   DO        26            X
      C**********         EVAL      W#EVNT = %SUBST(ArrSort(X):1:1)                          BUG27484
@@ -365,7 +363,7 @@
      C                   EVAL      DDDCSG = DDADCSG                                           CRE073
      C                   EVAL      DDDRMT = DDADRMT                                           CRE073
      C                   EVAL      DDDRFD = DDADRFD                                           CRE073
-
+ 
      C                   EVAL      DDCCSP = DDACCSP                                           CRE073
      C                   EVAL      DDCCSG = DDACCSG                                           CRE073
      C                   EVAL      DDCRMT = DDACRMT                                           CRE073
@@ -373,9 +371,9 @@
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
       ** Move sorted events back to screen data structure
-
+ 
      C                   MOVEA     ArrScnBuf     ScnPenaRows
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -385,17 +383,17 @@
       *                                                               *
       *****************************************************************
      C     SRLoadInput   BEGSR
-
+ 
       ** Move screen row fields to array
-
+ 
      C                   MOVEA     ScnPenaRows   ArrScnBuf
-
+ 
       ** Move screen row field OK flags to array
-
+ 
      C                   MOVEA     OKPenaRows    ArrOkBuf
-
+ 
       ** Count total set of periods passed
-
+ 
      C                   EVAL      W#TotalSet = 0
      C                   DO        26            X
      C                   IF        ArrScnBuf(X) <> *BLANKS
@@ -404,14 +402,14 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDDO
-
+ 
       ** Initialise file format array
-
+ 
      C                   CLEAR                   REPRPN
      C                   DO        26            X
      C                   EVAL      ArrFilBuf(X) = REPRPN
      C                   ENDDO
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -421,21 +419,21 @@
       *                                                               *
       *****************************************************************
      C     SRReload      BEGSR
-
+ 
       ** Move array to screen row fields
-
+ 
      C                   MOVEA     ArrScnBuf     ScnPenaRows
-
+ 
       ** Move array to screen row field OK flags
-
+ 
      C                   MOVEA     ArrOkBuf      OKPenaRows
-
+ 
       ** Move array to valid file
-
+ 
      C                   IF        Idx = 0
      C                   MOVEA     ArrFilBuf     ValidPena
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -445,9 +443,9 @@
       *                                                               *
       *****************************************************************
      C     SRValidate    BEGSR
-
+ 
       ** Setup initial values for event date calculation
-
+ 
      C                   MOVE      BJRDNB        RUNCHG
      C                   EVAL      PRCEDE = BJRDNB
      C                   IF        DDACTN = 'I'
@@ -455,51 +453,51 @@
      C                   ELSE
      C                   EVAL      MAINT = '*EXIST'
      C                   ENDIF
-
+ 
       ** Validate fixed fields
-
+ 
      C                   EXSR      SRPeriodType
      C                   EXSR      SRAmountType
      C                   EXSR      SRNextDate
-
+ 
       ** Validate repeating fields
-
+ 
      C                   IF        W#TotalSet > 0
      C                   DO        W#TotalSet    X
-
+ 
       ** Load screen fields and ok flags
-
+ 
      C                   EVAL      GLAMPR  = ArrScnBuf(X)
      C                   EVAL      GLEAMPR = ArrOkBuf(X)
-
+ 
       ** Load adjacent period for comparison
-
+ 
      C                   IF        X < W#TotalSet
      C                   EVAL      GLAM2PR = ArrScnBuf(X+1)
      C                   ELSE
      C                   CLEAR                   GLAM2PR
      C                   ENDIF
-
+ 
       ** Replace value date with the calculated value date
-
+ 
      C                   IF        X > 1
      C                             AND W#VDAT <> *BLANKS
      C                             AND Idx = 0
      C                   EVAL      RWVDAT = W#VDAT
      C                   ENDIF
-
+ 
       ** Pass the re-sequenced event id to the validation modules but
       ** retain the original value to update the correct row.  The
       ** actual re-sequencing of events in done during file update
-
+ 
      C                   IF        RWEVNT <> 'Z'
      C                   EVAL      R#EVNT = ArrEvnt(X)
      C                   ELSE
      C                   EVAL      R#EVNT = RWEVNT
      C                   ENDIF
-
+ 
       ** Validate each field in the period
-
+ 
      C                   EXSR      SREvent                                                  BUG27484
      C                   EXSR      SRStartDate                                              BUG27484
      C                   EXSR      SREndDate
@@ -513,7 +511,7 @@
      C                   EXSR      SRNumPeriod
      C                   EXSR      SRRollFreq
      C                   EXSR      SRRollDay
-
+ 
      C                   EXSR      SRCalcBasis
      C                   EXSR      SRRateFix
      C                   EXSR      SRCapFreq
@@ -667,24 +665,24 @@
      C                   EXSR      SRPenaType
      C                   EXSR      SRPenaTime
      C                   EXSR      SRPenaRest
-
+ 
       ** Update screen fields and OK flags
-
+ 
      C                   EVAL      ArrScnBuf(X) = GLAMPR
      C                   EVAL      ArrOkBuf(X) = GLEAMPR
-
+ 
       ** If no errors, set up valid file for this row and calculate
       ** event dates
-
+ 
      C                   IF        Idx = 0
      C                   EXSR      SRSetupValRow
-
+ 
       ** Calculate value, maturity and end dates
-
+ 
      C                   EXSR      SRCalDat
-
+ 
       ** Calculate capitalisation date
-
+ 
      C                   IF        X = 1
      C                   EXSR      SRCapDat
      C                   EVAL      W9DCAP = E2NDID
@@ -693,23 +691,23 @@
      C                   EVAL      E2NDID = W9DCAP
      C                   EVAL      E2NCID = W9CCAP
      C                   ENDIF
-
+ 
      C                   EVAL      ArrFilBuf(X) = REPRPN
-
+ 
       ** Pass the effective interest rate of the active event to the
       ** standard debit and credit details of the account maintenance API
-
+ 
      C                   IF        BJRDNB >= E2VDAT
      C                             AND BJRDNB <= E2MDAT
      C                   EXSR      SRCalRat
      C                   ENDIF
-
+ 
       ** Calculate the next event's value date. This is the current
       ** event's period end date + 1 day
-
+ 
      C                   EXSR      SRCalcVdat
      C                   ENDIF
-
+ 
      C                   ENDDO
      C                   ELSE                                                               BUG27484
                                                                                             BUG27484
@@ -721,7 +719,7 @@
      C                   EXSR      SREvent                                                  BUG27484
      C                   EVAL      ArrOkBuf(1) = GLEAMPR                                    BUG27484
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -731,33 +729,33 @@
       *                                                               *
       *****************************************************************
      C     SRPeriodType  BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVTPRD'
      C                   PARM                    RetCodeOut
      C                   PARM                    DD0TPRD
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    DDTPRDOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -767,33 +765,33 @@
       *                                                               *
       *****************************************************************
      C     SRAmountType  BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVIRLI'
      C                   PARM                    RetCodeOut
      C                   PARM                    DD0IRLI
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    DDIRLIOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -803,11 +801,11 @@
       *                                                               *
       *****************************************************************
      C     SRNextDate    BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVMDAT'
      C                   PARM                    RetCodeOut
      C                   PARM                    DD0MDAT
@@ -816,26 +814,26 @@
      C                   PARM                    BJDFIN
      C                   PARM                    BJRDNB
      C                   PARM                    DD0TPRD
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    DDMDATOK
      C                   PARM                    W#MDAT
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************                     BUG27484
      C/EJECT                                                                                BUG27484
@@ -931,11 +929,11 @@
       *                                                               *
       *****************************************************************
      C     SREndDate     BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVCEDE'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWCEDE
@@ -948,27 +946,27 @@
      C                   PARM      X             CURSET
      C                   PARM                    DD0TPRD
      C                   PARM                    DD0MDAT
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWCEDEOK
      C                   PARM                    W#CEDE
      C                   PARM                    DDMDATOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -978,11 +976,11 @@
       *                                                               *
       *****************************************************************
      C     SRNumPeriod   BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVNUMB'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWNDPD
@@ -990,26 +988,26 @@
      C                   PARM                    R#EVNT
      C                   PARM                    RWFREQ
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWNDPDOK
      C                   PARM                    RWNMPDOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1019,36 +1017,36 @@
       *                                                               *
       *****************************************************************
      C     SRRollFreq    BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVFREQ'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWFREQ
      C                   PARM                    R#EVNT
      C                   PARM      X             CURSET
      C                   PARM                    DD0TPRD
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWFREQOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1058,11 +1056,11 @@
       *                                                               *
       *****************************************************************
      C     SRRollDay     BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVDAYM'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDAYM
@@ -1078,27 +1076,27 @@
      C                   PARM                    RWNDPD                                     BUG27484
      C                   PARM                    RWVDAT                                     BUG27484
      C                   PARM                    BJRDNB                                     BUG27484
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDAYMOK
      C                   PARM                    DDMDATOK                                   BUG27484
      C                   PARM                    RWVDATOK                                   BUG27484
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1108,11 +1106,11 @@
       *                                                               *
       *****************************************************************
      C     SRBaseRate    BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVRIS'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDRIB
@@ -1135,19 +1133,19 @@
      C                   PARM                    RWDCST
      C                   PARM                    RWCICT
      C                   PARM                    RWCCST
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDRIBOK
      C                   PARM                    RWDRISOK
      C                   PARM                    RWSIGDOK
@@ -1158,11 +1156,11 @@
      C                   PARM      *ZERO         W#CRIS
      C                   PARM      *ZERO         W#DRBrt                                      CRE073
      C                   PARM      *ZERO         W#CRBrt                                      CRE073
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************                       CRE073
       /EJECT                                                                                  CRE073
@@ -1304,36 +1302,36 @@
       *                                                               *
       *****************************************************************
      C     SRIntType     BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVICT'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDICT
      C                   PARM                    RWCICT
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDICTOK
      C                   PARM                    RWCICTOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1343,11 +1341,11 @@
       *                                                               *
       *****************************************************************
      C     SRIntSubTyp   BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVCST'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDCST
@@ -1359,26 +1357,26 @@
      C                   PARM                    RWVDAT
      C                   PARM                    DDCCY
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDCSTOK
      C                   PARM                    RWCCSTOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1388,36 +1386,36 @@
       *                                                               *
       *****************************************************************
      C     SRCalcBasis   BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVRIC'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDRIC
      C                   PARM                    RWCRIC
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDRICOK
      C                   PARM                    RWCRICOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1427,37 +1425,37 @@
       *                                                               *
       *****************************************************************
      C     SRRateFix     BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVNIR'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDNIR
      C                   PARM                    RWCNIR
      C                   PARM                    DD0TPRD
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDNIROK
      C                   PARM                    RWCNIROK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1467,11 +1465,11 @@
       *                                                               *
       *****************************************************************
      C     SRCapFreq     BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVRIF'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDRIF
@@ -1481,26 +1479,26 @@
      C                   PARM                    RWDRMM
      C                   PARM                    RWCRMM
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDRIFOK
      C                   PARM                    RWCRIFOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1510,11 +1508,11 @@
       *                                                               *
       *****************************************************************
      C     SRCapDayMon   BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVRDP'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDRDD
@@ -1522,28 +1520,28 @@
      C                   PARM                    RWCRDD
      C                   PARM                    RWCRMM
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDRDDOK
      C                   PARM                    RWDRMMOK
      C                   PARM                    RWCRDDOK
      C                   PARM                    RWCRMMOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1553,36 +1551,36 @@
       *                                                               *
       *****************************************************************
      C     SRAltAcct     BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVACP'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDACP
      C                   PARM                    RWCACP
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDACPOK
      C                   PARM                    RWCACPOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1592,37 +1590,37 @@
       *                                                               *
       *****************************************************************
      C     SRPenaType    BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVRTTV'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWRTTD
      C                   PARM                    RWRTTC
      C                   PARM                    R#EVNT
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWRTTDOK
      C                   PARM                    RWRTTCOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1632,11 +1630,11 @@
       *                                                               *
       *****************************************************************
      C     SRPenaTime    BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVDYBV'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDYBD
@@ -1645,26 +1643,26 @@
      C                   PARM                    RWRTTC
      C                   PARM                    R#EVNT
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDYBDOK
      C                   PARM                    RWDYBCOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1674,11 +1672,11 @@
       *                                                               *
       *****************************************************************
      C     SRPenaRest    BEGSR
-
+ 
       ** Reset variables updated by each module
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'GLVVRST'
      C                   PARM                    RetCodeOut
      C                   PARM                    RWDRST
@@ -1687,26 +1685,26 @@
      C                   PARM                    RWRTTD
      C                   PARM                    RWRTTC
      C                   PARM      X             CURSET
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Warning message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
-
+ 
      C                   PARM                    RWDRSTOK
      C                   PARM                    RWCRSTOK
-
+ 
       ** Update error info with that returned from the validation module
-
+ 
      C                   EXSR      UPDATERRS
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1716,7 +1714,7 @@
       *                                                               *
       *****************************************************************
      C     SRSetupValRow BEGSR
-
+ 
      C                   CLEAR                   REPRPN
      C                   EVAL      E2BRCA = AMBRCA
      C                   EVAL      E2CNUM = AMCNUM
@@ -1725,12 +1723,12 @@
      C                   EVAL      E2ACSQ = AMACSQ
      C                   EVAL      E2EVNT = RWEVNT
      C                   EVAL      E2ITEM = 1
-
+ 
       ** Retrieve existing record and update, otherwise create from
       ** a clear record
-
+ 
      C     K@PRPNPD      CHAIN     REPRPNPD                           51
-
+ 
      C                   EVAL      ZDATEC = RWVDAT
      C                   EVAL      ZDATFM = BJDFIN
      C                   EXSR      SRCnvDate1
@@ -1738,17 +1736,17 @@
      C                   EVAL      E2MDAT = W#MDAT
      C                   EVAL      E2CEDE = W#CEDE
      C                   EVAL      E2FREQ = RWFREQ
-
+ 
      C                   EVALR     RWDAYM = %TRIM(RWDAYM)
      C                   MOVE      RWDAYM        E2DAYM
      C                   EVALR     RWNDPD = %TRIM(RWNDPD)
      C                   MOVE      RWNDPD        E2NDPD
      C                   EVALR     RWNMPD = %TRIM(RWNMPD)
      C                   MOVE      RWNMPD        E2NMPD
-
+ 
      C                   EVAL      E2IRLI = DD0IRLI
      C                   EVAL      E2TPRD = DD0TPRD
-
+ 
      C                   EVALR     RWDRIB = %TRIM(RWDRIB)
      C                   MOVE      RWDRIB        E2DRIB
       *                                                                                       CRE073
@@ -1785,7 +1783,7 @@
      C                   MOVEL     RWDRDD        E2DRDY
      C                   MOVE      RWDRMM        E2DRDY
      C                   EVAL      E2DACP = RWDACP
-
+ 
      C                   EVALR     RWCRIB = %TRIM(RWCRIB)
      C                   MOVE      RWCRIB        E2CRIB
       *                                                                                       CRE073
@@ -1822,15 +1820,15 @@
      C                   MOVEL     RWCRDD        E2CRDY
      C                   MOVE      RWCRMM        E2CRDY
      C                   EVAL      E2CACP = RWCACP
-
+ 
      C                   EVAL      E2RTTD = RWRTTD
      C                   EVAL      E2DYBD = RWDYBD
      C                   EVAL      E2DRST = RWDRST
-
+ 
      C                   EVAL      E2RTTC = RWRTTC
      C                   EVAL      E2DYBC = RWDYBC
      C                   EVAL      E2CRST = RWCRST
-
+ 
      C                   IF        RWBALN <> *BLANKS
      C                   EVAL      ZFIELD = %SUBST(RWBALN:1:16)
      C                   EVAL      ZADEC  = A6NBDP
@@ -1841,9 +1839,9 @@
      C                   EVAL      E2BALN = E2BALN * -1
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   MOVEL     AMACNO        E2KEY1
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1853,9 +1851,9 @@
       *                                                               *
       *****************************************************************
      C     SRCalcVdat    BEGSR
-
+ 
       ** Add 1 day to the current event's calculated end date
-
+ 
      C                   IF        PRCEDE > *ZERO
      C                   EVAL      ZDAYNO = PRCEDE + 1
      C                   EVAL      ZDATFM = BJDFIN
@@ -1864,7 +1862,7 @@
      C                   ELSE
      C                   EVAL      W#VDAT = *BLANKS
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1874,14 +1872,14 @@
       *                                                               *
       *****************************************************************
      C     SRCalDat      BEGSR
-
+ 
      C                   CALL      'RETNDAT1'
      C                   PARM                    REPRPN
      C                   PARM                    MAINT
      C                   PARM                    RUNCHG
      C                   PARM                    PRCEDE
      C                   PARM      *BLANKS       PRTCD
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'RETNDAT1'
@@ -1890,7 +1888,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1900,17 +1898,17 @@
       *                                                               *
       *****************************************************************
      C     SRCapDat      BEGSR
-
+ 
       ** Update the next cap date:
       **  o  For newly inserted accounts
       **  o  If the next cap date on REPRPN < run date and
       **     next cap date on REPRPN <= last cap date on ACCNTAB
       **  o  If the next cap date on REPRPN >= run date
-
+ 
      C                   Z-ADD     BJRDNB        XDATE             5 0
-
+ 
       ** DR capitalisation date
-
+ 
      C                   IF        DDACTN = 'I'
      C                             OR (E2NDID < BJRDNB AND E2NDID <= LDID)
      C                             OR E2NDID >= BJRDNB
@@ -1920,9 +1918,9 @@
      C                   EVAL      E2NDID = W9CAPD
      C                   EVAL      E2DRDY = W9XRDY
      C                   ENDIF
-
+ 
       ** CR capitalisation date
-
+ 
      C                   IF        DDACTN = 'I'
      C                             OR (E2NCID < BJRDNB AND E2NCID <= LCID)
      C                             OR E2NCID >= BJRDNB
@@ -1932,7 +1930,7 @@
      C                   EVAL      E2NCID = W9CAPD
      C                   EVAL      E2CRDY = W9XRDY
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1942,48 +1940,48 @@
       *                                                               *
       *****************************************************************
      C     SRNxtCap      BEGSR
-
+ 
       ** Minimum cap date must be end of term for notice account
-
+ 
      C     E2TPRD        IFEQ      'N'
      C                   Z-ADD     E2CEDE        W9EOTD            5 0
      C                   ENDIF
-
+ 
       ** For active term, this is maturity
-
+ 
      C     E2TPRD        IFEQ      'T'
      C                   Z-ADD     E2MDAT        W9EOTD
      C                   ENDIF
-
+ 
       ** Initialise next cap date to far in the future
-
+ 
      C                   Z-ADD     26664         W9CAPD            5 0
-
+ 
       ** Initialise start date to far in the future
-
+ 
      C                   Z-ADD     26664         W9ADVD            5 0
-
+ 
       ** If frequency is 'M' monthly
       **                 'Q' quarterly
       **                 'X' half-yearly
       **                 'Y' yearly
       ** check to see if you need to advance the next frequency cap date
-
+ 
      C     W9XRIF        IFEQ      'M'
      C     W9XRIF        OREQ      'Q'
      C     W9XRIF        OREQ      'X'
      C     W9XRIF        OREQ      'Y'
      C                   EXSR      SRCapFrq
      C                   ENDIF
-
+ 
       ** Select minimum of advance-by-freq date and end-of-term date
-
+ 
      C     W9ADVD        IFLE      W9EOTD
      C                   Z-ADD     W9ADVD        W9CAPD
      C                   ELSE
      C                   Z-ADD     W9EOTD        W9CAPD
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1993,33 +1991,33 @@
       *                                                               *
       *****************************************************************
      C     SRCapFrq      BEGSR
-
+ 
       ** Identify given frequency day and month
       ** (data structure GVNDMY splits into GVNDAY/GVMTH/GVNYER)
-
+ 
      C     W9XRDY        MULT      100           GVNDMY
-
+ 
       ** Redetermine start date for frequency
       ** (start date is lower limit on next frequency cap date and is
       ** equal to working run day or start of term, whichever is later)
-
+ 
      C     XDATE         IFGT      E2VDAT
      C                   Z-ADD     XDATE         W9ADVD            5 0
      C                   ELSE
      C                   Z-ADD     E2VDAT        W9ADVD            5 0
      C                   END
-
+ 
       ** Split up start date into WDAY/WMTH/WYEAR components
-
+ 
      C                   EVAL      ZDAYNO = W9ADVD
      C                   EVAL      ZDATFM = 'D'
      C                   EXSR      SRCnvDate2
      C                   MOVEL     ZDATE         WDMY
-
+ 
       ** If start date is the run day and the given day and given
       ** month have just passed then assume month must now be
       ** advanced
-
+ 
      C     W9ADVD        IFEQ      XDATE
      C     GVNMTH        ADD       1             W5N0              5 0
      C     W5N0          IFGT      12
@@ -2045,10 +2043,10 @@
      C                   END
      C                   END
      C                   END
-
+ 
       ** Check if the given year needs advancing
       **  start with start date year
-
+ 
      C                   Z-ADD     WYEAR         GVNYER
      C     GVNMTH        IFLT      WMTH
      C                   ADD       1             GVNYER
@@ -2057,35 +2055,35 @@
      C     GVNDAY        ANDLT     WDAY
      C                   ADD       1             GVNYER
      C                   END
-
+ 
       ** Convert this given date into Midas day number
       ** (i.e.  GVNDAY/GVNMTH/GVNYER -> Midas day number)
-
+ 
      C                   MOVE      GVNDMY        ZDATEC
      C                   EVAL      ZDATFM = 'D'
      C                   EXSR      SRCnvDate1
      C                   Z-ADD     ZDAYNO        W9MIND            5 0
-
+ 
       **   If start date and inferred (minimum) given date are in same
       **   month, and start date <=given date, the std frequency routine
       **   unfortunately advances to the following month.
       **   So artificially subtract one month for this case
-
+ 
      C     WMTH          IFEQ      GVNMTH
      C     W9ADVD        ANDLE     W9MIND
      C                   SUB       31            W9ADVD
      C                   SUB       1             WMTH
      C                   END
-
+ 
       **   If start date < given date, advance monthly until they equal
       **   using given day for positioning within month
-
+ 
      C                   MOVEL     'N'           MTHOK             1
      C     W9ADVD        DOWLT     W9MIND
      C     MTHOK         OREQ      'N'
-
+ 
       ** Advance start/working date by one month
-
+ 
      C                   CALL      'ZFRQB5'
      C                   PARM      'M'           ZFREQ             1
      C                   PARM      W9ADVD        ZDAYNO            5 0
@@ -2095,23 +2093,23 @@
      C                   PARM      'F'           ZDIREC            1
      C                   PARM      *BLANKS       ZRTRN             7
      C                   Z-ADD     ZDAYNO        W9ADVD
-
+ 
       ** Convert this working date to WDAY/WMTH/WYEAR
-
+ 
      C                   EVAL      ZDAYNO = W9ADVD
      C                   EVAL      ZDATFM = 'D'
      C                   EXSR      SRCnvDate2
      C                   MOVEL     ZDATE         WDMY
-
+ 
       ** Find difference between working month and given month
-
+ 
      C     WMTH          SUB       GVNMTH        W3N0              3 0
      C     W3N0          IFLE      0
      C                   ADD       12            W3N0
      C                   END
-
+ 
       ** Difference must be a suitable multiple of given month
-
+ 
      C     W9XRIF        IFEQ      'M'
      C     W3N0          IFGE      1
      C     W3N0          ANDLE     12
@@ -2138,11 +2136,11 @@
      C                   END
      C                   END
      C                   END
-
+ 
       ** Provide new given day/month, in case advancement occurred
-
+ 
      C                   MOVEL     GVNDMY        W9XRDY
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2152,7 +2150,7 @@
       *                                                               *
       *****************************************************************
      C     SRCalRat      BEGSR
-
+ 
      C                   CALL      'RE4009B'
      C                   PARM                    TranInMast
      C                   PARM                    TranInDebi
@@ -2161,7 +2159,7 @@
      C                   PARM                    PrevInCred
      C                   PARM                    REPRPN
      C                   PARM      *BLANKS       PRTCD
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'RE4009B'
@@ -2170,7 +2168,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2180,9 +2178,9 @@
       *                                                               *
       *****************************************************************
      C     SRSetupHdr    BEGSR
-
+ 
       ** Next date (maturity date)
-
+ 
      C                   IF        APAVDAT > *ZEROS
      C                             AND APAMDAT > *ZEROS
      C                             AND APAMDAT < C#TRMDAT
@@ -2192,23 +2190,23 @@
      C                   MOVE      ZDATE         DD0MDAT
      C                   EXSR      SREndDate2                                               BUG27631
      C                   ENDIF
-
+ 
       ** Available date
-
+ 
      C                   IF        APAVDAT > *ZEROS
      C                             AND APAMDAT > *ZEROS
      C                             AND APAMDAT < C#TRMDAT
-
+ 
       ** Get the next working date after maturity date, that is, the
       ** first working day of the new term
-
+ 
      C                   EVAL      ZDAYNO = APAMDAT
      C                   EVAL      ZDATFM = BJDFIN
      C                   EXSR      SRNxtFreq
      C                   EXSR      SRCnvDate2
      C                   MOVE      ZDATE         DD0AVAL
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2218,14 +2216,14 @@
       *                                                               *
       *****************************************************************
      C     SRAlign       BEGSR
-
+ 
      C                   CALL      'ZALIGN'
      C                   PARM      *BLANKS       ZRTN              7
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
      C                   PARM                    ZADIG             2 0
      C                   PARM                    ZAFLD            16
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2235,13 +2233,13 @@
       *                                                               *
       *****************************************************************
      C     SRCnvDate1    BEGSR
-
+ 
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEC            6
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    ZDATFM            1
      C                   PARM      *BLANKS       ZERR              1
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2251,13 +2249,13 @@
       *                                                               *
       *****************************************************************
      C     SRCnvDate2    BEGSR
-
+ 
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    ZDATFM            1
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2267,7 +2265,7 @@
       *                                                               *
       *****************************************************************
      C     SRNxtFreq     BEGSR
-
+ 
      C                   CALL      'ZFRQB5'
      C                   PARM      'D'           ZFREQ             1
      C                   PARM                    ZDAYNO            5 0
@@ -2276,7 +2274,7 @@
      C                   PARM      BJSLCD        ZLOC              3
      C                   PARM      'F'           ZDIREC            1
      C                   PARM      *BLANKS       ZRTRN             7
-
+ 
      C                   ENDSR
       *****************************************************************                     BUG27631
      C/EJECT                                                                                BUG27631
@@ -2353,17 +2351,17 @@
       *                                                               *
       *****************************************************************
      C     SRINIT        BEGSR
-
+ 
       ** Access currency details via access program
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM      DDCCY         PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POPTN
@@ -2372,7 +2370,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2383,18 +2381,18 @@
       *                                                               *
       *****************************************************************
      C     RESETERRS     BEGSR
-
+ 
      C                   EVAL      RetCodeOut = *BLANKS
-
+ 
       ** Reset error & warning fields/message IDs/message data (arrays)
-
+ 
      C                   MOVEL     *BLANK        FldNamXAr
      C                   MOVEL     *BLANK        MsgIDXAr
      C                   MOVEL     *BLANK        MsgDtaXAr
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2405,9 +2403,9 @@
       *                                                               *
       *****************************************************************
      C     UPDATERRS     BEGSR
-
+ 
       ** Update error fields/message IDs/message data (arrays)
-
+ 
      C                   Z-ADD     1             I                 3 0
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C     *IN99         IFEQ      '1'
@@ -2415,9 +2413,9 @@
      C                   MOVEA     MsgIDXAr      MsgIdArr(I)
      C                   MOVEA     MsgDtaXAr     MsgDtaArr(I)
      C                   END
-
+ 
       ** Set Error Index
-
+ 
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C                   IF        *IN99 = *ON
@@ -2425,9 +2423,9 @@
      C                   ELSE
      C                   EVAL      Idx = %ELEM(FldNameArr)
      C                   ENDIF
-
+ 
       ** Update warning fields/message IDs/message data (arrays)
-
+ 
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C     *IN99         IFEQ      '1'
@@ -2435,9 +2433,9 @@
      C                   MOVEA     WMsgIDXAr     WMsgIDArr(I)
      C                   MOVEA     WMsgDtXAr     WMsgDtaArr(I)
      C                   END
-
+ 
       ** Set warning index
-
+ 
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C                   IF        *IN99 = *ON
@@ -2445,7 +2443,7 @@
      C                   ELSE
      C                   EVAL      WIdx = %ELEM(WFldNamArr)
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2455,7 +2453,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    TranInMast
      C                   PARM                    TranInDebi
@@ -2464,27 +2462,27 @@
      C                   PARM                    PrevInCred
      C                   PARM                    TranInPena
      C                   PARM                    OKFlagsDS
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    Idx
-
+ 
       ** Warning fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
-
+ 
      C                   PARM                    AccnFilFmt
      C                   PARM                    ValidAccn
      C                   PARM                    ValidPena
-
+ 
       ** Key list
-
+ 
      C     K@PRPNPD      KLIST
      C                   KFLD                    E2BRCA
      C                   KFLD                    E2CNUM
@@ -2493,22 +2491,22 @@
      C                   KFLD                    E2ACSQ
      C                   KFLD                    E2EVNT
      C                   KFLD                    E2ITEM
-
+ 
       **  Move program name into LDA field
-
+ 
      C     *LOCK         IN        LDA
      C                   MOVEL     'GLAMAD7VL'   DBPGM
      C                   OUT       LDA
-
+ 
       ** Access bank details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST'      POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POPTN
@@ -2517,7 +2515,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
-
+ 
      C                   IF        BJDFIN = 'D'
      C                   EVAL      TRMDAT = '311244'
      C                   ELSE
@@ -2530,7 +2528,7 @@
      C**********         CALL      'QCMDEXC'                                                BUG27488
      C**********         PARM                    OVR1                                       BUG27488
      C**********         PARM                    CMDLEN                                     BUG27488
-
+ 
       ** Check if CRE073 is installed                                                         CRE073
                                                                                               CRE073
      C                   CALLB     'AOSARDR0'                                                 CRE073
@@ -2563,7 +2561,7 @@
       *                                                                                     BUG27488
       ** Array OVR1 deleted                                                                 BUG27488
       *                                                                                     BUG27488
-
+ 
 ** CPY@
 (c) Finastra International Limited 2009
 ** ARREVNT

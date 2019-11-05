@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD040876           Date 13Sep16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036311           Date 01Nov15               *
       *                 CGL157             Date 17Aug15               *
@@ -43,9 +42,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
-      *             State Code is mandatory (even CER054 is OFF) and  *
-      *             mandatory "Industry Code" field is protected      *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -733,7 +729,6 @@ als  C                   PARM                    @In36
      C                   EVAL      NHDOCN = A_NADOCN                                          CER048
      C                   EVAL      NHINDC = A_NAINDC                                          CER048
      C                   EVAL      NHSREF = A_NASREF                                        BUG22580
-     C                   EVAL      NHEXDT = A_NAEXDT                                        MD052399
       *                                                                                       CER048
      C                   ENDIF                                                                CER047
       *                                                                                       CER047
@@ -1225,7 +1220,6 @@ als  C                   PARM                    @In36
      C                   EVAL      NHDOCN = A_NADOCN                                          CER048
      C                   EVAL      NHINDC = A_NAINDC                                          CER048
      C                   EVAL      NHSREF = A_NASREF                                        BUG22580
-     C                   EVAL      NHEXDT = A_NAEXDT                                        MD052399
       *                                                                                       CER048
      C                   ENDIF                                                                CER047
       *                                                                                       CER047

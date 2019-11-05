@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
-      *                 MD051233           Date 03May18               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD051233           Date 03May18               *
       *                 MD050598           Date 03May18               *
       *                 MD040734           Date 23Aug16               *
       *                 CGL177             Date 11Jan16               *
@@ -31,7 +30,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051233 - Exception 15 is displayed with Exception 14       *
       *  MD050598 - SDC000714 00001 failed                            *

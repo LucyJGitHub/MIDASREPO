@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD021423E          Date 12Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD021423E          Date 12Sep13               *
       *                 MD000091           Date 09May13               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -47,7 +46,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD021423E - Deal date should be the deal date of the OL      *
       *              Pay instruction should be defaulted from receipt *

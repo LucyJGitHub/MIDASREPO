@@ -11,10 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD050052           Date 16Mar18               *
-      *                 CGL157             Date 17Aug15               *
+      *  Last Amend No. MD050052           Date 16Mar18               *
+      *  Prev Amend No. CGL157             Date 17Aug15               *
       *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
@@ -31,9 +29,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD050052 - Serious Midas Error is encountered during CUSD    *
       *  CGL157 - CRS Reporting                                       *
       *  MD040876 - CRS MQ (Recompile)                                *
@@ -177,7 +172,6 @@
      D RespMode        S              1A
      D DDCUSN          S              6A
      D DDBNBI          S              1A                                                    AR739736
-     D DDAPRC          S              1A                                                    MD054028
      D CGL032          S              1A
      D CLE134          S              1A                                                      CLE134
      D CSW207          S              1A                                                    BUG14992
@@ -186,7 +180,6 @@
      D DDOKCTR3        S              1A                                                      CGL157
      D DDOKCTR4        S              1A                                                      CGL157
      D DDOKCTR5        S              1A                                                      CGL157
-     D CER050          S              1A                                                      CER050
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -335,12 +328,6 @@
      C                   IF        CSW207 = 'Y' OR BGN4ST = 'Y'                             BUG14992
      C                   EXSR      SRVCISCD                                                 BUG14992
      C                   ENDIF                                                              BUG14992
-                                                                                              CER050
-      ** Validate APR Calculation Flag                                                        CER050
-                                                                                              CER050
-     C                   IF        CER050  = 'Y'                                              CER050
-     C                   EXSR      SRVAPR                                                     CER050
-     C                   ENDIF                                                                CER050
                                                                                               CGL157
      C                   EXSR      SrMail                                                     CGL157
      C                   EXSR      SrPhone                                                    CGL157
@@ -1337,38 +1324,6 @@
      C                   ENDSR                                                                CLE134
       *****************************************************************                       CLE134
      C/EJECT                                                                                  CLE134
-      *****************************************************************                       CER050
-      *                                                               *                       CER050
-      *  SRVAPR - Validate APR Calculation Flag                       *                       CER050
-      *                                                               *                       CER050
-      *****************************************************************                       CER050
-                                                                                              CER050
-     C     SRVAPR        BEGSR                                                                CER050
-                                                                                              CER050
-      ** Reset variables updated by validation                                                CER050
-     C                   EXSR      RESETERRS                                                  CER050
-                                                                                              CER050
-      ** Validate APR Flag                                                                    CER050
-     C                   CALLB     'SDVAPRC'                                                  CER050
-      ** Inputs                                                                               CER050
-      ** Return Code                                                                          CER050
-     C                   PARM                    RetCodeIn                                    CER050
-      ** Customer Number                                                                      CER050
-     C                   PARM                    DDCUSN                                       CER050
-      ** APR Flag                                                                             CER050
-     C     ADAPRC        PARM                    DDAPRC                                       CER050
-      ** OUTPUTS                                                                              CER050
-      ** Error fields/message IDs/message data (arrays) from/to caller                        CER050
-     C                   PARM                    FldNamXAr                                    CER050
-     C                   PARM                    MsgIDXAr                                     CER050
-     C                   PARM                    MsgDtaXAr                                    CER050
-      ** APR Calculation Flag - OK                                                            CER050
-     C                   PARM                    DDAPRCOK                                     CER050
-      ** Update error info with that returned from the validation module                      CER050
-                                                                                              CER050
-     C                   EXSR      UPDATERRS                                                  CER050
-                                                                                              CER050
-     C                   ENDSR                                                                CER050
       *****************************************************************
       *                                                               *
       * RESETERRS - Reset error information that is received back     *
@@ -1459,8 +1414,6 @@
       ** Customer Number                                                                    AR739736
                                                                                             AR739736
      C                   PARM                    DDBNBI                                     AR739736
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
  
       ** Outputs
       ** Additional Details OK inds
@@ -1574,19 +1527,6 @@
      C                   MOVE      'N'           CLE134                                       CLE134
      C                   ENDIF                                                                CLE134
  
-      ** Check if CER050 is on                                                                CER050
-     C                   CALL      'AOSARDR0'                                                 CER050
-     C                   PARM      *BLANKS       @RTCD                                        CER050
-     C                   PARM      '*VERIFY'     @OPTN                                        CER050
-     C                   PARM      'CER050'      @SARD                                        CER050
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
-                                                                                              CER050
-     C                   IF        @RTCD = *BLANK                                             CER050
-     C                   MOVE      'Y'           CER050                                       CER050
-     C                   ELSE                                                                 CER050
-     C                   MOVE      'N'           CER050                                       CER050
-     C                   ENDIF                                                                CER050
-                                                                                              CER050
       ** Check if SWIFT 2007 is installed                                                   BUG14992
                                                                                             BUG14992
      C                   CALL      'SWIF2007'                                               BUG14992

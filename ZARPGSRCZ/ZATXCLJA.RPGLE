@@ -18,9 +18,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CER071             Date 01Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 MD030924           Date 07Oct14               *
       *                 CER069             Date 03Jul14               *
@@ -81,7 +80,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -195,26 +193,26 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Joint Account Details by Joint/Cust
      FSDJACCL5  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Joint Account Details by Joint/Non Accnt Holder
      FSDJACCL6  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDJACCD0:SDJACCD6)
-
+ 
       ** Customer Details by Country of Tax
      FSDACTXL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Country of Tax Codes
      FSDCTTXL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Tax Basket Details
      FSDTXBSL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Non-account Holders by Country of Tax
      FSDNHTXL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ***EU*Tax*Accruals*at*Effective Dates****************************                       233269
      F***GLETXAL1  UF   E           K DISK    INFSR(*PSSR)                                    233269
       **********                                                                     CER048 BUG22911
@@ -227,7 +225,7 @@
                                                                                               CER054
       ** Religious Affiliation Codes Keyed by Religious Affiliation                           CER054
      FSDRLAFL0  IF   E           K DISK    INFSR(*PSSR)                                       CER054
-
+ 
       ** Midas SD Tax Status Changes Details                                                  CER069
      FSDTSCHPD  O    E           K DISK    INFSR(*PSSR)                                       CER069
                                                                                               CER069
@@ -242,26 +240,26 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -273,21 +271,21 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
      D UP              C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                       CER054
      D LO              C                   'abcdefghijklmnopqrstuvwxyz'                       CER054
                                                                                               CER054
@@ -300,36 +298,36 @@
       **********                                                                   BUG22754 BUG22911
      D*Power****       S              7  3 DIM(7) CTDATA PERRCD(1)                 BUG22754 BUG22911
       **********                                                                   BUG22754 BUG22911
-
+ 
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** External DS for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
-
+ 
       ** External DS for Additional Customer Details                                          233252
      D SDACUS        E DS                  EXTNAME(SDACUSPD)                                  233252
                                                                                               233252
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D CUST_DFAC     E                     EXTFLD(QQDFAC)                                     CGL035
-
+ 
       ** External DS for Country Codes
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
-
+ 
       ** External DS for Location Codes
      D SDLOCN        E DS                  EXTNAME(SDLOCNPD)
-
+ 
       ** External DS for Non-Account Holders
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)
       *                                                                                       CER048
       ** External DS for Sar Details                                                          CER048
       *                                                                                       CER048
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER048
-
+ 
       ** External DS for Short-data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** External DS for Long-data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                               236461
@@ -347,12 +345,12 @@
      D SDTXDT          DS                                                                   BUG23657
      D   PEVDT                             LIKE(E5EVDT)                                     BUG23657
      D   PEXDT                             LIKE(E5ETXT)                                     BUG23657
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Access object parameter list
      D PBranch         S              3A
      D PLocation       S              3A
@@ -363,9 +361,9 @@
      D POptn           S              7A
      D PRtcd           S              7A
      D PSard           S              6A                                                      CER048
-
+ 
       ** Input Parameter
-
+ 
      D PMODI           S              1A
      D*PTRRF****       S             18A                                                      CGL035
      D PTRRF           S             24A                                                      CGL035
@@ -381,9 +379,9 @@
      D PTAXR           S              6P 4
      D POCCY           S              3A
      D PInth           S              1A                                                      CER048
-
+ 
       ** Output Parameter
-
+ 
      D PIAED           S             15P 0
      D PTAXA           S             15P 0
      D PTOTO           S             15P 0
@@ -407,7 +405,7 @@
      D PRTRN           S              7A
      D PNonAccnt       S                   LIKE(PNARF)
      D P@TRN           S              7A                                                    BUG23071
-
+ 
       ** Work Fields
      D WEDAT           S              5P 0
      D WTRTS           S              1A
@@ -466,7 +464,7 @@
      D CER048          S              1A                                                      CER048
      D CER054          S              1A                                                      CER054
      D CER069          S              1A                                                      CER069
-
+ 
       ** Key Fields
      D KJANO           S              6A
      D KNAHO           S             10A
@@ -501,8 +499,8 @@
                                                                                               CER054
       ** Religious Affiliation Code                                                           CER054
      D KRLAF           S              4A                                                      CER054
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -517,9 +515,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Initialise output fields
-
+ 
      C                   EVAL      PIAED  = *ZEROS
      C                   EVAL      PTAXA  = *ZEROS
      C                   EVAL      PTOTO  = *ZEROS
@@ -544,7 +542,7 @@
      C                   EVAL      PStxa  = *ZEROS                                            CER048
      C                   EVAL      PUtil  = *ZEROS                                          BUG22911
      C                   EVAL      PPort  = *ZEROS                                          BUG22911
-
+ 
      C                   EVAL      PStcd  = *BLANKS                                           CER054
      C                   EVAL      PRlaf  = *BLANKS                                           CER054
      C                   EVAL      PTtxb  = *ZEROS                                            CER054
@@ -556,18 +554,18 @@
      C                   EVAL      WAudit = ' '                                               CER069
                                                                                               CER054
       ** Retrieve Tax Details: Customer Status, Tax Basket, Tax Currency Retrieval
-
+ 
      C                   EXSR      SRRtvTaxDet
-
+ 
      C*************      IF        PSTAT = 'DISCL'  OR                                       235045
      C*************                PSTAT = 'SELF '  OR                                       235045
      C*************                PSTAT = 'TAXAB'                                           235045
-
+ 
      C                   EXSR      SRInvtRatio
-
+ 
      C                   EVAL(H)   PTOTO = PTOTI * WMulValue / WDivValue
      C                   EVAL(H)   WTaxable = PTOTI * WMulValue / WDivValue                 BUG24521
-
+ 
      C**********         IF        PMODI <> 'S'                                               233269
       **********                                                                              233269
       ***Interest Accrued in the Different Periods Retrieval                                  233269
@@ -581,17 +579,17 @@
      C**********         ENDIF                                                                233269
      C                   EVAL      PIAED  = PTOTI                                             233269
      C************       ENDIF                                                                235045
-
+ 
      C                   IF        PSTAT = 'TAXAB'
-
+ 
       ** Retrieve Tax Pariod and Tax Rates
-
+ 
      C**********         IF        PMODI <> 'S'                                               233269
      C                   EXSR      SRRtvTaxRate
      C**********         ENDIF                                                                233269
-
+ 
       ** Calculate Tax Amount
-
+ 
      C**********         EXSR      SRCalTaxAmt                                                233269
      C**********         EVAL      PTAXA = (PTOTO * PTXR1) / 100                       233269 236825
      C                   EVAL(H)   PTAXA = (PTOTO * PTXR1) / 100                              236825
@@ -643,7 +641,7 @@
      C                   ENDIF                                                                CER069
                                                                                               CER069
      C                   ENDIF
-
+ 
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -651,52 +649,52 @@
       *  SRRtvTaxDet - Retrieve Tax Details
       *****************************************************************
      C     SRRtvTaxDet   BEGSR
-
+ 
       ** Retrieve Branch Details
-
+ 
      C                   EVAL      PBranch = PBRCA
      C                   EXSR      SRRtvBranch
-
+ 
       ** Retrieve Location
-
+ 
      C                   EVAL      PLocation = A8LCCD
      C                   EXSR      SRRtvLoc
      C                   EVAL      PCTAX = DVCNCD
-
+ 
       ** Retrieve Joint Account Details in SDCUSTL1
-
+ 
      C                   EVAL      PKey1 = *Blanks
      C                   MOVEL     PJANO         PKey1
      C                   EXSR      SRRtvCust
      C                   EVAL      JCOLC = BBCOLC
-
+ 
       ** Retrieve Country Code details
-
+ 
      C**********         EVAL      PCountry = JCOLC                                           233251
      C                   EVAL      PCountry = PCTAX                                           233251
      C                   EXSR      SRCntyCode
-
+ 
      C                   IF        A4JAMG = *Blanks  OR
      C                             A4JAMG = '0'
      C                   EVAL      PRTRN = 'NOTAX  '
      C***********        RETURN                                                               235045
      C                   ENDIF
-
+ 
       ** Retrieve Joint Account country of tax in SDACTXL1
-
+ 
      C                   EVAL      KCUST = PJANO
      C                   EVAL      KCTAX = PCTAX
      C                   EXSR      SRRtvCustTax
      C                   EVAL      WETXS = AXETXS
-
+ 
       ** Store value of passed PCUST, PNARF and PINVP
-
+ 
      C                   EVAL      InvolveCUST = PCUST
      C                   EVAL      InvolveNARF = PNARF
      C                   EVAL      InvolveINVP = PINVP
-
+ 
       ** If Customer is not blank
-
+ 
      C                   IF        PCUST <> *Blanks
       ** transfer code after validation of Joint Account Management (A4JAMG)                BUG26206
       **********                                                                            BUG26206
@@ -713,7 +711,7 @@
      C**********         EXSR      SRRtvCust                                                BUG26206
      C**********         EVAL      PCOLC = BBCOLC                                           BUG26206
       **********                                                                            BUG26206
-
+ 
       ** Retrieve country of tax in SDACTXL1
       *
      C                   EVAL      KCUST = PCUST
@@ -724,11 +722,11 @@
                                                                                             BUG26869
      C                   IF        PCUST <> *BLANKS OR                                      BUG26869
      C                             A4JAMG = '3' AND PCUST = *BLANKS                         BUG26869
-
+ 
       ** If Joint Management Account is 1, 2 or 3
-
+ 
      C                   EVAL      PJAMG = A4JAMG
-
+ 
      C                   IF        A4JAMG = '1'  OR
      C                             A4JAMG = '2'  OR
      C                             A4JAMG = '3'
@@ -741,32 +739,32 @@
      C                   EVAL      WValDate = AXCVDT                                          CER069
      C                                                                                        CER069
      C                   ENDIF                                                                CER069
-
+ 
      C                   SELECT
      C                   WHEN      AXETXS = 'S'
      C                   EVAL      PSTAT = 'SELF '
      C                   EVAL      PRTRN = 'NOTAX  '
-
+ 
      C                   WHEN      AXETXS = 'D'
      C                   EVAL      PSTAT = 'DISCL'
      C                   EVAL      PRTRN = 'NOTAX  '
-
+ 
      C                   WHEN      AXETXS = 'E'
      C                   EVAL      PSTAT = 'NOTAP'
      C                   EVAL      PRTRN = 'NOTAX  '
      C**************     RETURN                                                               235045
-
+ 
      C                   OTHER
      C                   EVAL      PSTAT = 'TAXAB'
      C                   EVAL      PRTRN = 'TAXAB  '
      C                   ENDSL
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        A4JAMG = '1'
      C                   EVAL      PCUST = InvolveCUST
      C                   ENDIF
-
+ 
      C**********         IF        A4JAMG = '2'                                             BUG26839
      C**********         EVAL      KJANO = PJANO                                            BUG26839
      C**********         EXSR      SRJointAccDet                                            BUG26839
@@ -783,7 +781,7 @@
      C                   EXSR      SRJointAccDet                                            BUG26876
                                                                                             BUG26839
      C                   ENDIF
-
+ 
      C                   IF        A4JAMG = '3'  AND
      C                             WETXS <> *Blanks
      C                   EVAL      PCUST = PJANO
@@ -791,7 +789,7 @@
      C                   EVAL      PINVP = '1/1       '
      C                   EVAL      PRTRN = 'LAST   '
      C                   ENDIF
-
+ 
      C                   IF        A4JAMG = '3'  AND
      C                             WETXS = *Blanks
      C                   EVAL      PCUST = InvolveCUST
@@ -810,38 +808,38 @@
      C                   MOVEL     PCUST         PKey1                                      BUG26206
      C                   EXSR      SRRtvCust                                                BUG26206
      C                   EVAL      PCOLC = BBCOLC                                           BUG26206
-
+ 
      C                   ENDIF
-
+ 
       ** If Non-Account Holder is not blank
-
+ 
      C                   IF        PNARF <> *Blanks
-
+ 
       ** Access Non-Account Holder details - SDNAHOL1
-
+ 
      C                   EVAL      PNonAccnt = PNARF
      C                   EXSR      SRRtvNonAcc
-
+ 
      C                   IF        NHPIND <> 'Y'
      C                   EVAL      PSTAT = 'NOTAP'
      C                   EVAL      PRTRN = 'NOTAX  '
      C*************      RETURN                                                               235045
      C                   ENDIF
-
+ 
      C                   EVAL      PCOLC = NHCOLC
-
+ 
       ** Retrieve country of tax in SDNHTXL1
-
+ 
      C                   EVAL      KNAHO = PNARF
      C                   EVAL      KCTTX = PCTAX
      C                   EXSR      SRRtvNAHOTax
-
+ 
       ** If Joint Management Account is 1, 2 or 3
-
+ 
      C                   IF        A4JAMG = '1'  OR
      C                             A4JAMG = '2'  OR
      C                             A4JAMG = '3'
-
+ 
      C                   IF        CER069 = 'Y'                                               CER069
      C                   EVAL      WAudit = 'Y'                                               CER069
      C                   EVAL      WTaxStat = NXETXS                                          CER069
@@ -853,33 +851,33 @@
      C                   WHEN      NXETXS = 'S'
      C                   EVAL      PSTAT = 'SELF '
      C                   EVAL      PRTRN = 'NOTAX'
-
+ 
      C                   WHEN      NXETXS = 'D'
      C                   EVAL      PSTAT = 'DISCL'
      C                   EVAL      PRTRN = 'NOTAX'
-
+ 
      C                   WHEN      NXETXS = 'E'
      C                   EVAL      PSTAT = 'NOTAP'
      C                   EVAL      PRTRN = 'NOTAX'
      C************       RETURN                                                               235045
-
+ 
      C                   OTHER
      C                   EVAL      PSTAT = 'TAXAB'
      C                   EVAL      PRTRN = 'TAXAB'
      C                   ENDSL
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        A4JAMG = '3'  AND
      C                             WETXS = *Blanks
      C                   EVAL      PNARF = InvolveNARF
      C                   EVAL      PINVP = InvolveINVP
      C                   ENDIF
-
+ 
      C                   IF        A4JAMG = '1'
      C                   EVAL      PNARF = InvolveNARF
      C                   ENDIF
-
+ 
       ** Retrieve Joint Account Details for A4JAMG = '2'                                    BUG26938
                                                                                             BUG26938
      C                   IF        A4JAMG = '2'                                             BUG26938
@@ -888,9 +886,9 @@
      C                   ENDIF                                                              BUG26938
                                                                                             BUG26938
      C                   ENDIF
-
+ 
       ** Retrieve Tax Basket in SDCTTXL1
-
+ 
      C                   EVAL      KCTAX = PCTAX
      C                   EVAL      KCOLC = PCOLC
      C                   EXSR      SRRtvTxBasket
@@ -901,12 +899,12 @@
      C                   ELSE                                                                233251
      C                   EVAL      PTRTE = EWTRT2                                            233251
      C                   ENDIF                                                               233251
-
+ 
       ***Retrieve*Tax*Currency*in*SDCTRYL1*****************************                       233251
       **********                                                                              233251
      C**********         EVAL      PCountry = PCTAX                                           233251
      C**********         EXSR      SRCntyCode                                                 233251
-
+ 
      C                   IF        A4TXCY <> *Blanks
      C                   EVAL      PTXCY = A4TXCY
      C                   ELSE
@@ -916,7 +914,7 @@
      C                   IF        CER069 = 'Y' AND WAudit = 'Y'                              CER069
      C                   EXSR      SRTSCH                                                     CER069
      C                   ENDIF                                                                CER069
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1014,16 +1012,16 @@
       *  SRRtvTaxRate - Retrieve Tax Period and Tax Rate
       *****************************************************************
      C     SRRtvTaxRate  BEGSR
-
+ 
      C     KTaxBkt1      KLIST
      C                   KFLD                    PCTAX
      C                   KFLD                    PTXBS
-
+ 
      C     KTaxBasket    KLIST
      C                   KFLD                    PCTAX
      C                   KFLD                    PTXBS
      C                   KFLD                    KEffDate
-
+ 
      C**********         EVAL      KEffDate = WSTR1                                           235663
                                                                                               235663
      C                   IF        PENDD <> *ZERO                                             235663
@@ -1036,7 +1034,7 @@
      C**********         READ      SDTXBSL1                                                   235663
      C     KTaxBasket    SETGT     SDTXBSL1                                                   235663
      C                   READP     SDTXBSL1                                                   235663
-
+ 
      C**********         IF        %EOF(SDTXBSL1)   OR                                        235663
      C**********                   TBCRTT <> PCTAX  AND                                       235663
      C**********                   TBTXBS <> PTXBS  AND                                       235663
@@ -1053,7 +1051,7 @@
      C                   ENDIF                                                              BUG26692
      C                   RETURN                                                               235663
      C                   ENDIF
-
+ 
      C**********         IF        TBCRTT = PCTAX  AND                                        233269
      C**********                   TBTXBS = PTXBS  AND                                        233269
      C**********                   TBEFDT < PENDD                                             233269
@@ -1129,7 +1127,7 @@
      C**********         ENDDO                                                                233269
       **********                                                                              233269
      C**********         ENDIF                                                                233269
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1191,25 +1189,25 @@
       *  SRRtvBranch - Retrieve Branch Details
       *****************************************************************
      C     SRRtvBranch   BEGSR
-
+ 
       ** Access Branch details
-
+ 
      C**********         CALL      'AOBRCHR0'                                                 CGL035
      C                   CALL      'AOBRCHR1'                                                 CGL035
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PBranch
      C     SDBRCH        PARM      SDBRCH        DSSDY
-
+ 
       ** No Record Found/ Error Encountered
-
+ 
      C                   IF        PRtcd <> *BLANKS
      C                   MOVEL     PBranch       PKEY
      C                   EVAL      PFILE = 'SDBRCHL1  '
      C                   EVAL      PRTRN = 'ERROR  '
      C                   RETURN
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1217,24 +1215,24 @@
       *  SRRtvLoc - Retrieve Location
       *****************************************************************
      C     SRRtvLoc      BEGSR
-
+ 
       ** Access Location details
-
+ 
      C                   CALL      'AOLOCNR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PLocation
      C     SDLOCN        PARM      SDLOCN        DSFDY
-
+ 
       ** No Record Found/ Error Encountered
-
+ 
      C                   IF        PRtcd <> *BLANKS
      C                   MOVEL     PLocation     PKEY
      C                   EVAL      PFILE = 'SDLOCNL1  '
      C                   EVAL      PRTRN = 'ERROR  '
      C                   RETURN
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1242,24 +1240,24 @@
       *  SRCntyCode - Retrieve Country Code
       *****************************************************************
      C     SRCntyCode    BEGSR
-
+ 
       ** Access Country Code
-
+ 
      C                   CALL      'AOCTRYR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCountry
      C     SDCTRY        PARM      SDCTRY        DSFDY
-
+ 
       ** No Record Found/ Error Encountered
-
+ 
      C                   IF        PRtcd <> *BLANKS
      C                   MOVEL     PCTAX         PKEY
      C                   EVAL      PFILE = 'SDCTRYL1  '
      C                   EVAL      PRTRN = 'ERROR  '
      C                   RETURN
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1267,12 +1265,12 @@
       *  SRJointAccDet - Joint Account Details
       *****************************************************************
      C     SRJointAccDet BEGSR
-
+ 
       ** Retrieve Prime Account Holder
-
+ 
      C                   IF        PCUST <> *BLANKS
      C     KJANO         CHAIN     SDJACCL5
-
+ 
      C                   IF        %FOUND(SDJACCL5)
      C                   EVAL      PCUST = JCCUST
      C                   EVAL      PNARF = *Blanks
@@ -1280,12 +1278,12 @@
      C                   EVAL      PINVP = '1/1       '                                       233251
      C                   EVAL      PRTRN = 'LAST   '
      C                   ENDIF
-
+ 
       ** If not found, non-account holder reference number
-
+ 
      C                   ELSE
      C     KJANO         CHAIN     SDJACCL6
-
+ 
      C                   IF        %FOUND(SDJACCL6)
      C                   EVAL      PCUST = *Blanks
      C                   EVAL      PNARF = JCNAHO
@@ -1294,7 +1292,7 @@
      C                   EVAL      PRTRN = 'LAST   '
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1302,24 +1300,24 @@
       *  SRRtvCustTax - Retrieve Customer by Country of Tax
       *****************************************************************
      C     SRRtvCustTax  BEGSR
-
+ 
      C     KCustByTax    KLIST
      C                   KFLD                    KCUST
      C                   KFLD                    KCTAX
-
+ 
       ** Access Customer by Country of Tax
-
+ 
      C     KCustByTax    CHAIN     SDACTXL1
-
+ 
       ** No Record Found
-
+ 
      C                   IF        NOT %FOUND(SDACTXL1)
      C                   EVAL      PKEY = PCUST + PCTAX
      C                   EVAL      PFILE = 'SDACTXL1  '
      C                   EVAL      PRTRN = 'ERROR  '
      C                   RETURN
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1327,9 +1325,9 @@
       *  SRRtvCust - Retrieve Customer Details
       *****************************************************************
      C     SRRtvCust     BEGSR
-
+ 
       ** Access Customer Details
-
+ 
      C**********         CALL      'AOCUSTR0'                                                 236461
      C                   CALL      'AOCUSTR2'                                                 236461
      C                   PARM      *Blanks       PRtcd
@@ -1338,9 +1336,9 @@
      C                   PARM      *Blanks       PKySt
      C*****SDCUST        PARM      SDCUST        DSSDY                                        236461
      C     SDCUST        PARM      SDCUST        DSLDY                                        236461
-
+ 
       ** No Record Found/ Error Encountered
-
+ 
      C                   IF        PRtcd <> *Blanks
      C                             AND BBCLST <> 'Y'                                          236461
      C**********         EVAL      PKEY = PCUST                                               236461
@@ -1349,7 +1347,7 @@
      C                   EVAL      PRTRN = 'ERROR  '
      C                   RETURN
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************                       233252
       /EJECT                                                                                  233252
@@ -1401,24 +1399,24 @@
       *  SRRtvNAHOTax - Access Non Account Holder Tax Details
       *****************************************************************
      C     SRRtvNAHOTax  BEGSR
-
+ 
       ** Set up key list
-
+ 
      C     KNonAccHold   KLIST
      C                   KFLD                    KNAHO
      C                   KFLD                    KCTTX
-
+ 
       ** Retrieve Non-account Holder details
-
+ 
      C     KNonAccHold   CHAIN     SDNHTXL1
-
+ 
      C                   IF        NOT %FOUND(SDNHTXL1)
      C                   EVAL      PKEY = PNARF + PCTAX
      C                   EVAL      PFILE = 'SDNHTXL1  '
      C                   EVAL      PRTRN = 'ERROR  '
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1426,23 +1424,23 @@
       *  SRRtvNonAcc - Access Non Account Holder details
       *****************************************************************
      C     SRRtvNonAcc   BEGSR
-
+ 
      C                   CALL      'AONAHOR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PNonAccnt
      C*****SDNAHO        PARM      SDNAHO        DSSDY                                      BUG24029
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      BUG24029
-
+ 
       ** No Record Found/ Error Encountered
-
+ 
      C                   IF        PRtcd <> *BLANKS
      C                   MOVEL     PNARF         PKEY
      C                   EVAL      PFILE = 'SDNAHOL1  '
      C                   EVAL      PRTRN = 'ERROR  '
      C                   RETURN
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1450,21 +1448,21 @@
       *  SRRtvTxBasket - Retrieve Tax Basket
       *****************************************************************
      C     SRRtvTxBasket BEGSR
-
+ 
      C     KCustTax      KLIST
      C                   KFLD                    KCTAX
      C                   KFLD                    KCOLC
-
+ 
       ** Access Customer by Country of Tax
-
+ 
      C     KCustTax      CHAIN     SDCTTXL1
-
+ 
       ** No Record Found, access customer with blank Country Location
-
+ 
      C                   IF        NOT %FOUND(SDCTTXL1)
      C                   EVAL      KCOLC = *Blanks
      C     KCustTax      CHAIN     SDCTTXL1
-
+ 
      C*******            IF        NOT %FOUND(SDCTTXL1)                                       235303
      C                   IF        NOT %FOUND(SDCTTXL1)  OR                                   235303
      C                             EWTXS1 = 'E'                                               235303
@@ -1473,7 +1471,7 @@
      C                   RETURN                                                               235663
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1481,45 +1479,45 @@
       *  SRInvtRatio - Determine ratio of investment proportion
       *****************************************************************
      C     SRInvtRatio   BEGSR
-
+ 
      C                   EVAL      WMulValue = *Zeros
      C                   EVAL      WDivValue = *Zeros
-
+ 
       ** Search '/' from the PINVP startting at position 2
-
+ 
      C                   EVAL      WPosition = %SCAN('/':PINVP:2)
-
+ 
       ** If '/' not found, or if '/' is on position 1, set ratio to 1
-
+ 
      C                   IF        WPosition = 0
      C                   EVAL      WMulValue = 1
      C                   EVAL      WDivValue = 1
      C                   ELSE
-
+ 
       ** Get the value on the left hand of '/' and set as multiplied value
       ** Get the value on the right hand of '/' and set as divide value
-
+ 
      C                   EVAL      WStart = WPosition - 1
      C                   EVAL      WEnd = WPosition + 1
      C                   EVAL      WNumerator = %SUBST(PINVP:1:WStart)
      C                   EVAL      WDenominator = %SUBST(PINVP:WEnd)
-
+ 
      C                   EVALR     WNumerator = %TRIM(WNumerator)                             233795
      C                   EVALR     WDenominator = %TRIM(WDenominator)                         233795
                                                                                               233795
      C                   MOVEL     WNumerator    WMulValue
      C                   MOVEL     WDenominator  WDivValue
      C                   ENDIF
-
+ 
       ** Trap possible blanks or zero value
-
+ 
      C************       IF        WMulValue = *Zeros  OR                                     235045
      C************                 WDivValue = *Zeros                                         235045
      C                   IF        WDivValue = *Zeros                                         235045
      C************       EVAL      WMulValue = 1                                              235045
      C                   EVAL      WDivValue = 1
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1961,9 +1959,9 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** INPUTS
       ** Module ID
       ** Transaction Reference
@@ -1979,7 +1977,7 @@
       ** Tax Rate Applicable for Band
       ** Original Currency
       ** Threshold Indicator                                                                  CER048
-
+ 
      C                   PARM                    PMODI
      C                   PARM                    PTRRF
      C                   PARM                    PBRCA
@@ -1994,7 +1992,7 @@
      C                   PARM                    PTAXR
      C                   PARM                    POCCY
      C                   PARM                    PInth                                        CER048
-
+ 
       ** OUTPUTS
       ** Interest Amount at Effective Date
       ** Tax Amount
@@ -2077,7 +2075,7 @@
      C                   IF        PRtcd = *BLANKS                                            CER048
      C                   EVAL      CER048 = 'Y'                                               CER048
      C                   ENDIF                                                                CER048
-
+ 
       *                                                                                       CER054
       ** Test if CER054 is installed                                                          CER054
       *                                                                                       CER054
@@ -2132,9 +2130,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT

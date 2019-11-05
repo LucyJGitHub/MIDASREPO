@@ -18,9 +18,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CER055             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23742           Date 09May09               *
@@ -45,7 +44,6 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
@@ -73,7 +71,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -103,38 +101,38 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      D/COPY ZACPYSRC,ERR_XARRYS                                                               CER031
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
      D WCPrtItmTyp     C                   CONST('RTL_ADV')
       ** Print Item Type
-
+ 
      D WCPrtItmSubTyp  C                   CONST('GL')
       ** Print Item Sub-Type
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Data structure for access objects, second DS
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Data structure for SD Customer details file
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Data structure Currency details
-
+ 
       *                                                                                       CER031
       ** Switchable Features Descriptions                                                     CER031
       *                                                                                       CER031
@@ -146,11 +144,11 @@
       *                                                                                       CER031
      D PEDsCGUDCRPD  E DS                  EXTNAME(CGUDCRPD)
       ** Data structure for UDC data reference file
-
+ 
      D WDsRSAC       E DS                  EXTNAME(RSACMTPD)
       ** Data structure for GL Account Movements
      D  WNrtd                 29     56
-
+ 
      D*PDsRetRsac      DS           155                                                       CAP204
      D*PDsRetRsac      DS           175                                                CAP204 CAP205
      D PDsRetRsac      DS           182                                                       CAP205
@@ -159,11 +157,11 @@
      D**WRsacDetls            11    155                                                       CAP204
      D**WRsacDetls            11    175                                                CAP204 CAP205
      D  WRsacDetls            11    182                                                       CAP205
-
+ 
      D WMDsPath        DS                  OCCURS(20)
       ** Multi-occurence data structure to store path starting from Treadv
      D  WMDsPathGrp            1      6
-
+ 
      D                 DS
       ** General data structure to define fields that need to share data
      D WGrp10                  1     10
@@ -172,7 +170,7 @@
      D  WAr20                 21     40    DIM(20)
      D  WNum20                21     40  0
      D  WAr29                 51     79    DIM(29)
-
+ 
       ** Compile-time array to contain RDE definitions
      D**********WTbGrp          S             10    DIM(16) CTDATA PERRCD(1)                  CER031
      D*WTbGrp***       S             10    DIM(56) CTDATA PERRCD(1)                  CER031 BUG23742
@@ -186,28 +184,28 @@
       ** Array for 22 * 35                                                                  BUG23742
       *                                                                                     BUG23742
      D PArrExt22       S             35A   DIM(22)                                          BUG23742
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D WPathStr        S            256A
       ** String that contains the concatenated path
-
+ 
      D WPx             S              3P 0
       ** Index for WMDsPath only
-
+ 
      D ##ITEM          S              8  0
       ** Confirmation Text code
-
+ 
       ** General purpose variables
      D WProduce        S              1A
      D Wx1             S              3P 0
      D Wx2             S              3P 0
      D Wx3             S              3P 0
      D WMvam           S             13P 0
-
+ 
       ** Parameter fields
      D PAction8        S              8A
      D PCustNumChr6    S              6A
@@ -218,14 +216,14 @@
      D CCG015          S              1A
      D PChgType        S              1A
      D W0SPAT          S             70A
-
+ 
       ** Access Object Parameter fields
      D PRtCd           S              7A
      D POptn           S              7A
      D PCustNo         S             10A
      D PChr003         S              3A
      D PErrInf         S              7A
-
+ 
       *                                                                                       CER031
      D Idx             S              3P 0                                                    CER031
      D #MsgData        S             45A                                                      CER031
@@ -285,41 +283,41 @@
       *                                                                                     BUG23445
      D/COPY CGCPYSRC,CGPACKDLE
       ** Data pack arrays and data structures
-
+ 
      D/COPY CGCPYSRC,SRERRDLE
       ** Fields, data structures, arrays definition for
       ** CG error processing
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'MAIN      '  @STK(Q)
-
+ 
       ** Execute main subroutine
-
+ 
      C                   EXSR      SrMain
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
       ** Termination
-
+ 
      C                   MOVE      *ON           *INLR
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -328,32 +326,32 @@
       *                                                               *
       *****************************************************************
      C     SrMain        BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrMain    '  @STK(Q)
-
+ 
       ** Move GL Account Movement details to a DS for RSACMTPD.
-
+ 
      C                   MOVEL     WRsacDetls    WDsRSAC
-
+ 
       ** Generate reference number by writing to PF/CGUDCRPD.
       ** If no confirmation to produce, then bypass.
-
+ 
      C                   EXSR      SrGenRef
-
+ 
       ** Top group set
-
+ 
      C                   IF        WProduce = 'Y'
      C                   EXSR      SrTREADV
      C                   ENDIF
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -363,32 +361,32 @@
       *                                                               *
       *****************************************************************
      C     SrTREADV      BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrTREADV  '  @STK(Q)
-
+ 
       ** Set up path multi-occurence data structure & path string
-
+ 
      C                   Z-ADD     1             WPx
      C     WPx           OCCUR     WMDsPath
      C                   MOVEL     'TREADV'      WMDsPathGrp
-
+ 
      C                   EXSR      SrPath
-
+ 
      C                   EXSR      PSHGRS
-
+ 
       *********************************
       ** Retail Advice Details group **
       *********************************
-
+ 
      C                   EXSR      SrRA_DTL
-
+ 
       *********************************
       ** Customer details group      **
       *********************************
-
+ 
      C                   EXSR      SrCUST
                                                                                               CER055
       *********************************                                                       CER055
@@ -404,20 +402,20 @@
      C                   EXSR      SrRtvExNr                                                  CER031
      C                   ENDIF                                                                CER031
       *                                                                                       CER031
-
+ 
       ** Decrement Path DS index
-
+ 
      C     WPx           OCCUR     WMDsPath
      C                   CLEAR                   WMDsPathGrp
      C                   SUB       1             WPx
-
+ 
      C                   EXSR      POPGRS
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -427,69 +425,69 @@
       *                                                               *
       *****************************************************************
      C     SrRA_DTL      BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrRA_DTL  '  @STK(Q)
-
+ 
       ** Set up path multi-occurence data structure & path string
-
+ 
      C                   ADD       1             WPx
      C     WPx           OCCUR     WMDsPath
      C                   MOVEL     'RA_DTL'      WMDsPathGrp
-
+ 
      C                   EXSR      SrPath
-
+ 
      C                   EXSR      PSHGRS
-
+ 
       ** Retrieve RDE info
-
+ 
      C                   MOVEL     'RA_DTL'      WGrpNme
      C                   EXSR      SrRtvRDE
-
+ 
       ** Transaction Reference
-
+ 
      C                   MOVEL     TNMR          ##D(1)
-
+ 
       ** Debit or Credit (0 or 1)
-
+ 
      C                   IF        DORC = 0
      C                   MOVEL     'DR'          ##D(2)
      C                   ELSE
      C                   MOVEL     'CR'          ##D(2)
      C                   ENDIF
-
+ 
       ** Retail Account Number
-
+ 
      C                   MOVEL     WRetailNum    ##D(3)
-
+ 
       ** Value Date
-
+ 
      C                   IF        VUDT <> *ZEROS
      C                   MOVEL     VUDT          ##D(4)
      C                   ENDIF
-
+ 
       ** Transaction Type Description
-
+ 
      C                   IF        TRYP = 'ME'
      C                   EVAL      ##D(5) = 'JOURNAL ENTRY'
      C                   ELSE
      C                   EVAL      ##D(5) = TRYP
      C                   ENDIF
-
+ 
       ** Transaction Narrative
-
+ 
      C                   MOVEL     WNrtd         ##D(6)
-
+ 
       ** Currency Code
-
+ 
      C                   MOVEL     CCYD          ##D(7)
-
+ 
       ** Posting Amount
-
+ 
      C                   EVAL      R#DATA = *BLANKS
-
+ 
      C                   IF        MVAM < *ZERO
      C                   Z-SUB     MVAM          WMvam
      C                   EVAL      ##SIGN = '-'
@@ -497,56 +495,56 @@
      C                   Z-ADD     MVAM          WMvam
      C                   EVAL      ##SIGN = *BLANKS
      C                   ENDIF
-
+ 
       ** Retrieve number of decimal places
-
+ 
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      CCYD          PChr003
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
      C     PRtCd         IFNE      *BLANKS
-
+ 
      C                   MOVEL     'SDCURRPD'    W0File
      C                   MOVEL     CCYD          W0Key
      C                   Z-ADD     04            W0ERNB
      C                   MOVEL     'MEM5003'     W0MsgD
      C                   MOVEL     'MIDAS     '  W0MsgF
      C                   EXSR      SRERR
-
+ 
      C                   ENDIF
-
+ 
      C                   MOVE      A6NBDP        ##DCPA
      C                   MOVEL     WMvam         ##NUMA
-
+ 
      C                   MOVEL     R#DATA        ##D(8)
-
+ 
       ** Last Transaction Change Type
-
+ 
      C                   MOVEL     PChgType      ##D(9)
                                                                                               CER055
      C                   IF        CER055 = 'Y'                                               CER055
      C                   MOVEL     'Y'           ##D(10)                                      CER055
      C                   ENDIF                                                                CER055
-
+ 
       ** Accumulate RDEs and associated data and output to CGUDTAPD
-
+ 
      C                   EXSR      SrPackDta
-
+ 
       ** Decrement Path DS index
-
+ 
      C     WPx           OCCUR     WMDsPath
      C                   CLEAR                   WMDsPathGrp
      C                   SUB       1             WPx
-
+ 
      C                   EXSR      POPGRS
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -556,31 +554,31 @@
       *                                                               *
       *****************************************************************
      C     SrCUST        BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrCUST    '  @STK(Q)
-
+ 
       ** Set up path multi-occurence data structure & path string
-
+ 
      C                   ADD       1             WPx
      C     WPx           OCCUR     WMDsPath
      C                   MOVEL     'CUST  '      WMDsPathGrp
-
+ 
      C                   EXSR      SrPath
-
+ 
      C                   EXSR      PSHGRS
-
+ 
       ** Retrieve RDE info
-
+ 
      C                   MOVEL     'CUST  '      WGrpNme
      C                   EXSR      SrRtvRDE
-
+ 
       ** Get the Customer Detail.
-
+ 
      C                   MOVEL     CUSN          PCustNo
-
+ 
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
@@ -589,65 +587,65 @@
      C     SDCUST        PARM      SDCUST        DSSDY
       *
      C                   IF        PRtCd = *BLANKS
-
+ 
       ** Customer number
-
+ 
      C                   MOVEL     BBCUST        ##D(1)
-
+ 
       ** Customer name
-
+ 
      C                   MOVEL     BBCRNM        ##D(2)
-
+ 
       ** Customer town
-
+ 
      C                   MOVEL     BBCRTN        ##D(3)
-
+ 
       ** Customer Name and Address line 1
-
+ 
      C                   MOVEL     BBCNA1        ##D(4)
-
+ 
       ** Customer Name and Address line 2
-
+ 
      C                   MOVEL     BBCNA2        ##D(5)
-
+ 
       ** Customer Name and Address line 3
-
+ 
      C                   MOVEL     BBCNA3        ##D(6)
-
+ 
       ** Customer Name and Address line 4
-
+ 
      C                   MOVEL     BBCNA4        ##D(7)
-
+ 
      C                   ELSE
-
+ 
       ** Handle Database Errors if any occur.
-
+ 
      C                   MOVEL     'SDCUSTPD'    W0File
      C                   MOVEL     PCustNo       W0Key
      C                   Z-ADD     01            W0ERNB
      C                   MOVEL     'MEM5003'     W0MsgD
      C                   MOVEL     'MIDAS  '     W0MsgF
      C                   EXSR      SRERR
-
+ 
      C                   ENDIF
-
+ 
       ** Accumulate RDEs and associated data and output to CGUDTAPD
-
+ 
      C                   EXSR      SrPackDta
-
+ 
       ** Decrement Path DS index
-
+ 
      C     WPx           OCCUR     WMDsPath
      C                   CLEAR                   WMDsPathGrp
      C                   SUB       1             WPx
-
+ 
      C                   EXSR      POPGRS
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************                       CER055
       /EJECT                                                                                  CER055
@@ -724,52 +722,52 @@
       *                                                               *
       *****************************************************************
      C     SrGenRef      BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrGenRef  '  @STK(Q)
-
+ 
       ** Reset the flag that indicates wether a correspondence is to be
       ** produced or not.
-
+ 
      C                   MOVEL     'N'           WProduce
-
+ 
       ** Set up fields of parameter PEDsCGUDCRPD to be passed to CG9010
-
+ 
      C                   CLEAR                   PEDsCGUDCRPD
-
+ 
       ** Booking/Main branch (mandatory)
-
+ 
      C                   MOVEL     BRCA          DRBRCA
-
+ 
       ** Module ID (madatory)
-
+ 
      C                   MOVEL     'RE'          DRMODI
-
+ 
       ** MIDAS Transaction number
-
+ 
      C                   MOVEL     TNMR          DRMTRN
-
+ 
       ** Print Item Type
-
+ 
      C                   MOVEL     WCPrtItmTyp   DRPTYP
-
+ 
       ** Print Item Subtype
-
+ 
      C                   MOVEL     WCPrtItmSubTypDRPSTP
-
+ 
       ** Auto Transmission indicator
-
+ 
      C                   MOVEL     'N'           DRATRM
-
+ 
       ** Customer
-
+ 
      C                   MOVE      *BLANKS       PCustNumChr6
      C                   MOVE      CUSN          PCustNumChr6
-
+ 
       ** Output to CGUDCRPD
-
+ 
      C                   CALL      'CG9010'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*GEN'        PMode
@@ -777,24 +775,24 @@
      C                   PARM                    PCustNumChr6
      C                   PARM                    PEDsCGUDCRPD
      C                   PARM      *BLANKS       PItmRef
-
+ 
      C                   SELECT
-
+ 
       ** No error, generate correspondence
-
+ 
      C                   WHEN      PRtnCode = *BLANKS
      C                   MOVEL     'Y'           WProduce
      C                   MOVEL     PItmRef       ##ITEM
      C     DRPTYP        CAT       ':':0         COLON            11
      C     COLON         CAT       DRPSTP:0      ##REFR
      C                   EXSR      WRAPRF
-
+ 
       ** No error, suppress output
-
+ 
      C                   WHEN      PRtnCode = 'CGD1270'
-
+ 
       ** Error.
-
+ 
      C                   OTHER
      C                   MOVEL     'CG9010'      W0File
      C                   MOVEL     PRtnCode      W0Key
@@ -802,14 +800,14 @@
      C                   MOVEL     'CGD1286'     W0MsgD
      C                   MOVEL     'CGUSRMSG'    W0MsgF
      C                   EXSR      SRERR
-
+ 
      C                   ENDSL
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -819,30 +817,30 @@
       *                                                               *
       *****************************************************************
      C     SrPath        BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrPath    '  @STK(Q)
-
+ 
       ** Reset output path string
-
+ 
      C                   MOVEL     *BLANKS       WPathStr
-
+ 
       ** Copy path from multi-occurence DS to string. Each entry is to be
       ** preceded by '\'.
-
+ 
      C                   DO        WPx           Wx1
      C     Wx1           OCCUR     WMDsPath
      C                   CAT       '\':0         WPathStr
      C                   CAT       WMDsPathGrp:0 WPathStr
      C                   ENDDO
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -853,20 +851,20 @@
       *                                                               *
       *****************************************************************
      C     SrRtvRDE      BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrRtvRDE  '  @STK(Q)
-
+ 
       ** Reset primary arrays
-
+ 
      C                   CLEAR                   ##R
      C                   CLEAR                   ##D
      C                   CLEAR                   ##S
-
+ 
       ** Get info from compile time array of the 20 RDEs in group set
-
+ 
      C                   Z-ADD     1             Wx1
      C                   Z-ADD     1             WGrpSeq
       *                                                                                     BUG23742
@@ -884,12 +882,12 @@
      C                   ADD       1             WGrpSeq
      C                   ENDIF
      C                   ENDDO
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -897,31 +895,31 @@
       * SrFmtDta - Reformat data before packing it.                  *
       *****************************************************************
      C     SrFmtDta      BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrFmtDta  '  @STK(Q)
-
+ 
       ** Loop through RDE's and data
-
+ 
      C                   Z-ADD     0             Wx1
-
+ 
      C     Wx1           DOUEQ     20
-
+ 
       ** Move RDE's and its data to their templates
-
+ 
      C                   ADD       1             Wx1
      C                   MOVEL     ##R(Wx1)      R#DEFN
      C                   MOVEL     ##D(Wx1)      R#DATA
-
+ 
       ** Reformat only if data is present and RDE is edited
-
+ 
      C     R#DATA        IFNE      *BLANK
      C     ##RDEC        ANDNE     *BLANK
-
+ 
       ** Right-align amount
-
+ 
      C                   MOVEA     ##NUMA        WAr29
      C                   Z-ADD     1             Wx2
      C     *BLANK        LOOKUP    WAr29(Wx2)                             61
@@ -934,40 +932,40 @@
      C                   MOVEL     WAr29(Wx2)    WAr20(Wx3)
      C                   SUB       1             Wx3
      C                   ENDDO
-
+ 
       ** Sign
-
+ 
      C     ##SIGN        IFEQ      '-'
      C                   Z-SUB     WNum20        ##NUMB
      C                   ELSE
      C                   Z-ADD     WNum20        ##NUMB
      C                   ENDIF
-
+ 
       ** Edit type
-
+ 
      C     ##EDTT        IFEQ      *BLANK
      C                   MOVEL     ##RDET        ##EDTT
      C                   ENDIF
-
+ 
       ** Default decimal places
-
+ 
      C     ##DCPA        IFEQ      *BLANK
      C                   MOVEL     ##RDED        ##DCPA
      C                   ENDIF
-
+ 
       ** New RDE data
-
+ 
      C                   MOVEL     R#DATA        ##D(Wx1)
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -977,21 +975,21 @@
       *                                                               *
       *****************************************************************
      C     SrPackDta     BEGSR
-
+ 
       ** Set up subroutine stack name
-
+ 
      C                   ADD       1             Q
      C                   MOVEL     'SrPackDta '  @STK(Q)
-
+ 
       ** Reformat RDE data
-
+ 
      C                   EXSR      SrFmtDta
-
+ 
      C                   MOVEL     '*NEWARR '    PAction8
      C                   MOVEL     WPathStr      W0SPAT
-
+ 
       ** Pack RDEs and associated data into data strings
-
+ 
      C                   CALL      'CG3999'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PAction8
@@ -1002,7 +1000,7 @@
      C                   PARM                    ##RN
      C                   PARM                    ##DN
      C                   PARM                    ##FM
-
+ 
      C                   IF        PRtnCode <> *BLANKS
      C                   MOVEL     'CG3999'      W0File
      C                   MOVEL     PRtnCode      W0Key
@@ -1011,14 +1009,14 @@
      C                   MOVEL     'MIDAS  '     W0MsgF
      C                   EXSR      SRERR
      C                   ENDIF
-
+ 
      C                   EXSR      WRTRDE
-
+ 
       ** Unwind subroutine stack name
-
+ 
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
-
+ 
      C                   ENDSR
       *****************************************************************                       CER031
       /EJECT                                                                                  CER031
@@ -1649,25 +1647,25 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    W0RTN
      C                   PARM                    W0CMT
      C                   PARM                    PDsRetRsac
      C                   PARM                    CCG015
      C                   PARM                    PChgType
-
+ 
      C                   Z-ADD     0             Q
-
+ 
       ** Initialise XML increment
-
+ 
      C                   EXSR      INIXML
-
+ 
       ** Index of WMDsPath
-
+ 
      C                   Z-ADD     0             WPx
      C                   CLEAR                   WMDsPath
-
+ 
       *                                                                                       CER031
       ** Check if 'CER031' is switched 'ON'                                                   CER031
       *                                                                                       CER031

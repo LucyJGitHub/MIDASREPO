@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 AR1056838          Date 15Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1056838          Date 15Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CGO001AC           Date 06Aug12               *
@@ -35,7 +34,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1056838 - Task Split's driver file use 6numeric for LNRF.  *
       *              Change LNRF from 6S0 to 6A to comply w/ Alpha    *
@@ -55,7 +53,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
-
+ 
      FXCLNDVPD  IF   E           K DISK    INFSR(*PSSR)                                       CGP014
      F**********                           RENAME(CLOANCLF: DRIVERF)                 CGP014 CGO001AC
      F                                     RENAME(XCLNDVD0:DRIVERF)                         CGO001AC
@@ -71,19 +69,19 @@
      F                                     INCLUDE(CLOANCLF)
      F                                     RENAME(CLOANCLF:CLOANCLS)
      F                                     PREFIX(SL_)
-
-
+ 
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
-
+ 
+ 
      D LOANCL        E DS                  EXTNAME(CLOANCL) PREFIX(CL_)
      D LOANCK        E DS                  EXTNAME(CLOANCK) PREFIX(CK_)
-
+ 
      D                 DS                                                                     CSD027
       ** General data structure to handle OLNO field now that is alpha.                       CSD027
      D***OLNOAlpha               1      6                                              CSD027 CLE148
      D***OLNONum                 1      6  0                                           CSD027 CLE148
-
+ 
       ** Data Structure for the end record key                                              CGO001AC
      D                 DS                                                                   CGO001AC
      D ENDKEY                  1      7                                                     CGO001AC
@@ -256,7 +254,7 @@
       * INPUTS
      C                   PARM      I#LOC         W#LOC             4
      C                   PARM      I#CCID        W#CCID           10 0
-
+ 
      C                   PARM      I#RDNB        W#RDNB            5 0
      C                   PARM      I#DNWD        W#DNWD            5 0
      C                   PARM      I#PCOD        W#PCOD            5 0
@@ -266,9 +264,9 @@
      C                   PARM                    SL_CNUM
      C                   PARM                    SL_MLNR
      C                   PARM                    SL_OLNO
-
+ 
       * If data error encountered, log error
-
+ 
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = 'LOAN' + I#EXTT + I#TREF
@@ -307,7 +305,7 @@
      C*****OLNONum       CHAIN     CLOANCLS                           99        *      CSD027 CLE148
      C     CL_OLNO       CHAIN     CLOANCLS                           99                      CLE148
      C                   ENDIF
-
+ 
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -315,15 +313,15 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
-
+ 
       * Get Extract control information
-
+ 
       /COPY GOCPYSRC,GOGETEXCT
-
+ 
      C*****I#EXTT        IFEQ      '*TSK'                                            CGP014 CGCGP014
      C**********         OPEN      XCLNDVPD                                          CGP014 CGCGP014
      C**********         ENDIF                                                       CGP014 CGCGP014
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5

@@ -16,12 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *                 244404             Date 13Dec06               *
+      *  Prev Amend No. 244404             Date 13Dec06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -42,8 +41,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with     *
-      *             zero rate                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  244404 - Correct formatting of Buy Out amount                *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -94,7 +91,7 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -106,62 +103,62 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Deal Status
      D*WDealStat*******S             24    DIM(2) CTDATA PERRCD(1)                            CIR008
      D WDealStat       S             24    DIM(5) CTDATA PERRCD(1)                            CIR008
-
+ 
       ** Deal in File Format
      D CrIRFilFmt    E DS                  EXTNAME(DEALSDG)
      D DGLCD         E                     EXTFLD(LCD)
      D WBsDayFil            2063   2126
-
+ 
       ** Deal in Screen Format
      D CrIRScnFmt    E DS                  EXTNAME(IRCACFPD)
      D WBsDayScn             205    268
-
+ 
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
-
+ 
       ** External DS for Broker Code Details
      D SDBROK        E DS                  EXTNAME(SDBROKPD)
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAP043
       ** EXTERNAL DS FOR SAR DETAILS                                                          CAP043
                                                                                               CAP043
@@ -170,7 +167,7 @@
                                                                                              BUG5443
       ** First DS For Access Programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** Second DS For Access Programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                               CAP043
@@ -178,46 +175,46 @@
      D WUNBDP          S              1  0                                                    CAP043
      D WTNBDP          S              1  0                                                    CAP043
      D CDL028          S              1A                                                      CDL028
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Input Parameters
      D PRetCodeIn      S             10A
      D PActCode        S              1A
-
+ 
       ** Switchable Feature
      D CIR005          S              1A
      D CIR006          S              1A
      D CIR008          S              1A                                                      CIR008
-
+ 
       ** Standing Data Fields
      D PDatFmtInd      S              1A
      D PPortMgmt       S              1A
-
+ 
       ** Output Parameters
      D PDealStat       S             24A
-
+ 
       ** Parameters for AOCURRR0/AOBROKR0
      D PRetrnCde       S              7A
      D POption         S              7A
      D PCurrency       S              3A
      D PBrkrCde        S              4A
-
+ 
       ** Parameter for ZDATE2
      D PZDayNo         S              5P 0
      D PZDate          S              6P 0
      D PZADate         S              7A
-
+ 
       ** Parameter for ZA0920
      D PRtCd           S             10A
      D PAmountIn       S             13P 0
      D PNbrDecPl       S              1P 0
      D PDeciSep        S              1A
      D PAmountOut      S             14A
-
+ 
       ** Parameter for ZA1150
      D P1CcyScExp      S              1S 0
      D P2CcyScExp      S              1S 0
@@ -226,10 +223,10 @@
      D PScalRate       S             13P 8
      D PInvScalRate    S             13P 8
      D PErrCode        S              1P 0
-
+ 
      D WFstDig         S              1P 0
      D WShtAve         S                   LIKE(UEINR)
-
+ 
      D POPTN           S              7A                                                      CAP043
      D PSARD           S              6A                                                      CAP043
                                                                                               CAP043
@@ -240,84 +237,84 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Initialization
-
+ 
      C                   EXSR      SRInit
-
+ 
       ** Set output screen fields
-
+ 
      C                   EXSR      SrSetFld
-
+ 
       ** Return
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
       *  SrSetFld - Set Output Screen Fields                          *
       *****************************************************************
      C     SrSetFld      BEGSR
-
+ 
       ** Action Code
-
+ 
      C                   EVAL      #0ACCD = PActCode
-
+ 
       ** Deal Number
-
+ 
      C                   MOVE      DLNO          #0DLNO
-
+ 
       ** Deal Type
-
+ 
      C                   EVAL      #0DTYP = DTYP
-
+ 
       ** Deal Sub-type
-
+ 
      C                   EVAL      #0DLST = DLST
-
+ 
       ** Deal date.
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMYY format.
-
+ 
      C                   EVAL      PZDayNo = DDAT
      C                   EXSR      SrZDate2
      C                   MOVE      PZDate        #0DDAT
-
+ 
       ** Branch code.
-
+ 
      C                   EVAL      #0BRCA = BRCA
-
+ 
       ** Broker Code.
-
+ 
      C                   EVAL      #0BRKC = BRKC
-
+ 
       ** Brokerage amount.
-
+ 
      C                   IF        BAGE = *ZERO OR BRKC = 'TELX'
      C                             OR BRKC = 'PHON' OR BRKC = 'MAIL'
-
+ 
      C                   EVAL      #0BAGE = *BLANKS
-
+ 
      C                   ELSE
-
+ 
       ** Call Access Program to check Broker Code
-
+ 
      C                   CALL      'AOBROKR0'
      C                   PARM      '*DBERR'      PRetrnCde
      C                   PARM      '*KEY   '     POption
      C                   PARM      BRKC          PBrkrCde
      C     SDBROK        PARM      SDBROK        DSFDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRetrnCde <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -329,17 +326,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Access currency for number of decimal places of broker currency.
-
+ 
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     PRetrnCde
      C                   PARM      '*KEY   '     POption
      C                   PARM      A9BRCY        PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRetrnCde <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -351,26 +348,26 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** If Brokerage a number, reformat
-
+ 
      C                   EVAL      PAmountIn = BAGE
      C                   Z-ADD     A6NBDP        PNbrDecPl
      C                   EXSR      SrFmtAmt
      C                   EVAL      #0BAGE = PAmountOut
      C                   ENDIF
-
+ 
       ** Linked Deal Number.
-
+ 
      C                   IF        LNKDN = *ZERO
      C                   EVAL      #0LNKD = *BLANK
      C                   ELSE
      C                   MOVE      LNKDN         #0LNKD
      C                   ENDIF
-
+ 
       ** Customer.
      C**  Customer can be displayed in cust. no. or shortname format                         BUG5443
-
+ 
      C     CustFormat    IFEQ      'N'                                                       BUG5443
      C                   MOVEL     CNUM          #0CNUM
      C                   ELSE                                                                BUG5443
@@ -395,45 +392,45 @@
      C                   END                                                                 BUG5443
      C*                                                                                      BUG5443
      C                   END                                                                 BUG5443
-
+ 
       ** Value date.
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMYY format.
-
+ 
      C                   EVAL      PZDayNo = VDAT
      C                   EXSR      SrZDate2
-
+ 
      C                   MOVE      PZDate        #0VDAT
-
+ 
       ** Maturity Date.
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMYY format.
-
+ 
      C                   EVAL      PZDayNo = MDAT
      C                   EXSR      SrZDate2
-
+ 
      C                   MOVE      PZDate        #0MDAT
-
+ 
       ** Account Sequence Number.
-
+ 
      C                   MOVE      CDAS          #0CDAS
-
+ 
       ** Currency Code.
-
+ 
      C                   EVAL      #0CUCY = UCUCY
-
+ 
       ** Deal Amount/Our Principal Amount
-
+ 
       ** Access currency for number of decimal places of deal currency.
-
+ 
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     PRetrnCde
      C                   PARM      '*KEY   '     POption
      C                   PARM      UCUCY         PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRetrnCde <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = *ON
@@ -445,75 +442,75 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Format Deal Amount, using deal ccy decimal places
-
+ 
      C                   Z-ADD     UPAMT         PAmountIn
      C                   Z-ADD     A6NBDP        PNbrDecPl
      C                   EXSR      SrFmtAmt
      C                   EVAL      #0PAMT = PAmountOut
-
+ 
       ** Federal funds indicator
       ** (Federal Funds Indicator is a bit setting on DEALSDG)
-
+ 
      C                   TESTB     '2'           UDSTI                    01
      C                   IF        *IN01 = *ON
      C                   EVAL      #0FEFI = 'Y'
      C                   ELSE
      C                   EVAL      #0FEFI = *BLANK
      C                   ENDIF
-
+ 
       ** Base Currency Rate.
       ** Scale the Base Currency Exchange Rate.
-
+ 
      C                   EVAL      P1CcyScExp = A6SCEX
      C                   EVAL      P2CcyScExp = 0
      C                   EVAL      PRate = UBCXR
      C                   EVAL      PMultDivInd = 'M'
      C                   EXSR      SrScalRat
-
+ 
       ** Format the rate, using 8 decimal places
-
+ 
      C                   IF        PScalRate <> 0
      C     PScalRate     MULT      100000000     PAmountIn
      C                   Z-ADD     8             PNbrDecPl
-
+ 
       ** Fix to allow for 5 integers, if required (& only 7 decimal)
-
+ 
      C                   EVAL      WFstDig = *ZERO
      C                   MOVEL     PScalRate     WFstDig
-
+ 
      C                   IF        WFstDig <> *ZERO
      C                   EVAL      PNbrDecPl = 7
      C     PAmountIn     DIV       10            PAmountIn
      C                   ENDIF
-
+ 
      C                   EXSR      SrFmtAmt
      C                   MOVE      PAmountOut    #0BCXR
      C                   ENDIF
-
+ 
       ** Book code.
-
+ 
      C                   EVAL      #0BOKC = BOKC
-
+ 
       ** Interest Calculation Basis.
-
+ 
      C                   MOVE      UICBS         #0ICBS
-
+ 
       ** Taxable Indicator.
-
+ 
      C                   EVAL      #0TAXI = TAXI
-
+ 
       ** Profit Centre
-
+ 
      C                   EVAL      #0PRFC = PRFC
-
+ 
       ** Originating Branch
-
+ 
      C                   EVAL      #0ORBR = ORBR
-
+ 
       ** Set up Average Rate Method
-
+ 
      C                   TESTB     '3'           UDSTI                    02
      C                   IF        *IN02 = *ON
      C                   EVAL      #0AVRM = 'Y'
@@ -525,143 +522,141 @@
      C                   EVAL      #0AVRM = 'N'
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** FRA/IRS Buy/Sell Indicator
-
+ 
      C                   EVAL      #0BYSL = BYSL
-
+ 
      C                   IF        (DTYP = 'RP' AND BYSL = 'B')
      C                             OR (DTYP = 'RR' AND BYSL = 'B')
      C                             OR (DTYP = 'RF' AND BYSL = 'S')
-
+ 
       ** Their Base Rate Code/Type
-
+ 
      C                   MOVE      TBRTT         #0BRTT
-
+ 
       ** Their Spread/Rate.
       ** Scale the 'Their Spread Rate'.
-
+ 
      C                   IF        TRTSP = *ZERO
      C                   EVAL      #0RTSP = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      P1CcyScExp = A6SCEX
      C                   EVAL      P2CcyScExp = 0
      C                   EVAL      PRate = TRTSP
      C                   EVAL      PMultDivInd = 'M'
      C                   EXSR      SrScalRat
-
+ 
       ** Format the rate, using 7 decimal places
-
+ 
      C                   IF        PScalRate <> 0
      C     PScalRate     MULT      10000000      PAmountIn
      C                   EVAL      PNbrDecPl = 7
      C                   EXSR      SrFmtAmt
      C                   MOVE      PAmountOut    #0RTSP
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Their Spread Indicator
-
+ 
      C                   EVAL      #0SPIN = TSPIN
-
+ 
       ** Their Rate Fix Days.
-
+ 
      C                   TESTB     '3'           TDSTI                    01
-
+ 
      C                   IF        TFRFD=*ZERO AND *IN01 = *ON
      C                   EVAL      #0FRFD = *BLANKS
      C                   ELSE
      C                   MOVE      TFRFD         #0FRFD
      C                   ENDIF
-
+ 
       ** Their Rate Change Date.
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMYY format.
-
+ 
      C                   IF        TNICD = *ZERO
      C                   EVAL      #0NICD = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      PZDayNo = TNICD
      C                   EXSR      SrZDate2
-
+ 
      C                   MOVE      PZDate        #0NICD
      C                   ENDIF
-
+ 
       ** Their Rate Change Frequency
-
+ 
      C                   EVAL      #0ICFR = TICFR
-
+ 
       ** Their Rate Change Day in Month
-
+ 
      C                   IF        TICFD = *ZERO
      C                   EVAL      #0ICFD = *BLANKS
      C                   ELSE
      C                   MOVE      TICFD         #0ICFD
      C                   ENDIF
-
+ 
       ** Their Next Interest Payment Date.
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMYY format.
-
+ 
      C                   IF        TNIPD = *ZERO
      C                   EVAL      #0NIPD = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      PZDayNo = TNIPD
      C                   EXSR      SrZDate2
-
+ 
      C                   MOVE      PZDate        #0NIPD
      C                   ENDIF
-
+ 
       ** Their Interest Payment Frequency
-
+ 
      C                   EVAL      #0IPFR = TIPFR
-
+ 
       ** Their Interest Payment Day in Month
-
+ 
      C                   IF        TIPFD = *ZERO
      C                   EVAL      #0IPFD = *BLANKS
      C                   ELSE
      C                   MOVE      TIPFD         #0IPFD
      C                   ENDIF
-
+ 
       ** Their Short Term Rate.
       ** Scale the Rate
-
+ 
       ** If Average Rate method is 'Y', display current average from
       ** Actual Average Calc. Rate field
-
+ 
      C                   IF        #0AVRM = 'Y'
      C                   EVAL      WShtAve = AACRT
-
+ 
       ** Else, display short term rate from Effective Int. Rate field
-
+ 
      C                   ELSE
      C                   EVAL      WShtAve = TEINR
      C                   ENDIF
-
-     C                   TESTB     '0'           TDNSI                    85             MD054095
-     C**********         IF        WShtAve = *ZERO                                       MD054095
-     C                   IF        *IN85 = *OFF                                          MD054095
+ 
+     C                   IF        WShtAve = *ZERO
      C                   EVAL      #0EINR = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      P1CcyScExp = A6SCEX
      C                   EVAL      P2CcyScExp = 0
      C                   EVAL      PRate = WShtAve
      C                   EVAL      PMultDivInd = 'M'
      C                   EXSR      SrScalRat
-
+ 
       ** Format the rate, using 7 decimal places
-
-     C**********         IF        PScalRate <> 0                                        MD054095
+ 
+     C                   IF        PScalRate <> 0
      C     PScalRate     MULT      10000000      PAmountIn
      C                   EVAL      PNbrDecPl = 7
      C     PAmountIn     IFLT      0                                                         BUG6472
@@ -669,9 +664,9 @@
      C                   ENDIF                                                               BUG6472
      C                   EXSR      SrFmtAmt
      C                   MOVE      PAmountOut    #0EINR
-     C**********         ELSE                                                            MD054095
-     C**********         EVAL      #0EINR = *BLANKS                                      MD054095
-     C**********         ENDIF                                                           MD054095
+     C                   ELSE
+     C                   EVAL      #0EINR = *BLANKS
+     C                   ENDIF
      C                   ENDIF
       *                                                                                      BUG6472
       ** Output sign of their short term interest rate                                       BUG6472
@@ -803,139 +798,137 @@
      C                   ENDIF                                                                CDL028
                                                                                               CDL028
      C                   ENDIF                                                                CDL028
-
+ 
       ** Else, Deal has been sold.
-
+ 
      C                   ELSE
-
+ 
       ** Our Base Rate Code/Type
-
+ 
      C                   MOVE      UBRTT         #0BRTT
-
+ 
       ** Our Spread/Rate.
       ** Scale the 'Our Spread Rate'.
-
+ 
      C                   IF        URTSP = *ZERO
      C                   EVAL      #0RTSP = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      P1CcyScExp = A6SCEX
      C                   EVAL      P2CcyScExp = 0
      C                   EVAL      PRate = URTSP
      C                   EVAL      PMultDivInd = 'M'
      C                   EXSR      SrScalRat
-
+ 
       ** Format the rate, using 7 decimal places
-
+ 
      C                   IF        PScalRate <> 0
      C     PScalRate     MULT      10000000      PAmountIn
      C                   EVAL      PNbrDecPl = 7
      C                   EXSR      SrFmtAmt
      C                   MOVE      PAmountOut    #0RTSP
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Our Spread Indicator
-
+ 
      C                   EVAL      #0SPIN = USPIN
-
+ 
       ** Our Rate Fix Days.
-
+ 
      C                   TESTB     '3'           TDSTI                    01
-
+ 
      C                   IF        UFRFD=*ZERO AND *IN01 = *ON
      C                   EVAL      #0FRFD = *BLANKS
      C                   ELSE
      C                   MOVE      UFRFD         #0FRFD
      C                   ENDIF
-
+ 
       ** Our Rate Change Date.
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMYY format.
-
+ 
      C                   IF        UNICD = *ZERO
      C                   EVAL      #0NICD = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      PZDayNo = UNICD
      C                   EXSR      SrZDate2
      C                   MOVE      PZDate        #0NICD
      C                   ENDIF
-
+ 
       ** Our Rate Change Frequency
-
+ 
      C                   EVAL      #0ICFR = UICFR
-
+ 
       ** Our Rate Change Day in Month
-
+ 
      C                   IF        UICFD = *ZERO
      C                   EVAL      #0ICFD = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   MOVE      UICFD         #0ICFD
      C                   ENDIF
-
+ 
       **  Our Next Interest Payment Date.
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMYY format.
-
+ 
      C                   IF        UNIPD = *ZERO
      C                   EVAL      #0NIPD = *BLANKS
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      PZDayNo = UNIPD
      C                   EXSR      SrZDate2
-
+ 
      C                   MOVE      PZDate        #0NIPD
      C                   ENDIF
-
+ 
       ** Our Interest Payment Frequency
-
+ 
      C                   EVAL      #0IPFR = UIPFR
-
+ 
       ** Our Interest Payment Day in Month
-
+ 
      C                   IF        UIPFD = *ZERO
      C                   EVAL      #0IPFD = *BLANKS
      C                   ELSE
      C                   MOVE      UIPFD         #0IPFD
      C                   ENDIF
-
+ 
       ** Our Short Term Rate.
       ** Scale the Rate
-
+ 
       ** If Average Rate method is 'Y', display current average from
       ** Actual Average Calc. Rate field
-
+ 
      C                   IF        #0AVRM = 'Y'
      C                   EVAL      WShtAve = AACRT
-
+ 
       ** Else, display short term rate from Effective Int. Rate field
-
+ 
      C                   ELSE
      C                   EVAL      WShtAve = UEINR
      C                   ENDIF
-
-     C                   TESTB     '0'           UDNSI                    85             MD054095
-     C**********         IF        WShtAve = *ZERO                                       MD054095
-     C                   IF        *IN85 = *OFF                                          MD054095
+ 
+     C                   IF        WShtAve = *ZERO
      C                   EVAL      #0EINR = *BLANKS
-
+ 
      C                   ELSE
      C                   EVAL      P1CcyScExp = A6SCEX
      C                   EVAL      P2CcyScExp = 0
      C                   EVAL      PRate = WShtAve
      C                   EVAL      PMultDivInd = 'M'
      C                   EXSR      SrScalRat
-
+ 
       ** Format the rate, using 7 decimal places
-
-     C**********         IF        PScalRate <> 0                                        MD054095
+ 
+     C                   IF        PScalRate <> 0
      C     PScalRate     MULT      10000000      PAmountIn
      C                   EVAL      PNbrDecPl = 7
      C     PAmountIn     IFLT      0                                                         BUG6472
@@ -943,9 +936,9 @@
      C                   ENDIF                                                               BUG6472
      C                   EXSR      SrFmtAmt
      C                   MOVE      PAmountOut    #0EINR
-     C**********         ELSE                                                            MD054095
-     C**********         EVAL      #0EINR = *BLANKS                                      MD054095
-     C**********         ENDIF                                                           MD054095
+     C                   ELSE
+     C                   EVAL      #0EINR = *BLANKS
+     C                   ENDIF
      C                   ENDIF
       *                                                                                      BUG6472
       ** Output sign of our short term interest rate                                         BUG6472
@@ -961,7 +954,7 @@
      C                   ENDIF                                                               BUG6472
       *                                                                                      BUG6472
      C                   ENDIF                                                               BUG6472
-
+ 
       ** If Automatic Rate Interpolations is ON                                               CDL028
                                                                                               CDL028
      C                   IF        CDL028 = 'Y'                                               CDL028
@@ -1049,19 +1042,19 @@
      C                   ENDIF                                                                CDL028
                                                                                               CDL028
      C                   ENDIF
-
+ 
       ** If Deal is a floor, do not output ceiling rate.
       **  Scale the 'Ceiling Rate'.
-
+ 
      C                   IF        CLRAT <> *ZERO AND DTYP <> 'RF'
      C                   EVAL      P1CcyScExp = A6SCEX
      C                   EVAL      P2CcyScExp = 0
      C                   EVAL      PRate = CLRAT
      C                   EVAL      PMultDivInd = 'M'
      C                   EXSR      SrScalRat
-
+ 
       ** Format the rate, using 7 decimal places
-
+ 
      C                   IF        PScalRate <> 0
      C     PScalRate     MULT      10000000      PAmountIn
      C                   EVAL      PNbrDecPl = 7
@@ -1069,19 +1062,19 @@
      C                   MOVE      PAmountOut    #0CRAT
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** If deal is a cap, do not output floor rate.
       ** Scale the 'Floor Rate'.
-
+ 
      C                   IF        FLRAT <> *ZERO AND DTYP <> 'RP'
      C                   EVAL      P1CcyScExp = A6SCEX
      C                   EVAL      P2CcyScExp = 0
      C                   EVAL      PRate = FLRAT
      C                   EVAL      PMultDivInd = 'M'
      C                   EXSR      SrScalRat
-
+ 
       ** Format the rate, using 7 decimal places
-
+ 
      C                   IF        PScalRate <> 0
      C     PScalRate     MULT      10000000      PAmountIn
      C                   EVAL      PNbrDecPl = 7
@@ -1089,9 +1082,9 @@
      C                   MOVE      PAmountOut    #0FRAT
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Set up Up-front premium Value date, if CIR006 is off
-
+ 
      C                   IF        CIR006 = 'N'
      C                   IF        UPVD <> 0
      C                   EVAL      PZDayNo = UPVD
@@ -1101,9 +1094,9 @@
      C                   EVAL      #0PUPVD = *BLANKS
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Set up Up-front premium Fee amount, if CIR006 is off
-
+ 
      C                   IF        CIR006 = 'N'
      C                   IF        UPFE <> 0
      C                   EVAL      PAmountIn = UPFE
@@ -1114,13 +1107,13 @@
      C                   EVAL      #0PUPFE = *BLANKS
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Set up text for deal status.
-
+ 
      C                   IF        RECI = 'R'
      C                   EVAL      PDealStat = WDealStat(1)
      C                   ENDIF
-
+ 
      C                   IF        RECI = 'M'
      C                   EVAL      PDealStat = WDealStat(2)
      C                   ENDIF
@@ -1135,10 +1128,10 @@
      C                   EVAL      PDealStat = WDealStat(5)                                   CIR008
      C                   ENDSL                                                                CIR008
      C                   ENDIF                                                                CIR008
-
+ 
       ** If Business Day Convention enhancement is installed, move BDC
       ** fields from file to screen
-
+ 
      C                   IF        CIR005 = 'Y'
      C                   EVAL      WBsDayScn = WBsDayFil
      C                   ENDIF
@@ -1231,7 +1224,7 @@
       ** Class                                                                                CDL038
       *                                                                                       CDL038
      C                   MOVE      CLAS          #0CLAS                                       CDL038
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1239,14 +1232,14 @@
       *  SrFmtAmt-Format Amount For Display                           *
       *****************************************************************
      C     SrFmtAmt      BEGSR
-
+ 
      C                   CALLB     'ZA0920'
      C                   PARM      *BLANK        PRtCd
      C                   PARM                    PAmountIn
      C                   PARM                    PNbrDecPl
      C                   PARM                    PDeciSep
      C                   PARM      *BLANK        PAmountOut
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1254,7 +1247,7 @@
       *  SrScalRat - Scale Rate                                       *
       *****************************************************************
      C     SrScalRat     BEGSR
-
+ 
      C                   CALLB     'ZA1150'
      C                   PARM                    P1CcyScExp
      C                   PARM                    P2CcyScExp
@@ -1271,13 +1264,13 @@
       *  SrZDate2 - Format a date for output                          *
       *****************************************************************
      C     SrZDate2      BEGSR
-
+ 
      C                   CALLB     'ZDATE2'
      C                   PARM                    PZDayNo
      C                   PARM                    PDatFmtInd
      C                   PARM      *ZEROS        PZDate
      C                   PARM      *BLANKS       PZADate
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1285,12 +1278,12 @@
       *  SRInit - Initialization                                      *
       *****************************************************************
      C     SRInit        BEGSR
-
+ 
       ** Blank outputs
-
+ 
      C                   EVAL      CrIRScnFmt = *BLANKS
      C                   EVAL      PDealStat = *BLANK
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1298,62 +1291,62 @@
       *  *INZSR - Initial Processing                                  *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       **  Program Parameters
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Input Parameters:
-
+ 
       ** Return Code
-
+ 
      C                   PARM                    PRetCodeIn
-
+ 
       ** Action Code
-
+ 
      C                   PARM                    PActCode
-
+ 
       ** Deal in file format
-
+ 
      C                   PARM                    CrIRFilFmt
-
+ 
       ** Switchable Features:
-
+ 
       ** FRA/IRS Business Day Convention
-
+ 
      C                   PARM                    CIR005
-
+ 
       ** Amortisation of Caps, Collars, Floors and
       ** Individual Compounding Swaps
-
+ 
      C                   PARM                    CIR006
                                                                                               CIR008
       ** FRA/IRS Deals Authorisation                                                          CIR008
                                                                                               CIR008
      C                   PARM                    CIR008                                       CIR008
-
+ 
       ** Standing Data:
-
+ 
       ** Date Format Indicator from SDBANKPD
-
+ 
      C                   PARM                    PDatFmtInd
-
+ 
       ** Portfolio Management from SDMMODPD
-
+ 
      C                   PARM                    PPortMgmt
-
+ 
       ** Decimal Separator from SDDEALPD
-
+ 
      C                   PARM                    PDeciSep
-
+ 
       ** Output Parameters:
-
+ 
       ** Deal in Screen Format
-
+ 
      C                   PARM                    CrIRScnFmt
-
+ 
       ** Deal Status
-
+ 
      C                   PARM                    PDealStat
       ***Sign*of Short Term Rate                                                     BUG5707 BUG6472
      C**********         PARM                    #0SIGN            1                 BUG5707 BUG6472
@@ -1421,14 +1414,14 @@
      C                   ELSE                                                                 CDL028
      C                   EVAL      CDL028 = 'N'                                               CDL028
      C                   ENDIF                                                                CDL028
-
-
+ 
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT

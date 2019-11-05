@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CLE164             Date 18Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD021202           Date 11Jul13               *
       *                 MD020445           Date 16May13               *
@@ -53,7 +52,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  CDL094 - Enhance Receive Settlement Instructions             *

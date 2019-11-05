@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR855391           Date 27Oct11               *
       *                 CSD091             Date 04Jul11               *
       *                 AR740758           Date 04Apr11               *
@@ -40,7 +39,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  AR855391 - CUSD Overridable Errors not found in EN System    *

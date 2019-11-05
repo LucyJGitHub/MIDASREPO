@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas DL Zeroise RODN for deals - utility')
@@ -11,15 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 MD021155 *CREATE   Date 23Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *

@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD037756           Date 26Apr16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037756           Date 26Apr16               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE083BM           Date 06Aug12               *
       *                 AR848501           Date 10Nov11               *
@@ -23,7 +22,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037756 - Component went on MSGW due to missing member but  *
       *             did not fail. Fix is to perform *PSSR in case of  *

@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CER069             Date 03Jul14               *
       *                 MD026854           Date 29May14               *
@@ -54,7 +53,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -423,7 +421,6 @@
      D CER054          S              1A                                                      CER054
      D CER045          S              1A                                                      CER045
      D CER069          S              1A                                                      CER069
-     D CER050          S              1A                                                      CER050
      D PCusn           S             10A                                                      CER034
      D KFCust          S             10A                                                      CER034
      D PCntry          S              2A                                                   BUG22578A
@@ -832,14 +829,6 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      E5BEXT = A_ACBEXT                                          CER045
      C                   ENDIF                                                                CER045
       *                                                                                       CER034
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   If        A_ACAPRC = *Blank                                          CER050
-     C                   Eval      E5APRC = 'Y'                                               CER050
-     C                   else                                                                 CER050
-     C                   Eval      E5APRC = A_ACAPRC                                          CER050
-     C                   Endif                                                                CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
       ** Write new Transaction Detail
 
      C                   WRITE     @ACUSL0
@@ -1049,15 +1038,6 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      E5TNC4 = A_ACTNC4                                          CGL132
      C                   EVAL      E5TIN5 = A_ACTIN5                                          CGL132
      C                   EVAL      E5TNC5 = A_ACTNC5                                          CGL132
-                                                                                              CER050
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   If        A_ACAPRC = *Blank                                          CER050
-     C                   Eval      E5APRC = 'Y'                                               CER050
-     C                   else                                                                 CER050
-     C                   Eval      E5APRC = A_ACAPRC                                          CER050
-     C                   Endif                                                                CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
       ** Update Record
 
      C                   UPDATE    @ACUSL0
@@ -2226,20 +2206,6 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      CSW207 = 'N'                                               CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
-      *                                                                                       CER050
-      ** Check if CER050 is enabled                                                           CER050
-      *                                                                                       CER050
-     C                   CALL      'AOSARDR0'                                                 CER050
-     C                   Parm      *BLANKS       PRtcd                                        CER050
-     C                   Parm      '*VERIFY'     POptn                                        CER050
-     C                   Parm      'CER050'      PSard                                        CER050
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
-      *                                                                                       CER050
-     C                   Eval      CER050 = 'N'                                               CER050
-     C                   If        PRtcd = *BLANKS                                            CER050
-     C                   Eval      CER050 = 'Y'                                               CER050
-     C                   Endif                                                                CER050
-                                                                                              CER050
       *                                                                                       CER054
       ** Check if CER054 is enabled                                                           CER054
       *                                                                                       CER054

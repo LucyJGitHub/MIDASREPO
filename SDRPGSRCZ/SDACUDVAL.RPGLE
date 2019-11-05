@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD044093           Date 18Apr17               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044093           Date 18Apr17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD022651           Date 10Oct13               *
       *                 CLE134             Date 01Aug12               *
       *                 263285             Date 15Jan10               *
@@ -39,7 +38,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD044093 - The Country of TIN is already defined for this    *
       *             customer                                          *
       *  MD046248 - Finastra Rebranding                               *
@@ -200,7 +198,6 @@
      D CSW207          S              1A                                                      CSW207
      D CER047          S              1A                                                    BUG22589
      D CLE134          S              1A                                                      CLE134
-     D CER050          S              1A                                                      CER050
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -366,12 +363,6 @@
       ** Validate Code Word
  
      C                   EXSR      SRVCCWLD
-                                                                                              CER050
-      ** Validate APR Flag                                                                    CER050
-      *                                                                                       CER050
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   Exsr      SRVAPR                                                     CER050
-     C                   Endif                                                                CER050
  
       ** Fill up other fields
  
@@ -1225,45 +1216,6 @@
      C                   EXSR      SRUPDATERRS                                                CLE134
       *                                                                                       CLE134
      C                   ENDSR                                                                CLE134
-      *****************************************************************                       CER050
-      /EJECT                                                                                  CER050
-      *****************************************************************                       CER050
-      ** Validate APR flag                                                                    CER050
-      *****************************************************************                       CER050
-     C     SRVAPR        BEGSR                                                                CER050
-      *                                                                                       CER050
-      ** Reset variables updated by each module                                               CER050
-      *                                                                                       CER050
-     C                   EXSR      SRRESETERRS                                                CER050
-      *                                                                                       CER050
-      ** Validate APR Flag                                                                    CER050
-      *                                                                                       CER050
-     C                   CALLB     'SDVAPRC'                                                  CER050
-      *                                                                                       CER050
-      ** INPUTS                                                                               CER050
-      ** Return Code                                                                          CER050
-     C                   PARM                    RetCodeOut                                   CER050
-      ** Customer                                                                             CER050
-     C                   PARM                    DDCUST                                       CER050
-      ** APR Flag                                                                             CER050
-     C     ACAPRC        PARM                    DDAPRC                                       CER050
-      ** OUTPUTS                                                                              CER050
-      ** Error fields/message IDs/message data (arrays) from/to caller                        CER050
-     C                   PARM                    FldNamXAr                                    CER050
-     C                   PARM                    MsgIDXAr                                     CER050
-     C                   PARM                    MsgDtaXAr                                    CER050
-      ** Warning fields/message IDs/message data (arrays) from/to caller                      CER050
-     C                   PARM                    WFldNmXAr                                    CER050
-     C                   PARM                    WMsgIDXAr                                    CER050
-     C                   PARM                    WMsgDtXAr                                    CER050
-      ** APR flag - OK                                                                        CER050
-     C                   PARM                    DDOKAPRC                                     CER050
-      *                                                                                       CER050
-      ** Update error info with that returned from the validation module                      CER050
-      *                                                                                       CER050
-     C                   EXSR      SRUPDATERRS                                                CER050
-      *                                                                                       CER050
-     C                   ENDSR                                                                CER050
       *****************************************************************                       CLE134
      C/EJECT                                                                                  CLE134
       *****************************************************************
@@ -1482,19 +1434,6 @@
      C                   ENDIF                                                                CLE134
      C                   ENDIF                                                                CLE134
                                                                                               CLE134
-      ** Check if CER050 is enabled                                                           CER050
-                                                                                              CER050
-     C                   CALL      'AOSARDR0'                                                 CER050
-     C                   Parm      *Blanks       PRtcd                                        CER050
-     C                   Parm      '*VERIFY'     POptn                                        CER050
-     C                   Parm      'CER050'      PSard                                        CER050
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
-                                                                                              CER050
-     C                   Eval      CER050 = 'N'                                               CER050
-     C     PRTCD         Ifeq      *Blanks                                                    CER050
-     C                   Eval      CER050 = 'Y'                                               CER050
-     C                   Endif                                                                CER050
-                                                                                              CER050
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
       /COPY ZACPYSRC,DBFIELDS

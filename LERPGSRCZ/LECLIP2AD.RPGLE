@@ -18,9 +18,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CLE141             Date 08Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
       *                 MD000091           Date 09May13               *
       *                 AR804863           Date 10Dec12               *
@@ -48,7 +47,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *

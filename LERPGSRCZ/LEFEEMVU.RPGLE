@@ -22,9 +22,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 CLE071             Date 18Jul18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
@@ -83,7 +82,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  CLE168 - Allow Debit of Blocked Account                      *

@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD038258           Date 13Apr16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038258           Date 13Apr16               *
       *                 MD037489           Date 11Feb16               *
       *                 MD037485           Date 11Feb16               *
       *                 MD036881           Date 17Dec15               *
@@ -22,7 +21,6 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038258 - Bulk update does not work correctly for fees      *
       *           - Priorities are not updated for fees when ran in   *

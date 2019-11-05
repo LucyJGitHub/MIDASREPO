@@ -26,10 +26,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD029805           Date 05Sep14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -81,10 +79,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate (Amend for compilation   *
-      *           purposes. Rename of DDIBEI required. Not CER050)    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation (Recompile)                *
@@ -279,7 +273,6 @@
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(SDCUPRPD)
      D TranInSwft    E DS                  EXTNAME(SDCUSWPD)                                  CSW207
-     D DDIBEIS       E                     EXTFLD(DDIBEI)                                     CER050
      D TranInSeco    E DS                  EXTNAME(SDCUSEPD)
      D TranInMT3X    E DS                  EXTNAME(SDCUMTPD)                                  CSW024
      D TranInMsrt    E DS                  EXTNAME(SDCUMRPD)
@@ -611,7 +604,6 @@
                                                                                               CSD012
      D CLE025          S              1                                                       CLE025
      D CFX001          S              1                                                       CFX001
-     D DDAPRC          S              1                                                     MD054028
                                                                                               CLE025
      D PTransType      S              4                                                       CSD028
      D PDATA           DS          1024                                                       CER001
@@ -1318,8 +1310,6 @@
                                                                                               CLE025
      C                   PARM                    CLE025                                       CLE025
      C                   PARM                    CFX001                                       CFX001
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
       *
       * Output parameters
       *
@@ -2344,8 +2334,6 @@
                                                                                               CLE025
      C                   PARM                    CLE025                                       CLE025
      C                   PARM                    CFX001                                       CFX001
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
       *
       * Output parameters
       * Customer Details - screen formats

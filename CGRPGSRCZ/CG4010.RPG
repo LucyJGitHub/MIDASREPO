@@ -15,9 +15,8 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CDL099             Date 06Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Mar15               *
       *                 MD033488           Date 12Mar15               *
       *                 MD031144           Date 13Feb15               *
@@ -163,7 +162,6 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -426,8 +424,6 @@
       ** Deal Charges/Commissions  - Extended file - Rtv idx              CDL006
       *                                                                   CDL006
      F/COPY WNCPYSRC,CG4010FFPG                                           S01408
-     FDLAPRHI0IF  E           K        DISK                                                   CER050
-      *                                                                                       CER050
       *                                                                                       CER038
       ** Correspondent file by customer number                                                CER038
       *                                                                                       CER038
@@ -519,8 +515,7 @@
      E**********          ##GRP   1 422 10   ##RDEA 22                               CER049 MD026764
      E**********          ##GRP   1 466 10   ##RDEA 22                               MD026764 CDL094
      E**********          ##GRP   1 478 10   ##RDEA 22                               CDL094 MD030644
-     E**********          ##GRP   1 481 10   ##RDEA 22                               MD030644 CER050
-     E                    ##GRP   1 482 10   ##RDEA 22                                        CER050
+     E                    ##GRP   1 481 10   ##RDEA 22                                      MD030644
      E*                                                                   S01408
      E/COPY WNCPYSRC,CG4010EEP1                                           S01408
      E*                                                                   S01408
@@ -1908,10 +1903,6 @@
       ** Loan & Deposit Details
      C                     EXSR D@LAD
      C                     EXSR D@LADE                                                      AR745799
-      *                                                                                       CER050
-     C           CER050    IFEQ 'Y'                                                           CER050
-     C                     EXSR D@APR                                                         CER050
-     C                     ENDIF                                                              CER050
       *                                                                                       CER048
       ** Secondary Tax  Detail                                                                CER048
       *                                                                                       CER048
@@ -4216,10 +4207,6 @@
       ** Precious Metal Indicator                                         086780
      C                     MOVELA6PMRT    ##D,9                           086780
      C/COPY WNCPYSRC,CG4010C031
-      *                                                                                       CER050
-     C           CER050    IFEQ 'Y'                                                           CER050
-     C                     EXSR ZI@APR                                                        CER050
-     C                     ENDIF                                                              CER050
       *
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -13236,19 +13223,6 @@
      C                     ENDIF                                                            MD029242
       *                                                                                     MD029242
      C                     ENDIF                                                            MD029242
-      *                                                                                       CER050
-      ** Access SAR details file to determine if CER050 is installed.                         CER050
-      *                                                                                       CER050
-     C                     CALL 'AOSARDR0'                                                    CER050
-     C                     PARM '       ' ##RTCD                                              CER050
-     C                     PARM '*VERIFY' ##OPTN                                              CER050
-     C                     PARM 'CER050'  ##SARD                                              CER050
-      *                                                                                       CER050
-     C           ##RTCD    IFEQ *BLANK                                                        CER050
-     C                     MOVEL'Y'       CER050  1                                           CER050
-     C                     ELSE                                                               CER050
-     C                     MOVEL'N'       CER050                                              CER050
-     C                     END                                                                CER050
       *
       *................................................................
       *
@@ -15090,98 +15064,6 @@
      C                     SUB  1         Q                                                 MD026764
       *                                                                                     MD026764
      C                     ENDSR                                                            MD026764
-      *****************************************************************                       CER050
-      * Subroutine  :  D@APR                                          *                       CER050
-      * Function    :  Extract - Annualised Percentage Rate (APR)     *                       CER050
-      *                                                               *                       CER050
-      * Called by   :                                                 *                       CER050
-      * Calls       :                                                 *                       CER050
-      *****************************************************************                       CER050
-     C           D@APR     BEGSR                                                              CER050
-      *                                                                                       CER050
-      **  Set up subroutine stack name                                                        CER050
-     C                     ADD  1         Q                                                   CER050
-     C                     MOVEL'D_APR '  @STK,Q                                              CER050
-      *                                                                                       CER050
-      *................................................................                       CER050
-      *                                                                                       CER050
-      **  Retrieve subroutine specific data.                                                  CER050
-     C           1         OCUR ##SRDT                                                        CER050
-     C                     MOVEL##SPAT    S#PATH                                              CER050
-      *                                                                                       CER050
-      **  Set up Path.                                                                        CER050
-     C                     MOVEL'\D_APR ' ##PNAM                                              CER050
-     C           S#PATH    CAT  ##PNAM:0  S#PATH                                              CER050
-     C                     EXSR PSHGRS                                                        CER050
-      *                                                                                       CER050
-      **  Retrieve RDE information for RDEs in group set                                      CER050
-      *                                                                                       CER050
-     C                     MOVEL@STK,Q    ##GRPS                                              CER050
-     C                     Z-ADD1         ##RDEN                                              CER050
-     C                     EXSR SRRRDE                                                        CER050
-      *                                                                                       CER050
-      * Run this process only if Do not print APR is set to Blank                             CER050
-      *                                                                                       CER050
-     C           APRC      IFEQ 'Y'                                                           CER050
-     C           DLNO      CHAINDLAPRHI0             89                                       CER050
-      **   APR rate.                                                                          CER050
-     C                     MOVELIAPRR     ##D,1                                               CER050
-     C                     ENDIF                                                              CER050
-      *                                                                                       CER050
-      **  Accumulate RDE's and associated data and output to                                  CER050
-      **  PF/CGUDTAPD.                                                                        CER050
-     C                     EXSR SRADTA                                                        CER050
-     C                     EXSR SRODTA                                                        CER050
-      *                                                                                       CER050
-      *................................................................                       CER050
-      *                                                                                       CER050
-     C           EXAPR     TAG                                                                CER050
-      *                                                                                       CER050
-      **  Unwind subroutine stack name                                                        CER050
-     C                     EXSR POPGRS                                                        CER050
-     C                     MOVEA*BLANKS   @STK,Q                                              CER050
-     C                     SUB  1         Q                                                   CER050
-      *                                                                                       CER050
-     C                     ENDSR                                                              CER050
-      *                                                                                       CER050
-      *****************************************************************                       CER050
-      * Subroutine  :  ZI@APR                                         *                       CER050
-      * Function    :  Extract - Annualised Percentage Rate (APR)     *                       CER050
-      *                                                               *                       CER050
-      * Called by   :                                                 *                       CER050
-      * Calls       :                                                 *                       CER050
-      *****************************************************************                       CER050
-     C           ZI@APR    BEGSR                                                              CER050
-      *                                                                                       CER050
-      * Run this process only if Do not print APR is set to Blank                             CER050
-      *                                                                                       CER050
-     C           APRC      IFEQ 'Y'                                                           CER050
-     C           DLNO      CHAINDLAPRHI0             89                                       CER050
-      *                                                                                       CER050
-      * LOOK FOR THE FIRST ELEMENT IN BLANK IN SERIE                                          CER050
-     C                     Z-ADD1         R1      20                                          CER050
-     C           ##R,R1    DOUEQ*BLANKS                                                       CER050
-     C           R1        OREQ 20                                                            CER050
-     C                     ADD  1         R1                                                  CER050
-     C                     ENDDO                                                              CER050
-      *                                                                                       CER050
-     C                     CLEARR#DATA                                                        CER050
-     C                     CLEARR#DEFN                                                        CER050
-     C                     CLEAR#@RDE                                                         CER050
-     C                     MOVEL'ZI_AAPR' #@RDE  10                                           CER050
-     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER050
-     C                     MOVELIAPRR     R#DATA                                              CER050
-     C                     MOVELIAPRR     ##DATA                                              CER050
-     C                     MOVEL'Rate  '  ##RDEC                                              CER050
-     C                     MOVEL'L'       ##RDET                                              CER050
-     C                     MOVEL'2'       ##DCPA                                              CER050
-     C                     MOVELR#DATA    ##D,R1                                              CER050
-     C                     MOVELR#DEFN    ##R,R1                                              CER050
-      *                                                                                       CER050
-     C                     ENDIF                                                              CER050
-      *                                                                                       CER050
-     C                     ENDSR                                                              CER050
-      *****************************************************************                       CER050
      C/COPY ZSRSRC,ZCCYXR                                                                   BUG23515
      C/SPACE 5                                                            CEU014
      C/COPY CGCPYSRC,SRERRPSSR
@@ -15363,7 +15245,6 @@ D_LADE0001 PRNC_EQCY  AmountL                                             151837
 D_LADE0002 G_INT_EQCY AmountL                                             151837
 D_LADE0003 CUST_STAT                                                                          234381
 D_LADE0004 CGL031                                                                             234381
-D_APR 0001 ZI_AAPR    Rate  L2                                                                CER050
 d_RMDT0001 MAC_RMACI                                                                          CDL018
 d_RMDT0002 MAC_RUNAC                                                                          CDL018
 RMAC010001 MAC_RACT1                                                                          CDL018

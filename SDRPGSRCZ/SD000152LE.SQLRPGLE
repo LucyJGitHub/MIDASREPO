@@ -16,9 +16,15 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
+<<<<<<< HEAD
       *  Last Amend No. MD054178           Date 15Oct19               *
       *  Prev Amend No. MD042142A          Date 15Oct19               *
+      *                 MD054551           Date 14Oct19               *
       *                 MD054189           Date 03Sep19               *
+=======
+      *  Last Amend No. MD054551           Date 14Oct19               *
+      *  Prev Amend No. MD054189           Date 03Sep19               *
+>>>>>>> branch 'bugfix/MD-54551' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 MD052107           Date 02Jul19               *
       *                 MD051081           Date 29May18               *
       *                 MD042142           Date 08May18               *
@@ -28,11 +34,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
       *  MD054178 - Add Reversed Transactions as blocker to nostro    *
       *             account closure.                                  *
       *  MD042142A - Remove Matured Nostro Transfers as blocker to    *
       *              nostro account closure.                          *
       *            - Applied for MD-54178.                            *
+=======
+>>>>>>> branch 'bugfix/MD-54551' of http://blrvslalm0006:7990/scm/md/midasrpg.git
+      *  MD054551 -  SRFacility subroutine not invoked                *
       *  MD054189  - Misaligned Nostro Report Layout and Duplicate    *
       *              Pay/Receive Settlement Leg                       *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
@@ -98,11 +108,13 @@
      D pFAFSEQ         S              2  0
      D nFAFSEQ         S              2A
      D PCNUM           S              6A
-     D PFACT           S              2  0
+     D********** PFACT           S              2  0                                        MD054551
+     D PFACT           S              3  0                                                  MD054551
      D PFCNO           S              2  0
      D PVDAT           S              5  0
      D PMDAT           S              5  0                                                  MD054189
-     D nFACT           S              2A
+     D********** nFACT           S              2A                                          MD054551
+     D nFACT           S              3A                                                    MD054551
      D nFCNO           S              2A
      D KACNO           S             17A
      D********** APTRAN          S             40A                                          MD052107
@@ -182,6 +194,11 @@
      C                   IF        XxRtn <> 'R'                                             MD052107
      C                   EXSR      SRCustLend                                               MD052107
      C                   ENDIF                                                              MD052107
+      *                                                                                     MD054551
+      **  Facilities                                                                        MD054551
+     C                   IF        XxRtn <> 'R'                                             MD054551
+     C                   EXSR      SRFacility                                               MD054551
+     C                   ENDIF                                                              MD054551
       *                                                                                     MD052107
       **  Fees                                                                              MD052107
      C                   IF        XxRtn <> 'R'                                             MD052107

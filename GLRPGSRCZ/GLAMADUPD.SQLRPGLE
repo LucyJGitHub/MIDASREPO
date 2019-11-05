@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053470           Date 13Aug19               *
-      *                 MD053978           Date 25Jul19               *
+      *  Last Amend No. MD053470           Date 13Aug19               *
+      *  Prev Amend No. MD053978           Date 25Jul19               *
       *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
       *                 AR1021393          Date 13Nov18               *
@@ -135,7 +134,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD053470 - When Additional Overdraft Rate was changed to zero*
       *             with an OD Rate Value Date but without a DR change*
       *             value date, the value date in STRAN is not updated*
@@ -1006,7 +1004,6 @@
      D/COPY WNCPYSRC,GLH00574
      D CRE072          S              1A                                                      CRE072
      D CTI006          S              1A                                                    MD034725
-     D CER050          S              1A                                                      CER050
                                                                                               CSD101
      D PReturnCode     S              7A                                                      CSD101
      D PAction         S              1A                                                      CSD101
@@ -2545,11 +2542,6 @@
       ** Allow adding account extensions if account type is retail                           BUG8210
       *                                                                                      BUG8210
      C***********        IF        AMATYP='R'                                         BUG8210 239720
-      *                                                                                       CER050
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   Eval      AX_ATAPRC = BXAPRC                                         CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
      C                   WRITE     ACCNTBD0                                                  BUG8210
       *
      C***********        ENDIF                                                         204942 239720
@@ -3586,11 +3578,6 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
                                                                                 CDE002
      C                   ENDIF                                                  CDE002
                                                                                 CDE002
-      *                                                                                       CER050
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   Eval      AX_ATAPRC = BXAPRC                                         CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
      C                   UPDATE    ACCNTBD0
       *                                                                                       239720
      C                   IF        CRE001='Y' and AMATYP='R'                                  239720
@@ -5519,11 +5506,6 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
                                                                                 CDE002
      C                   ENDIF                                                  CDE002
                                                                                 CDE002
-      *                                                                                       CER050
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   Eval      AX_ATAPRC = BXAPRC                                         CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
      C                   UPDATE    ACCNTBD0
      C                   ENDIF
      C**********         ENDIF                                                               BUG7194
@@ -6998,20 +6980,6 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EXSR      *PSSR                                                    MD034725
      C                   ENDIF                                                              MD034725
       *                                                                                     MD034725
-      ** Check if enhancement CER050 is ON                                                    CER050
-      *                                                                                       CER050
-     C                   CallB     'AOSARDR0'                                                 CER050
-     C                   Parm      *BLANKS       PRTCD                                        CER050
-     C                   Parm      '*VERIFY'     POPTN                                        CER050
-     C                   Parm      'CER050'      PSARD                                        CER050
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
-                                                                                              CER050
-     C                   If        PRTCD = *BLANKS                                            CER050
-     C                   Eval      CER050 = 'Y'                                               CER050
-     C                   Else                                                                 CER050
-     C                   Eval      CER050 = 'N'                                               CER050
-     C                   Endif                                                                CER050
-                                                                                              CER050
      C                   ENDSR
      C****************************************************************
       /EJECT

@@ -15,10 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD101             Date 07Dec18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD034725           Date 27Jul16               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 23Feb15               *
@@ -66,9 +64,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate                          *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
@@ -145,9 +140,6 @@
                                                                                               CRE015
      FSDACD1L0  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
  
-     FREAPRHI0  IF   E           K DISK    INFSR(*PSSR)                                       CER050
-     FREAPRHI1  IF   E           K DISK    INFSR(*PSSR)                                       CER050
-     F                                     RENAME(REAPRHD0:REAPRHD1)                          CER050
      F****RECCY     IF   E           K DISK    INFSR(*PSSR)                     176842
  
       *****************************************************************
@@ -350,9 +342,6 @@
      D CRE073          S              1A                                                      CRE073
      D CGL165          S              1A                                                      CGL165
      D CTI006          S              1A                                                    MD034725
-     D CER050          S              1A                                                      CER050
-     D APRDrRate       S              6S 0                                                    CER050
-     D APRCrRate       S              6S 0                                                    CER050
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -691,36 +680,6 @@
      C                   ENDIF                                                                213342
      C                   ENDIF
       *
-      **                                                                                      CER050
-     C                   If        CER050 = 'Y'                                               CER050
-     C                             and AMATYP = 'R'                                           CER050
-      *                                                                                       CER050
-     C                   Eval      DDAPRC = BXAPRC                                            CER050
-      *                                                                                       CER050
-     C     AMACNO        Chain     REAPRHI0                           80                      CER050
-     C                   If        *In80 = *Off                                               CER050
-     C                             and IAPRR <> 0                                             CER050
-     C                   Eval      ZFLD15 = IAPRR * 100                                       CER050
-     C                   EVAL      ZDECS = 2                                                  CER050
-     C                   Exsr      FMTAMT                                                     CER050
-     C                   move      ZOUT21        DDAPDR                                       CER050
-     C                   Else                                                                 CER050
-     C                   move      *Blanks       DDAPDR                                       CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
-     C     AMACNO        Chain     REAPRHI1                           80                      CER050
-     C                   If        *In80 = *Off                                               CER050
-     C                             and IAPRR <> 0                                             CER050
-     C                   Eval      ZFLD15 = IAPRR * 100                                       CER050
-     C                   EVAL      ZDECS = 2                                                  CER050
-     C                   Exsr      FMTAMT                                                     CER050
-     C                   move      ZOUT21        DDAPCR                                       CER050
-     C                   Else                                                                 CER050
-     C                   move      *Blanks       DDAPCR                                       CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2136,10 +2095,6 @@
       * Retail Details
      C                   PARM                    R_FACH            1
      C                   PARM                    R_TSTMC           1
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDAPDR            8                        MD054028
-     C                   PARM                    DDAPCR            8                        MD054028
       *
       * Output parameters
       *
@@ -2454,18 +2409,6 @@
      C                   EVAL      DBASE = 910                                              MD034725
      C                   EXSR      *PSSR                                                    MD034725
      C                   ENDIF                                                              MD034725
-                                                                                              CER050
-     C                   CALLB     'AOSARDR0'                                                 CER050
-     C                   PARM      *BLANKS       PRTCD                                        CER050
-     C                   PARM      '*VERIFY'     POPTN                                        CER050
-     C                   PARM      'CER050'      PSARD                                        CER050
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
-                                                                                              CER050
-     C                   IF        PRTCD = *BLANKS                                            CER050
-     C                   EVAL      CER050 = 'Y'                                               CER050
-     C                   ELSE                                                                 CER050
-     C                   EVAL      CER050 = 'N'                                               CER050
-     C                   ENDIF                                                                CER050
       *
      C                   IN        SDSTAT                                                     CSD101
      C                   ENDSR

@@ -14,10 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD046248           Date 27Oct17               *
-      *                 LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CER070             Date 24Nov14               *
       *                 MD030956           Date 09Oct14               *
@@ -103,9 +101,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -604,7 +599,6 @@
                                                                                               CLE025
      D CLE025          S              1                                                       CLE025
      D CFX001          S              1                                                       CFX001
-     D DDAPRC          S              1                                                     MD054028
      D PRTCD           S              7                                                       CLE025
      D POPTN           S              7                                                       CLE025
      D PSARD           S              6                                                       CLE025
@@ -3710,8 +3704,6 @@
                                                                                               CLE025
      C                   PARM                    CLE025                                       CLE025
      C                   PARM                    CFX001                                       CFX001
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
       * OUTPUTS
       * Customer - screen formats
      C                   PARM                    NewCuPrim

@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CRE095             Date 25Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE090             Date 14Feb14               *
       *                 MD023783           Date 25Nov13               *
@@ -21,7 +20,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -35,21 +33,21 @@
      F                                     INFSR(*PSSR)
      FGLAQDVPD  IF   E           K DISK
      F                                     INFSR(*PSSR)
-
+ 
      D Z_GLACNTL3    E DS                  EXTNAME(GLACNTQD)
      D G_GLACNTL3    E DS                  EXTNAME(GZGLACNTQD)
      D                                     PREFIX(G_)
-
+ 
      D WRun            S              1
      D WkRrn           S              9  0
-
+ 
       ** Main Process
-
+ 
      C                   Z-ADD     0             WkRrn
      C                   READ      GLAQDVPD
      C     GLFERN        SETLL     GLACNTQD
      C                   READ      GLACNTQD
-
+ 
      C                   DOW       NOT %EOF(GLACNTQD) AND WkRrn <= GLTERN
      C                   EVAL      G_GLACNTL3 = Z_GLACNTL3
 B    C                   EVAL      G_F1BRCA = F1BRCA
@@ -57,7 +55,7 @@ B    C                   EVAL      G_F1BRCA = F1BRCA
      C                   EXSR      UPGLBF
      C                   READ      GLACNTQD
      C                   ENDDO
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -82,14 +80,14 @@ B    C                   EVAL      G_F1BRCA = F1BRCA
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I_ZONE           10
-
+ 
      C                   MOVEL     *BLANK        I#ERMS           50
      C                   CLEAR                   Z_GLACNTL3
      C                   CLEAR                   G_GLACNTL3
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -102,16 +100,16 @@ B    C                   EVAL      G_F1BRCA = F1BRCA
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
       *****************************************************************

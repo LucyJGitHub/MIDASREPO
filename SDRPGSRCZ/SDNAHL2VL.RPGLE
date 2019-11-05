@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. MD044093           Date 18Apr17               *
-      *                 CGL177             Date 11Jan16               *
+      *  Last Amend No. MD044093           Date 18Apr17               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
       *                 MD036274           Date 21Oct15               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
@@ -47,9 +46,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
-      *             State Code is mandatory (even CER054 is OFF) and  *
-      *             mandatory "Industry Code" field is protected      *
       *  MD044093 - The Country of TIN is already defined for this    *
       *             customer                                          *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -428,11 +424,6 @@
       ** Validate Spouse Reference                                                            CER047
       *                                                                                       CER047
      C                   EXSR      SRSRef                                                     CER047
-     C                   ELSEIF    CER048 = 'Y'                                             MD052399
-      *                                                                                     MD052399
-      ** Validate Expiry Date                                                               MD052399
-      *                                                                                     MD052399
-     C                   EXSR      SRExpDt                                                  MD052399
      C                   ENDIF                                                                CER047
       *                                                                                       CER047
      C                   IF        CER048 = 'Y'                                               CER048
@@ -1942,12 +1933,6 @@
       *                                                                                       CER054
      C                   ENDIF                                                                CER054
      C                   ELSE                                                               BUG24714
-     C                   IF        DDSTCD <> *BLANKS                                        MD052399
-      *                                                                                     MD052399
-      ** The State code entry will be validated with Country of Domicile input              MD052399
-      **  against the country of location defined in SDBANKPD                               MD052399
-      *                                                                                     MD052399
-     C                   IF        DDCOLC = BJCNCD                                          MD052399
      C     DDSTCD        CHAIN     SDGESTL0                                                 BUG24714
       *                                                                                     BUG24714
      C                   IF        NOT %FOUND(SDGESTL0)                                     BUG24714
@@ -1962,13 +1947,6 @@
      C                   EVAL      NASTCD = DDSTCD                                          BUG26384
       *                                                                                     BUG26384
      C                   ENDIF                                                              BUG24714
-     C                   ELSE                                                               MD052399
-     C                   EVAL      Err = Err + 1                                            MD052399
-     C                   EVAL      FldNamXAr(Err) = 'DDSTCD'                                MD052399
-     C                   EVAL      MsgIdXAr(Err)  = 'USR8324'                               MD052399
-     C                   EVAL      OKSTCD = 'N'                                             MD052399
-     C                   ENDIF                                                              MD052399
-     C                   ENDIF                                                              MD052399
       *                                                                                     BUG24714
      C                   ENDIF                                                              BUG24714
       *                                                                                       CER054

@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
       *                 AR1045782          Date 07Feb13               *
@@ -23,7 +22,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -37,7 +35,7 @@
       *  CER034 - German Features - New fields and enquiries          *
       *                                                               *
       *****************************************************************
-
+ 
 O    FGZDLCHISL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZDLCHISPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -46,9 +44,9 @@ O    F                                     USROPN
 O
 O    D Z_DLCHISPD    E DS                  EXTNAME(GZDLCHISPD)
 O    D G_DLCHISPD    E DS                  EXTNAME(GZDLCHISPD) PREFIX(G_)
-
+ 
       * ENTRY PARAMETERS
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -91,9 +89,9 @@ O    C                   ELSE
 O    C                   WRITE     W_DLCHISD0
 O    C                   ENDIF
 O    C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -112,7 +110,7 @@ O
 O    C     K_GZDLCHISL1  KLIST
 O    C                   KFLD                    BRCA
 O    C                   KFLD                    DLNO
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -120,15 +118,15 @@ O    C                   KFLD                    DLNO
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
-
+ 
      C     W#RUN         IFEQ      *BLANKS
-
+ 
      C                   MOVE      'Y'           W#RUN             1
-
+ 
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
-
+ 
      C                   DUMP
       *
       * If no identified cause of error
@@ -143,10 +141,10 @@ O    C                   KFLD                    DLNO
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
-
+ 
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *********************************************************************

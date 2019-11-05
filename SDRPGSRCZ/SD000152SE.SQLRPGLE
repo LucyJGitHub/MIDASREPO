@@ -16,16 +16,13 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD054178           Date 15Oct19               *
-      *  Prev Amend No. MD052107           Date 02Jul19               *
-      *                 MD042142           Date 08May18               *
+      *  Last Amend No. MD052107           Date 02Jul19               *
+      *  Prev Amend No. MD042142           Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054178 - Add Reversed Transactions as blocker to nostro    *
-      *             account closure.                                  *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
       *           - Applied for MD038440A.                            *
@@ -194,12 +191,10 @@
      C+ select TDRF, TDSS, TDTP, TSUB from TRADSD                                           MD052107
      C+ where SETC = :YyCcy and
      C+       PYFM = :XxNost and
-     C********RECI = 'D'                                                                    MD054178
-     C+       RECI in ('D', 'C')                                                            MD054178
+     C+       RECI = 'D'
      C+       or SETC = :YyCcy and                                                          MD042142
      C+       PAYT = :XxNost and                                                            MD042142
-     C********RECI = 'D'                                                           MD042142 MD054178
-     C+       RECI in ('D', 'C')                                                            MD054178
+     C+       RECI = 'D'                                                                    MD042142
      C+ order by
      C**********+       TDRF                                                                MD052107
      C+       TDRF, TDTP, TSUB                                                              MD052107

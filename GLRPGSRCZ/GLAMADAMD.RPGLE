@@ -18,9 +18,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD043086           Date 13Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043086           Date 13Dec16               *
       *                 CGL165             Date 23Feb15               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
@@ -47,7 +46,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043086 - IBAN should be non-amendable but gets cleared by  *
       *           JMS GLAMAD API call when sending blanks.            *
@@ -78,7 +76,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,46 +95,46 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       * New Account in Screen Format
      D AccnNwMast    E DS                  EXTNAME(GLAMADPD)
      D AccnNwDebi    E DS                  EXTNAME(GLAMDIPD)
@@ -145,7 +143,7 @@
      D AccnNwOthe    E DS                  EXTNAME(GLAMODPD)
      D AccnNwPena    E DS                  EXTNAME(GLAMPPPD)                                  CRE015
      D  ScnPenaRows           33   4166                                                       CRE015
-
+ 
       * (Current) Account in Screen Format - Master Details
      D CurMasScn     E DS                  EXTNAME(GLAMADPD)
      D                                     PREFIX(@)
@@ -164,16 +162,16 @@
       * (Current) Account in Screen Format - Period and Penalty Definition File               CRE015
      D CurPenScn     E DS                  EXTNAME(GLAMPPPD) PREFIX(@)                        CRE015
      D  CurPenScn2            33   4166                                                       CRE015
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
                                                                                 178695
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                    178695
       ** EXTERNAL DS FOR MODULE ID DETAILS                                      178695
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
                                                                                               CRE015
@@ -188,15 +186,15 @@
                                                                                               CRE015
      D GLEAMPR       E DS                  EXTNAME(GLEAMPRPD)                                 CRE015
      D ArrOkBuf        S                   DIM(26) LIKE(GLEAMPR)                              CRE015
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Flags to indicate whether transaction fields are valid
      D OKAcMast      E DS                  EXTNAME(GLEAMADPD)
      D OKAcDebi      E DS                  EXTNAME(GLEAMDIPD)
@@ -224,7 +222,7 @@
      D ZLOC            S              3A                                                      CRE015
      D ZDIREC          S              1A                                                      CRE015
      D ZRTRN           S              7A                                                      CRE015
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -759,9 +757,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       *
       * INPUTS

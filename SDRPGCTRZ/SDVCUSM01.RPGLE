@@ -18,9 +18,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CER071             Date 01Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 MD027720           Date 30Jul14               *
       *                 MD026549           Date 12May14               *
@@ -41,7 +40,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *

@@ -1,7 +1,6 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
-/*OVRF*: OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)              : *                    MD054211A
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate debit interest calc. type/subtyp')
       *****************************************************************
@@ -12,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054211A          Date 02Oct19               *
-      *  Prev Amend No. MD053611           Date 19Oct19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053611           Date 19Aug19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,7 +26,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054211A - Use OVRDBF for REIAC in GLVDBIT02.               *
       *  MD053611 - Add validation when changing the interest         *
       *             calculation type.                                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -47,11 +44,9 @@
       ** RE Interest Sub-types file
      FREINT     IF   E           K DISK    INFSR(*PSSR)
       **
-      *****FREIAC     IF   E           K DISK    INFSR(*PSSR)                     MD053611 MD054211A
-     FREIACXX   IF   E           K DISK    INFSR(*PSSR)                                    MD054211A
-     F                                           IGNORE(REIACAF)                  MD053611 MD054211A
-     F                                           IGNORE(REIACZF)                  MD053611 MD054211A
-
+     FREIAC     IF   E           K DISK    INFSR(*PSSR)                                     MD053611
+     F                                     IGNORE(REIACAF)                                  MD053611
+     F                                     IGNORE(REIACZF)                                  MD053611
 
       *****************************************************************
       ** +--------------------------------------+
@@ -235,10 +230,8 @@
      C                   MOVE      DDACSQ        ACSQ                                       MD053611
      C                   MOVE      DDBRCA        BRCA                                       MD053611
       *                                                                                     MD053611
-     C**********Key_REIAC     CHAIN     REIAC                                     MD053611 MD054211A
-     C**********         IF        %FOUND(REIAC)                                  MD053611 MD054211A
-     C     Key_REIAC     CHAIN     REIACXX                                                 MD054211A
-     C                   IF        %FOUND(REIACXX)                                         MD054211A
+     C     Key_REIAC     CHAIN     REIAC                                                    MD053611
+     C                   IF        %FOUND(REIAC)                                            MD053611
      C                   MOVE      DICT          TDICT             2                        MD053611
      C     DDDICT        IFNE      TDICT                                                    MD053611
       **                                                                                    MD053611

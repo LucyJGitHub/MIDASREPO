@@ -23,9 +23,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052008           Date 05Oct18               *
-      *                 MD051940           Date 21Sep18               *
+      *  Last Amend No. MD052008           Date 05Oct18               *
+      *  Prev Amend No. MD051940           Date 21Sep18               *
       *                 MD051242           Date 29Jun18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -48,7 +47,6 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052008 - Rounding off issue on PDCL amount using           *
       *             settlement account with partial balance           *
       *  MD051940 - PDCL X, Y, Z amount is incorrect as a result of   *
@@ -671,7 +669,7 @@
      C                   ELSE                                                               MD051242
      C                   EVAL      WMINUS = ' '                                             MD051242
      C                   ENDIF                                                              MD051242
-     C**********         ENDIF                                                     MD051242 MD051940
+     C**********         ENDIF                                                     MD046080 MD051940
                                                                                             MD046080
      C                   EVAL      LKAAMT = 0
      C                   MOVEL     LKAKEY        Wf10

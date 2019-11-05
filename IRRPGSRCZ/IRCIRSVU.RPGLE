@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD053400           Date 03Jul19               *
-      *                 CSD102             Date 08Jan19               *
+      *  Last Amend No. MD053400           Date 03Jul19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD052876           Date 27Feb19               *
       *                 MD052154           Date 28Jan19               *
       *                 MD051725           Date 23Nov18               *
@@ -103,8 +102,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
-      *             rate                                              *
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *
       *             validation if action is Reject.                   *
@@ -8036,8 +8033,6 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    ExtSetM
      C                   PARM                    CIR008
      C                   PARM                    CAP056
-     C                   PARM                    SUEINR                                     MD054095
-     C                   PARM                    STEINR                                     MD054095
                                                                                               CSW213
       ** Call DLRPIFVU - Midas DL Reporting Information Validate and Update                   CSW213
                                                                                               CSW213

@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24157           Date 02Jun09               *
@@ -23,7 +22,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -40,7 +38,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -54,100 +52,100 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       **--------------------------------------------------------------------------------------------
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** Array of Fields with warnings.
      D WFldNamXAr      S             10A   DIM(XArrayMax)
-
+ 
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** Customer Details by Country of Tax
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
-
+ 
       ** Second DS for access programs, LONG DATA STRUCTURE
      D DSLDY         E DS                  EXTNAME(DSLDY)
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
-
+ 
       ** KWG §24c reporting field
      D***DDK24C          S              1A                                                  BUG24157
      D DD24C           S              1A                                                    BUG24157
-
+ 
       ** Customer Number
      D DDCUSN          S              6A
-
+ 
       ** KWG §24c reporting Y/N - Ok Flag
      D***DDK24COK        S              1A                                                  BUG24157
      D DD24COK         S              1A                                                    BUG24157
-
+ 
       ** Return Code
      D PRtcd           S              7A
-
+ 
      D POptn           S              7A
-
+ 
      D PCusn           S              6A
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       /EJECT
       *****************************************************************
      C
@@ -219,7 +217,7 @@
      C                   PARM      '*KEY'        POptn
      C                   PARM      DDCUSN        PCusn
      C     SDACUS        PARM      SDACUS        DSLDY
-
+ 
      C                   IF        PRtcd <> *BLANKS
      C*********          EVAL      DBFILE = 'SDACUSPD'                                      BUG22198
      C*********          EVAL      DBKEY = 'DDCUSN'                                         BUG22198
@@ -268,7 +266,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       ** Return Code
      C                   PARM                    RetCodeIn
@@ -288,14 +286,14 @@
       ** KWG §24c reporting Y/N - Ok Flag
      C**********         PARM                    DDK24COK                                   BUG24157
      C                   PARM                    DD24COK                                    BUG24157
-
+ 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT

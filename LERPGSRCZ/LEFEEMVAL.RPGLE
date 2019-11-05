@@ -11,10 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053837           Date 28Aug19               *
-      *                 MD021377           Date 18Jul18               *
-      *                 CLE071             Date 18Jul18               *
+      *  Last Amend No. MD021377           Date 18Jul18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
       *                 MD046370           Date 07Nov17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028931           Date 13May14               *
@@ -110,11 +108,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
-      *  MD053837 - Classification out of range for initial date if   *
-      *             rundate falls on the last day of classification.  *
-      *             Use %LOOKUP if rundate is equal to start date +   *
-      *             period days.                                      *
       *  MD021377 - Reversed Fee Rate Changes have FCRECI = 'R'.      *
       *             LER0238 should be checked against live fees only. *
       *  CLE071 - Value Dating of Rate Changes to Fees                *
@@ -5598,11 +5591,7 @@
      C                   EVAL      DSRCAT      = %LOOKUPLE(DSDYS:DSRCN)                     MD027024
      C                   ELSE                                                               MD027024
                                                                                               CLE134
-     C                   IF        BJRDNB      = @@FERCSD + @@FERCDY                        MD053837
-     C                   EVAL      DSRCAT      = %LOOKUP(DSDYS:DSRCN)                       MD053837
-     C                   ELSE                                                               MD053837
      C                   EVAL      DSRCAT      = %LOOKUPGT(DSDYS:DSRCN)                       CLE134
-     C                   ENDIF                                                              MD053837
      C                   ENDIF                                                              MD027024
      C                   ENDIF                                                                CLE134
                                                                                               CLE134
@@ -5806,15 +5795,10 @@
                                                                                             MD027024
       ** Find last valid period if date >= 999 days                                         MD027024
                                                                                             MD027024
-     C**********         EVAL      DSRCAT      = %LOOKUPLE(DSDYS:DSBCN)            MD027024 MD053837
-     C                   EVAL      DSBCAT      = %LOOKUPLE(DSDYS:DSBCN)                     MD053837
+     C                   EVAL      DSRCAT      = %LOOKUPLE(DSDYS:DSBCN)                     MD027024
      C                   ELSE                                                               MD027024
                                                                                               CLE134
-     C                   IF        BJRDNB      = @@FEBCSD + @@FEBCDY                        MD053837
-     C                   EVAL      DSBCAT      = %LOOKUP(DSDYS:DSBCN)                       MD053837
-     C                   ELSE                                                               MD053837
      C                   EVAL      DSBCAT      = %LOOKUPGT(DSDYS:DSBCN)                       CLE134
-     C                   ENDIF                                                              MD053837
      C                   ENDIF                                                              MD027024
      C                   ENDIF                                                                CLE134
                                                                                               CLE134

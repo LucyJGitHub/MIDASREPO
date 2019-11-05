@@ -14,10 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD044880           Date 15Jan18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD039248           Date 07Jun16               *
       *                 MD037909           Date 08Mar16               *
       *                 CLE141             Date 08Feb16               *
@@ -62,9 +60,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039248 - Business Day Convention details missing in BDC    *
@@ -499,9 +494,6 @@
      C                                           + Infdata                              CAP086246159
      C**********                                 + RegData                           CER001 MD044880
      C                                           + ExtData                                    246159
-     C                                           + DDAPRC                                   MD054028
-     C                                           + DDPREM                                   MD054028
-     C                                           + DDAPRR                                   MD054028
      C                                           + RegData                                  MD044880
  
      C                   SETON                                        LR
@@ -1044,10 +1036,6 @@
       ***  Loan in file format CK
       *
      C                   PARM                    CrLnFilFmtCK
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDPREM           15                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
       *
       ***  Outputs
       *
@@ -1055,19 +1043,6 @@
       *
      C                   PARM                    CrLnScnFmt1
       *
-     C                   MOVE      DDAPRC        @DDAPRC           1                        MD054028
-     C                   MOVE      DDPREM        @DDPREM          15                        MD054028
-     C                   MOVE      DDAPRR        @DDAPRR           8                        MD054028
-     C     @DDAPRC       Ifeq      'N'                                                        CER050
-     C     @DDAPRR       andne     *Blanks                                                    CER050
-     C                   move      *Blanks       @DDAPRR                                      CER050
-     C                   Endif                                                                CER050
-     C     @DDAPRC       IFEQ      'N'                                                      MD054028
-     C     @DDAPRC       OREQ      *BLANKS                                                  MD054028
-     C                   MOVE      *BLANKS       DDAPRR                                     MD054028
-     C                   MOVE      *BLANKS       DDPREM                                     MD054028
-     C                   MOVE      *BLANKS       DDAPRC                                     MD054028
-     C                   ENDIF                                                              MD054028
       *
       *
      C                   ENDSR

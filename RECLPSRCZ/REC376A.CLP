@@ -10,9 +10,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CER050             Date 16Jun19              */
-/*       Prev Amend No. MD050679           Date 26Apr18              */
-/*                      CRE113             Date 08Feb18              */
+/*       Last Amend No. MD050679           Date 26Apr18              */
+/*       Prev Amend No. CRE113             Date 08Feb18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      AR1069713          Date 14Dec12              */
 /*                      259754             Date 27Jul12              */
@@ -28,7 +27,6 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       CER050 - Annualised Percentage Rate                         */
 /*       MD050679 - Component REC376A failed during COB run (CRE113) */
 /*       CRE113 - COB Optimisation of REC376A                        */
 /*       MD046248 - Finastra Rebranding                              */
@@ -88,11 +86,6 @@
              DCL        VAR(&QRYSLT) TYPE(*CHAR) LEN(2000)                                /*CRE113*/
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(10 0)                                  /*CRE113*/
                                                                                           /*CRE113*/
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CER050*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')                    /*CER050*/
-             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) VALUE('CER050')                     /*CER050*/
-             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(60)                                   /*CER050*/
-             DCL        VAR(&CER050) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CER050*/                                                                                          
              DCLF       FILE(TABTBRE)
 /**/
              SNDPGMMSG  MSG('REC376 - Retail interests statements  ') +
@@ -130,15 +123,6 @@
                                                                                           /*CCB016*/
              OVRDBF     FILE(ACCNTL0) TOFILE(EACCNTL0)                                    /*CCB016*/
              OVRDBF     FILE(ACCNTL1) TOFILE(EACCNTL1)                                    /*CCB016*/
-                                                                                          /*CER050*/
-/** Determine whether feature CER050 is switched on **/                                   /*CER050*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                      /*CER050*/
-             IF         COND(&RTCD = '       ') THEN(DO)                                  /*CER050*/
-             OVRDBF     FILE(ACCRACJ) TOFILE(EACCRACJ)                                    /*CER050*/
-                CALL       PGM(REC6001)                                                   /*CER050*/
-             DLTOVR     FILE(ACCRACJ)                                                     /*CER050*/
-             ENDDO                                                                        /*CER050*/
-                                                                                          /*CER050*/
 /**********  IF         COND(&REC376A *EQ 'Y') THEN(DO)            */           /*259754 AR1069713*/
 /**********  RTVDTAARA  DTAARA(REC376A (1 2000)) RTNVAR(&QRYSLT)   */           /*259754 AR1069713*/
 /**********                                                        */           /*259754 AR1069713*/

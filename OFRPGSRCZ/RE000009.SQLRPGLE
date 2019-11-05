@@ -10,13 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CRE104  *CREATE    Date 04Mar15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE104  *CREATE    Date 04Mar15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE104 - Modelo 123 and 193 Reports                          *
       *                                                               *

@@ -32,12 +32,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054610           Date 18Oct10               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
-      *                 CER050             Date 16Jun19               *
-      *                 MD052465           Date 10Jan19               *
-      *                 CSD102             Date 08Jan19               *
-      *                 MD050212           Date 02Apr18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
       *                 MD023188           Date 20Sep18               *
       *                 MD051305           Date 19Jun18               *
       *                 MD050345           Date 04Apr18               *
@@ -150,12 +146,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054610 - Added the parameter TranInCRDD to SDFTCS5VL call  *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate                          *
-      *  MD052465 - Not possible to capture mandatory US TIN for      *
-      *             FATCA reporting                                   *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD023188 - European tax status disappears after re-inserting *
@@ -898,7 +888,6 @@
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
      D  TransCUEX                          LIKE(ExtData)                                    MD044880
      D  TransCRSS                          LIKE(SDCRSS)                                       CGL157
-     D  TransCR50                     1A                                                    MD054028
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -1034,7 +1023,6 @@
                                                                                               CLE025
      D CLE025          S              1                                                      BUG5082
      D CFX001          S              1                                                      BUG5082
-     D DDAPRC          S              1                                                     MD054028
      D PRTCD           S              7                                                      BUG5082
      D POPTN           S              7                                                      BUG5082
      D PSARD           S              6                                                      BUG5082
@@ -1080,7 +1068,6 @@
      D CGL032          S              1A                                                    AR728530
      D CSD090          S              1A                                                      CSD090
      D CGL132          S              1A                                                      CGL132
-     D CER050          S              1                                                       CER050
                                                                                               CER059
      D DfltScrn1       S              1A   INZ('N')                                           CER059
      D Idy             S              3P 0 INZ(0)                                             CER059
@@ -1109,8 +1096,7 @@
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
      D***FillerBufEx2    S           5915A                                           MD044880 CGL157
-     D***FillerBufEx2    S           5591A                                           CGL157 MD054028
-     D FillerBufEx2    S           5590A                                                    MD054028
+     D FillerBufEx2    S           5591A                                                      CGL157
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1231,9 +1217,7 @@
      C                   EVAL      ExtData    = TransCUEX                                   MD044880
      C                   EVAL      TranInCRSS = TransCRSS                                     CGL157
      C                   EVAL      TranInCRDD = TransCRSD1 + TransCRSD2                       CGL157
-     C                   IF        CER050 = 'Y'                                             MD054028
-     C                   EVAL      DDAPRC = TransCR50                                       MD054028
-     C                   ENDIF                                                              MD054028
+
       * Reset variables gradually updated
 
      C                   EXSR      RESETCYCLE
@@ -1529,7 +1513,6 @@
      C                                       + TranInFTCR                                     CGL132
      C                                       + ExtData                                      MD044880
      C                                       + TranInCRSS                                     CGL157
-     C                                       + DDAPRC                                       MD054028
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -1727,11 +1710,6 @@
      C                   MOVEL     CuCdFilFmt    ValidCRSD                                    CGL157
 
       * For Amends, convert the Customer to screen format
-      *                                                                                     MD054028
-     C                   IF        CER050 = 'Y'                                             MD054028
-     C                   MOVE      DDAPRC        E5APRC                                     MD054028
-     C                   MOVE      DDAPRC        V_ADAPRC                                   MD054028
-     C                   ENDIF                                                              MD054028
 
      C                   CALLB     'SDCUSDCVT'
       *
@@ -1769,8 +1747,6 @@
                                                                                              BUG5082
      C                   PARM                    CLE025                                      BUG5082
      C                   PARM                    CFX001                                      BUG5082
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
       *
       * Output parameters
       *
@@ -1803,7 +1779,6 @@
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
 
-     C                   MOVE      DDAPRC        ADDDAPRC          1                        MD054028
       ** Customer Details
 
      C                   MOVEL     DDCUSN        PCusNum                                    MD044880
@@ -2801,10 +2776,6 @@
 
       ** Convert file fields to screen format
      C                   reset                   ReturnCode
-     C                   IF        CER050 = 'Y'                                             MD054028
-     C                   MOVE      DDAPRC        E5APRC                                     MD054028
-     C                   MOVE      DDAPRC        V_ADAPRC                                   MD054028
-     C                   ENDIF                                                              MD054028
      C                   CALLB     'SDCUSDCVT'
       * Return Code
      C                   PARM                    ReturnCode
@@ -2838,8 +2809,6 @@
       *                                                                                       CSD079
      C                   PARM                    CLE025                                       CSD079
      C                   PARM                    CFX001                                       CSD079
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
       *
       * Output parameters
       * Customer Details - screen formats
@@ -2871,7 +2840,6 @@
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
 
-     C                   MOVE      DDAPRC        ADDDAPRC                                   MD054028
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
 
@@ -3853,10 +3821,6 @@
      C                   MOVEL     ADDDBEXT      V_ADBEXT                                     CER059
      C                   MOVEL     ADDDRIGR      V_ADRIGR                                     CER070
      C                   MOVEL     ADDDRECH      V_ADRECH                                     CER071
-                                                                                              CER050
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   movel     ADDDAPRC      V_ADAPRC                                     CER050
-     C                   Endif                                                                CER050
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Set Service fees Fields                                                              CSD079
@@ -4710,11 +4674,6 @@
       *                                                               *                       CSD079
       *****************************************************************                       CSD079
      C     ValdCuCuad    BEGSR                                                                CSD079
-      *                                                                                     MD054028
-     C                   IF        CER050 = 'Y'                                             MD054028
-     C                   MOVE      DDAPRC        E5APRC                                     MD054028
-     C                   MOVE      DDAPRC        V_ADAPRC                                   MD054028
-     C                   ENDIF                                                              MD054028
                                                                                               CSD079
      C                   CALLB     'SDCUSDAVL'                                                CSD079
                                                                                               CSD079
@@ -4734,8 +4693,6 @@
       ** Customer Number                                                                    AR739736
                                                                                             AR739736
      C                   PARM                    DDBNBI                                     AR739736
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
                                                                                               CSD079
       ** OUTPUTS                                                                              CSD079
       ** Additional customer Details OK inds                                                  CSD079
@@ -4766,7 +4723,6 @@
       ** Valid Additional customer Details (DS) from/to caller                                CSD079
                                                                                               CSD079
      C                   PARM                    ValidCuad                                    CSD079
-     C                   MOVE      DDAPRC        ADDDAPRC                                   MD054028
      C                   ENDSR                                                                CSD079
                                                                                               CER059
       *****************************************************************                       CER059
@@ -5905,7 +5861,6 @@
      C                   PARM                    PAPARM                                     MD042692
      C                   PARM                    V_CUAHArr                                  MD045238
      C                   PARM                    CurCuCRSH                                    CGL157
-     C                   PARM                    TranInCRDD                                 MD054610
                                                                                               CGL132
       ** OUTPUTS                                                                              CGL132
       ** FATCA Customer Details OK inds                                                       CGL132
@@ -7035,20 +6990,6 @@
      C                   ENDIF                                                              MD030956
       *                                                                                     MD030956
                                                                                               CGL132
-      ** Check if CER050 is switched on                                                       CER050
-                                                                                              CER050
-     C                   CALLB     'AOSARDR0'                                                 CER050
-     C                   PARM      *BLANKS       @RTCD                                        CER050
-     C                   PARM      '*VERIFY'     @OPTN                                        CER050
-     C                   PARM      'CER050'      @SARD                                        CER050
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
-                                                                                              CER050
-     C     @RTCD         Ifeq      *BLANK                                                     CER050
-     C                   Eval      CER050 = 'Y'                                               CER050
-     C                   Else                                                                 CER050
-     C                   eval      CER050 = 'N'                                               CER050
-     C                   Endif                                                                CER050
-                                                                                              CER050
       /COPY WNCPYSRC,SDCUSDVU03
      C                   ENDSR
                                                                                              BUG5082

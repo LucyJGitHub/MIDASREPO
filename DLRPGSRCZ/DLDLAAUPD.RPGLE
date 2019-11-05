@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD022302           Date 09Sep13               *
@@ -28,7 +27,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -92,12 +90,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -108,23 +106,23 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
-
+ 
       *****************************************************************
-
+ 
       ** data structure for zalign
 0082 D ZA1             S              1    DIM(16)
 0083 D ZA2             S              1    DIM(16)
-
+ 
       ** Timestamp for the transaction
      D TimeStamp       S               Z
-
+ 
      D*ChkDlaaFmt    E DS                  EXTNAME(DLSTRANFPD)                             AR1096788
      D ChkDlaaFmt    E DS                  EXTNAME(STRANF)                                 AR1096788
      D                                     PREFIX(CH)
@@ -159,7 +157,7 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
-
+ 
      D VFMAAM          S                   LIKE(MAAM)
      D VFSIGN          S                   LIKE(SIGN)
      D VFINIRS         S                   LIKE(INIRS)
@@ -408,8 +406,8 @@
      C                   ENDIF
       *
      C                   ENDIF
-
-
+ 
+ 
      C                   CALLB     'DLDLAARTV'
       *
       ** Inputs
@@ -781,7 +779,7 @@
      C                   IF        RCDT = 'C'                                               AR916823
      C                   EXSR      CNFPYRC                                                  AR916823
      C                   ENDIF                                                              AR916823
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT

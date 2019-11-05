@@ -33,9 +33,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&ROUTINE &MNEM)
- 
+
 /*/COPY WNCPYSRC,TIC0027INT                                          */
- 
+
              DCL        VAR(&ROUTINE) TYPE(*DEC) LEN(3 0)
              DCL        VAR(&MNEM) TYPE(*CHAR) LEN(3)
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
@@ -59,46 +59,46 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES)                                /*AR861029*/
              RTVJOBA    TYPE(&JOBTYPE)
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*/COPY WNCPYSRC,TIC0027MPS                                          */
- 
+
 /*/COPY WNCPYSRC,TIC0027MPE                                          */
- 
- 
+
+
              IF         COND(&ROUTINE *EQ 7) THEN(DO)
                GOTO     CMDLBL(ROUTINE07)
              ENDDO
- 
+
              IF         COND(&ROUTINE *EQ 8) THEN(DO)
                GOTO     CMDLBL(ROUTINE08)
              ENDDO
- 
- 
+
+
 /* Otherwise routine passed as paramter is invalid */
- 
+
              GOTO       CMDLBL(ABNOR)
- 
- 
+
+
  ROUTINE07:
- 
+
 /* Initialise processing unit */
- 
+
              CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
                           DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
- 
+
 /* First set the current library list to that in the TIJOBD        */
 /* jod description                                                 */
- 
+
              CHGVAR     VAR(&PREFIX) VALUE(%SST(&MNEM 1 2))
              CHGVAR     VAR(&XLIB) VALUE(&PREFIX *TCAT 'XLIB')
              CHGVAR     VAR(&QLFDJOBD) VALUE('TIJOBD    ' *CAT &XLIB)
@@ -117,34 +117,34 @@
              CHGVAR     VAR(&CHGLIBL) VALUE('CHGLIBL LIBL(' *TCAT +
                           &NEWLIBL *TCAT ')')
              CALL QCMDEXC (&CHGLIBL &CMDLEN)
- 
+
 /*   Start commitment control  */
- 
+
              CHGVAR     VAR(&JLIB) VALUE(&PREFIX *TCAT 'JLIB')
- 
+
              GOTO       CMDLBL(END)
- 
+
  ROUTINE08:
- 
+
 /* Return the current processing mnemonic */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
              CHGVAR     VAR(&MNEM) VALUE(&PREFIX *CAT '1')
              GOTO       CMDLBL(END)
- 
- 
+
+
  ABNOR:
 /*/COPY WNCPYSRC,TIC0027ERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           TIC0027 ended abnormally - see job log')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /*/COPY WNCPYSRC,TIC0027END                                          */
- 
+
              ENDPGM

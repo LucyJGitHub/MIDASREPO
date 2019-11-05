@@ -16,10 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD046248           Date 27Oct17               *
-      *                 CLE141             Date 08Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025521           Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
@@ -50,9 +48,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
@@ -244,10 +239,6 @@
       *
       ***  Loan in file format CK
      C                   PARM                    TRANFilFmtCK
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDPREM           15                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
       *
       ***  OUTPUTS parameters
       *

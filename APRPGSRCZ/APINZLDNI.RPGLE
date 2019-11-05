@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -47,7 +46,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -84,22 +82,22 @@
       *  CAP004 - APIs phase 3.                                       *
       *                                                               *
       *****************************************************************
-
+ 
      FMMDELDPP  UP   E             DISK
      FBKRAT     IF   E           K DISK                                         161999
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
      D @YD             S              5  0 DIM(4) CTDATA PERRCD(4) ASCEND
      D @MD             S              5  0 DIM(13) CTDATA PERRCD(13) ASCEND
-
+ 
      D @MMDL         E DS                  EXTNAME(MMDELDPP)
      D  @DVSD                 50     57  0
      D  @DDND                111    118  0
      D  @SLID                179    186  0
      D  @NIPD                205    212  0
      D  @MATD                252    259  0
-
+ 
      D                 DS
      D  @@DTIN                 1      8  0
      D  @@YYYY                 1      4  0
@@ -107,21 +105,21 @@
      D  @@CC                   1      2  0
      D  @@MTH                  5      6  0
      D  @@DAY                  7      8  0
-
+ 
       * PARAMETERS
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
-
+ 
       * Deal Date
      C                   MOVE      @DDND         @@DTIN
      C                   EXSR      ZA0680
      C                   MOVE      @@MDNO        HKDDND
-
+ 
       * Value Date
      C                   MOVE      @DVSD         @@DTIN
      C                   EXSR      ZA0680
      C                   MOVE      @@MDNO        HKDVSD
-
+ 
       * Next Int Date
      C     @NIPD         IFNE      *ZERO
      C                   MOVE      @NIPD         @@DTIN
@@ -130,7 +128,7 @@
      C                   ELSE
      C                   Z-ADD     *ZERO         HKNIPD
      C                   END
-
+ 
       * Last Int Date
      C     @SLID         IFNE      *ZERO
      C                   MOVE      @SLID         @@DTIN
@@ -139,7 +137,7 @@
      C                   ELSE
      C                   Z-ADD     *ZERO         HKSLID
      C                   END
-
+ 
       * Maturity Date
      C     @MATD         IFNE      *ZERO
      C                   MOVE      @MATD         @@DTIN
@@ -153,7 +151,7 @@
       *                                                                         161999
      C     HKDN38        CHAIN     BKRAT                              99        161999
      C  N99              MOVE      RACD          HKRACD                         161999
-
+ 
       * Initialise Original Rollover Amount                                                   207875
                                                                                               207875
      C                   EVAL      HKORDA = 0                                                 207875
@@ -194,7 +192,7 @@
                                                                                               207875
       * UPDATE DEAL
      C                   EXCEPT    MMDELD
-
+ 
      C*******************************************************************
      C/EJECT
      C*******************************************************************
@@ -203,7 +201,7 @@
      C*          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
      C*
      C*******************************************************************
-
+ 
      C     ZA0680        BEGSR
      C*
      C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
@@ -247,9 +245,9 @@
      C                   ADD       @@DAY         @@MDNO
      C*
      C     ZA0689        ENDSR
-
+ 
      C*****************************************************************
-
+ 
      OMMDELDP0  E            MMDELD
      O                       HKDVSD
      O                       HKDDND
@@ -266,7 +264,7 @@
      O                       HKOMDT                                                           207875
      O                       HKPENA                                                           207875
      O                       HKCOLA                                                           207875
-
+ 
 **  CPY@
 (c) Finastra International Limited 2001
 ** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN

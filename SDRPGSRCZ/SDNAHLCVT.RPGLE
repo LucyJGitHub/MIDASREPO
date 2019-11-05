@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
-      *                 CGL157             Date 17Aug15               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027467           Date 11Jun14               *
       *                 CGL132             Date 01May13               *
@@ -37,9 +36,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
-      *             State Code is mandatory (even CER054 is OFF) and  *
-      *             mandatory "Industry Code" field is protected      *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -569,7 +565,6 @@
      C                   EVAL      DDDOCN = NHDOCN                                            CER048
      C                   EVAL      DDINDC = NHINDC                                            CER048
      C                   EVAL      DDSREF = NHSREF                                          BUG22580
-     C                   EVAL      DDEXDT = NHEXDT                                          MD052399
       *                                                                                       CER047
      C                   ENDIF                                                                CER047
       *                                                                                       CER047

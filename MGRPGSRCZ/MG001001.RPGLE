@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD037229           Date 03Sep18               *
-      *                 MD038302           Date 03Sep18               *
+      *  Last Amend No. MD037229           Date 03Sep18               *
+      *  Prev Amend No. MD038302           Date 03Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035038           Date 14Jul15               *
       *                 MD034605           Date 04Jun15               *
@@ -23,7 +22,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD037229 - Remove the validation of town after ISO code in   *
       *             first occurrence of 3/                            *
       *           - Applied for MD-51750                              *
@@ -46,9 +44,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FMEISOCL0  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -67,53 +65,53 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
      D NumCode         C                   CONST('123')
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Input Parameters
-
+ 
      D PRetCode        S              7A
      D PCallFrom       S              4A
      D PInpParm1       S             35A
@@ -135,9 +133,9 @@
      D POutParm5       S             35A
      D PMsgID          S              7A
      D PErrType        S              1A
-
+ 
       ** IBAN Parameters
-
+ 
      D PIBAN           S             47A
      D POWith          S             47A
      D PONobl          S             34A
@@ -147,9 +145,9 @@
      D WIBNU1          S              1A
      D WIBNU2          S              1A
      D WIBANY          S              1A
-
+ 
       ** Program variables
-
+ 
      D POption         S              7A
      D PMSard          S              6A
      D CFT004          S              1A
@@ -190,18 +188,18 @@
      D Y               S              1S 0
      D Z               S              3S 0
      D WCtr            S              3S 0
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D WInpArr         S             35A   DIM(4)
      D WTrnArr         S             35A   DIM(5)
      D WFmtArr         S             15A   DIM(5)
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)
-
+ 
      D MEOUFM        E DS                  EXTNAME(MEOUFMPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
@@ -214,18 +212,18 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D InpParmDS       DS
      D  InpDS1                 1    140
      D  InpDS2                36    175
      D  InpDS3                71    175
-
+ 
      D AcctLine        DS
      D  WSlash                 1      1
      D  WISO                   2      3
      D  WInfo1                 2     35
      D  WInfo2                 4     35
-
+ 
      D AddrLine        DS
      D  WCodeN                 1      2
      D  WCode                  1      1
@@ -234,9 +232,9 @@
      D  WISO2                  3      4
      D  WSlash2                5      5
      D  WInfoA2                6     35
-
+ 
      D FrmtLine        DS            75
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -251,42 +249,42 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
      C                   EVAL      PRetCode = *BLANKS
      C                   EVAL      PErrType = *BLANKS
-
+ 
      C                   SELECT
-
+ 
       ** Select process if called from Outgoing Message Field Mngt
-
+ 
      C                   WHEN      PCallFrom = 'OMFM'
-
+ 
      C                   EXSR      SrOMFM
-
+ 
       ** Select process if called from Transaction input valdiation
-
+ 
      C                   WHEN      PCallFrom = 'TRAN'
-
+ 
      C                   EXSR      SrTran
-
+ 
       ** Select process if called from Message Generation
-
+ 
      C                   WHEN      PCallFrom = 'FRMT'
-
+ 
      C                   EXSR      SrFrmt
-
+ 
      C                   ENDSL
-
+ 
       ** Set error type base on the return code
-
+ 
      C                   IF        PRetCode = '*ERROR'
      C                   EVAL      PErrType = 'E'
      C                   ELSEIF    PRetCode = '*WARN'
      C                   EVAL      PErrType = 'W'
      C                   ENDIF
-
+ 
       ** Exit program
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -297,9 +295,9 @@
       *                                                               *
       *****************************************************************
      C     SrOMFM        BEGSR
-
+ 
      C                   EXSR      SrValidate
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -309,55 +307,55 @@
       *                                                               *
       *****************************************************************
      C     SrTran        BEGSR
-
+ 
       ** Validate message type and tags keys for OMFM checking
-
+ 
      C                   EXSR      SrOMKeys
-
+ 
       ** Save the number sequence from input
-
+ 
      C                   EXSR      SrTranSeq
-
+ 
       ** If an identifier is inserted, continue
       ** with the validation
-
+ 
      C                   IF        NumCExist = 'Y'
-
+ 
      C                   EXSR      SrLayOMFM
-
+ 
       ** Retrieve Flag for ACOUNTLINE and ACOUNTIBAN
-
+ 
      C                   EXSR      SrAccLine
-
+ 
       ** Validate identifier sequence and format
-
+ 
      C                   EXSR      SrValidate
-
+ 
      C                   IF        PRetCode <> '*ERROR'
-
+ 
       ** If *FORMAT is defined in OMFM but no matching layout
       ** found against the input
-
+ 
      C                   IF        WdOMFM = 'Y'
      C                             AND WLayFound = 'N'
-
+ 
       ** Issue error, Format is not configured
-
+ 
      C                   IF        SveFlg3 = 'M'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00328'
-
+ 
       ** Issue warning error, Format is not configured
-
+ 
      C                   ELSEIF    SveFlg3 = 'W'
      C                   EVAL      PRetCode = '*WARN'
      C                   EVAL      PMsgID = 'ME00335'
      C                   ENDIF
-
+ 
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -367,27 +365,27 @@
       *                                                               *
       *****************************************************************
      C     SrFrmt        BEGSR
-
+ 
       ** Validate and extract details of account
-
+ 
      C                   IF        (%SUBST(PInpParm1:1:1) = '/'
      C                             AND PInpParm2 <> *BLANKS AND
      C                             InpDS3 = *BLANKS) OR
      C                             (PInpParm1 <> *BLANKS AND
      C                             InpDS2 = *BLANKS)
-
+ 
      C                   EXSR      SrValAccnt
-
+ 
      C                   IF        PRtnCode = *BLANKS
-
+ 
       ** Retrieve Flag for ACOUNTLINE and ACOUNTIBAN
-
+ 
      C                   EXSR      SrAccLine
-
+ 
       ** Extract layout from OMFM to output 59F
-
+ 
      C                   EXSR      SrLayOMFM
-
+ 
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      POutParm1 = WOMFM1
      C                   EVAL      POutParm2 = WOMFM2
@@ -395,7 +393,7 @@
      C                   EVAL      POutParm4 = WOMFM4
      C                   EVAL      POutParm5 = WOMFM5
      C                   ENDIF
-
+ 
      C                   ELSE                                                               MD034511
                                                                                             MD034511
       ** Input is an adress without the 59F format                                          MD034511
@@ -403,15 +401,15 @@
                                                                                             MD034511
      C                   EVAL      PRetCode = '*NRF '                                       MD034511
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
       ** Input is an adress without the 59F format
       ** No checking must be done
-
+ 
      C                   EVAL      PRetCode = '*NRF '
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -422,35 +420,35 @@
       * Called By: SrOMFM, SrTran                                     *
       *                                                               *
       *****************************************************************
-
+ 
      C     SrValidate    BEGSR
-
+ 
       ** First Line cannot be blanks
-
+ 
      C                   IF        PInpParm1 = *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00307'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      ** Line 1 must start with '/' for Account line
      ** and 1/ for Name and Address Line
-
+ 
      C                   IF        %SUBST(PInpParm1:1:1) <> '/' AND
      C                             %SUBST(PInpParm1:1:1) <> '1'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00308'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** If Line 1 is a '/', validate account line
-
+ 
      C                   IF        %SUBST(PInpParm1:1:1) = '/'
-
+ 
      C                   EVAL      AcctLine = PInpParm1
-
+ 
       ** Validate ISO Country code if inserted
-
+ 
      C                   EVAL      WISOFlg = ' '
      C                   IF        WISO <> *BLANKS
      C                   EVAL      WISOFlg = 'Y'
@@ -460,37 +458,37 @@
      C                   EVAL      WISOFlg = 'N'
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Call validation of accountline subroutines
-
+ 
      C                   IF        PCallFrom = 'OMFM'
      C                   EXSR      SrValAccO
      C                   ELSEIF    PCallFrom = 'TRAN'
      C                   EXSR      SrValAccT
      C                   ENDIF
-
+ 
       ** If error is encountered, do not continue with the
       ** other validation
-
+ 
      C                   IF        PRetCode = '*ERROR'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Move the input parameter 2-5 to array
       ** for the validation of address lines
-
+ 
      C                   MOVE      InpDS2        WInpDSA
      C                   EXSR      SrMoveArr
-
+ 
       ** Else if first character is Numeric
-
+ 
      C                   ELSE
-
+ 
      C                   IF        PCallFrom = 'TRAN'
-
+ 
       ** Account Line is Mandatory
       ** Account IBAN is Mandatory
-
+ 
      C                   IF        SveFlg1 = 'M'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00324'
@@ -500,10 +498,10 @@
      C                   EVAL      PMsgID = 'ME00332'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Warning: Account Line is not inserted
       ** Warning: Account IBAN is not inserted
-
+ 
      C                   IF        SveFlg1 = 'W'
      C                   EVAL      PRetCode = '*WARN '
      C                   EVAL      PMsgID = 'ME00325'
@@ -512,32 +510,32 @@
      C                   EVAL      PMsgID = 'ME00333'
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Move the input parameter 1-4 to array
       ** for the validation of address lines
-
+ 
      C                   MOVE      InpDS1        WInpDSA
      C                   EXSR      SrMoveArr
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        PRetCode = '*ERROR'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Validate Name and Address lines
-
+ 
      C                   EXSR      SrValAdd
-
+ 
       ** Fifth line must be blanks if account line is not present
-
+ 
      C                   IF        PRetCode <> '*ERROR' AND
      C                             %SUBST(PInpParm1:1:1) <> '/'
      C                             AND PInpParm5 <> *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00321'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -546,19 +544,19 @@
       * SrValAccO - Validate Account Line from OMFM                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SrValAccO     BEGSR
-
+ 
       ** If /XX, Account Line must be followed by a valid ISO
       ** country code
-
+ 
      C                   IF        WISOFlg = 'N'
      C                             OR WInfo2 <> *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00309'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -567,28 +565,28 @@
       * SrValAccT - Validate Account Line from Transaction Input      *
       *                                                               *
       *****************************************************************
-
+ 
      C     SrValAccT     BEGSR
-
+ 
       ** Account number of beneficiary must be stated in
       ** the account line
-
+ 
      C                   IF        WInfo1 = *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00322'
      C                   LEAVESR
-
+ 
      C                   ELSE
-
+ 
       ** Save flag from ACOUNTIBAN and ACOUNTLINE
-
+ 
      C                   EVAL      WACLNE = 'N'                                             MD035038
      C                   EVAL      WIBANY = 'N'                                             MD035038
      C                   IF        WISOFlg = 'Y'
      C                             AND CFT004 = 'Y'
      C                   EVAL      PMAccount = %SUBST(PInpParm1:2)
      C                   EXSR      SrValIBAN
-
+ 
      C                   IF        WIBANY = 'Y'                                             MD034543
      C                             AND SveFlg2 <> *BLANKS                                   MD035038
      C                   EVAL      SaveFlag = SveFlg2
@@ -600,9 +598,9 @@
      C                   EVAL      SaveFlag = SveFlg1
      C                   EVAL      WACLNE = 'Y'                                             MD035038
      C                   ENDIF
-
+ 
       ** Account line or Account IBAN is prohibited
-
+ 
      C                   IF        SaveFlag = 'P'
      C**********         EVAL      PRetCode = '*ERROR'                                      MD035038
      C                   IF        WIBANY = 'Y'
@@ -618,7 +616,7 @@
      C                   LEAVESR
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Account Line or Account IBAN is mandatory for line 1                               MD035038
       ** starting with '/'                                                                  MD035038
                                                                                             MD035038
@@ -650,7 +648,7 @@
      C                   ENDIF                                                              MD035038
                                                                                             MD035038
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -660,14 +658,14 @@
       *             embedded blanks                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SrMoveArr     BEGSR
-
+ 
      C                   EVAL      Num3Exist = 'N'
      C                   MOVEA     WInpDSA       WInpArr
-
+ 
       ** No embedded blanks must exist
-
+ 
      C                   IF        PCallFrom <> 'FRMT'
      C                   FOR       X = 4 DOWNTO 2
      C                   IF        WInpArr(X) <> *BLANKS
@@ -682,16 +680,16 @@
      C
      C                   ENDFOR
      C                   ENDIF
-
+ 
       ** Save number of lines with values to be validated
-
+ 
      C                   EVAL      IDX = %LOOKUP(*BLANKS:WInpArr)
      C                   IF        IDX = 0
      C                   EVAL      IDX = 4
      C                   ELSE
      C                   EVAL      IDX = IDX - 1
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -701,63 +699,63 @@
       *                                                               *
       *****************************************************************
      C     SrValAdd      BEGSR
-
+ 
      C                   FOR       X = 1 TO IDX
      C                   EVAL      AddrLine = WInpArr(X)
-
+ 
       ** The First line of Name and Address Line
       ** must start with number 1
-
+ 
      C                   IF        X = 1 and WCode <> '1'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00311'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Name and Address Lines must start with number in
       ** range 1 to 3, followed by a '/'
-
+ 
      C                   IF        %CHECK(NumCode:WCode) <> 0
      C                             OR WSlash1 <> '/'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00312'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Numbers in Name and Address Lines must appear in
       ** increasing Numerical order
-
+ 
      C                   IF        X > 1 AND
      C                             WCode < %SUBST(WInpArr(X-1):1:1)
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00313'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Number 2 of Name and Address Lines must not
       ** be used without number 3
-
+ 
      C                   IF        WCode = '2' AND
      C                             Num3Exist <> 'Y'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00314'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Additional Name and Address lines validation
-
+ 
      C                   IF        PCallFrom = 'OMFM'
      C                   EXSR      SrValAddOMFM
      C                   ELSEIF    PCallFrom = 'TRAN'
      C                   EXSR      SrValAddTran
      C                   ENDIF
-
+ 
      C                   IF        PRetCode = '*ERROR'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C                   ENDFOR
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -767,11 +765,11 @@
       *                for OMFM                                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     SrValAddOMFM  BEGSR
-
+ 
       ** No repeating numbers must exist
-
+ 
      C                   IF        X > 1
      C                   IF        WCode = %SUBST(WInpArr(X-1):1:1)
      C                   EVAL      PRetCode = '*ERROR'
@@ -779,12 +777,12 @@
      C                   LEAVESR
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Validate format for number 3
       ** Format should be 3/XX/
-
+ 
      C                   IF        WCode = '3'
-
+ 
      C                   EVAL      WISOC = WISO2
      C     WISOC         CHAIN     MEISOCL0
      C                   IF        NOT %FOUND(MEISOCL0)
@@ -794,20 +792,20 @@
      C                   EVAL      PMsgID = 'ME00316'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
       ** Else Validate format for number 1 and 2
       ** Format should be 1/ or 2/
-
+ 
      C                   IF        WInfoA1 <> *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00315'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -817,37 +815,37 @@
       *                for Transaction Input                          *
       *                                                               *
       *****************************************************************
-
+ 
      C     SrValAddTran  BEGSR
-
+ 
       ** Number 1 of Name and Address Lines must be followed by a
       ** '/' and followed by name of Beneficiary customer
-
+ 
      C                   IF        WCode = '1' AND
      C                             WInfoA1 = *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00326'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Number 2 of Name and Address Lines must be followed by a
       ** '/' and followed by address of Beneficiary customer
-
+ 
      C                   IF        WCode = '2' AND
      C                             WInfoA1 = *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00327'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Validate format for number 3
-
+ 
      C                   IF        WCode = '3'
-
+ 
      C                   IF        %SUBST(WInpArr(X-1):1:1) <> '3'
      C                   EVAL      WISOC = WISO2
      C     WISOC         CHAIN     MEISOCL0
-
+ 
       ***First*occurrence*of*number*3**********************************                     MD037229
       ***Format*should*be*3/XX/yyyyyy**********************************                     MD037229
       **********                                                                            MD037229
@@ -862,9 +860,9 @@
      C**********         ENDIF                                                              MD037229
       **********                                                                            MD037229
      C**********         ELSE                                                               MD037229
-
+ 
       ** Format should be 3/XX or 3/XX/yyyyyy
-
+ 
      C                   IF        NOT %FOUND(MEISOCL0)
      C                             OR (WSlash2 <> *BLANKS
      C                             AND WSlash2 <> '/')
@@ -876,14 +874,14 @@
      C                   EVAL      PMsgID = 'ME00318'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C**********         ENDIF                                                              MD037229
-
+ 
      C                   ELSE
-
+ 
       ** Other occurrence of nunmber 3
       ** Format should be 3/yyyyyy
-
+ 
      C                   IF        WInfoA1 = *BLANKS
      C                             OR WSlash2= '/'
      C                   EVAL      PRetCode = '*ERROR'
@@ -892,7 +890,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -902,20 +900,20 @@
       *                                                               *
       *****************************************************************
      C     SrAccLine     BEGSR
-
+ 
      C                   EVAL      POption = '*KEY   '
      C                   EVAL      SaveFlag = *BLANKS
-
+ 
       ** Retrieve Flag for ACOUNTLINE if defined in OMFM
-
+ 
      C                   EVAL      PAction = 'ACOUNTLINE'
      C                   EXSR      SrOMFMAct
      C                   IF        SaveFlag <> *BLANKS
      C                   EVAL      SveFlg1 = SaveFlag
      C                   ENDIF
-
+ 
       ** Retrieve Flag for ACOUNTIBAN if defined in OMFM
-
+ 
      C                   IF        CFT004 = 'Y'
      C                   EVAL      PAction = 'ACOUNTIBAN'
      C                   EVAL      SaveFlag = *BLANKS
@@ -924,7 +922,7 @@
      C                   EVAL      SveFlg2 = SaveFlag
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -934,7 +932,7 @@
       *                                                               *
       *****************************************************************
      C     SrSaveSeq     BEGSR
-
+ 
      C                   IF        X = 1 OR
      C                             (X > 1 AND WCode <>
      C                             %SUBST(WTrnArr(X-1):1:1))
@@ -945,7 +943,7 @@
      C                   ENDIF
      C                   EXSR      SrTranOM
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -956,24 +954,24 @@
       *                                                               *
       *****************************************************************
      C     SrTranOM      BEGSR
-
+ 
      C                   SELECT
      C                   WHEN      WOMFM1 = *BLANKS
      C                   EVAL      WOMFM1 = WLayOut
-
+ 
      C                   WHEN      WOMFM2 = *BLANKS
      C                   EVAL      WOMFM2 = WLayOut
-
+ 
      C                   WHEN      WOMFM3 = *BLANKS
      C                   EVAL      WOMFM3 = WLayOut
-
+ 
      C                   WHEN      WOMFM4 = *BLANKS
      C                   EVAL      WOMFM4 = WLayOut
-
+ 
      C                   WHEN      WOMFM5 = *BLANKS
      C                   EVAL      WOMFM5 = WLayOut
      C                   ENDSL
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -983,28 +981,28 @@
       *                                                               *
       *****************************************************************
      C     SrOMKeys      BEGSR
-
+ 
       ** Validate Network
-
+ 
      C                   IF        PNetwork <> *BLANKS
      C                   CALL      'AONWRKR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*KEY'        POption
      C                   PARM                    PNetwork
      C     SDNWRK        PARM      SDNWRK        DSLDY
-
+ 
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      PMsgID = 'ME00329'
      C                   LEAVESR
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Validate Message Tag and Type
-
+ 
      C                   IF        PMsgTag = *BLANKS
      C                   EVAL      PMsgTag = ':59F:'
      C                   ENDIF
-
+ 
      C                   CALL      'AOMTAGR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*KEY'        POption
@@ -1016,7 +1014,7 @@
      C                   EVAL      PMsgID = 'ME00330'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C                   IF        PMsgID <> *BLANKS
      C                   EVAL      PRetCode = '*WARN'
      C                   ENDIF
@@ -1029,38 +1027,38 @@
       *                                                               *
       *****************************************************************
      C     SrLayOMFM     BEGSR
-
+ 
       ** Check OMFM with *FORMAT action
-
+ 
      C                   EVAL      PAction = '*FORMAT'
      C                   EVAL      POption = '*KEY'
      C                   EVAL      WdOMFM = 'N'
      C                   EVAL      WLayFound = 'N'
-
+ 
      C                   EXSR      SrOMFMAct
-
+ 
       ** If return code is not blanks, no OMFM entry
       ** has been defined for 59F for MT 103
-
+ 
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      PRetCode = '*NRF '
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Else if an OMFM record is found, check for the
       ** layout
-
+ 
      C                   DOW       PRtnCode <> '*EOF' AND
      C                             PRtnCode <> '*ERROR' AND
      C                             PRtnCode <> '*NRF' AND
      C                             WLayFound <> 'Y'
-
+ 
      C                   EVAL      WdOMFM = 'Y'
      C                   EVAL      SveFlg3 = OMFLAG
-
+ 
       ** For Transaction Input, check if there is a
       ** matching layout in OMFM
-
+ 
      C                   IF        PCallFrom = 'TRAN'
      C                             AND %SUBST(OM50F1:1:2) = WOMFM1
      C                             AND %SUBST(OM50F2:1:2) = WOMFM2
@@ -1069,19 +1067,19 @@
      C                             AND %SUBST(OM50F5:1:2) = WOMFM5
      C                   EVAL      WLayFound = 'Y'
      C                   ENDIF
-
+ 
       ** For Message Generation, check if account
       ** details matches the layout in OMFM
-
+ 
      C                   IF        PCallFrom = 'FRMT'
      C                   EVAL      WLayFound = 'Y'
      C                   EVAL      PRetCode = *BLANKS
      C                   EXSR      SrFmtMatch
      C                   ENDIF
-
+ 
       ** Check for the next layout, if the details is not
       ** enough to output 59F
-
+ 
      C                   IF        WLayFound <> 'Y'
      C                   EVAL      POption = '*NEXTEQ'
      C                   IF        PCallFrom = 'FRMT'
@@ -1093,9 +1091,9 @@
      C                   ENDIF
      C                   EXSR      SrOMFMAct
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1105,7 +1103,7 @@
       *                                                               *
       *****************************************************************
      C     SrOMFMAct     BEGSR
-
+ 
      C                   CALL      'AOOUFMR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    POption
@@ -1118,11 +1116,11 @@
      C                   PARM                    PNostro
      C                   PARM                    PAction
      C     MEOUFM        PARM      MEOUFM        DSSDY
-
+ 
      C                   IF        PRtnCode = *BLANKS
      C                   EVAL      SaveFlag = OMFLAG
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1132,7 +1130,7 @@
       *                                                               *
       *****************************************************************
      C     SrValAccnt    BEGSR
-
+ 
      C                   EVAL      WIBANY = 'N'
      C                   EVAL      WAccLine = 'N'
      C                   IF        %SUBST(PInpParm1:1:1) = '/'
@@ -1145,50 +1143,50 @@
      C                   ELSE
      C                   EVAL      PMAccount = PInpParm1
      C                   ENDIF
-
+ 
      C                   CALL      'AOACCTV1'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      *BLANKS       PAccType
      C                   PARM                    PMAccount
      C                   PARM                    DSSDY
-
+ 
      C                   IF        PRtnCode = *BLANKS
-
+ 
       ** If valid account, save the customer number
-
+ 
      C                   SELECT
      C                   WHEN      PAccType = '*RETAIL'
      C                             OR PAccType = '*LEDGER'
      C                   MOVEL     DSSDY         SDACNT
      C                   MOVEL     CNUM          PCustA
-
+ 
      C                   WHEN      PAccType = '*NOSTRO'
      C                   MOVEL     DSSDY         SDNOST
      C                   MOVEL     A7CUST        PCustA
-
+ 
      C                   WHEN      PAccType = '*CUSTNO'
      C                             OR PAccType = '*SHNAME'
      C                   MOVEL     DSSDY         SDCUST
      C                   MOVEL     BBCUST        PCustA
-
+ 
      C                   ENDSL
-
+ 
      C                   ELSE
-
+ 
       ** Check if account is a valid IBAN
-
+ 
      C                   IF        CFT004 = 'Y'
      C                   EXSR      SrValIBAN
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Retrieve Customer Details
-
+ 
      C                   IF        PCustA <> *BLANKS
      C                   EXSR      SrGetCus
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1205,7 +1203,7 @@
      C                   PARM                    PIBAN
      C                   PARM                    POWith
      C     WIBANR        PARM                    PONobl
-
+ 
      C                   EVAL      WIBCH1 = %SUBST(WIBANR:1:1)
      C                   EVAL      WIBCH2 = %SUBST(WIBANR:2:1)
      C                   EVAL      WIBNU1 = %SUBST(WIBANR:3:1)
@@ -1214,20 +1212,20 @@
      C   94WIBCH2        LOOKUP    Alpha                                  94
      C   94WIBNU1        LOOKUP    Numeric                                94
      C   94WIBNU1        LOOKUP    Numeric                                94
-
+ 
      C                   IF        *IN94 = *ON
      C                   CALL      'AOIBANR2'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PMAccount
      C     SDACNT        PARM      *BLANKS       DSSDY
-
+ 
      C                   IF        PRtnCode = *BLANKS
      C                   EVAL      WIBANY = 'Y'
      C                   MOVEL     CNUM          PCustA
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1237,22 +1235,22 @@
       *                                                               *
       *****************************************************************
      C     SrGetCus      BEGSR
-
+ 
       ** Retrieve Customer details
-
+ 
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*KEY'        POption
      C                   PARM                    PCustA
      C                   PARM                    PCKyst
      C     SDCUST        PARM      *BLANKS       DSSDY
-
+ 
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      PRetCode = '*NRF'
      C                   ELSE
-
+ 
       ** Retrieve the ISO Country code of Country of Location
-
+ 
      C                   EVAL      PCtry = BBCOLC
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRtnCde2
@@ -1260,16 +1258,16 @@
      C                   PARM                    PCtry
      C     SDCTRY        PARM      SDCTRY        DSSDY
      C                   ENDIF
-
-
+ 
+ 
       ** Retrieve Additional Customer Details
-
+ 
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtnCde2
      C                   PARM      '*KEY'        POption
      C                   PARM                    PCustA
      C     SDACUS        PARM      SDACUS        DSLDY
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1279,19 +1277,19 @@
       *                                                               *
       *****************************************************************
      C     SrFormat      BEGSR
-
+ 
      C                   SELECT
-
+ 
       ** '/' must be followed by the inserted account line
-
+ 
      C                   WHEN      WCode = '/'
      C                   EVAL      WFrmtL = PInpParm1
-
+ 
       ** '1/' must be followed by Customer Name
       ** and Address Lines 1 and 2
-
+ 
      C                   WHEN      WCode = '1'
-
+ 
      C                   IF        E5CNA2 <> *BLANKS
      C                   EVAL      WFrmtL = WCodeN + %TRIM(E5CNA1)
      C                              + ' ' + %TRIM(E5CNA2)
@@ -1300,12 +1298,12 @@
      C                   ELSE
      C                   EVAL      WFrmtL = WCodeN + %TRIM(BBCNA1)
      C                   ENDIF
-
+ 
       ** '2/' must be followed by Customer Name
       ** and Address Lines 3 and 4
-
+ 
      C                   WHEN      WCode = '2'
-
+ 
      C                   IF        E5CNA4 <> *BLANKS
      C                   EVAL      WFrmtL = WCodeN + %TRIM(E5CNA3)
      C                              + ' ' + %TRIM(E5CNA4)
@@ -1314,12 +1312,12 @@
      C                   ELSE
      C                   EVAL      WFrmtL = WCodeN + %TRIM(BBCNA2)
      C                   ENDIF
-
+ 
       ** '3/' must be followed by ISO Country Code
       ** City and ZipCode
-
+ 
      C                   WHEN      WCode = '3'
-
+ 
      C                   IF        E5CITY <> *BLANKS
      C                   EVAL      WFrmtL = WCodeN + %TRIM(A4ISOC)
      C                              + '/' + %TRIM(E5CITY)
@@ -1328,25 +1326,25 @@
      C                   EVAL      WFrmtL = WCodeN + %TRIM(A4ISOC)
      C                                + '/' + %TRIM(BBCRTN)
      C                   ENDIF
-
+ 
      C                   ENDSL
-
+ 
      C                   EVAL      AddrLine = WFrmtL
-
+ 
       ** If not enough information, set return code to error
-
+ 
      C                   IF        WInfoA1 = *BLANKS
      C                   EVAL      PRetCode = '*NRF'
      C                   ELSE
-
+ 
       ** Else, save the format to output parameter
       ** and check for excess lines
-
+ 
      C                   EVAL      WLayOut = WFrmtL
      C                   EXSR      SrTranOM
      C                   EXSR      SrExcess
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1356,11 +1354,11 @@
       *                                                               *
       *****************************************************************
      C     SrExcess      BEGSR
-
+ 
      C                   EVAL      WCtr = 35
      C                   FOR       Y = 1 TO 5
      C                   EVAL      Z = %CHECKR(' ':WFrmtL)
-
+ 
      C                   IF        Z > WCtr
      C                             AND %SUBST(WFrmtL:WCtr+1:35) <> *BLANKS
      C                             AND WExsLine > 0
@@ -1369,13 +1367,13 @@
      C                   EVAL      WCtr = WCtr + 33
      C                   EVAL      WExsLine = WExsLine - 1
      C                   EXSR      SrTranOM
-
+ 
      C                   ELSE
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C                   ENDFOR
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1385,18 +1383,18 @@
       *                                                               *
       *****************************************************************
      C     SrTranSeq     BEGSR
-
+ 
      C                   EVAL      NumCExist = 'N'
      C                   MOVEA     InpParmDS     WTrnArr
-
+ 
      C                   FOR       X = 1 TO 5
      C                   EVAL      AddrLine = WTrnArr(X)
-
+ 
      C                   EXSR      SrSaveSeq
-
+ 
       ***Check*if*code*1*to*3*is*inserted*to*continue*******************                    MD038302
       ***with*59F*validation********************************************                    MD038302
-
+ 
      C**********         IF        %CHECK(NumCode:WCode) = 0                                MD038302
      C**********                   AND WSlash1 = '/'                               MD034605 MD038302
      C**********         EVAL      NumCExist = 'Y'                                          MD038302
@@ -1407,7 +1405,7 @@
      C                   EVAL      NumCExist = 'Y'                                          MD038302
      C                   ENDIF                                                              MD038302
      C                   ENDFOR
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1418,9 +1416,9 @@
       *                                                               *
       *****************************************************************
      C     SrFmtMatch    BEGSR
-
+ 
       ** Check number of allowed excess line
-
+ 
      C                   EVAL      WExsLine = 0
      C                   SELECT
      C                   WHEN      OM50F2 = *BLANKS
@@ -1432,7 +1430,7 @@
      C                   WHEN      OM50F5 = *BLANKS
      C                   EVAL      WExsLine = 1
      C                   ENDSL
-
+ 
      C                   EXSR      SRAccIBAN                                                MD035038
      C                   EVAL      WProhibit = 'N'
      C                   IF        (WIBANY = 'Y' AND SveFlg2 = 'P')
@@ -1443,19 +1441,19 @@
       ** Do not use layout with account line if existing
       ** ACOUNTLINE or ACOUNTIBAN is flagged as Prohibited
       ** or an Account line is not specified in the input
-
+ 
      C                   IF        %SUBST(OM50F1:1:1) = '/'
      C                   IF        WProhibit = 'Y' OR WAccLine = 'N'
      C                   EVAL      PRetCode = '*NRF'
      C                   EVAL      WLayFound = 'N'
      C                   LEAVESR
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
       ** If account line is specified in the input,
       ** output it as part of the layout
-
+ 
      C                   IF        WAccLine = 'Y' AND WProhibit = 'N'
      C                   EVAL      WLayOut = PInpParm1
      C                   EXSR      SrTranOM
@@ -1464,20 +1462,20 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Start formatting based on the extracted layout from OMFM
-
+ 
      C                   EVAL      FrmtLine = OM50F1 + OM50F2
      C                             + OM50F3 + OM50F4 + OM50F5
      C                   MOVEA     FrmtLine      WFmtArr
      C                   EVAL      IDX = %LOOKUP(*BLANKS:WFmtArr)
-
+ 
      C                   IF        IDX = 0
      C                   EVAL      IDX = 5
      C                   ELSE
      C                   EVAL      IDX = IDX - 1
      C                   ENDIF
-
+ 
      C                   FOR       X = 1 TO IDX
      C                   EVAL      AddrLine = WFmtArr(X)
      C                   EXSR      SrFormat
@@ -1486,7 +1484,7 @@
      C                   LEAVESR
      C                   ENDIF
      C                   ENDFOR
-
+ 
      C                   ENDSR
       *****************************************************************                     MD035038
       /EJECT                                                                                MD035038
@@ -1526,9 +1524,9 @@
       *                                                               *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PRetCode
      C                   PARM                    PCallFrom
@@ -1551,19 +1549,19 @@
      C                   PARM                    POutParm5
      C                   PARM                    PMsgID
      C                   PARM                    PErrType
-
+ 
       ** International Bank Account Number
-
+ 
      C                   EVAL      CFT004 = 'N'
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*VERIFY'     POption
      C                   PARM      'CFT004'      PMSard
-
+ 
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      CFT004 = 'Y'
      C                   ENDIF
-
+ 
      C                   EVAL      InpParmDS = PInpParm1 +
      C                             PInpParm2 + PInpParm3 +
      C                             PInpParm4 + PInpParm5

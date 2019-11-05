@@ -19,15 +19,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 AR1063971          Date 06Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1063971          Date 06Dec12               *
       *                 CLE148             Date 23Jul12               *
       *                 262545  *CREATE    Date 19Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1063971 - Access hedge details when CAS009 enhancement is  *
       *              switched on.                                     *

@@ -15,10 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD101             Date 07Dec18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER049             Date 06Dec10               *
@@ -38,9 +36,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -189,9 +184,6 @@
      D PCommDisp       S              1
      D PRtcd           S              7
      D POptn           S              7
-     D DDAPRC          S              1                                                     MD054028
-     D DDAPDR          S              8                                                     MD054028
-     D DDAPCR          S              8                                                     MD054028
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -251,10 +243,6 @@
  
      C                   PARM                    R_FACH
      C                   PARM                    R_TSTMC
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC                                     MD054028
-     C                   PARM                    DDAPDR                                     MD054028
-     C                   PARM                    DDAPCR                                     MD054028
  
       ** Account details in screen format
  

@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CER071             Date 01Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 CGL132             Date 01May13               *
       *                 CLE134             Date 01Aug12               *
@@ -40,7 +39,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field                             *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
@@ -180,7 +178,6 @@
      D CER054          S              1A                                                      CER054
      D CER045          S              1A                                                      CER045
      D CLE134          S              1A                                                      CLE134
-     D CER050          S              1A                                                      CER050
       *                                                                                       CER034
       ** Parameters for ZDATE9                                                                CER034
       *                                                                                       CER034
@@ -603,10 +600,6 @@
      C                   EVAL      DDPDCU = E5PDCU                                            CLE134
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE134
-     C                   If        CER050 = 'Y'                                               CER050
-     C                   Eval      DDAPRC = E5APRC                                            CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -979,22 +972,6 @@
      C                   EVAL      CLE134 = 'Y'                                               CLE134
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE134
-      *                                                                                       CER050
-      ** Check if CER050 is enabled.                                                          CER050
-      *                                                                                       CER050
-     C                   CALL      'AOSARDR0'                                                 CER050
-     C                   Parm      *BLANKS       PRtcd                                        CER050
-     C                   Parm      '*VERIFY'     POptn                                        CER050
-     C                   Parm      'CER050'      PSard                                        CER050
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
-      *                                                                                       CER050
-     C                   Eval      CER050 = 'N'                                               CER050
-      *                                                                                       CER050
-     C                   If        PRtcd = *BLANKS                                            CER050
-     C                   Eval      CER050 = 'Y'                                               CER050
-     C                   Endif                                                                CER050
-      *                                                                                       CER050
-
      C                   ENDSR
       ********************************************************************
       /EJECT

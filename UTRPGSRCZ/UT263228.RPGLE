@@ -11,14 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CLE141             Date 08Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
       *                 263228  *CREATE    Date 01Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -26,24 +24,24 @@
       *                                                               *
       *****************************************************************
      FCLOAN     UP   E           K DISK    INCLUDE(CLOANCLF)
-
+ 
      D/EJECT
-
+ 
      D                 DS
      D LTYP
      D  DSLTYP1                1      1A
-
+ 
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** Main Processing Control
-
+ 
       ** Process Request.
-
+ 
      C                   IF        INTR = 0
      C                             AND (DSLTYP1 = 'X'
      C                             OR DSLTYP1 = 'Y'
@@ -56,29 +54,29 @@
       *  SRCLOANCL - Process Loan Details.                            *
       *****************************************************************
      C     SRCLOANCL     BEGSR
-
+ 
       ** Set Spread Indicator.
-
+ 
      C                   IF        SPIN = *BLANKS
      C                   IF        BRTE <> 0
      C                             OR RTSP <> 0
      C                   EVAL      SPIN = 'A'
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Set Interest Rate.
-
+ 
      C                   SELECT
      C                   WHEN      SPIN = 'A'
      C     BRTE          ADD       RTSP          INTR
      C                   ENDSL
-
+ 
       ** Update Loan Details.
-
+ 
      C                   IF        INTR <> 0
      C                   UPDATE(E) CLOANCLF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/SPACE

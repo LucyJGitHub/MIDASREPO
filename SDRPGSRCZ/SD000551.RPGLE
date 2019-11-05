@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD039670           Date 26Jul16               *
       *                 MD030211A          Date 05Sep14               *
       *                 MD030211           Date 01Sep14               *
@@ -27,7 +26,6 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039670 - FATCA Housekeeping program                        *

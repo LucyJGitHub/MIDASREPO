@@ -11,10 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052465           Date 10Jan19               *      
-      *                 MD040876           Date 13Sep16               *
-      *                 CGL177             Date 11Jan16               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
       *                 MD036375           Date 02Nov15               *
       *                 MD036356           Date 02Nov15               *
       *                 MD035388           Date 20Oct15               *
@@ -51,9 +49,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
-      *  MD052465 - Not possible to capture mandatory US TIN for      *
-      *             FATCA reporting                                   *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036375 - Exception 3 is displayed even TIN details are comp*
@@ -245,9 +240,6 @@
      D  PAACCZ                46     47                                                     MD036356
      D  PAINSF                48     48                                                     MD036356
                                                                                             MD036356
-      ** External DS for CRS API Format Definition File - Detail                            MD052465
-     D TranInCRDD    E DS                  EXTNAME(SDCRDDPD)                                MD052465
-     D                                     PREFIX(CR)                                       MD052465
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -1200,7 +1192,6 @@
      C**********         PARM                    DDCUST                            MD027140 MD042692
      C                   PARM                    PHasIndicia                                MD042692
      C                   PARM      'C'           POrigin                                    MD042692
-     C                   PARM                    TranInCRDD                                 MD052465
  
       ** OUTPUTS
  
@@ -1372,7 +1363,6 @@
      C                   PARM                    PAPARM                                     MD036356
      C                   PARM                    V_CUAHArr                                  MD045238
      C                   PARM                    CurCrsdDets                                MD035388
-     C                   PARM                    TranInCRDD                                 MD052645
  
       ** OUTPUTS
  

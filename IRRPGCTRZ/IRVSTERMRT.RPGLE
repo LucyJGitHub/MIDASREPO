@@ -21,9 +21,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD051346           Date 17Jul18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051346           Date 17Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD033488           Date 11Mar15               *
       *                 245692             Date 10Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,10 +44,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
-      *             rate                                              *
-      *           - Blank short-term rate not rejected on backvalued  *
-      *             SIRS deal                                         *
       *  MD051346 - The system does not allow to change the maturity  *
       *             date in OIS deal.                                 *
       *           - Ensure zero short term rate is accepted by the    *
@@ -360,8 +355,7 @@
      C     CIR005        OREQ      'Y'                                          CIR005
      C     ZRFDT         ANDLT     BJRDNB                                       CIR005
      C     WValBDC       ANDEQ     'Y'                                          CIR005
-     C**********         IF        PDealTyp <> 'RS' AND PRatChgFq <> 'O'           MD051346 MD054095
-     C                   IF        PRatChgFq <> 'O'                                         MD054095
+     C                   IF        PDealTyp <> 'RS' AND PRatChgFq <> 'O'                    MD051346
      C                   MOVE      'MMA0032'     Msgid1
      C                   MOVE      'Y'           ErrorFound
      C                   ENDIF                                                              MD051346

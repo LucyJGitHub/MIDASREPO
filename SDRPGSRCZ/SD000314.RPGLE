@@ -18,9 +18,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052723           Date 27Feb19               *
-      *                 MD052526           Date 07Jan19               *
+      *  Last Amend No. MD052723           Date 27Feb19               *
+      *  Prev Amend No. MD052526           Date 07Jan19               *
       *                 MD051393           Date 29Jun18               *
       *                 MD051045           Date 01Jun18               *
       *                 MD039670           Date 26Jul16               *
@@ -28,12 +27,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052723 - Account Holder customer asset not included in     *
       *             high value calculation. Added asset calculation   *
       *             for non-account holders' customer.                *
       *  MD052526 - CRS High Value A/C Ident. Tool (SD000314)         *
-      *             calculated wrong Total Asset amount               *
+      *             calculated wrong Total Asset amount               *      
       *  MD051393 - FATCAFilerCategory error                          *
       *  MD051045 - CRS High Value Account Identification Tool gets   *
       *             database error when run in Update Mode            *

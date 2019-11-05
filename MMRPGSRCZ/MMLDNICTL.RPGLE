@@ -33,10 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -126,9 +124,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
@@ -1875,8 +1870,6 @@
      C                   PARM                    PayNostro
      C                   PARM      HKFRNT        @@FRNT           20            CPB002
      C                   PARM                    ExtData                        CAP004
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -2103,9 +2096,6 @@
      C                   PARM                    ReturnCode                     CAP011
       * (Current) Deal in file format                                           CAP011
      C                   PARM                    DealFilfmt                     CAP011
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
      C/COPY WNCPYSRC,MMLDNICC11
                                                                                 CAP011
       * OUTPUTS                                                                 CAP011
@@ -2214,9 +2204,6 @@
      C                   PARM                    ReturnCode
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
  
       * OUTPUTS
       * (Current) Deal in screen format

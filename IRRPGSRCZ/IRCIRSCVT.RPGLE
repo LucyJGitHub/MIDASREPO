@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD038303           Date 13May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038303           Date 13May16               *
       *                 245692             Date 11Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -71,8 +70,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
-      *             rate                                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038303 - Format zero value of buy-amount if it was entered *
       *             by user.                                          *
@@ -138,7 +135,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -157,47 +154,47 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       * Deal Status
      D*@STSA****       S             24    DIM(2) CTDATA PERRCD(1)                            CIR008
      D @STSA           S             24    DIM(5) CTDATA PERRCD(1)                            CIR008
-
+ 
       * Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(DEALSDG)
      D DGLCD         E                     EXTFLD(LCD)
@@ -205,7 +202,7 @@
                                                                                               CLE025
       * Deal Extension in File Format                                                         CLE025
      D DealXFilFmt   E DS                  EXTNAME(DLDLDGQD)                                  CLE025
-
+ 
       * Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(IRCIRSPD)
      D**BsDayScn*************243    370                                                CIR005 218641
@@ -213,47 +210,47 @@
      D**BsDayScn*************263    390                                                CAS005 CLE025
      D**BsDayScn             278    405                                               CLE025 BUG6472
      D  BsDayScn             288    415                                                      BUG6472
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
-
+ 
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
-
+ 
      D SDBROK        E DS                  EXTNAME(SDBROKPD)                                  208053
       ** EXTERNAL DS FOR CURRENCY DETAILS                                                     208053
                                                                                               208053
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
-
+ 
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
-
+ 
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -268,7 +265,7 @@
      D PRTCD           S              7A                                                      CAS001
      D POPTN           S              7A                                                      CAS001
      D PSARD           S              6A                                                      CAS001
-
+ 
      D CIR011          S              1A                                                      CIR011
      D PNDADJ          S              1  0                                                    CIR011
      D PUFRFD          S              2  0                                                    CIR011
@@ -280,7 +277,7 @@
                                                                                               CAS005
       ** Variables defined for CAS005                                                         CAS005
      D CAS005          S              1A                                                      CAS005
-
+ 
      D CLE025          S              1A                                                      CLE025
                                                                                               CLE025
       ** Variables defined for CAS008                                                         CAS008
@@ -643,7 +640,7 @@
      C*
      C**  Format the rate, using 7 decimal places
      C*
-     C*****@@SCRT*****   IFNE      0                                                        MD054095
+     C     @@SCRT        IFNE      0
      C     @@SCRT        MULT      10000000      @@AMTW
      C                   Z-ADD     7             @@QECN
      C     @@AMTW        IFLT      0                                                         BUG6472
@@ -651,7 +648,7 @@
      C                   ENDIF                                                               BUG6472
      C                   EXSR      FMTAMT
      C                   MOVE      @@AMTD        SUEINR
-     C***********        END                                                                MD054095
+     C                   END
      C                   END
       *                                                                                      BUG6472
       ** Output sign of our short term interest rate                                         BUG6472
@@ -859,7 +856,7 @@
      C*
      C**  Format the rate, using 7 decimal places
      C*
-     C*****@@SCRT*****   IFNE      0                                                        MD054095
+     C     @@SCRT        IFNE      0
      C     @@SCRT        MULT      10000000      @@AMTW
      C                   Z-ADD     7             @@QECN
      C     @@AMTW        IFLT      0                                                         BUG6472
@@ -867,7 +864,7 @@
      C                   ENDIF                                                               BUG6472
      C                   EXSR      FMTAMT
      C                   MOVE      @@AMTD        STEINR
-     C**********         END                                                                MD054095
+     C                   END
      C                   END
       *                                                                                      BUG6472
       ** Output sign of their short term interest rate                                       BUG6472

@@ -11,12 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *
       *****************************************************************

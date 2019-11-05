@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
-      *                 MD052296           Date 26Nov18               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD052296           Date 26Nov18               *
       *                 MD048443           Date 08Dec17               *
       *                 MD050228           Date 31May18               *
       *                 MD050026           Date 06Apr18               *
@@ -109,7 +108,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD052296 - Problems caused by use of special characters      *
       *  MD048443 - Past due loan generated without loan type subtype *

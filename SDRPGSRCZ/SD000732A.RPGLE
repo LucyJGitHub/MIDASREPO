@@ -22,9 +22,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
-      *                 MD051218           Date 06Jun18               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD051218           Date 06Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 MD027498           Date 20Jun14               *
@@ -41,7 +40,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051218 - US Indicia Tool not running properly              *
       *  MD046248 - Finastra Rebranding                               *

@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053719           Date 20Jun19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053719           Date 20Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CGL132             Date 01May13               *
       *                 CER059             Date 19Jul10               *
@@ -64,7 +63,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053719 - Compilation error due to fields not renamed       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *

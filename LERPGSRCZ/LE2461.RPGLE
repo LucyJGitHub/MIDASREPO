@@ -18,9 +18,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052819           Date 17Apr19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052819           Date 17Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
       *                 AR988331           Date 03Dec12               *
@@ -40,7 +39,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052819 - Use correct datatype for rate fixing days.        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -90,24 +88,24 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Live Loan details
      FLELOANL0  UF   E           K DISK    INFSR(*PSSR) PREFIX(L0)
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      D SValk2          S             20A   INZ('UseRateFixingDayatSt')                      MD031736
      D LDA           E DS           256    EXTNAME(LDA)
       *
@@ -121,41 +119,41 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** Externally described DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Externally described DS for Base Rate details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       *
       ** Externally described DS for Historic Base rate
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D WRUN            S              1
      D WBaseRate       S             11P 7
      D PDaysBckS       S              2S 0                                                  MD052819
@@ -190,7 +188,7 @@
      D  WParm2                 6     10                                                     AR988331
      D  WParm3                11     15                                                     AR988331
      D  WParm4                16     20                                                     AR988331
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -201,11 +199,11 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
-
+ 
       *                                                                                     AR988331
       ** If Rate Fixing on Start/Value Date is to be done, check if the                     AR988331
       ** new value of the Base Rate Code will be used on Start Date.                        AR988331

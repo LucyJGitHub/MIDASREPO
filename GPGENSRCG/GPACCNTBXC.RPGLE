@@ -12,9 +12,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CGP017             Date 06Aug12               *
       *                 AR645170           Date 07Nov10               *
       *                 CRE073             Date 06Dec10               *
@@ -31,7 +30,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
@@ -50,7 +48,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
-
+ 
 O    FGZACCNTBL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZACCNTBXCO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -61,7 +59,7 @@ O    F                                     USROPN
 O
 O    D Z_ACCNTBXC    E DS                  EXTNAME(GZACCNTBXC)
 O    D G_ACCNTBXC    E DS                  EXTNAME(GZACCNTBXC) PREFIX(G_)
-
+ 
      D SVATCRST        S                   LIKE(G_ATCRST)                                     CGP017
      D SVATSUBO        S                   LIKE(G_ATSUBO)                                     CGP017
      D SVATITAX        S                   LIKE(G_ATITAX)                                     CGP017
@@ -81,7 +79,7 @@ O    D G_ACCNTBXC    E DS                  EXTNAME(GZACCNTBXC) PREFIX(G_)
      D SVATCRMD        S                   LIKE(G_ATCRMD)                                     CGP017
                                                                                               CGP017
       * ENTRY PARAMETERS
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -170,9 +168,9 @@ O    C                   WRITE     W_ACCNTBD0
 O    C                   ENDIF
      C                   ENDIF                                                                CGP017
 O    C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
      C/SPACE 5                                                                              BUG16715
       ********************************************************************                  BUG16715
       * DELAMAD - Delete GPAMADL0                                                           BUG16715
@@ -244,7 +242,7 @@ O    C                   ENDIF
      C                   ENDIF                                                              BUG16715
                                                                                             BUG16715
      C                   ENDSR                                                              BUG16715
-
+ 
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -267,7 +265,7 @@ O    C                   KFLD                    ATCCY
 O    C                   KFLD                    ATACOD
 O    C                   KFLD                    ATACSQ
 O    C                   KFLD                    ATBRCA
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -275,15 +273,15 @@ O    C                   KFLD                    ATBRCA
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
-
+ 
      C     W#RUN         IFEQ      *BLANKS
-
+ 
      C                   MOVE      'Y'           W#RUN             1
-
+ 
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
-
+ 
      C                   DUMP
       *
       * If no identified cause of error
@@ -298,10 +296,10 @@ O    C                   KFLD                    ATBRCA
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
-
+ 
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *********************************************************************

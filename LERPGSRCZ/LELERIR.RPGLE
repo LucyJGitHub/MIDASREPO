@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 AR702532           Date 13Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR702532           Date 13Jan15               *
       *                 MD028338           Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -50,7 +49,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR702532 - After rejection, there is no WIP record but RSTS  *
       *             is still 'R'. Pass reject action parameter to     *

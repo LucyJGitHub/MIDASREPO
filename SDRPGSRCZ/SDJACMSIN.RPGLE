@@ -12,9 +12,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CER071             Date 01Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
       *                 MD027327           Date 03Jun14               *
       *                 MD027198           Date 26May14               *
       *                 MD026549           Date 12May14               *
@@ -35,7 +34,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD027327 - US Green Card System Value did not Update         *

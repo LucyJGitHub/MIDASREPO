@@ -17,9 +17,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -62,7 +61,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -114,14 +112,14 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
-
+ 
      FMMDEAMLL  IF   E           K DISK    INFSR(*PSSR)
-
+ 
      FDEPTRANPD O    E           K DISK    INFSR(*PSSR)
      FDEPPOSNPD O    E           K DISK    INFSR(*PSSR)
      FDEPEVNTPD O    E           K DISK    INFSR(*PSSR)
      FDEPCASHPD O    E           K DISK    INFSR(*PSSR)
-
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -139,26 +137,26 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
-
+ 
       *
       **  Deal types
      D*TABCDE**********S              2    DIM(15) CTDATA PERRCD(1)                 198289
      D*TABTYP**********S             17    DIM(15) ALT(TABCDE)                      198289
      D TABCDE          S              2    DIM(17) CTDATA PERRCD(1)                 198289
      D TABTYP          S             17    DIM(17) ALT(TABCDE)                      198289
-
-
+ 
+ 
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
      D DEALDC        E DS                  EXTNAME(DEALSDC)
-
-
+ 
+ 
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D***W#PAYA*                3     14                                                      CGL029
@@ -186,16 +184,16 @@
      D W#TABT          DS
      D  W#ASLI                 1      1
      D  W#TDES                 2     17
-
-
+ 
+ 
       ** DEFINE FIELDS FOR ZDATE10
      D                 DS
      D ZWDTIN                  1      8S 0
      D  ZWYYYY                 1      4S 0
      D  ZWMTH                  5      6S 0
      D  ZWDAY                  7      8S 0
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -206,7 +204,7 @@
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
                                                                                               208221

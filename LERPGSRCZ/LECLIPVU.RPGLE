@@ -33,10 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
-      *                 MD053143           Date 04Apr19               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD053143           Date 04Apr19               *
       *                 MD052478           Date 15Jan19               *
       *                 MD052134           Date 18Oct18               *
       *                 MD034521A          Date 14Sep15               *
@@ -139,9 +137,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated                                     *
-      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
       *             applied for loan start date rate fixing.          *
@@ -1031,20 +1026,6 @@
      C                   MOVEL     TransQ        TranInExt                                    CER049
      C/COPY WNCPYSRC,LECLIPXC04
      C                   MOVEL     Extdata500    Extdata
-      ** ExtData Buffer Pointer                                                             MD054028
-     C                   Z-ADD     1             eBfp              4 0                      MD054028
-     C                   MOVEL     'LECLEXPD'    Filename                                   MD054028
-     C                   EXSR      GETRCDLN                                                 MD054028
-     C                   ADD       RecordLen     eBfp                                       MD054028
-      ** CER050 Fields                                                                      MD054028
-     C                   IF        CER050 = 'Y'                                             MD054028
-     C                   EVAL      DDAPRC = %SUBST(Extdata500:eBfp:1)                       MD054028
-     C                   ADD       1             eBfp                                       MD054028
-     C                   EVAL      DDPREM = %SUBST(Extdata500:eBfp:15)                      MD054028
-     C                   ADD       15            eBfp                                       MD054028
-     C                   EVAL      DDAPRR = %SUBST(Extdata500:eBfp:8)                       MD054028
-     C                   ADD       8             eBfp                                       MD054028
-     C                   ENDIF                                                              MD054028
      C                   MOVEL     RegData500    RegData                                      CER001
 
       * Reset variables gradually updated
@@ -1493,24 +1474,6 @@
      C                   ENDIF
 
      C                   SETON                                        LR
-     C     DDAPRC        Ifeq      'N'                                                        CER050
-     C     DDAPRR        Ifne      *Blanks                                                    CER050
-     C                   Move      *Blanks       DDAPRR                                       CER050
-     C                   Endif                                                                CER050
-     C     DDPREM        Ifne      *Blanks                                                    CER050
-     C                   Move      *Blanks       DDPREM                                       CER050
-     C                   Endif                                                                CER050
-     C                   Endif                                                                CER050
-     C     DDAPRC        Ifeq      'Y'                                                        CER050
-     C     DDAPRR        Ifeq      *Blanks                                                    CER050
-     C     @DDAPRR       andne     *Blanks                                                    CER050
-     C                   Move      @DDAPRR       DDAPRR                                       CER050
-     C                   Endif                                                                CER050
-     C     DDPREM        Ifeq      *Blanks                                                    CER050
-     C     @DDPREM       andne     *Blanks                                                    CER050
-     C                   Move      @DDPREM       DDPREM                                       CER050
-     C                   Endif                                                                CER050
-     C                   Endif                                                                CER050
 
       ** If action is for Update, get the correct record information                         BUG4685
       ** from file                                                                           BUG4685
@@ -1557,9 +1520,6 @@
      C**********                                     + InfData + RegData           MD020605 MD044880
      C                                               + InfData                              MD044880
      C                                               + ExtData                              MD020605
-     C                                               + DDAPRC                               MD054028
-     C                                               + DDPREM                               MD054028
-     C                                               + DDAPRR                               MD054028
      C                                               + RegData                              MD044880
      C                   ENDIF                                                              MD020605
                                                                                             MD020605
@@ -1585,9 +1545,6 @@
      C**********                                     + InfData + RegData             CER001 MD044880
      C                                               + InfData                              MD044880
      C                                               + ExtData                                CER001
-     C                                               + DDAPRC                               MD054028
-     C                                               + DDPREM                               MD054028
-     C                                               + DDAPRR                               MD054028
      C                                               + RegData                              MD044880
      C                   ENDIF                                                               BUG4685
 
@@ -1924,10 +1881,6 @@
                                                                                               CLE141
       ** Business Day Convention Screen Detail                                                CLE141
      C                   PARM                    TranInSeven                                  CLE141
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDPREM           15                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
 
       * OUTPUTS
 
@@ -1978,9 +1931,6 @@
      C                   PARM                    APFOTranID       20                        MD032052
      C**********         PARM                    WBLKACCT                         MD022807 MD022807C
                                                                                               247441
-     C                   MOVE      DDAPRC        @DDAPRC           1                        MD054028
-     C                   MOVE      DDPREM        @DDPREM          15                        MD054028
-     C                   MOVE      DDAPRR        @DDAPRR           8                        MD054028
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2852,16 +2802,6 @@
      C                   EVAL      VL_CLBTB5 = DDBTB5                                         247545
      C                   EVAL      VL_CLBTB6 = DDBTB6                                         247545
                                                                                               247545
-     C                   IF        CER050 = 'Y'                                             MD054028
-     C                   EVAL      VL_CLAPRC = DDAPRC                                       MD054028
-     C     DDAPRC        IFEQ      'Y'                                                      MD054028
-     C     DDPREM        ANDNE     *BLANKS                                                  MD054028
-     C                   EVAL      VL_CLPREM = %DECH(%TRIM(DDPREM):13:2)*100                MD054028
-     C                   ELSE                                                               MD054028
-     C                   EVAL      VL_CLPREM = 0                                            MD054028
-     C                   ENDIF                                                              MD054028
-     C                   ENDIF                                                              MD054028
-      * 	                                                                                MD054028
       ** Setup work field                                                                    BUG3721
                                                                                              BUG3721
      C                   MOVE      'N'           WPRCS2            1                         BUG3721
@@ -2884,18 +2824,11 @@
       * Customer loans - file formats
      C                   PARM                    ValidClil
      C                   PARM                    ValidClik
-      *                                                                                     MD054028
-     C                   PARM                    DDAPRC            1                        MD054028
-     C                   PARM                    DDPREM           15                        MD054028
-     C                   PARM                    DDAPRR            8                        MD054028
 
       * Output parameters
       * Customer loans Details - screen formats 1
      C                   PARM                    CurClPrim
 
-     C                   MOVE      DDAPRC        @DDAPRC                                    MD054028
-     C                   MOVE      DDPREM        @DDPREM                                    MD054028
-     C                   MOVE      DDAPRR        @DDAPRR                                    MD054028
       * For Amends, convert the customer loan to screen format 2
 
      C                   CALLB     'LECLIP2CT'
@@ -4350,18 +4283,6 @@
      C                   EXSR      *PSSR                                                      CLE106
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                                CLE106
-      *                                                                                     MD054028
-      ** Check if CER050 is ON                                                              MD054028
-     C                   CallB     'AOSARDR0'                                               MD054028
-     C                   Parm      *Blanks       PRTCD                                      MD054028
-     C                   Parm      '*VERIFY'     POPTN                                      MD054028
-     C                   Parm      'CER050'      PSARD                                      MD054028
-     C     SCSARD        Parm      SCSARD        DSFDY                                      MD054028
-      *                                                                                     MD054028
-     C                   Move      'N'           CER050            1                        MD054028
-     C                   If        PRTCD = *Blanks                                          MD054028
-     C                   Eval      CER050 = 'Y'                                             MD054028
-     C                   Endif                                                              MD054028
       *                                                                                       CLE168
       ** Access SAR details file                                                              CLE168
       *                                                                                       CLE168
@@ -4404,23 +4325,6 @@
      C                   EVAL      KRCTP = 'A'                                                CLE031
      C     CHKFAC        CHAIN     FCLTY                                                      CLE031
      C                   ENDSR                                                                CLE031
-      ****************************************************************                      MD054028
-      *  Get Record Lengths of Transaction Data Blocks               *                      MD054028
-      ****************************************************************                      MD054028
-     C     GETRCDLN      BEGSR                                                              MD054028
-                                                                                            MD054028
-     C                   CALLB     'UTGETRCDLN'                                             MD054028
-     C                   PARM                    ReturnCode       10                        MD054028
-     C                   PARM      *ZERO         RecordLen         5 0                      MD054028
-     C                   PARM                    FileName         10                        MD054028
-     C                   PARM      '*LIBL     '  FileLib          10                        MD054028
-                                                                                            MD054028
-      ** If file not found (or any other error) shut down the program                       MD054028
-     C     ReturnCode    Ifne      *Blanks                                                  MD054028
-     C                   EXSR      *pssr                                                    MD054028
-     C                   EndIf                                                              MD054028
-                                                                                            MD054028
-     C                   ENDSR                                                              MD054028
       *****************************************************************                    AR1095041
       /EJECT                                                                               AR1095041
       *****************************************************************                    AR1095041

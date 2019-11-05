@@ -10,9 +10,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CER050             Date 16Jun19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      CDL098             Date 06Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CDL098             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -64,7 +63,6 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       CER050 - Annualised Percentage Rate                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CDL098 - Cancelled Deal Numbers                             */
 /*       BUG7956 - FOOB in DLC1201                                   */
@@ -168,7 +166,6 @@
              DCL        VAR(&CDL012) TYPE(*CHAR) LEN(1)                                   /*CDL012*/
              DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1)                                   /*CLE025*/
              DCL        VAR(&CDL098) TYPE(*CHAR) LEN(1)                                   /*CDL098*/
-             DCL        VAR(&CER050) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CER050*/
 /* */                                                                 /*AUS019*/
 /** NEW PARAMETER: DEAL TYPE SELECTION (FX, MM OR BLANKS FOR BOTH) */ /*AUS019*/
 /* */                                                                 /*AUS019*/
@@ -198,7 +195,7 @@
 /*/COPY WNCPYSRC,DLC1201008                                          /*S01408*/
 /*                                                                   /*S01408*/
 /**/                                                                  /*048933*/
-
+ 
 /**/
 /********    DCLDTAARA  DTAARA(DLSTAT)                                  S01179*/
 /********    DCLDTAARA  DTAARA(MMOD)                                    S01179*/
@@ -233,15 +230,6 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &AOFMT)                      /*CLE025*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CLE025) VALUE('Y'))                                        /*CLE025*/
-                                                                                          /*CLE025*/
-/** Check if CER050 is On                            */                                   /*CER050*/
-                                                                                          /*CER050*/
-             CHGVAR     VAR(&RTCD) VALUE(' ')                                             /*CER050*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER050*/
-             CHGVAR     VAR(&SARD) VALUE('CER050')                                        /*CER050*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &AOFMT)                      /*CER050*/
-             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CER050) +
-                          VALUE('Y'))                                                     /*CER050*/
 /*                                                                      CCB009*/
 /** Check for Switchable feature CCB009.                                CCB009*/
 /*                                                                      CCB009*/
@@ -355,12 +343,6 @@
                 MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                         /*CLE025*/
              ENDDO                                                                        /*CLE025*/
                                                                                           /*CLE025*/
-             IF         COND(&CER050 *EQ 'Y') THEN(DO)                                    /*CER050*/
-                RMVJRNCHG  JRN(ICJRN) FILE((DLAPRHTD) (DLHISTTD)) RCVRNG(*CURRENT) +
-                             FROMENT(&START) TOENT(&FINISH)                               /*CER050*/
-                MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                         /*CER050*/
-             ENDDO       /*CER050*/
-                                                                                          /*CER050*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
@@ -395,14 +377,6 @@
 /*                                                                   /*S01408*/
 /*/COPY WNCPYSRC,DLC1201004                                          /*S01408*/
 /*                                                                   /*S01408*/
-  IF         COND(&CER050 *EQ 'Y') THEN(DO)                                               /*CER050*/
-     RMVJRNCHG  JRN(JDLC1201) FILE((DLAPRHTD))                                            /*CER050*/
-     MONMSG     (CPF7042 CPF7049)                                                         /*CER050*/
-     RMVJRNCHG  JRN(JDLC1201) FILE((DLHISTTD))                                            /*CER050*/
-     MONMSG     (CPF7042 CPF7049)                                                         /*CER050*/
-  ENDDO       /* CER050 */
-                                                                                          /*CER050*/
-
                 ENDJRNPF   FILE(*ALL) JRN(JDLC1201)                   /*048933*/
                 MONMSG     MSGID(CPF7032)                             /*048933*/
                 DLTJRN     JRN(JDLC1201)                              /*048933*/
@@ -432,15 +406,6 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
 /***********              DEALSDE DEALSDF DEALSDG) JRN(JDLC1201) +    /*S01444*/
 /***********              IMAGES(*BOTH) OMTJRNE(*OPNCLO)  */   /*048933 S01444*/
 /*/COPY WNCPYSRC,DLC1201021                                          */
-  IF         COND(&CER050 *EQ 'Y') THEN(DO)                                               /*CER050*/
-     STRJRNPF   FILE(DLAPRHTD) JRN(JDLC1201) IMAGES(*BOTH) OMTJRNE(*OPNCLO) +
-                                                                                          /*CER050*/
-     MONMSG     MSGID(CPF7030)                                                            /*CER050*/
-     STRJRNPF   FILE(DLHISTTD) JRN(JDLC1201) IMAGES(*BOTH) OMTJRNE(*OPNCLO) +
-                                                                                          /*CER050*/
-     MONMSG     MSGID(CPF7030)                                                            /*CER050*/
-  ENDDO       /*CER050*/
-                                                                                          /*CER050*/
              STRJRNPF   FILE(ACCNTAB BKRATAA DEALSDB DEALSDC DEALSDD +
                           DEALSDE DEALSDF DEALSDG DLBHISPD DLCHISPD +
                           DLDHISPD DLEHISPD DLGHISPD) JRN(JDLC1201) +
@@ -568,7 +533,7 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
                 SNDMSG     MSG('Deals by customer this month report')         +
                            TOMSGQ(MRUNQ)
 /************** CALL       PGM(DL1060)                                /*S01117*/
-
+ 
 /***REPORT*BY*SYSTEM***/                                  /*S01117*/  /*048932*/
 /************IF    COND(&RLEV *EQ 'S') THEN(CALL PGM(DL1060)) *S01117* *E27942*/
 /************IF         COND(&RLEV *EQ 'S' *OR &RLEV *EQ ' ') +
@@ -790,13 +755,6 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
 /***********              (DEALSDB) (DEALSDC) (DEALSDD) (DEALSDE) +   /*S01444*/
 /***********              (DEALSDF) (DEALSDG))              */ /*048933 S01444*/
 /*/COPY WNCPYSRC,DLC1201015                                          */
-  IF         COND(&CER050 *EQ 'Y') THEN(DO)                                               /*CER050*/
-     RMVJRNCHG  JRN(JDLC1201) FILE((DLAPRHTD))                                            /*CER050*/
-     MONMSG     (CPF7042 CPF7049)                                                         /*CER050*/
-     RMVJRNCHG  JRN(JDLC1201) FILE((DLHISTTD))                                            /*CER050*/
-     MONMSG     (CPF7042 CPF7049)                                                         /*CER050*/
-  ENDDO       /*CER050*/
-                                                                                          /*CER050*/
                 RMVJRNCHG  JRN(JDLC1201) FILE((ACCNTAB) (BKRATAA) +
                           (DEALSDB) (DEALSDC) (DEALSDD) (DEALSDE) +
                           (DEALSDF) (DEALSDG) (DLBHISPD) (DLCHISPD) +
@@ -868,12 +826,6 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
              MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
                                                                       /*CCB009*/
 /*/COPY WNCPYSRC,DLC1201023                                          */
-  IF         COND(&CER050 *EQ 'Y') THEN(DO)                                               /*CER050*/
-     RMVJRNCHG  JRN(ICJRN) FILE((DLAPRHTD) (DLHISTTD)) RCVRNG(*CURRENT) +
-                  FROMENT(&START) TOENT(&FINISH)                                          /*CER050*/
-     MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                                    /*CER050*/
-  ENDDO       /*CER050*/
-                                                                                          /*CER050*/
              IF         COND(&CIR003 *EQ 'Y') THEN(DO)                                    /*CIR003*/
                  RMVJRNCHG  JRN(ICJRN) FILE(DLGXSTPD) +
                    RCVRNG(*CURRENT) FROMENT(&START) TOENT(&FINISH)                        /*CIR003*/

@@ -20,14 +20,12 @@
       *                                                               *
       *  Called By : UTCDL0502                                        *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
-      *                 CDL099             Date 06Oct17               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
       *                 AR317892 *Create   Date 26Jul12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR317892 - Utility that will check corrupted FSRRAT fields   *

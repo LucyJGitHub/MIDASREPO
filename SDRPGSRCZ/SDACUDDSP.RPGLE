@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -44,7 +43,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
@@ -421,17 +419,6 @@
      C                   EVAL      *IN84 = *ON                                                CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
-      ** Switchable feature CER050                                                            CER050
-                                                                                              CER050
-     C                   IF        CER050 = 'Y'                                               CER050
-     C                   If        DDACTN = 'I' and DDAPRC = *Blank                           CER050
-     C                   Eval      DDAPRC = 'Y'                                               CER050
-     C                   Endif                                                                CER050
-     C                   Eval      *IN82 = *OFF                                               CER050
-     C                   ELSE                                                                 CER050
-     C                   Eval      *IN82 = *ON                                                CER050
-     C                   ENDIF                                                                CER050
-                                                                                              CER050
       ** If delete, enable F10                                                              BUG22133
                                                                                             BUG22133
      C                   IF        DDACTN = 'D'                                             BUG22133
@@ -674,20 +661,6 @@
      C                   ELSE                                                                 CLE134
      C                   EVAL      *IN89 = *OFF                                               CLE134
      C                   ENDIF                                                                CLE134
-      *                                                                                       CER050
-      ** Call AOSARDR0 to check for CER050                                                    CER050
-      *                                                                                       CER050
-     C                   CALL      'AOSARDR0'                                                 CER050
-     C                   PARM      *BLANKS       PRtcd                                        CER050
-     C                   PARM      '*VERIFY'     POptn                                        CER050
-     C                   PARM      'CER050'      PSard                                        CER050
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
-      *                                                                                       CER050
-     C                   IF        PRtcd = *BLANKS                                            CER050
-     C                   move      'Y'           CER050            1                          CER050
-     C                   ELSE                                                                 CER050
-     C                   EVAL      CER050 = 'N'                                               CER050
-     C                   ENDIF                                                                CER050
 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SD *DSP

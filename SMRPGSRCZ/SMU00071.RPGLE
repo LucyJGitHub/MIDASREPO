@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CER071             Date 01Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -26,7 +25,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *

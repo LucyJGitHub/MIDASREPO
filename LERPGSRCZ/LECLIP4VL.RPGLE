@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052135           Date 23Nov18               *
-      *                 CLE071             Date 18Jul18               *
+      *  Last Amend No. MD052135           Date 23Nov18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 AR567846           Date 01Aug12               *
@@ -49,7 +48,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052135 - LE: Inconsistency in 'Reporting Past Due Initial  *
       *             Date' and 'Basel II Initial Date                  *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *

@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054037           Date 23Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD044588           Date 09Mar17               *
       *                 CFT049             Date 20Feb15               *
       *                 AR898165           Date 10Nov14               *
@@ -122,8 +121,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
-      *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044588 - Transactions sent via SOAP that falls under       *
@@ -281,8 +278,7 @@
       * Outgoing payment extension file
      F***OTPAYXL0  UF A E           K DISK    COMMIT                            CFT014
      FOTXL0     UF A E           K DISK    COMMIT                               CFT014
-     F****OTPAYDQD  O    E             DISK    COMMIT                                257487 MD054037
-     FOTPAYQL0  UF A E           K DISK    COMMIT                                           MD054037
+     FOTPAYDQD  O    E             DISK    COMMIT                                             257487
  
       * Outgoing payments Trailer file
      FOTPAYZZ   UF   E             DISK    COMMIT
@@ -1861,19 +1857,6 @@
      C*****STMTE         ANDNE     SETT                                            BUG24776 AR402776
      C     STMTE         IFNE      SETT                                                     AR402776
      C                   MOVE      STMTE         PREF                                       BUG24776
-                                                                                            MD054037
-      ** Update pay ref on OTPAYDQD                                                         MD054037
-     C     OTPREF        CHAIN     OTPAYQD0                           99                    MD054037
-                                                                                            MD054037
-     C                   IF        *IN99 = *OFF                                             MD054037
-     C                   MOVE      STMTE         OTPREF                                     MD054037
-     C                   UPDATE    OTPAYQD0                                                 MD054037
-     C                   ELSE                                                               MD054037
-     C                   MOVEL     'OTPAYDQD'    DBFILE                                     MD054037
-     C                   MOVEL     '438'         DBASE                                      MD054037
-     C                   MOVEL     'OTPREF'      DBKEY                                      MD054037
-     C                   EXSR      *PSSR                                                    MD054037
-     C                   ENDIF                                                              MD054037
      C                   ENDIF                                                              BUG24776
  
      C/COPY WNCPYSRC,FTH00546
@@ -1968,8 +1951,6 @@
                                                                                 CFT014
      C                   If        @CFT014 = 'Y'                                CFT014
      C                             OR @CFT009 = 'Y'                             CFT009
-     C                   Eval      O2PREF = OTPREF                                          MD054037
-     C                   MOVE      STMT          O2SETM                                     MD054037
      C                   Eval      NewPmntB = ValidPmntB                        CFT014
      C**********         EndIf                                                  CFT014 195566
      C/COPY WNCPYSRC,FTH00421

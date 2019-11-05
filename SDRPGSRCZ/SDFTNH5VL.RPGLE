@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD052465           Date 10Jan19               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
-      *                 CGL177             Date 11Jan16               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
       *                 MD036460           Date 05Nov15               *
       *                 MD036380           Date 03Nov15               *
       *                 MD036356           Date 02Nov15               *
@@ -42,8 +41,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052465 - Not possible to capture mandatory US TIN for      *
-      *             FATCA reporting                                   *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036460 - FATCA US Indicia update enhancements              *
@@ -194,9 +191,6 @@
                                                                                               CGL157
       ** External DS for CRS Details                                                          CGL157
      D ValidCusD     E DS                  EXTNAME(SDVCRSNPD)                               MD036356
-      ** External DS for CRS API Format Definition File - Detail                            MD052465
-     D TranInCRDD    E DS                  EXTNAME(SDCRDDPD)                                MD052465
-     D                                     PREFIX(CR)                                       MD052465
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1084,7 +1078,6 @@
      C**********         PARM      *BLANKS       PCUST                             MD027140 MD042697
      C                   PARM                    PHasIndicia       1                        MD042697
      C                   PARM      'N'           POrigin           1                        MD042697
-     C                   PARM                    TranInCRDD                                 MD052465
  
       ** OUTPUTS
  
@@ -1275,7 +1268,6 @@
      C                   PARM                    WCLAFlag          1                        MD027561
      C                   PARM                    PAINSF                                     MD042697
      C                   PARM                    CurCrshDets                                MD035388
-     C                   PARM                    TranInCRDD                                 MD052465
  
       ** OUTPUTS
  

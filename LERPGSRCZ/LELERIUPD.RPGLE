@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 CLE071             Date 18Jul18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
       *                 243232             Date 13Mar15               *
@@ -67,7 +66,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *

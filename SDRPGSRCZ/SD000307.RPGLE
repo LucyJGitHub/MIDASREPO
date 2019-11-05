@@ -14,13 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD039670           Date 26Jul16               *
-      *                 CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD039670           Date 26Jul16               *
+      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD039670 - FATCA Housekeeping program                        *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *

@@ -18,9 +18,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CGL157             Date 17Aug15               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 CLE141             Date 08Feb16               *
@@ -89,7 +88,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *

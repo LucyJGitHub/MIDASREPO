@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR401133           Date 01Aug12               *
       *                 264044             Date 01Aug12               *
       *                 263289             Date 01Aug12               *
@@ -24,7 +23,6 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR401133- PDCL returned incorrect value for DDFAMT           *

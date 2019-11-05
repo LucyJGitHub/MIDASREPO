@@ -12,14 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CGL157             Date 17Aug15               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annnualised Percentage Rate (Recompile)             *
       *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *

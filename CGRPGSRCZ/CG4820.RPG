@@ -15,9 +15,8 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD049504           Date 02Feb18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049504           Date 02Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CER069             Date 03Jul14               *
       *                 AR1029309          Date 20Dec12               *
@@ -70,7 +69,6 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  CER050 - Annualised Percentage Rate                          *
       *  MD049504 - (1) Add extract of Posting Narrative.             *
       *             (2) Review sequence of fields in array.           *
       *  MD046248 - Finastra Rebranding                               *
@@ -151,15 +149,6 @@
      FSDCSINL7IF  E           K        DISK                                                   CGL031
      FACCNTBJ0IF  E           K        DISK                                                 BUG23986
      F/COPY WNCPYSRC,CG4820F001
-      *                                                                                       CER050
-     FACCNTBY0IF  E           K        DISK                                                   CER050
-     F            ACCNTBD0                          KRENAMEACCNTBDY                           CER050
-      *                                                                                       CER050
-     FREAPRHI0IF  E           K        DISK                                                   CER050
-      *                                                                                       CER050
-     FREAPRHI1IF  E           K        DISK                                                   CER050
-     F            REAPRHD0                          KRENAMEREAPRHD1                           CER050
-      *                                                                                       CER050
      E/COPY CGCPYSRC,CGPACKE
      E/COPY CGCPYSRC,SRERRE
      E**  Number Arrays
@@ -286,8 +275,6 @@
      I                                       26  270WACSQ                                     CGL035
      I                                       28  30 WBRCA                                     CGL035
       *                                                                                       CGL031
-     I@@PNAR      DS                                                                          CER050
-     I                                        8  15 @@W8                                      CER050
      I** Used to convert item reference from character to numeric
      I*
      ISDCURR    E DSSDCURRPD                101
@@ -727,7 +714,6 @@
       *
      C                     MOVE *BLANKS   ##NAR
      C                     MOVELPNAR      ##NAR
-     C                     MOVELPNAR      @@PNAR                                              CER050
       *
       **  Alternative Retail account number/Alternative account.
      C           ##CAP     IFNE *BLANKS
@@ -776,19 +762,8 @@
       *
       ** Interest capitalised or transaction charge.
      C                     MOVELPNAR      #W8     8
-     C                     MOVELPNAR      @@PNAR                                              CER050
      C           #W8       IFEQ 'INTEREST'
      C           #W8       OREQ 'Interest'                                                 AR1029309
-      *                                                                                       CER050
-      **      Instead of testing PNAR narrative which may be in any                           CER050
-      **      language, test for transaction type.                                            CER050
-      *                                                                                       CER050
-     C           TRAT      OREQ 91061                                                         CER050
-     C           CER050    ANDEQ'Y'                                                           CER050
-     C           TRAT      OREQ 91062                                                         CER050
-     C           CER050    ANDEQ'Y'                                                           CER050
-     C           @@W8      OREQ 'Interest'                                                    CER050
-     C           CER050    ANDEQ'Y'                                                           CER050
      C                     MOVEL'I'       ##D,5
      C                     ELSE
      C                     MOVEL'T'       ##D,5
@@ -1158,10 +1133,6 @@
       *                                                                                       CGL031
      C                     ENDIF                                                              CGL031
      C/COPY WNCPYSRC,CG4820C004
-      *                                                                                       CER050
-     C           CER050    IFEQ 'Y'                                                           CER050
-     C                     EXSR ZI@APR                                                        CER050
-     C                     ENDIF                                                              CER050
       *
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -1445,7 +1416,6 @@
      C                     Z-ADDPSTA      WSTAX  130                                          CER049
       *                                                                                       CER049
      C                     MOVELPNAR      #W8                                                 CER049
-     C                     MOVELPNAR      @@PNAR                                              CER050
      C           #W8       IFEQ 'INTEREST'                                                    CER049
      C           DRCR      ANDEQ1                                                             CER049
      C           #W8       OREQ 'Interest'                                                 AR1029309
@@ -1551,80 +1521,6 @@
      C                     ENDSR                                          089776
      C*****************************************************************   089776
      C/COPY WNCPYSRC,CG4820C007
-      *****************************************************************                       CER050
-      * Subroutine  :  ZI@APR                                         *                       CER050
-      * Function    :  Extract - Annualised Percentage Rate (APR)     *                       CER050
-      *                                                               *                       CER050
-      * Called by   :                                                 *                       CER050
-      * Calls       :                                                 *                       CER050
-      *****************************************************************                       CER050
-      *                                                                                       CER050
-     C           ZI@APR    BEGSR                                                              CER050
-      *                                                                                       CER050
-     C           KACKEY    CHAINACCNTBY0             89                                       CER050
-      *                                                                                       CER050
-     C           *IN89     IFEQ *ON                                                           CER050
-     C                     MOVE CNUM      #CNUM                                               CER050
-     C                     MOVELCCY       #CCY                                                CER050
-     C                     Z-ADDACOD      #ACOD                                               CER050
-     C                     Z-ADDACSQ      #ACSQ                                               CER050
-     C                     MOVEL'ACCNTBY0'W0FILE                                              CER050
-     C                     MOVELREIKEY    ##WK24 24                                           CER050
-     C                     MOVE BRCA      ##WK24                                              CER050
-     C                     MOVEL##WK24    W0KEY            ***************                    CER050
-     C                     Z-ADD900       W0ERNB           * DB ERROR 900*                    CER050
-     C                     MOVEL'MEM5004' W0MSGD           ***************                    CER050
-     C                     MOVEL'MIDAS  ' W0MSGF                                              CER050
-     C                     EXSR SRERR                                                         CER050
-     C                     ENDIF                                                              CER050
-      *                                                                                       CER050
-      *       Instead of testing PNAR narrative which may be in any                           CER050
-      *       langauge, test for transaction type.                                            CER050
-      *                                                                                       CER050
-     C           TRAT      IFEQ 91061                                                         CER050
-     C           #W8       ANDNE'Retenci'                                                     CER050
-     C           TRAT      OREQ 91062                                                         CER050
-     C           #W8       ANDNE'Retenci'                                                     CER050
-     C           TRAT      OREQ 91061                                                         CER050
-     C           #W8       ANDNE'Withhol'                                                     CER050
-     C           TRAT      OREQ 91062                                                         CER050
-     C           #W8       ANDNE'Withhol'                                                     CER050
-     C           #W8       OREQ 'INTEREST'                                                    CER050
-     C           #W8       OREQ 'Interest'                                                    CER050
-     C           @@W8      OREQ 'Interest'                                                    CER050
-     C           ATAPRC    IFEQ 'Y'                        B002                               CER050
-      *                                                                                       CER050
-     C           DRCR      IFEQ 0                          B003                               CER050
-     C           ACNO      CHAINREAPRHI0             89                                       CER050
-     C                     ELSE                            X003                               CER050
-     C           ACNO      CHAINREAPRHI1             89                                       CER050
-     C                     ENDIF                           E003                               CER050
-      *                                                                                       CER050
-      * LOOK FOR THE FIRST ELEMENT IN BLANK IN SERIE                                          CER050
-     C                     Z-ADD1         R1      20                                          CER050
-     C           ##R,R1    DOUEQ*BLANKS                                                       CER050
-     C           R1        OREQ 20                                                            CER050
-     C                     ADD  1         R1                                                  CER050
-     C                     ENDDO                                                              CER050
-      *                                                                                       CER050
-     C                     CLEARR#DATA                                                        CER050
-     C                     CLEARR#DEFN                                                        CER050
-     C                     CLEAR#@RDE                                                         CER050
-     C                     MOVEL'ZI_AAPR '#@RDE  10                                           CER050
-     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER050
-     C                     MOVELIAPRR     R#DATA                                              CER050
-     C                     MOVELIAPRR     ##DATA                                              CER050
-     C                     MOVEL'Rate  '  ##RDEC                                              CER050
-     C                     MOVEL'L'       ##RDET                                              CER050
-     C                     MOVEL'2'       ##DCPA                                              CER050
-     C                     MOVELR#DATA    ##D,R1                                              CER050
-     C                     MOVELR#DEFN    ##R,R1                                              CER050
-      *                                                                                       CER050
-     C                     END                             E002                               CER050
-     C                     END                             E001                               CER050
-      *                                                                                       CER050
-     C                     ENDSR                                                              CER050
-      *****************************************************************                       CER050
       /SPACE 5
       *****************************************************************
       * Subroutine  :  SRRRDE                                         *
@@ -1913,21 +1809,8 @@
      C                     MOVEL'N'       DRATRM
       *
      C                     MOVELPNAR      #W8     8
-     C                     MOVELPNAR      @@PNAR                                              CER050
      C           #W8       IFEQ 'INTEREST'
      C           #W8       OREQ 'Interest'                                                 AR1029309
-      *                                                                                       CER050
-      **      Instead of testing PNAR narrative which may be in any                           CER050
-      **      language, test for transaction type.                                            CER050
-      *                                                                                       CER050
-     C           TRAT      OREQ 91061                                                         CER050
-     C           CER050    ANDEQ'Y'                                                           CER050
-     C           TRAT      OREQ 91062                                                         CER050
-     C           CER050    ANDEQ'Y'                                                           CER050
-     C           @@W8      OREQ 'INTEREST'                                                    CER050
-     C           CER050    ANDEQ'Y'                                                           CER050
-     C           @@W8      OREQ 'Interest'                                                    CER050
-     C           CER050    ANDEQ'Y'                                                           CER050
      C                     MOVEL#TEXT1    DRPTYP
      C                     ELSE
      C                     MOVEL#TEXT2    DRPTYP
@@ -2266,19 +2149,6 @@
      C                     KFLD           WACSQ   20                                          CGL031
      C                     KFLD           WBRCA   3                                           CGL031
       *                                                                   CFT004
-      *                                                                                       CER050
-      ** Access SAR details file to determine if CER050 is installed.                         CER050
-      *                                                                                       CER050
-     C                     CALL 'AOSARDR0'                                                    CER050
-     C                     PARM '       ' ##RTCD                                              CER050
-     C                     PARM '*VERIFY' ##OPTN                                              CER050
-     C                     PARM 'CER050'  ##SARD  6                                           CER050
-      *                                                                                       CER050
-     C           ##RTCD    IFEQ *BLANK                                                        CER050
-     C                     MOVEL'Y'       CER050  1                                           CER050
-     C                     ELSE                                                               CER050
-     C                     MOVEL'N'       CER050                                              CER050
-     C                     ENDIF                                                              CER050
      C/COPY WNCPYSRC,CG4820C002
       *
       *................................................................

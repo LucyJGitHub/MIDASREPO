@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -53,7 +52,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *

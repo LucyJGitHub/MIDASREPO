@@ -21,21 +21,18 @@
 /*       Day' phase) is conditioned on this component having ended.  */
 /*       Therefore the date change should always be passed to TI.    */
 /*                                                                   */
-/*       Last Amend No. MD054507           Date 02Nov19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*                      164736  *CREATE    Date 22Dec99              */
+/*       Prev Amend No. 164736  *CREATE    Date 22Dec99              */
 /*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD054507 - TIC0501 Failing during Fusion Midas COB,         */
-/*                  amend retrieve journal entry job to SCC041101    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       164736 - Created to guarantee the rundate update being      */
 /*                passed to TI.                                      */
@@ -154,14 +151,11 @@
 
 
 /* Retrieve the journal entry that reflects the date change made by */
-/**SCC0411.**/                                                                          /*MD054507*/
-/* SCC041101. */                                                                        /*MD054507*/
+/* SCC0411. */
 
  PROCEED2:   RTVJRNE    JRN(ICJRN) FILE((SDBANKPD)) JRNCDE((R)) +
-                           ENTTYP(UP) JOB(SCC041101) PGM(SD1030) +
-                           RTNSEQNBR(&RTNSEQNBR)                                        /*MD054507*/
-/**********                ENTTYP(UP) JOB(SCC0411) PGM(SD1030) +    */                  /*MD054507*/
-/**********                RTNSEQNBR(&RTNSEQNBR)                    */                  /*MD054507*/
+                           ENTTYP(UP) JOB(SCC0411) PGM(SD1030) +
+                           RTNSEQNBR(&RTNSEQNBR)
 
 /* If no journal entry found then rundate is not updated in Midas */
 /* we have an error. */

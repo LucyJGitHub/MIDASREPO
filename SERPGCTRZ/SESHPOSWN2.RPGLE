@@ -20,17 +20,16 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD054698 *CREATE   Date 02NOv19               *
+      *  Last Amend No. MD054689 *CREATE   Date 02NOv19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054698 - System allows to REPO more than the actual        *
+      *  MD054689 - System allows to REPO more than the actual        *
       *             Security Position Without any warning             *
       *                                                               *
       *****************************************************************
      FUDEPH     IF   E           K DISK
-     F*                                    RENAME(CDEPPDF:CDEPPDFX)
-     F** Customer depot position & hist
+     F** Midas SE User Depot Posns- Current & Hist
 
       *****************************************************************
       ** +--------------------------------------+

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. CLE051             Date 02Mar18               *
+      *  Last Amend No. MD054707           Date 06Nov19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 CLE051             Date 02Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 AR882700           Date 07Jun13               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054707 - CER050 Comp LEC06A 00010 failed during COB Run    *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  CLE051 - Mandatory Profit Centre User Input                  *
       *  MD046248 - Finastra Rebranding                               *
@@ -918,9 +920,14 @@
       ***  Validated only if multi-branching and originating branch
       ***  are being used (for loans and parts purchased)
       *
+     C     BGMBIN        IFEQ      'Y'                                                      MD054707
+     C     *IN83         IFEQ      '0'                                                      MD054707
+     C     BKOBRU        ANDEQ     'N'                                                      MD054707
+     C                   MOVE      CCLBRCA       DDORBR                                     MD054707
+     C                   ELSE                                                               MD054707
      C     *IN83         IFEQ      '0'
      C     BKOBRU        ANDEQ     'Y'
-     C     BGMBIN        ANDEQ     'Y'
+     C*****BGMBIN        ANDEQ     'Y'                                                      MD054707
       *                                                                                       CGL058
       ** When CGL058 is on in Insert mode, the branch has already been                        CGL058
       ** defaulted and stored in the corresponding valid file field by                        CGL058
@@ -983,6 +990,8 @@
      C                   ENDSL
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              MD054707
+     C                   ENDIF                                                              MD054707
       *
      C     DDORBROK      IFNE      'N'
      C                   MOVEL     DDORBR        CCLORBR

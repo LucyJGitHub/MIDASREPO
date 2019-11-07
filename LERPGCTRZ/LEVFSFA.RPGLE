@@ -15,13 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR314017           Date 01Aug12               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR314017           Date 01Aug12               *
       *                 262672             Date 01Aug12               *
       *                 CLE134   *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR314017 - CLE134 LEC0459 failed in COB # 10 in BB           *
       *             Component LEC0459 00001 failed in COB             *

@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -125,37 +127,37 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FCLOANB    UF   E           K DISK    INFSR(*PSSR) COMMIT
       ** Loans by Branch/Customer
- 
+
      FLELOANL0  IF   E           K DISK    INFSR(*PSSR) PREFIX(L0)
      F                                     RENAME(CLOANCLF:LELOAND0)
       ** Live Loans details
- 
+
      FLELOANL2  IF   E           K DISK    INFSR(*PSSR) PREFIX(L2)
       ** Live Rollover details
- 
+
      FLE3165AU  O    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLU) USROPN
- 
+
      FLE3165P1  O    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOL1) USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -167,92 +169,92 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Constant fields(1-3) of the Confirmation's first sentence.
- 
+
      D WConfTxt1       C                   CONST('We confirm that the +
      D                                     interest rate on')
- 
+
      D WConfTxt2A      C                   CONST('your Loan')
      D WConfTxt2B      C                   CONST('our Participation +
      D                                     Purchased from you')
      D WConfTxt2C      C                   CONST('our Participation +
      D                                     Sold to you')
- 
+
      D WConfTxt3A      C                   CONST('has been fixed as +
      D                                     follows:')
      D WConfTxt3B      C                   CONST('is no longer fixed.')
- 
+
       ** Constant field of the Confirmation's second sentence.
      D WConfTxt4       C                   CONST('A new advice will be +
      D                                     issued once the revised rate +
      D                                     has been agreed.')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SPOOLU          DS
       ** File information data structure for Audit file
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
      D SPOOL1          DS
       ** File information data structure for AP0007P1
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  SOFLN1               188    189B 0
      D  SPRLN1               367    368B 0
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Data structure for access objects, first DS
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Data structure for access objects, second DS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Data structure for Bank ICD
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Data structure for Currency details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Data structure for Customer details
- 
+
      D                 DS
       ** DS to enable these two fields to have synchronized values
      D RRFRT1                  1     12
      D RRFRT2                  1     12
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WArr20X1        S              1A   DIM(20)
       ** 20-element alpha array used as an output by SR/SRFmtNum
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *
       ** Read input file
       *
@@ -295,7 +297,7 @@
       *
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

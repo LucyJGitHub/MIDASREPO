@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -80,13 +82,13 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FMMDEAMLL  IF   E           K DISK    INFSR(*PSSR)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -95,19 +97,19 @@
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D**E_SETD***************179    198                                                       TDA102
      D  E_SETD               185    210                                                       TDA102
- 
- 
+
+
       **  Deal types
      D*TABCDE**********S              2    DIM(15) CTDATA PERRCD(1)                           BG2937
      D*TABTYP**********S              1    DIM(15) ALT(TABCDE)                                BG2937
      D TABCDE          S              2    DIM(17) CTDATA PERRCD(1)                           BG2937
      D TABTYP          S              1    DIM(17) ALT(TABCDE)                                BG2937
- 
- 
+
+
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
      D DEALDC        E DS                  EXTNAME(DEALSDC)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D  W#PAYA                 3     20                                                       TDA102
@@ -134,72 +136,72 @@
      D**W#ISCY****************18     20                                                       TDA102
      D W#TABT          DS
      D  W#ASLI                 1      1
- 
- 
+
+
       ** DEFINE FIELDS FOR ZDATE10
      D                 DS
      D ZWDTIN                  1      8S 0
      D  ZWYYYY                 1      4S 0
      D  ZWMTH                  5      6S 0
      D  ZWDAY                  7      8S 0
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0
      C                   PARM                    I#DNWD            5 0
      C                   PARM                    I#PCOD            5 0
      C                   PARM                    I#TVDI            1
      C                   PARM                    MMDELD
      C                   PARM                    DEALDC
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * WRITE TRANSACTION INDEX RECORD
       * Commitment Cycle ID
      C     I#TVDI        IFEQ      'T'
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -214,12 +216,12 @@
      C                   PARM                    MMDELD
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    DealDate          5 0            Midas day no.
      C                   PARM                    ValueDate         5 0            Midas day no.
      C                   PARM                    MaturityDate      5 0            Midas day no.
- 
- 
+
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETLDNI'
      C                   EXSR      *PSSR
@@ -232,11 +234,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -244,9 +246,9 @@
       * SETUP SETTLEMENT INSTRUCTIONS
       *****************************************************************
      C     SETUP_SETI    BEGSR
- 
+
       **  Pay and receive settlement methods, accounts & branches
- 
+
      C                   MOVEL     HKMOPM        W#PAYM                         * pay method
      C                   MOVEL     HKMOPI        W#PAYA                         * pay account
      C                   MOVEL     HKPOBR        W#PAYB                         * pay branch
@@ -256,9 +258,9 @@
      C                   MOVEL     HKMORI        W#RECA                         * rec account
      C                   MOVEL     HKROBR        W#RECB                         * rec branch
      C                   MOVEL     HKSTCY        W#RSCY                         * rec settle ccy
- 
+
       * If interest is paid separately set up interest instructions
- 
+
      C     HKIPDS        IFEQ      'Y'
      C                   MOVE      HKIMET        W#INTM                         * settle method
      C                   MOVEL     HKINSA        W#INTA                         * settle A/C
@@ -266,9 +268,9 @@
      C                   MOVEL     HKISCY        W#ISCY                         * settle currency
       *
      C                   ELSE
- 
+
       * If interest is not paid separately use maturity details
- 
+
      C     W#ASLI        IFEQ      'A'
      C                   MOVEL     W#RECD        W#INTS
      C                   ELSE

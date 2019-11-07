@@ -17,14 +17,18 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD052107           Date 02Jul19               *
-      *  Prev Amend No. MD042142           Date 08May18               *
+      *  Last Amend No. MD042142A          Date 15Oct19               *
+      *  Prev Amend No. MD052107           Date 02Jul19               *
+      *                 MD042142           Date 08May18               *
       *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042142A - Remove Matured Nostro Transfers as blocker to    *
+      *              nostro account closure.                          *
+      *            - Applied for MD-54178.                            *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
       *           - Applied for MD038440A                             *
@@ -822,7 +826,9 @@
      C+ declare FTLIST8 cursor for
      C+ select TFRF, PYTP, PYST from NTRANDD
      C+ where CCY = :YyCcy and
+     C+       RECI <> 'M' and                                                              MD042142A
      C+       DEST = :XxNost or
+     C+       RECI <> 'M' and                                                              MD042142A
      C+       CCY = :YyCcy and
      C+       ACBN = :XxNost
      C+ order by

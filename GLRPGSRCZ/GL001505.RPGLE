@@ -38,8 +38,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042713           Date 05Dec16               *
       *                 222427             Date 05Dec16               *
@@ -69,6 +71,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -1118,6 +1123,10 @@
       * Retail charges details
      C                   PARM                    R_FACH
      C                   PARM                    R_TSTMC
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       * Output parameters
       *
@@ -1273,6 +1282,10 @@
      C                   PARM                    AUTHRQ            1
       * Authorisation Mode
      C                   PARM                    AUTHMD            1
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       * Ensure first individual alternate address field is read if error encountered.
      C                   Z-ADD     1             I                 3 0
@@ -2213,6 +2226,10 @@
       * Retail Details
      C                   PARM                    R_FACH
      C                   PARM                    R_TSTMC
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC                                     MD054028
+     C                   PARM                    DDAPDR                                     MD054028
+     C                   PARM                    DDAPCR                                     MD054028
       * OUTPUTS
       * Account - screen formats
      C                   PARM                    NewAcPrim

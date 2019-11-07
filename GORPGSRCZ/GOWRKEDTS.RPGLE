@@ -114,7 +114,7 @@
 
 
       ** The size of the detail arrays
-     D ArrSizDet       C                   CONST(360)
+     D ArrSizDet       C                   CONST(360) 
 
       * WORK ARRAYS OF EVENT DATES AND DATA
      D #arevdt_WK    E DS                  EXTNAME(DEEVDTPD) PREFIX(WK)

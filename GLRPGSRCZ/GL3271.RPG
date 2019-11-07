@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034366           Date 09Sep15               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD030959           Date 17Jun15               *
@@ -234,6 +235,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034366 - CRE005 failuers in COB. (Recompile)               *
@@ -954,6 +956,9 @@
      FGLACNTL3IF  E           K        DISK         KINFSR *PSSR                              CAP205
      F*                                                                                       CRE101
      F/COPY OFCPYSRCZ,CRE101_074                                                              CRE101
+     FREAPRHI0IF  E           K        DISK                                                   CER050
+     FREAPRHI1IF  E           K        DISK                                                   CER050
+     F            REAPRHD0                          KRENAMEREAPRHD1                           CER050
      F/EJECT
      F*****************************************************************
      F*                                                               *
@@ -1036,6 +1041,7 @@
      F*   89   - I/O indicator                                        *
      F*   89   - On when user can enter TI Account No. & Suffix       *   CTI001
      F*   91   - TI account not found                                 *   160464
+     F*   92   - CER050 switched on                                   *                       CER050
      F*   98   - Date format                                          *
      F*   U1   - Retail 3 or Interest on Accounts installed           *
      F*   U3   - Base Rate Category                                   *
@@ -13972,6 +13978,21 @@
      C                     MOVELP@VL01    MOD11   1                                           CGL062
      C                     ENDIF                                                              CGL062
       *                                                                   CDE002
+      **  Check if CER050 is installed                                                        CER050
+      *                                                                                       CER050
+     C                     CALL 'AOSARDR0'                                                    CER050
+     C                     PARM *BLANKS   @RTCD                                               CER050
+     C                     PARM '*VERIFY' @OPTN                                               CER050
+     C                     PARM 'CER050'  @SAR                                                CER050
+      *                                                                                       CER050
+     C           @RTCD     IFEQ *BLANKS                                                       CER050
+     C                     MOVE 'Y'       CER050  1                                           CER050
+     C                     MOVE *ON       *IN92                                               CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE 'N'       CER050                                              CER050
+     C                     MOVE *OFF      *IN92                                               CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C/COPY WNCPYSRC,GL3271C154
      C*
      C** CHECK IF COMMISSIONS ARE PRESENT OR NOT
@@ -14648,6 +14669,12 @@
      C                     MOVE *BLANKS   DDIABC                                              CAP205
      C                     MOVE '0'       DDTOLR    P                                         CAP205
      C                     ENDIF                                                              CAP205
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+     C                     MOVE *BLANKS   DDAPRP                                              CER050
+     C                     MOVE *BLANKS   DDAPRC                                              CER050
+     C                     MOVE *BLANKS   DDAPRD                                              CER050
+     C                     END                                                                CER050
      C**
      C                     ENDSR
       ********************************************************************
@@ -15298,6 +15325,38 @@
      C                     END                                            110695
      C                     END                                            110695
      C                     MOVELACKEYK    WWCHC2                          110695
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+     C                     MOVE *BLANKS   WAPRP   1                                           CER050
+     C                     MOVE *BLANKS   WAPRCA 10                                           CER050
+     C                     MOVE *BLANKS   WAPRD  10                                           CER050
+      *                                                                                       CER050
+     C                     MOVE ATAPRC    WAPRP                                               CER050
+      *                                                                                       CER050
+     C                     MOVE *IN55     SAV55   1                                           CER050
+     C                     MOVE SACNO     WWRKEY                                              CER050
+     C           WWRKEY    CHAINREAPRHI0             55                                       CER050
+     C           *IN55     IFEQ *OFF                                                          CER050
+     C                     MOVE IAPRR     ZFLD15                                              CER050
+     C                     Z-ADD2         ZDECS                                               CER050
+     C                     MOVEL'L'       ZECODE                                              CER050
+     C                     EXSR ZFRPED                                                        CER050
+     C                     MOVE ZOUT22    WAPRD                                               CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C           WWRKEY    CHAINREAPRHI1             55                                       CER050
+     C           *IN55     IFEQ *OFF                                                          CER050
+     C                     MOVE IAPRR     ZFLD15                                              CER050
+     C                     Z-ADD2         ZDECS                                               CER050
+     C                     MOVEL'L'       ZECODE                                              CER050
+     C                     EXSR ZFRPED                                                        CER050
+     C                     MOVE ZOUT22    WAPRCA                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     MOVE SAV55     *IN55                                               CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C* Set control date limit for rate value date
      C           SWDRIB    IFNE 0                          IF03
      C                     MOVE SWDRIB    WWRIB
@@ -16430,6 +16489,28 @@
      C                     ENDIF                                                              CRE090
       *                                                                                       CRE090
       /COPY OFCPYSRCZ,CRE101_076                                                              CRE101
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+     C           WAPRP     IFEQ ' '                                                           CER050
+     C                     MOVE *BLANKS   DDAPRP                                              CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE WAPRP     DDAPRP                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C           WAPRD     IFEQ *BLANKS                                                       CER050
+     C                     MOVE *BLANKS   DDAPRD                                              CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE WAPRD     DDAPRD                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C           WAPRCA    IFEQ *BLANKS                                                       CER050
+     C                     MOVE *BLANKS   DDAPRC                                              CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE WAPRCA    DDAPRC                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C                     ENDSR
      C**
       ********************************************************************

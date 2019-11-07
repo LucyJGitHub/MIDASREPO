@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD048980           Date 15Dec17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD048980           Date 15Dec17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042411           Date 18Nov16               *
       *                 MD033583           Date 03Jun15               *
       *                 253181             Date 26Apr16               *
@@ -85,6 +86,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD048980 - Dumps in GLC3320                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042411 - GLC33202 component failure. BRCA/CCY/ACOD         *
@@ -264,6 +266,9 @@
      F*                                                                   S01408
      F/COPY WNCPYSRC,GL3320FFPG                                           S01408
      F*                                                                   S01408
+     FREAPRHI0  UF   E           K DISK    COMMIT                                             CER050
+     FREAPRHI1  UF   E           K DISK    COMMIT                                             CER050
+     F                                     RENAME(REAPRHD0:REAPRHD1)                          CER050
      F/EJECT
      F*****************************************************************
      F*                                                               *
@@ -924,6 +929,18 @@
      C                   ELSE                                                                 253181
      C                   MOVEL     'N'           CRE023                                       253181
      C                   END                                                                  253181
+      *                                                                                       CER050
+     C                   CALL      'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       @RTCD                                        CER050
+     C                   PARM      '*VERIFY'     @OPTN                                        CER050
+     C                   PARM      'CER050'      @SARD                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+                                                                                              CER050
+     C     @RTCD         IFEQ      *BLANKS                                                    CER050
+     C                   MOVEL     'Y'           CER050            1                          CER050
+     C                   ELSE                                                                 CER050
+     C                   MOVEL     'N'           CER050                                       CER050
+     C                   ENDIF                                                                CER050
      C*
      C***SDRETLPD                                                         080809
      C*******                                                             080809
@@ -1193,6 +1210,20 @@
      C**********           ENDIF                                                      CLE025 BUG7418
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL3320CCP3                                           S01408
+     C     CER050        IFEQ      'Y'                                                        CER050
+     C     ACNO          Setll     REAPRHI0                                                   CER050
+     C     ACNO          ReadE     REAPRHI0                               81                  CER050
+     C     *IN81         Doweq     *OFF                                                       CER050
+     C                   Delete    REAPRHD0                                                   CER050
+     C     ACNO          Reade     REAPRHI0                               81                  CER050
+     C                   Enddo                                                                CER050
+     C     ACNO          Setll     REAPRHI1                                                   CER050
+     C     ACNO          ReadE     REAPRHI1                               81                  CER050
+     C     *IN81         Doweq     *OFF                                                       CER050
+     C                   Delete    REAPRHD1                                                   CER050
+     C     ACNO          Reade     REAPRHI1                               81                  CER050
+     C                   Enddo                                                                CER050
+     C                   ENDIF                                                                CER050
      C*                                                                   S01408
      C*
      C** IF PORTFOLIO REFERENCE NOT BLANK DELETE ALL HOLDINGS FOR THE     S01486

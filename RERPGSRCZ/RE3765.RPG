@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037149           Date 11May16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037149           Date 11May16               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -64,6 +65,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037149 - ORF Queries not running (Recompile)               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -157,6 +159,10 @@
      FTABTBRE IF  E                    DISK                           UC
      FSDCURRL0IF  E           K        DISK
      FTABLEV4 IF  E                    DISK
+     FACCNTBY0IF  E           K        DISK                                                   CER050
+     FREAPRHI0IF  E           K        DISK                                                   CER050
+     FREAPRHI1IF  E           K        DISK                                                   CER050
+     F            REAPRHD0                          KRENAMEREAPRHD1                           CER050
      F/COPY WNCPYSRC,RE3765F001
      FRE3765HCO   E             74     PRINTER      KINFDS SPOOL      UC
      FRE3765DCO   E             73     PRINTER      KINFDS SPOOL1     UC
@@ -761,6 +767,9 @@
      I*                                                                   087284
      I* 084174                                                            084174
      I*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084174
+      ** Constants definition                                                                 CER050
+     I              'APR Debit Rate '     C         APRDRT                                    CER050
+     I              'APR Credit Rate'     C         APRCRT                                    CER050
      I*
      C*===================================================================
      C                     MOVEACPY@      BIS@   80
@@ -3476,6 +3485,28 @@
      C                     END                             - E1
      C*
      C/COPY WNCPYSRC,RE3765C007
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+     C           *IN70     IFEQ '0'                        B001                               CER050
+      *                                                                                       CER050
+     C                     MOVEA'00'      *IN,61                                              CER050
+     C                     MOVE *BLANKS   TANAR  30                                           CER050
+      *                                                                                       CER050
+     C           KACCNT    CHAINACCNTBY0             99                                       CER050
+     C           *IN99     IFEQ '0'                                                           CER050
+      *                                                                                       CER050
+      * Run this process only if APR is set to 'Y'                                            CER050
+      *                                                                                       CER050
+     C           ATAPRC    IFEQ 'Y'                                                           CER050
+     C                     EXSR SRAPRD                                                        CER050
+     C                     EXSR SRAPRC                                                        CER050
+     C                     ENDIF                                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C                     ENDSR                           **BOTHSR ENDSR*
      C********************************************************************
      C/EJECT
@@ -4540,6 +4571,30 @@
      C                     END                             - E1
      C*
      C/COPY WNCPYSRC,RE3765C008
+      *                                                                                       CER050
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+      * Only print APR if not management statement                                            CER050
+      *                                                                                       CER050
+     C           *IN70     IFEQ '0'                        B001                               CER050
+      *                                                                                       CER050
+     C                     MOVEA'00'      *IN,61                                              CER050
+     C                     MOVE *BLANKS   TANAR  30                                           CER050
+      *                                                                                       CER050
+     C           KACCNT    CHAINACCNTBY0             99                                       CER050
+     C           *IN99     IFEQ '0'                                                           CER050
+      *                                                                                       CER050
+      * Run this process only if APR is set to 'Y'                                            CER050
+      *                                                                                       CER050
+     C           ATAPRC    IFEQ 'Y'                                                           CER050
+     C                     EXSR SRAPRC                                                        CER050
+     C                     ENDIF                                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C                     ENDSR                           **CRSR ENDSR**
      C********************************************************************
      C/EJECT
@@ -5374,6 +5429,28 @@
      C                     END                             - E1
      C*
      C/COPY WNCPYSRC,RE3765C009
+     C           CER050    IFEQ 'Y'                                                           CER050
+      *                                                                                       CER050
+      * Only print APR if not management statement                                            CER050
+      *                                                                                       CER050
+     C           *IN70     IFEQ '0'                        B001                               CER050
+      *                                                                                       CER050
+     C                     MOVE *OFF      *IN61                                               CER050
+     C                     MOVE *BLANKS   TANAR  30                                           CER050
+      *                                                                                       CER050
+     C           KACCNT    CHAINACCNTBY0             99                                       CER050
+     C           *IN99     IFEQ '0'                                                           CER050
+      *                                                                                       CER050
+     C* Run this process only if Do not print APR is set                                      CER050
+      *                                                                                       CER050
+     C           ATAPRC    IFEQ 'Y'                                                           CER050
+     C                     EXSR SRAPRD                                                        CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDIF                                                              CER050
+     C                     ENDIF                                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C                     ENDSR                           **DRSR ENDSR**
      C*
      C********************************************************************
@@ -6019,6 +6096,19 @@
       *                                                                                       CER016
      C                     ENDIF                                                              CER016
       *                                                                                       CER016
+      ** Check if CER050 is installed                                                         CER050
+      *                                                                                       CER050
+     C                     CALL 'AOSARDR0'                                                    CER050
+     C                     PARM *BLANKS   @RTCD   7                                           CER050
+     C                     PARM '*VERIFY' @OPTN                                               CER050
+     C                     PARM 'CER050'  @SARD   6                                           CER050
+      *                                                                                       CER050
+     C           @RTCD     IFEQ *BLANK                                                        CER050
+     C                     MOVE 'Y'       CER050  1                                           CER050
+     C                     ELSE                                                               CER050
+     C                     MOVE 'N'       CER050                                              CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
      C                     ENDSR                           **FIRST ENDSR**
      C********************************************************************
      C/EJECT
@@ -8613,6 +8703,33 @@
      C**
      C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
      C**
+      ******************************************************************                      CER050
+      * SRAPRC - Credit Output Processing                                                     CER050
+      ******************************************************************                      CER050
+      *                                                                                       CER050
+     C           SRAPRC    BEGSR                                                              CER050
+      *                                                                                       CER050
+     C           ACNO      CHAINREAPRHI1             62                                       CER050
+     C                     MOVELAPRCRT    TANAR                                               CER050
+     C           *IN62     IFEQ *OFF                                                          CER050
+     C                     WRITEAPRDC                                                         CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDSR                                                              CER050
+      ******************************************************************                      CER050
+      * SRAPRD - Debit Output Processing                                                      CER050
+      ******************************************************************                      CER050
+      *                                                                                       CER050
+     C           SRAPRD    BEGSR                                                              CER050
+      *                                                                                       CER050
+     C           ACNO      CHAINREAPRHI0             61                                       CER050
+     C                     MOVELAPRDRT    TANAR                                               CER050
+     C           *IN61     IFEQ *OFF                                                          CER050
+     C                     WRITEAPRDC                                                         CER050
+     C                     ENDIF                                                              CER050
+      *                                                                                       CER050
+     C                     ENDSR                                                              CER050
+      ******************************************************************                      CER050
      C/COPY WNCPYSRC,RE3765C033
      C**
      C********************************************************************

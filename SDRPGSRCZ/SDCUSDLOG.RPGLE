@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT050             Date 03Jun13               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT050             Date 03Jun13               *
       *                 CER059             Date 19Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT050 - SWIFTRef Directories upload (Recompile)             *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -139,6 +142,7 @@
       ** +--------------------------------------+
  
      D TRANSDTL        S           5800A
+     D DDAPRC          S              1A                                                    MD054028
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -185,6 +189,8 @@
      C                   PARM                    PRIVFilFmt
      C                   PARM                    TranInACU3                                   CER059
      C                   PARM                    TranInACU4                                   CER059
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC                                     MD054028
       ** Global Customer X-Reference                                                          222373
      C                   PARM                    GCustFilFmt                                  222373
      C                   PARM                    CUSDScnFmt

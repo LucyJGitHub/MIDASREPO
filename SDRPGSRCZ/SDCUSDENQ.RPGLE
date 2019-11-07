@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 AR1003366          Date 11May16               *
       *                 AR981842           Date 11May16               *
       *                 LLN022             Date 03Jun15               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  AR1003366- Decimal-data error occurred in ILE/SDCUSDCVT.     *
@@ -454,6 +457,7 @@
      D***CER048          S              1                                         BUG26917 BUG26917A
      D CLE025          S              1
      D CFX001          S              1
+     D DDAPRC          S              1                                                     MD054028
      D CSC011          S              1
      D CSW024          S              1
      D S01383          S              1
@@ -2024,6 +2028,8 @@ e3   C                   ENDIF                                                  
  
      C                   PARM                    CLE025
      C                   PARM                    CFX001
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC                                     MD054028
  
       ** OUTPUTS
       ** Customer Details in screen formats

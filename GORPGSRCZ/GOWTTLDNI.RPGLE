@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -65,45 +67,45 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
- 
+
       * Universal Transaction Updates
- 
+
      C                   EXSR      TRAP_LDNI
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       ********************************************************************
       * Universal Transaction Updates - Loan/Deposit
       ********************************************************************
      C     TRAP_LDNI     BEGSR
- 
+
      C                   MOVEL     I#AIMG        MMDELD
- 
+
       * SETUP TRANSACTION INDEX RECORD
       * WRITE TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAPLDNI
      C                   EXSR      WRITE_TRAP
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -119,11 +121,11 @@
      C                   PARM                    MMDELD
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    DealDate          5 0            Midas day no.
      C                   PARM                    ValueDate         5 0            Midas day no.
      C                   PARM                    MaturityDate      5 0            Midas day no.
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETLDNI'
      C                   EXSR      *PSSR
@@ -136,15 +138,15 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
       * Commitment Cycle ID
      C                   Z-ADD     0             T_CCID
- 
+
      C                   MOVEL     'GLOB'        I#LOC
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -152,7 +154,7 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

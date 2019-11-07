@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 MD026387           Date 13May14               *
       *                 CGP017             Date 06Aug12               *
       *                 AR1090088          Date 20Feb13               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD026387 - Reconciliation issue with GPAMADPD                *
@@ -56,7 +58,7 @@
       *  BUG16715 - Slow performance unable to locate an Account      *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZACCNTBL1IF   E           K DISK    PREFIX(G_) INFSR(*PSSR)
 O    FGZREIACDL1IF   E           K DISK    PREFIX(G_) INFSR(*PSSR)
 O    FGZRECOMDL1IF   E           K DISK    PREFIX(G_) INFSR(*PSSR)
@@ -74,13 +76,13 @@ O    D G_ACCNTAB     E DS                  EXTNAME(GZACCNTAB ) PREFIX(G_)
       ***External*DS*for*Customer*Details                                        AR1047824 AR1090088
      D*DSLDY*********E*DS******************EXTNAME(DSLDY)                        AR1047824 AR1090088
       **Third*DS*for*access*programs,*very*long*data*structure                   AR1047824 AR1090088
- 
+
      D CmdArray        S             80A   DIM(2) CTDATA PERRCD(1)                           256612A
      D Cmd             S             80A                                                     256612A
      D Len             S             15P 5                                                   256612A
                                                                                              256612A
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -125,15 +127,15 @@ O    C                   ELSE
      C                   EXSR      GENAMAD
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     GENAMAD       BEGSR
      C                   EXSR      OPENFILE                                                  256612A
- 
+
      C                   EVAL      G_CUSTZONE = I#ZONE
      C                   MOVEL     ACOD          G_PADACOD
      C                   MOVEL     ACOD          ACCD
@@ -143,7 +145,7 @@ O    C     K_GZACCNTL1   CHAIN     GZREIACDL1                         97
 O    C     K_GZACCNTL2   CHAIN     GZRECOMDL1                         96
 O    C     K_GZACODL1    CHAIN     GZSDACODL1                         95
 O    C     K_GZCUSGL1    CHAIN     GPGLCUSLL1                         94
- 
+
      C                   IF        *IN94 = *ON                                                254797
      C                   EVAL      G_CGGLOB = *BLANKS                                         254797
      C                   EVAL      G_CGCSSN = *BLANKS                                         254797
@@ -172,7 +174,7 @@ O    C     K_GZCUSGL1    CHAIN     GPGLCUSLL1                         94
      C                   ENDIF                                                                254797
                                                                                               254797
 O    C                   WRITE     AMADREC
- 
+
      C                   EXSR      CLOSEFIL                                                  256612A
      C                   ENDSR
      C/SPACE 5                                                                               256612A
@@ -253,18 +255,18 @@ O    C                   KFLD                    CCY
 O    C                   KFLD                    ACOD
 O    C                   KFLD                    ACSQ
 O    C                   KFLD                    BRCA
- 
+
 O    C     K_GZACCNTL2   KLIST
 O    C                   KFLD                    BRCA
 O    C                   KFLD                    CNUM
 O    C                   KFLD                    CCY
 O    C                   KFLD                    ACOD
 O    C                   KFLD                    ACSQ
- 
+
 O    C     K_GZACODL1    KLIST
 O    C                   KFLD                    I#ZONE
 O    C                   KFLD                    ACCD             10
- 
+
 O    C     K_GZCUSGL1    KLIST
 O    C**********         KFLD                    BRCA                                       MD026387
 O    C                   KFLD                    G_BBBRCD                                   MD026387
@@ -273,7 +275,7 @@ O    C                   KFLD                    CNUM
 O    C     K_GZBRCHL1    KLIST                                                             AR1090088
 O    C                   KFLD                    I#ZONE                                    AR1090088
 O    C                   KFLD                    G_BBBRCD                                  AR1090088
- 
+
      C                   CALL      'GPCOPN4COM'                                             AR645170
      C                   PARM                    D_COM             1                        AR645170
      C                   OPEN      GPAMADL0                                                 AR645170
@@ -285,15 +287,15 @@ O    C                   KFLD                    G_BBBRCD                       
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -308,11 +310,11 @@ O    C                   KFLD                    G_BBBRCD                       
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
 ** CmdArray

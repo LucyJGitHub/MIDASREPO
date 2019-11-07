@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CER055             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23445A          Date 19Apr09               *
@@ -43,6 +44,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *

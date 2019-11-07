@@ -22,8 +22,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054316           Date 18Sep19               *
-      *  Prev Amend No. MD053789           Date 23Jul19               *
+      *  Last Amend No. MD052515           Date 24Jan19               *
+      *  Prev Amend No. AR988460           Date 24Jan19               *
+      *                 MD054316           Date 18Sep19               *
+      *                 MD053789           Date 23Jul19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD053334           Date 26Apr19               *
       *                 MD053238           Date 08Apr19               *
@@ -34,7 +36,7 @@
       *                 MD050018           Date 05Nov18               *
       *                 MD050139           Date 23Mar18               *
       *                 MD047806           Date 18Sep17               *
-      *                 MD031179           Date 24Nov15               *
+      *                 MD031179           Date 24Nov15               *      
       *                 AR698122           Date 11Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
@@ -289,6 +291,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052515 - Negative fixed rate loan got unexpected errors    *
+      *  AR988460 - Cannot input negative all-in-rate on Lending.     *
+      *             Allow input and computation for negative          *
+      *             all-in-rate on Lending.                           *
+      *           - Applied for AR997089 (Child: AR997090)            *
+      *           - Applied for MD052515                              *
       *  MD054316 - Missing PDCL X - Transfer (Principal Increase)    *
       *             on LOAC                                           *
       *  MD053789 - Loan activity enquiry is missing due to DBASE 58. *
@@ -302,7 +310,7 @@
       *  MD052734 - Maturity date projections missing for loans       *
       *             whose maturity date is less than rundate and is   *
       *             holiday on Currency and Location Business Day     *
-      *             Convention.                                       *
+      *             Convention.                                       *      
       *  MD053035 - Add missing line from MD035545.                   *
       *  MD052587 - Past Due Interest from PDCL Y appearing in PDCL Z *
       *             during enquiry in LOAC screen.                    *
@@ -2483,18 +2491,37 @@
       *                                                                                      BUG9052
       ** ... rate                                                                            BUG9052
       *                                                                                      BUG9052
-     C           RTSP      IFGT *ZEROS                                                       BUG9052
+     C********** RTSP      IFGT *ZEROS                                              BUG9052 AR988460
      C********** BRTE      ANDEQ*ZEROS                                              BUG9052 MD035329
-     C           BRTT      ANDEQ*ZEROS                                                      MD035329
+     C********** BRTT      ANDEQ*ZEROS                                             MD035329 MD052515
+     C           RTSP      IFNE *ZEROS                                                      AR988460
+     C           BRTT      ANDEQ*ZEROS                                                      MD052515
      C           VSLN      ANDLT20                                                           BUG9052
      C                     MOVEL'LEE0042' ZAMSID                                             BUG9052
      C                     EXSR SRTEXT                                                       BUG9052
      C                     MOVELZAMSTX    SNARR                                              BUG9052
+      *                                                                                     AR988460
+      ** Display it properly if negative.                                                   AR988460
+      *                                                                                     AR988460
+     C           RTSP      IFLT 0                                                           AR988460
+     C                     MOVE 'Y'       WSUB                                              AR988460
+     C                     Z-SUBRTSP      RTSP                                              AR988460
+     C                     ENDIF                                                            AR988460
+      *                                                                                     AR988460
      C                     MOVE RTSP      ZFIELD                                             BUG9052
      C                     Z-ADD7         ZADEC                                              BUG9052
      C                     EXSR ZEDIT                                                        BUG9052
+      *                                                                                     AR988460
+     C           WSUB      IFEQ 'Y'                                                         AR988460
+     C                     MOVE *BLANKS   WSUB                                              AR988460
+     C                     MOVE ZFIELD    WFLD1                                             AR988460
+     C           WFLD1     CAT  '-'       WFLD2                                             AR988460
+     C                     MOVE WFLD2     SAMNT                                             AR988460
+     C                     Z-SUBRTSP      RTSP                                              AR988460
+     C                     ELSE                                                             AR988460
      C                     MOVE ZFIELD    SAMNT                                              BUG9052
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
+     C                     ENDIF                                                            AR988460
      C                     EXSR SRDISS                                                       BUG9052
      C                     ENDIF                                                             BUG9052
       *                                                                                      BUG9052
@@ -2502,8 +2529,10 @@
       *                                                                                      BUG9052
      C********** RTSP      IFGT *ZEROS                                              BUG9052 MD035329
      C********** BRTE      ANDGT*ZEROS                                              BUG9052 MD035329
-     C           RTSP      IFGE *ZEROS                                                      MD035329
-     C           BRTT      ANDGT*ZEROS                                                      MD035329
+     C********** RTSP      IFGE *ZEROS                                             MD035329 MD052515
+     C********** BRTT      ANDGT*ZEROS                                             MD035329 MD052515
+     C           RTSP      IFNE *ZEROS                                                      AR988460
+     C           BRTT      ANDGT*ZEROS                                                      MD052515
      C           VSLN      ANDLT20                                                           BUG9052
      C                     SELEC                                                             BUG9052
      C           SPIN      WHEQ 'A'                                                          BUG9052
@@ -2515,11 +2544,28 @@
      C                     ENDSL                                                             BUG9052
      C                     EXSR SRTEXT                                                       BUG9052
      C                     MOVELZAMSTX    SNARR                                              BUG9052
+      *                                                                                     AR988460
+      ** Display it properly if negative.                                                   AR988460
+      *                                                                                     AR988460
+     C           RTSP      IFLT 0                                                           AR988460
+     C                     MOVE 'Y'       WSUB                                              AR988460
+     C                     Z-SUBRTSP      RTSP                                              AR988460
+     C                     ENDIF                                                            AR988460
+      *                                                                                     AR988460
      C                     MOVE RTSP      ZFIELD                                             BUG9052
      C                     Z-ADD7         ZADEC                                              BUG9052
      C                     EXSR ZEDIT                                                        BUG9052
+      *                                                                                     AR988460
+     C           WSUB      IFEQ 'Y'                                                         AR988460
+     C                     MOVE *BLANKS   WSUB                                              AR988460
+     C                     MOVE ZFIELD    WFLD1                                             AR988460
+     C           WFLD1     CAT  '-'       WFLD2                                             AR988460
+     C                     MOVE WFLD2     SAMNT                                             AR988460
+     C                     Z-SUBRTSP      RTSP                                              AR988460
+     C                     ELSE                                                             AR988460
      C                     MOVE ZFIELD    SAMNT                                              BUG9052
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
+     C                     ENDIF                                                            AR988460
      C                     EXSR SRDISS                                                       BUG9052
      C                     ENDIF                                                             BUG9052
       *                                                                                      BUG9052

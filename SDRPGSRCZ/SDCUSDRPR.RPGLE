@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
       *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26917A          Date 27Jan10               *
@@ -77,6 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  AR787620 - Hooks Incorporation                               *
@@ -595,6 +598,7 @@
      D***CER048          S              1                                         BUG26917 BUG26917A
      D CLE025          S              1                                                       CLE025
      D CFX001          S              1                                                       CFX001
+     D DDAPRC          S              1                                                     MD054028
      D ULX043          S              1                                                       CER001
      D ULX609          S              1                                                       CER001
      D ULX008          S              1                                                       CER001
@@ -3565,6 +3569,8 @@
                                                                                               CLE025
      C                   PARM                    CLE025                                       CLE025
      C                   PARM                    CFX001                                       CFX001
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC                                     MD054028
       * OUTPUTS
       * Customer - screen formats
      C                   PARM                    NewCuPrim

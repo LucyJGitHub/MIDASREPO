@@ -102,7 +102,7 @@
      D                                     INZ(0)
 
       ** Starting Position
-     D     StartPosit  S             15  0
+     D     StartPosit  S                   LIKE(NOML)
 
 
      D DELF            S              6A                                                      CSD027

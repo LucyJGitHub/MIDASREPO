@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054689           Date 02Nov19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -97,8 +96,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054698 - System allows to REPO more than the actual        *
-      *             Security Position Without any warning             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -381,8 +378,6 @@
 
       ** SD status data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
-      ** Trading ICD                                                                        MD054689
-     D SDSTRD        E DS                  EXTNAME(SDSTRDPD)                                MD054689
 
       ** Additional entry parameter for Midas Compliance Watch
      D PMCWL           DS          9999
@@ -550,8 +545,6 @@
                                                                                               CAP087
                                                                                               CER001
      D @@FIND          S              1A                                                      CER001
-     D CSE013          S              1A                                                    MD054689
-     D ShortFlag       S              1A                                                    MD054689
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -1073,15 +1066,6 @@
      C                   IF        ULX602 = 'Y'                                               CER001
      C                   EXSR      ValidateLUX                                                CER001
      C                   ENDIF                                                                CER001
-      *                                                                                     MD054689
-      ** Validate Depot Movement Security Position                                          MD054689
-      *                                                                                     MD054689
-     C                   IF        CSE013 = 'Y' AND                                         MD054689
-     C                             (DPMVType = 'RP'                                         MD054689
-     C                             OR DPMVType = 'BL'                                       MD054689
-     C                             OR DPMVType = 'PL')                                      MD054689
-     C                   EXSR      ValDPMVSecPos                                            MD054689
-     C                   ENDIF                                                              MD054689
 
      C     EValidTr      ENDSR
 
@@ -1517,51 +1501,6 @@
       *                                                                                       CER001
       *****************************************************************                       CER001
       /EJECT
-      *****************************************************************                     MD054689
-      *                                                               *                     MD054689
-      * ValDPMVSecPos - Validate Depot Movement Security Position     *                     MD054689
-      *                                                               *                     MD054689
-      * Calls:                                                        *                     MD054689
-      *                                                               *                     MD054689
-      *****************************************************************                     MD054689
-      *                                                                                     MD054689
-     C     ValDPMVSecPos BEGSR                                                              MD054689
-      *                                                                                     MD054689
-     C                   CALLB     'SESHPOSWN2'                                             MD054689
-      *                                                                                     MD054689
-      ** INPUTS                                                                             MD054689
-      *                                                                                     MD054689
-      ** Return Code                                                                        MD054689
-     C                   PARM                    ReturnCode                                 MD054689
-      ** Branch Code (3A)                                                                   MD054689
-      ** Customer number (6A)                                                               MD054689
-      ** Security Shortname (10A)                                                           MD054689
-      ** Nominal Amount (11P 0)                                                             MD054689
-      ** Deliver From (6 0)                                                                 MD054689
-      ** Trade/Value Date Valuation (1A)                                                    MD054689
-     C                   PARM                    IN_DDDPBA                                  MD054689
-     C                   PARM                    IN_DDDPBN                                  MD054689
-     C                   PARM                    IN_DDDPSS                                  MD054689
-     C                   PARM                    V_DPNA                                     MD054689
-     C                   PARM                    IN_DDDPID                                  MD054689
-     C                   PARM                    BVTVDV                                     MD054689
-      *                                                                                     MD054689
-      ** OUTPUT                                                                             MD054689
-      *                                                                                     MD054689
-     C                   PARM                    ShortFlag                                  MD054689
-      *                                                                                     MD054689
-      ** Setup Warning message                                                              MD054689
-     C     ShortFlag     IFEQ      '1'                                                      MD054689
-     C                   ADD       1             WIdx                                       MD054689
-     C                   EVAL      WMsgIDArr(WIdx) = 'MMA0663'                              MD054689
-     C                   EVAL      WFldNamArr(WIdx) = 'DDDPID'                              MD054689
-     C*                  EVAL      DDDPIDOK = 'W'                                           MD054689
-     C                   ENDIF                                                              MD054689
-      *                                                                                     MD054689
-     C                   ENDSR                                                              MD054689
-      *                                                                                     MD054689
-      *****************************************************************                     MD054689
-      /EJECT                                                                                MD054689
       *****************************************************************
       * EvalParms - Set up parameters for the called modules
       *****************************************************************
@@ -2809,43 +2748,6 @@
       ***Set*Front*Office*ID*=*User*ID                                                       BUG7029
      C**********         EVAL      APFOTranID = %SUBST(PUSRID:1:3) +                         BUG7029
      C**********                                %SUBST(WorkTime:3:17)                        BUG7029
-      *                                                                                     MD054689
-      ** Retrieve the status of CSE013                                                      MD054689
-      *                                                                                     MD054689
-     C                   CALLB     'AOSARDR0'                                               MD054689
-     C                   PARM      *BLANKS       @RtCd                                      MD054689
-     C                   PARM      '*VERIFY'     @Optn                                      MD054689
-     C                   PARM      'CSE013'      @SARD                                      MD054689
-      *                                                                                     MD054689
-     C                   IF        @RtCd = *Blanks                                          MD054689
-     C                   MOVE      'Y'           CSE013                                     MD054689
-     C                   ELSE                                                               MD054689
-     C                   IF        @RtCd <> '*NRF'                                          MD054689
-     C     *LOCK         IN        LDA                                                      MD054689
-     C                   EVAL      DBFile = 'SCSARDPD'                                      MD054689
-     C                   EVAL      DBKey = @SARD                                            MD054689
-     C                   EVAL      DBase = 102                                              MD054689
-     C                   OUT       LDA                                                      MD054689
-     C                   EXSR      *PSSR                                                    MD054689
-     C                   ENDIF                                                              MD054689
-     C                   ENDIF                                                              MD054689
-      *                                                                                     MD054689
-      ** Get Trading details                                                                MD054689
-      *                                                                                     MD054689
-     C                   CALL      'AOSTRDR0'                                               MD054689
-     C                   PARM      *BLANKS       @RTCD                                      MD054689
-     C                   PARM      '*FIRST'      @OPTN                                      MD054689
-     C     SDSTRD        PARM      SDSTRD        DSFDY                                      MD054689
-      *                                                                                     MD054689
-      ** DATABASE ERROR                                                                     MD054689
-      *                                                                                     MD054689
-     C     @RTCD         IFNE      *BLANKS                                                  MD054689
-     C                   EVAL      DBFile = 'SDSTRDPD'                                      MD054689
-     C                   EVAL      DBKey = '*FIRST'                                         MD054689
-     C                   EVAL      DBase = 103                                              MD054689
-     C                   OUT       LDA                                                      MD054689
-     C                   EXSR      *PSSR                                                    MD054689
-     C                   ENDIF                                                              MD054689
 
      C*
      C* Define key list for file INVTP

@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054696           Date 29Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1078953          Date 18Jan13               *
       *                 260029             Date 29Apr09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1078953 - Blank Batch Number is not accepted by the system *
@@ -275,6 +278,9 @@
      D CSC022          S              1A   INZ('N')                                           CSC022
      D WCmtSk          S              1A                                                      CSC022
      D PSARD           S                   LIKE(SARN)                                         CSC022
+                                                                                            MD054696
+      ** JE Headers Shadow Post Indicator                                                   MD054696
+     D DDSHPI          S              1A                                                    MD054696
       *
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
@@ -506,6 +512,9 @@
       *
       ** SDGELR - Mandatory Batch No./ No. of Items
      C                   PARM                    BKMHTN
+      *                                                                                     MD054696
+      ** Batch Header - Shadow Post Indicator                                               MD054696
+     C                   PARM                    DDSHPI                                     MD054696
       *
       ** OUTPUT
       ** ======

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. MD054696           Date 29Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 07May13               *
       *                 CSC054             Date 23Feb12               *
       *                 260029             Date 29Apr09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CSC054 - Period End Adjustments                              *
@@ -131,6 +134,16 @@
                                                                                               CSC054
       ** Period End Adjustments Fields                                                        CSC054
      D PEAHeader       S              8A                                                      CSC054
+                                                                                            MD054696
+      ** JE Non-screen Interface Data file format                                           MD054696
+     D PInfData      E DS                  EXTNAME(GLJEIFPD)                                MD054696
+     D                                     PREFIX(IF_)                                      MD054696
+                                                                                            MD054696
+      ** JE Headers Extra Data (DS)                                                         MD054696
+     D PExtData      E DS                  EXTNAME(GLBHEXPD)                                MD054696
+                                                                                            MD054696
+      ** JE Headers Shadow Post Indicator                                                   MD054696
+     D DDSHPI          S              1A                                                    MD054696
  
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -276,6 +289,8 @@
       * Build buffer with required output
      C                   EVAL                    Buffer = BITHScnFmt
      C                                                    + PEAHeader                         CSC054
+     C                                           + PInfData + PExtData                      MD054696
+     C                                           + DDSHPI                                   MD054696
  
      C                   SETON                                        LR
      C                   RETURN
@@ -385,6 +400,9 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    BITHScnfmt
+                                                                                            MD054696
+      * Batch Header - Shadow Post Indicator                                                MD054696
+     C                   PARM                    DDSHPI                                     MD054696
  
       ** AMEND CHECKING
      C                   RESET                   ReturnCode

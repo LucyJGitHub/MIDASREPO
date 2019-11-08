@@ -105,7 +105,7 @@
      D PFCNO           S              2  0
      D PVDAT           S              5  0
      D PMDAT           S              5  0                                                  MD054189
-     D********** PFACT           S              2  0                                        MD054551
+     D********** nFACT           S              2A                                          MD054551
      D nFACT           S              3A                                                    MD054551
      D nFCNO           S              2A
      D KACNO           S             17A

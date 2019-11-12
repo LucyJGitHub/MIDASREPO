@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052254A          Date 19Jul19               *
-      *  Prev Amend No. MD052254           Date 21Dec18               *
+      *  Last Amend No. MD054663           Date 31Oct19               *
+      *  Prev Amend No. MD052254A          Date 19Jul19               *
+      *                 MD052254           Date 21Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD034285           Date 14Feb17               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054663 - MT292 was not generated after deletion of FX NETT *
       *  MD052254A - Generate cancellation message for reversed deal  *
       *              amendments (PI/PD).                              *
       *  MD052254 - Check if pay/rec side is amednded to cancel       *
@@ -861,6 +863,7 @@
      C                     MOVE ' '       MSPAY   1                                           260363
      C                     MOVE ' '       MSREC   1                                           260363
      C                     MOVE ' '       FIPRI   1                                         AR923287
+     C                     MOVE ' '       DLCANC  1                                         MD054663
       *                                                                                     AR923287
      C           MODI      IFEQ 'DL'                                                          260363
      C                     EXSR PAYREC                                                        260363
@@ -875,6 +878,7 @@
      C           @CARQ     IFNE 'Y'                                   3
      C           HOLD1     ANDNE'3'
      C           @PTST     ANDNE'D'
+     C           MODI      ANDNE'DL'                                                        MD054663
      C           WCANC     OREQ 'Y'                                       CDL008
      C********** PAYSD     IFEQ ' '                                                  260363 AR927179
      C********** RECSD     ANDEQ' '                                                  260363 AR927179
@@ -892,10 +896,11 @@
      C********** MSPAY     ANDEQ' '                                               MD052254 MD052254A
      C********** MSREC     ANDEQ' '                                               MD052254 MD052254A
      C********** MSREC     OREQ 'Y'                                               MD052254 MD052254A
-     C           MSREC     IFEQ 'Y'                                                        MD052254A
-     C           RECSD     ANDEQ'Y'                                                         MD052254
-     C           MSPAY     OREQ 'Y'                                                         MD052254
-     C           PAYSD     ANDEQ'Y'                                                         MD052254
+     C********** MSREC     IFEQ 'Y'                                               MD052254A MD054663
+     C********** RECSD     ANDEQ'Y'                                                MD052254 MD054663
+     C********** MSPAY     OREQ 'Y'                                                MD052254 MD054663
+     C********** PAYSD     ANDEQ'Y'                                                MD052254 MD054663
+     C           DLCANC    OREQ 'Y'                                                         MD054663
      C***********          MOVE *ON       *IN50                    157756 169025
      C                     CALL 'MG9210'               12                 E29592
      C                     PARM           @TRNO
@@ -923,7 +928,7 @@
       *
      C                     END                                       E3
      C**********           ENDIF                                                     260363 AR927179
-     C                     ENDIF                                                            MD052254
+     C**********           ENDIF                                                   MD052254 MD054663
       *
       ** First MT3xx message found was sent (need 'CANCEL' message)       E31801
       *                                                                   E31801
@@ -1084,6 +1089,12 @@
       *                                                                                     MD052254
      C                     ENDIF                                                            MD052254
       *                                                                                       260363
+     C           MSREC     IFEQ 'Y'                                                         MD054663
+     C           RECSD     ANDEQ'Y'                                                         MD054663
+     C           MSPAY     OREQ 'Y'                                                         MD054663
+     C           PAYSD     ANDEQ'Y'                                                         MD054663
+     C                     MOVEL'Y'       DLCANC                                            MD054663
+     C                     ENDIF                                                            MD054663
      C                     ENDSR                                                              260363
      C/EJECT                                                                                AR923287
       *****************************************************************                     AR923287

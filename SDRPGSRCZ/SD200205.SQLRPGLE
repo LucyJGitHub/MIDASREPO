@@ -22,7 +22,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD047885           Date 18Nov19               *
+      *  Last Amend No. AR686864           Date 18Nov19               *
       *  Prev Amend No. MD034216           Date 24Apr15               *
       *                 AR752509           Date 01May11               *
       *                 CER059             Date 19Jul10               *
@@ -34,7 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD047885 - Tax Office Summary and Withholding Tax per Fed    *
+      *  AR686864 - Tax Office Summary and Withholding Tax per Fed    *
       *             State contains not traceable amounts              *
       *             Applied for MD053833                              *
       *  MD034216 - SDC200205 Failed during COB run                   *
@@ -382,7 +382,7 @@
      C                   ELSE
       *
      C     ZMTH          IFEQ      ZRMNTH
-     C     ZYEAR         ANDEQ     ZRYEAR                                                   MD053833
+     C     ZYEAR         ANDEQ     ZRYEAR                                                   AR686864
      C                   MOVE      'Y'           WRTREC
      C                   ELSE
      C                   MOVE      'N'           WRTREC
@@ -1269,7 +1269,7 @@
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZMTH          ZRMNTH
-     C                   MOVE      ZYEAR         ZRYEAR                                     MD053833
+     C                   MOVE      ZYEAR         ZRYEAR                                     AR686864
       *
       ** Set up print of month
      C                   MOVEL     MON(ZMTH)     PRMONT
@@ -1317,7 +1317,7 @@
       *
       ** FIELDS
      C     *LIKE         DEFINE    ZMTH          ZRMNTH
-     C     *LIKE         DEFINE    ZYEAR         ZRYEAR                                     MD053833
+     C     *LIKE         DEFINE    ZYEAR         ZRYEAR                                     AR686864
       *
      C     *LIKE         DEFINE    TSGINC        WGINTD          + 1            BY TAX TYPE
      C     *LIKE         DEFINE    TSGINC        TGINTD          + 1            OVERALL

@@ -34,8 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR686864 - Tax Office Summary and Withholding Tax per Fed    *
-      *             State contains not traceable amounts              *
+      *  AR686864 - On keying dates, include the month and year.      *
       *             Applied for MD053833                              *
       *  MD034216 - SDC200205 Failed during COB run                   *
       *  AR752509 - SDCHTXPD and SDWTGSPD are empty (Child:AR752510)  *

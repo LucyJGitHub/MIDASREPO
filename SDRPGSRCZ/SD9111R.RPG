@@ -911,8 +911,7 @@
       * Cancel & exit program
      C   03                CAS            ZXEXPG
       * Redisplay previous screen
-     C***12                CAS            CCDSPV                                            MD054650
-     C   12                CAS            RCD2                                              MD054650
+     C   12                CAS            CCDSPV
       * HOME: Reset screen fields
      C   05                CAS            CCDSPV
       * Process detail screen input
@@ -956,7 +955,7 @@
      C                     EXSR Y1SET
      C                     END
      C                     WRITE#MSGCTL
-     C                     MOVE *OFF      *IN55                                             MD054650
+     C                     MOVE *OFF      *IN59                                             MD054650
      C                     MOVE *OFF      *IN87                                             MD054650
      C                     WRITE#CMDTXT2
      C                     EXFMT#RCDDTL1
@@ -1050,6 +1049,7 @@
       *                                                                                       CLE134
       ** No error: update record                                                              CLE134
       *                                                                                       CLE134
+     C           *IN12     IFEQ *OFF                                                        MD054650
      C                     EXSR EBPR##
      C           CLE134    IFEQ 'Y'                                                           CLE134
       *                                                                                       CLE134
@@ -1057,6 +1057,7 @@
       *                                                                                       CLE134
      C                     EXSR EBPR#2                                                        CLE134
      C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                            MD054650
       *================================================================
      CSR         CFEXIT    ENDSR
       *================================================================                       CLE134
@@ -1065,8 +1066,9 @@
      C                     SETOF                     85                                       CLE134
      C           *IN85     DOWEQ*OFF                                                          CLE134
      C                     WRITE#MSGCTL                                                       CLE134
-     C                     MOVE *ON       *IN55                                             MD054650
+     C                     MOVE *ON       *IN59                                             MD054650
      C                     MOVE *ON       *IN87                                             MD054650
+     C                     MOVE *OFF      *IN12                                             MD054650
      C                     WRITE#CMDTXT2                                                      CLE134
      C                     EXFMT#RCDDTL2                                                      CLE134
       *                                                                                       CLE134
@@ -1079,7 +1081,12 @@
       ** Cancel & exit program                                                                CLE134
       *                                                                                       CLE134
      C   03                CAS            ZXEXPG                                              CLE134
+     C   12                CAS            DCVL12                                            MD054650
      C                     ENDCS                                                              CLE134
+      *                                                                                     MD054650
+     C           PREV      IFEQ 'Y'                                                         MD054650
+     C                     MOVEL'Y'       W0TRN                                             MD054650
+     C                     ELSE                                                             MD054650
       *                                                                                       CLE134
       ** Confirm/update is not deferred                                                       CLE134
       *                                                                                       CLE134
@@ -1089,10 +1096,16 @@
       *                                                                                       CLE134
      C                     EXSR DCVLD2                                                        CLE134
       *                                                                                       CLE134
+     C                     ENDIF                                                            MD054650
       ** If no errors, exit loop                                                              CLE134
       *                                                                                       CLE134
      C           *IN99     IFEQ *OFF                                                          CLE134
+     C           *IN12     IFEQ *ON                                                         MD054650
+     C           PREV      ANDEQ*BLANK                                                      MD054650
+     C                     SETOF                     85                                     MD054650
+     C                     ELSE                                                             MD054650
      C                     SETON                     85                                       CLE134
+     C                     ENDIF                                                            MD054650
      C                     ENDIF                                                              CLE134
      C                     ENDDO                                                              CLE134
       *                                                                                       CLE134
@@ -2014,6 +2027,28 @@
       *================================================================                       CLE134
      CSR         S2EXIT    ENDSR                                                              CLE134
       /EJECT
+     CSR         DCVL12    BEGSR                                                            MD054650
+      *================================================================                     MD054650
+     C                     CALL 'SD9112R'              90  Edit Cust Lend                   MD054650
+     C                     PARM *BLANK    W0RTN   7                                         MD054650
+     C                     PARM           PARC             RCD: Customer L                  MD054650
+     C           WUDRTC    PARM *BLANK    WQ0170  7        Duplicate Retur                  MD054650
+     C                     PARM *BLANK    PREV    1                                         MD054650
+      *                                                                                     MD054650
+     C           *IN90     IFEQ '1'                                                         MD054650
+      * Call to program ended in error                                                      MD054650
+     C                     MOVEL'Y2U0032' W0RTN                                             MD054650
+     C                     MOVEL*BLANKS   W0CLPG 10                                         MD054650
+     C                     MOVEL'SD9112R' W0CLPG                                            MD054650
+      * Send message '*Error occured on CALL...'                                            MD054650
+     C                     MOVEL'Y2U0032' ZAMSID                                            MD054650
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            MD054650
+     C                     MOVELW0CLPG    ZAMSDA           Message data                     MD054650
+     C                     EXSR ZASNMS                                                      MD054650
+     C                     END                                                              MD054650
+      *================================================================                     MD054650
+     CSR                   ENDSR                                                            MD054650
+      /EJECT                                                                                MD054650
      CSR         DCVLDL    BEGSR
       *================================================================
       * Validate details
@@ -3573,6 +3608,7 @@
      C                     PARM *BLANK    W0RTN   7
      C                     PARM           PARC             RCD: Customer L
      C           WUDRTC    PARM *BLANK    WQ0170  7        Duplicate Retur
+     C                     PARM *BLANK    PREV    1                                         MD054650
       *
      C           *IN90     IFEQ '1'
       * Call to program ended in error

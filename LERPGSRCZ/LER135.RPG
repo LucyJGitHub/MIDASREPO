@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054318           Date 10Sep19               *
+      *  Last Amend No. MD047522           Date 21Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054318           Date 10Sep19               *
       *                 MD053946           Date 17Jul19               *
       *                 MD051883           Date 04Apr19               *
       *                 261205A            Date 20Aug19               *
@@ -279,6 +280,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD047522 - Renamed FARECI of LEFEEAD to FARECC to            *
+      *             differentiate FARECI of LEFEEAD and FACHISA       *
+      *           - Added condition for old fees to properly          *
+      *             execute the calculation of adjustments            *
+      *           - Applied for MD052131                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054318 - Back-valued repayment does not generate a reversal*
       *             for accrual. Applied fix MD-52410                 *
@@ -1193,6 +1199,7 @@
       ** Rename settlement fields to avoid them being overwritten         CLE009
       ** by the settlement fields on LEFEED                               CLE009
       *                                                                   CLE009
+     I              FARECI                          FARECC                                  MD047522
      I              SSTS                            FASSTS                CLE009
      I              IUSR                            FAIUSR                CLE009
      I              AUSR                            FAAUSR                CLE009
@@ -2358,6 +2365,7 @@
      C                     MOVE *BLANKS   LKPRFC                                            AR995302
      C                     Z-ADD0         WARY                                              AR753180
      C                     Z-ADD0         R       40                                        AR753180
+     C                     Z-ADD0         FEPOST                                            MD047522
      C/COPY WNCPYSRC,LER135CCP2                                           S01408
       *
      C                     MOVE *BLANKS   LKSCCY                          179741
@@ -2724,7 +2732,8 @@
      C           FEEKEY    READELEFEADL1                 15
       *
      C           *IN15     IFEQ '0'
-     C           FARECI    ANDNE'*'
+     C********** FARECI    ANDNE'*'                                                         MD047522
+     C           FARECC    ANDNE'*'                                                         MD047522
      C                     MOVE 'ADJ'     WSTYPE                                            AR699396
       *
       ** Process according to whether an adjustment (FATYPE = blank)
@@ -6755,7 +6764,8 @@
       ** old fees                                                                             227253
       *                                                                                       227253
      C           FEINDC    IFEQ 'Y'                                                           227253
-     C           FARECI    ANDEQ'A'                                                           247644
+     C********** FARECI    ANDEQ'A'                                                  247644 MD047522
+     C           FARECC    ANDEQ'A'                                                         MD047522
      C           FASIGN    IFEQ '+'                                                           227253
      C           FASIGN    OREQ ' '                                                           227253
      C                     ADD  FASADJ    LKEAMT                                              227253
@@ -6799,6 +6809,9 @@
      C           CLE005    IFEQ 'N'                                                          243496B
      C           FATYPE    ANDEQ' '                                                          243496B
      C           FASADJ    ANDNE0                                                            243496B
+     C           FEINDC    OREQ 'Y'                                                         MD047522
+     C           FATYPE    ANDEQ' '                                                         MD047522
+     C           FASADJ    ANDNE0                                                           MD047522
      C           FASIGN    IFEQ '+'                                                          243496B
      C           FASIGN    OREQ ' '                                                          243496B
      C                     ADD  FASADJ    FELPAM                                             243496B

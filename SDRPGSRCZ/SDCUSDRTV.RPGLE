@@ -3243,6 +3243,7 @@
      C*****WDS1001       IFEQ      'F'                                              BUG7233 MD052297
      C*****WDS2001       OREQ      'F'                                               253344 MD052297
      C*****CSD023        ANDEQ     'Y'                                                BUG7233 253344
+     C*****CSD023        IFEQ      'Y'                                               253344 MD052297
      C**********         MOVEL     'USR9836'     MsgIdArr(Ix)                       BUG7233 MD052297
      C**********         ELSE                                                       BUG7233 MD052297
      C**********         MOVEL     'USR9834'     MsgIdArr(Ix)                        CSD023 MD052297

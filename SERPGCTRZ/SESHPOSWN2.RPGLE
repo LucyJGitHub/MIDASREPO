@@ -10,7 +10,7 @@
       *  SESHPOSWN2 - Short Position Warning for DPMV Security Pos    *
       *                                                               *
       *  Function:  This is to test if the position is less than the  *
-      *             nominal of the Trade Purchased.                   *
+      *             nominal of the Depot Movement.                    *
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
@@ -105,7 +105,7 @@
      D     StartPosit  S                   LIKE(NOML)
 
 
-     D DELF            S              6A                                                      CSD027
+     D DELF            S              6A
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -150,13 +150,13 @@
      C                   ADD       UDNV          CumulPosit
      C                   ADD       UDPV          CumulPosit
      C                   ADD       UDSV          CumulPosit
-     C                   END
+     C                   ENDIF
       *
-     C                   END
+     C                   ENDIF
       *
      C     KUDEPH        READE     UDEPH                                  99
       *
-     C                   END
+     C                   ENDDO
       *
       ** Compare Cumulate Position with Starting Position
       *

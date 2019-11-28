@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050928A          Date 28Jun18               *
+      *  Last Amend No. MD054059           Date 28Nov19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054059 - Reflected value of OTPREF to SPREF during         *
+      *             subroutine WriteToDB                              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928A -OPAY inserted as unauthorised even AutoAUTH = 'Y' *
       *             Re-instate codes reversed by MD033098.  CFT157    *
@@ -1858,6 +1861,7 @@
      C     Idx           IFEQ      0
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
+     C                   MOVEL     OTPREF        SPREF                                      MD054059
      C                   ENDIF
 
      C                   ENDSR

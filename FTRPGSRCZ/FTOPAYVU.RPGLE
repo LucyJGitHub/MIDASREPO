@@ -108,8 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054059 - Reflected value of OTPREF to SPREF during         *
-      *             subroutine WriteToDB                              *
+      *  MD054059 - Missing outgoing payment reference in the         *
+      *             extension files                                   *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928A -OPAY inserted as unauthorised even AutoAUTH = 'Y' *
       *             Re-instate codes reversed by MD033098.  CFT157    *

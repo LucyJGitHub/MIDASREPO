@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053600           Date 28Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 MD030924           Date 07Oct14               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053600 - Missing tax total in Report SD200205P1            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
@@ -1415,6 +1417,10 @@
      C     SRRtvGrmState BEGSR                                                                CER054
       *                                                                                       CER054
       ** Access Federal States Codes file                                                     CER054
+      *                                                                                     MD053600
+     C                   IF        PCUST <> *BLANKS                                         MD053600
+     C                   EVAL      KSTCD = E5STCD                                           MD053600
+     C                   ENDIF                                                              MD053600
       *                                                                                       CER054
      C                   IF        CER054 = 'N' and KSTCD = *BLANKS                         BUG26581
      C                   EVAL      PStcd = *BLANKS                                          BUG26581

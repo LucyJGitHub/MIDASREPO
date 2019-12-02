@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD020934           Date 11May19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CER050             Date 16Jun19              */
+/*       Prev Amend No. MD020934           Date 11May19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CRE105             Date 03Mar15              */
 /*                      MD034346           Date 08May15              */
 /*                      CGL165             Date 23Feb15              */
@@ -86,6 +87,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CER050 - Annualised Percentage Rate                         */
 /*       MD020934 - COB component LERC135 failed due to CDL045.      */
 /*                  Amend length of field &EXTLIB from 8 to 10 to    */
 /*                  avoid truncated library name which causes error. */
@@ -240,6 +242,7 @@
                                                                                           /*CIR014*/
              DCL        VAR(&CGL165) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CGL165*/
                                                                                           /*CGL165*/
+             DCL        VAR(&CER050) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CER050*/
 /*********   DCLDTAARA  DTAARA(SDSTAT)                           S01147 S01179*/
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)             /*S01179*/
              DCL        VAR(&CIR007) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CIR007*/
@@ -413,6 +416,15 @@
                           FILE(REDWTXPD))                                                 /*CGL165*/
              ENDDO                                                                      /*MD034346*/
 /**/                                                                                      /*CGL165*/
+                                                                                          /*CER050*/
+/** Check if feature CER050 is On                                    */                   /*CER050*/
+                                                                                          /*CER050*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER050*/
+             CHGVAR     VAR(&SARD) VALUE('CER050')                                        /*CER050*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CER050*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CER050) +
+                          VALUE('Y'))                                                     /*CER050*/
+                                                                                          /*CER050*/
              RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                /*S01179*/
 /*/COPY WNCPYSRC,DLC0606B18                                          */
 /**/                                                                  /*S01147*/
@@ -680,6 +692,16 @@
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                            EXEC(CLRPFM DLDIRHPD)                                        /*MD027681*/
              ENDDO                                                                      /*MD027681*/
+             IF         COND(&CER050 *EQ 'Y') THEN(DO)                                    /*CER050*/
+                CPYF       FROMFILE(XDLAPRHTD) TOFILE(DLAPRHTD) MBROPT(*REPLACE) +
+                             FMTOPT(*NONE)                                                /*CER050*/
+                MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM DLAPRHTD) +
+                                                                                          /*CER050*/
+                CPYF       FROMFILE(XGLAPRCTD) TOFILE(GLAPRCTD) MBROPT(*REPLACE) +
+                             FMTOPT(*NONE)                                                /*CER050*/
+                MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM GLAPRCTD) +
+                                                                                          /*CER050*/
+             ENDDO       /*CER050*/
 /*/COPY OFCPYSRCZ,CRE105_003                                                              /*CRE105*/
 
                 CPYF       FROMFILE(NEWDLDA) TOFILE(DEALSDA) +
@@ -883,6 +905,12 @@
              DLTF       FILE(XDLDIRHPD)                                                 /*MD027681*/
              MONMSG     MSGID(CPF0000)                                                  /*MD027681*/
              ENDDO                                                                      /*MD027681*/
+             IF         COND(&CER050 *EQ 'Y') THEN(DO)                                    /*CER050*/
+                DLTF       FILE(XDLAPRHTD)                                                /*CER050*/
+                MONMSG     MSGID(CPF0000)                                                 /*CER050*/
+                DLTF       FILE(XGLAPRCTD)                                                /*CER050*/
+                MONMSG     MSGID(CPF0000)                                                 /*CER050*/
+             ENDDO       /*CER050*/
              IF         COND(&CAS009 *EQ 'Y') THEN(DO)                                    /*CAS009*/
                 DLTF       FILE(NEWMMCF)                                                  /*CAS009*/
                 MONMSG     MSGID(CPF0000)                                                 /*CAS009*/
@@ -1061,6 +1089,16 @@
                           FMTOPT(*NONE)                                                 /*MD027681*/
              MONMSG     (CPF2817) CMPDTA(CPF2869)                                       /*MD027681*/
              ENDDO                                                                      /*MD027681*/
+             IF         COND(&CER050 *EQ 'Y') THEN(DO)                                    /*CER050*/
+                CPYF       FROMFILE(DLAPRHTD) TOFILE(&TOLIB/XDLAPRHTD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES) FMTOPT(*NONE) +
+                                                                                          /*CER050*/
+                MONMSG     (CPF2817) CMPDTA(CPF2869)                                      /*CER050*/
+                CPYF       FROMFILE(GLAPRCTD) TOFILE(&TOLIB/XGLAPRCTD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES) FMTOPT(*NONE) +
+                                                                                          /*CER050*/
+                MONMSG     (CPF2817) CMPDTA(CPF2869)                                      /*CER050*/
+             ENDDO       /*CER050*/
              IF         COND(&CAS009 *EQ 'Y') THEN(DO)                                    /*CAS009*/
                 CPYF       FROMFILE(MMCFLSPD) TOFILE(&TOLIB/NEWMMCF) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
@@ -1372,6 +1410,10 @@
                MONMSG     MSGID(CPF0000)                                                  /*CDL013*/
              ENDDO                                                                        /*CDL013*/
           ENDDO                                                                           /*CDL013*/
+                                                                                          /*CER050*/
+          IF         COND(&CER050 *EQ 'Y') THEN(DO)                                       /*CER050*/
+             CALL       PGM(DL6011)                                                       /*CER050*/
+          ENDDO       /*CER050*/
 
 /*/COPY OFCPYSRCZ,CRE105_006                                                              /*CRE105*/
 

@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
@@ -48,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -237,6 +242,9 @@
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
+      ** Define fields used in MD054028                                                     MD054028
+     D DDAPRC          S              1A                                                    MD054028
+     D DDAPRR          S              8A                                                    MD054028
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -323,10 +331,12 @@
  
      C                   PARM                    RetCodeOut
      C                   PARM                    TRANFilFmt
+     C                   PARM                    DDAPRC                         MD054028
+     C                   PARM                    DDAPRR                         MD054028
      C                   PARM                    LDNIScnFmt
      C                   PARM                    PSTS
      C                   PARM                    PCSTS
- 
+      
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE

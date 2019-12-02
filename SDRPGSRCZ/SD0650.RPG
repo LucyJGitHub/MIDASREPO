@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD051784           Date 20Feb19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG23967           Date 13May09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -45,6 +46,8 @@
 0011 F*                      E10310            DATE 23/03/87             *
 0012 F*------------------------------------------------------------------*
 0011 F*                                                               *
+      *  MD051784 - FBM Live COB: SDC000776 Customers Status Update   *
+      *             at Effective Date 2 FAILED                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23967 - Add Local Industry Code Field.                    *
@@ -127,6 +130,12 @@
       *                                                                   CGL018
 0040 FSDCRWAL0UF  E           K        DISK                               CGL018
      F*                                                                   CGL018
+      ** Midas SD Customer Details by Country File                                          MD051784
+     FSDACTXL0UF  E           K        DISK                                                 MD051784
+      ** SD FATCA Customer Details File                                                     MD051784
+     FSDFTCSL0UF  E           K        DISK                                                 MD051784
+      ** Midas SD Customer Details Extension C File                                         MD051784
+     FSDCUSXL0UF  E           K        DISK                                                 MD051784
      F*                                                                   S01408
      F*                                                                   S01408
      F/COPY WNCPYSRC,SD0650FFP1                                           S01408
@@ -295,6 +304,36 @@
      C                     MOVE 'N'       CGL018                          CGL018
      C                     ENDIF                                          CGL018
       *                                                                   CGL018
+      *                                                                                     MD051784
+      ***  Determine if switchable feature CGL032 is activated                              MD051784
+      *                                                                                     MD051784
+     C                     CALL 'AOSARDR0'                                                  MD051784
+     C                     PARM *BLANKS   @RTCD                                             MD051784
+     C                     PARM '*VERIFY' @OPTN                                             MD051784
+     C                     PARM 'CGL032'  @SARD                                             MD051784
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD051784
+      *                                                                                     MD051784
+     C           @RTCD     IFEQ *BLANK                                                      MD051784
+     C                     MOVE 'Y'       CGL032  1                                         MD051784
+     C                     ELSE                                                             MD051784
+     C                     MOVE 'N'       CGL032                                            MD051784
+     C                     ENDIF                                                            MD051784
+      *                                                                                     MD051784
+      *                                                                                     MD051784
+      ***  Determine if switchable feature CGL132 is activated                              MD051784
+      *                                                                                     MD051784
+     C                     CALL 'AOSARDR0'                                                  MD051784
+     C                     PARM *BLANKS   @RTCD                                             MD051784
+     C                     PARM '*VERIFY' @OPTN                                             MD051784
+     C                     PARM 'CGL132'  @SARD                                             MD051784
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD051784
+      *                                                                                     MD051784
+     C           @RTCD     IFEQ *BLANK                                                      MD051784
+     C                     MOVE 'Y'       CGL132  1                                         MD051784
+     C                     ELSE                                                             MD051784
+     C                     MOVE 'N'       CGL132                                            MD051784
+     C                     ENDIF                                                            MD051784
+      *                                                                                     MD051784
 0176 C           START     TAG
 0177 C*
 0178 C                     SETOF                     717276
@@ -336,6 +375,21 @@
      C           CGL018    IFEQ 'Y'                                       CGL018
      C                     EXSR RWA                                       CGL018
      C                     END                                            CGL018
+      *                                                                                     MD051784
+      ** If feature CGL032 is present,                                                      MD051784
+      ** delete any record from file SDACTXPD                                               MD051784
+      *                                                                                     MD051784
+     C           CGL032    IFEQ 'Y'                                                         MD051784
+     C                     EXSR ACTX                                                        MD051784
+     C                     END                                                              MD051784
+      *                                                                                     MD051784
+      ** If feature CGL132 is present,                                                      MD051784
+      ** delete any record from file SDFTCSPD and SDCUSTXC                                  MD051784
+      *                                                                                     MD051784
+     C           CGL132    IFEQ 'Y'                                                         MD051784
+     C                     EXSR FTCS                                                        MD051784
+     C                     EXSR CUSX                                                        MD051784
+     C                     END                                                              MD051784
      C*                                                                   S01408
      C/COPY WNCPYSRC,SD0650CCP2                                           S01408
      C*                                                                   S01408
@@ -436,6 +490,95 @@
      C                     ENDIF                                          CGL018
      C                     ENDDO                                          CGL018
      C                     ENDSR                                          CGL018
+      *******************************************************************                   MD051784
+      * ACTX      : Delete any records from SDACTXPD                    *                   MD051784
+      * ---                                                             *                   MD051784
+      * Called By : Main                                                *                   MD051784
+      * Calls     : None                                                *                   MD051784
+      *******************************************************************                   MD051784
+     C           ACTX      BEGSR                                                            MD051784
+     C           KCNUM     CHAINSDACTXL0             79                                     MD051784
+     C           *IN79     DOWEQ'0'                                                         MD051784
+     C                     DELETSDACTXD0               80                                   MD051784
+     C           *IN80     IFEQ '1'                                                         MD051784
+      *                                                                                     MD051784
+      ** If delete not OK, database error.                                                  MD051784
+      *                                                                                     MD051784
+     C           *LOCK     IN   DLDA                                                        MD051784
+     C                     MOVEL'SD0650  'DBPGM                                             MD051784
+     C                     MOVE *BLANK    DBKEY                                             MD051784
+     C                     MOVELKCNUM     DBKEY                                             MD051784
+     C                     MOVE 'SDACTXPD'DBFILE                                            MD051784
+     C                     Z-ADD5         DBASE                                             MD051784
+     C                     OUT  DLDA                                                        MD051784
+     C                     MOVE '1'       *INU8                                             MD051784
+     C                     MOVE '1'       *INLR                                             MD051784
+     C                     DUMP                                                             MD051784
+     C                     RETRN                                                            MD051784
+     C                     ENDIF                                                            MD051784
+      *                                                                                     MD051784
+     C           KCNUM     READESDACTXL0                 79                                 MD051784
+     C                     ENDDO                                                            MD051784
+     C                     ENDSR                                                            MD051784
+      *******************************************************************                   MD051784
+      * FTCS      : Delete any records from SDFTCSPD                    *                   MD051784
+      * ---                                                             *                   MD051784
+      * Called By : Main                                                *                   MD051784
+      * Calls     : None                                                *                   MD051784
+      *******************************************************************                   MD051784
+     C           FTCS      BEGSR                                                            MD051784
+     C           KCNUM     CHAINSDFTCSL0             79                                     MD051784
+     C           *IN79     IFEQ '0'                                                         MD051784
+     C                     DELETSDFTCSD0               80                                   MD051784
+     C           *IN80     IFEQ '1'                                                         MD051784
+      *                                                                                     MD051784
+      ** If delete not OK, database error.                                                  MD051784
+      *                                                                                     MD051784
+     C           *LOCK     IN   DLDA                                                        MD051784
+     C                     MOVEL'SD0650  'DBPGM                                             MD051784
+     C                     MOVE *BLANK    DBKEY                                             MD051784
+     C                     MOVELKCNUM     DBKEY                                             MD051784
+     C                     MOVE 'SDFTCSPD'DBFILE                                            MD051784
+     C                     Z-ADD6         DBASE                                             MD051784
+     C                     OUT  DLDA                                                        MD051784
+     C                     MOVE '1'       *INU8                                             MD051784
+     C                     MOVE '1'       *INLR                                             MD051784
+     C                     DUMP                                                             MD051784
+     C                     RETRN                                                            MD051784
+     C                     ENDIF                                                            MD051784
+      *                                                                                     MD051784
+     C                     ENDIF                                                            MD051784
+     C                     ENDSR                                                            MD051784
+      *******************************************************************                   MD051784
+      * CUSX      : Delete any records from SDCUSTXC                    *                   MD051784
+      * ---                                                             *                   MD051784
+      * Called By : Main                                                *                   MD051784
+      * Calls     : None                                                *                   MD051784
+      *******************************************************************                   MD051784
+     C           CUSX      BEGSR                                                            MD051784
+     C           KCNUM     CHAINSDCUSXL0             79                                     MD051784
+     C           *IN79     DOWEQ'0'                                                         MD051784
+     C                     DELETSDCUSTX0               80                                   MD051784
+     C           *IN80     IFEQ '1'                                                         MD051784
+      *                                                                                     MD051784
+      ** If delete not OK, database error.                                                  MD051784
+      *                                                                                     MD051784
+     C           *LOCK     IN   DLDA                                                        MD051784
+     C                     MOVEL'SD0650  'DBPGM                                             MD051784
+     C                     MOVE *BLANK    DBKEY                                             MD051784
+     C                     MOVELKCNUM     DBKEY                                             MD051784
+     C                     MOVE 'SDCUSTXC'DBFILE                                            MD051784
+     C                     Z-ADD7         DBASE                                             MD051784
+     C                     OUT  DLDA                                                        MD051784
+     C                     MOVE '1'       *INU8                                             MD051784
+     C                     MOVE '1'       *INLR                                             MD051784
+     C                     DUMP                                                             MD051784
+     C                     RETRN                                                            MD051784
+     C                     ENDIF                                                            MD051784
+      *                                                                                     MD051784
+     C           KCNUM     READESDCUSXL0                 79                                 MD051784
+     C                     ENDDO                                                            MD051784
+     C                     ENDSR                                                            MD051784
 0237 C**
 0238 C********************************************************************
      C/COPY WNCPYSRC,SD0650C006

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD041578           Date 23Sep16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD041578           Date 23Sep16               *
       *                 MD041407           Date 19Sep16               *
       *                 MD041389           Date 19Sep16               *
       *                 MD041066           Date 13Sep16               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD041578 - Last Action User is not displayed in the          *
       *             Description Header generated when deleting        *

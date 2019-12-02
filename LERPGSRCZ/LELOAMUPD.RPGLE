@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD054317           Date 09Sep19               *      
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD050018           Date 05Nov18               *
       *                 MD047554           Date 11Oct17               *
       *                 MD046248           Date 27Oct17               *
@@ -102,7 +103,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054317 - PDCL X not generated for freq based repayment     *
+      *  MD054317 - PDCL X not generated for freq based repayment     *      
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
       *             for Input Cycle Principal Increase Events to PDCL *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD031234           Date 16May19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD031234           Date 16May19               *
       *                 MD020755           Date 16May19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051563           Date 19Jul18               *
@@ -144,6 +145,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD031234 - Marketing information not updated on CLINTCB      *
       *             when inserting customer.                          *
@@ -537,6 +539,7 @@
      D APIRetc         S              1                                                       CSD023
                                                                                               CSD023
      D WURDNB          S                   like(BJRDNB)                                       CSD079
+     D CER050          S              1A   inz('N')                                           CER050
      D CSD079          S              1A   inz('N')                                           CSD079
      D S01425          S              1A   inz('N')                                           CSD079
      D CSD008          S              1A   inz('N')                                           CSD079
@@ -7824,6 +7827,19 @@
      C                   ELSE                                                               MD028198
      C                   EVAL      CSW213 = 'N'                                             MD028198
      C                   ENDIF                                                              MD028198
+      *                                                                                       CER050
+     C                   CALLB     'AOSARDR0'                                                 CER050
+     C                   PARM      *BLANKS       PRTCD                                        CER050
+     C                   PARM      '*VERIFY'     POPTN                                        CER050
+     C                   PARM      'CER050'      PSARD                                        CER050
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER050
+                                                                                              CER050
+     C                   IF        PRTCD       = *BLANKS                                      CER050
+     C                   EVAL      CER050      = 'Y'                                          CER050
+     C                   ELSE                                                                 CER050
+     C                   EVAL      CER050      = 'N'                                          CER050
+     C                   ENDIF                                                                CER050
+      *                                                                                       CER050
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -8604,6 +8620,14 @@
                                                                                               CER059
      C                   EVAL      E5FRNT = A_ADFRNT                                        AR971184
      C                   EVAL      E5REPA = A_ADREPA                                        AR971184
+      *                                                                                       CER050
+     C                   IF        CER050 = 'Y'                                               CER050
+     C                   If        A_ADAPRC = *Blanks                                         CER050
+     C                   EVAL      E5APRC = 'Y'                                               CER050
+     C                   else                                                                 CER050
+     C                   EVAL      E5APRC = A_ADAPRC                                          CER050
+     C                   Endif                                                                CER050
+     C                   ENDIF                                                                CER050
                                                                                             AR971184
       ** Insert                                                                               CSD079
                                                                                               CSD079

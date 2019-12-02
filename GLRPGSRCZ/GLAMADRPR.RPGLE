@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 222427             Date 05Dec16               *
       *                 LLN022A            Date 03Jun15               *
       *                 CRE095             Date 25Apr14               *
@@ -86,6 +88,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
@@ -1716,6 +1721,10 @@
                                                                                               CSD012
       * Authorisation Mode                                                                    CSD012
      C                   PARM                    AUTHMD                                       CSD012
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       *
       * If errors returned
      C     Idx           IFNE      0
@@ -2788,6 +2797,10 @@
       * Retail charges details
      C                   PARM                    R_FACH
      C                   PARM                    R_TSTMC
+      *                                                                                     MD054028
+     C                   PARM                    DDAPRC            1                        MD054028
+     C                   PARM                    DDAPDR            8                        MD054028
+     C                   PARM                    DDAPCR            8                        MD054028
       * OUTPUTS
       * Trade - screen formats
      C                   PARM                    NewAcMast

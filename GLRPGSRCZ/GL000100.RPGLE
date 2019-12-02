@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24862           Date 10Jun09               *
       *                 BUG24335           Date 25Jun09               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -167,7 +169,7 @@
       ** Print End of Report
       *
      D WEndOfRep       S               N
- 
+
      D WRun            S              1A
      D PRtCd           S              7A
      D POptn           S              7A
@@ -285,7 +287,7 @@
       *  Calls: *PSSR                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFill        BEGSR
       *
      C                   MOVE      CNUM          RCUST

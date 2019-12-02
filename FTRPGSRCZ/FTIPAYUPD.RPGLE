@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054037           Date 23Sep19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037804           Date 25May16               *
       *                 AR924677           Date 03Nov14               *
       *                 MD030940           Date 08Oct14               *
@@ -92,6 +93,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
+      *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037804 - Unnecessary DUMP produced by FTIPAYUPD module     *
@@ -3947,7 +3950,8 @@ e1   C                   ENDSL                                                  
      C                   CALL      'AOCURRR0'                                                 CAP211
      C                   PARM      *BLANKS       PRTCD                                        CAP211
      C                   PARM      '*KEY   '     POPTN                                        CAP211
-     C                   PARM      PCCY          PCCY                                         CAP211
+     C************       PARM      PCCY          PCCY                               CAP211  MD054037
+     C                   PARM      SMCY          P#CCY             3                        MD054037
      C     SDCURR        PARM      SDCURR        DSSDY                                        CAP211
       *                                                                                       CAP211
 s1   C     PRTCD         IFNE      *BLANKS                                                    CAP211
@@ -3979,7 +3983,8 @@ e1   C                   ENDIF                                                  
      C                   CALL      'AOCURRR0'                                                 CAP211
      C                   PARM      *BLANKS       PRTCD                                        CAP211
      C                   PARM      '*KEY   '     POPTN                                        CAP211
-     C                   PARM      BJCYCD        PCCY                                         CAP211
+     C************       PARM      BJCYCD        PCCY                                CAP211 MD054037
+     C                   PARM      BJCYCD        P#CCY                                      MD054037
      C     SDCURR        PARM      SDCURR        DSSDY                                        CAP211
       *                                                                                       CAP211
 s1   C     PRTCD         IFNE      *BLANKS                                                    CAP211
@@ -4550,7 +4555,8 @@ e1   C                   ENDIF                                                  
      C     *IN80         IFEQ      *Off                                                       CAP211
      C                   Z-ADD     OHRWN         ZZTOTI                                       CAP211
      C                   Z-ADD     OHRDC         ZZTOTD                                       CAP211
-     C                   ADD       1             NORE1                                        CAP211
+     C************       ADD       1             NORE1                               CAP211 MD054037
+     C                   ADD       1             ONORE1                                     MD054037
      C     SMAM          DIV       1000          ZZAMT                                        CAP211
      C                   EXSR      SrGLZADD                                                   CAP211
      C                   Z-ADD     ZZTOTI        OHRWN                                        CAP211

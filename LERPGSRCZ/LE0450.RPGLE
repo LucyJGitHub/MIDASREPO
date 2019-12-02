@@ -12,13 +12,14 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054326           Date 18Sep19               *
-      *  Prev Amend No. MD054335           Date 11Sep19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054326           Date 18Sep19               *
+      *                 MD054335           Date 11Sep19               *
       *                 MD054132           Date 16Aug19               *
       *                 MD054108           Date 14Aug19               *
       *                 MD053947           Date 17Jul19               *
       *                 MD051883           Date 04Apr19               *
-      *                 MD054008           Date 20Aug19               *
+      *                 MD054008           Date 20Aug19               *      
       *                 MD053295           Date 13Apr19               *
       *                 AR1097303          Date 16May19               *
       *                 MD047693           Date 30Jan18               *
@@ -411,6 +412,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  MD054326 - Repayment amount debited from settlement account  *
       *             showed discrepancy against balance check          *
       *             on LEC000496 report                               *
@@ -427,7 +429,7 @@
       *             on principal and discount amount.                 *
       *  MD051883 - CLE031: Changes to Value Date Account Keys        *
       *  MD054008 - ABLN for past due loans should be up to the next  *
-      *             working date.                                     *
+      *             working date.                                     *      
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -1260,7 +1262,8 @@
      F***LOUPDL1 IP AF    1782 10AI     2 DISK                                         CER020 CRE073
      F***LOUPDL1   IP  AF 1829    10AIDISK    KEYLOC(2)                                CRE073 CLE134
      F***LOUPDL1   IP  AF 1905    10AIDISK    KEYLOC(2)                                CLE134 CLE141
-     FLOUPDL1   IP  AF 2025    10AIDISK    KEYLOC(2)                                          CLE141
+     F***LOUPDL1   IP  AF 2025    10AIDISK    KEYLOC(2)                                CLE141 CER050
+     FLOUPDL1   IP  AF 2039    10AIDISK    KEYLOC(2)                                          CER050
      FLELOMKL1  IF   E           K DISK                                                       CLE134
      F                                     IGNORE(LOAMSDHF)                                   CLE134
      F                                     RENAME(LOAMSDKF:LOMNEWF)                           CLE134
@@ -1366,7 +1369,8 @@
      F***NCLONCL O   F    1782            DISK                                       BUG22966 CRE073
      F***NCLONCL   O    F 1829        DISK                                             CRE073 CLE134
      F***NCLONCL   O    F 1905        DISK                                             CLE134 CLE141
-     FNCLONCL   O    F 2025        DISK                                                       CLE141
+     F***NCLONCL   O    F 2025        DISK                                             CLE141 CER050
+     FNCLONCL   O    F 2039        DISK                                                       CER050
      F***NCLONCK O   F     469            DISK                     S01518 CLE004
      F***NCLONCK*O   F    1103            DISK                     CLE004 123335
      F***NCLONCK*O   F    1111            DISK                     123335 CEU004
@@ -1407,7 +1411,8 @@
      F***MCLONCL O   F    1776            DISK                                         CER020 CRE073
      F***MCLONCL   O    F 1805        DISK                                             CRE073 CLE134
      F***MCLONCL   O    F 1881        DISK                                             CLE134 CLE141
-     FMCLONCL   O    F 2001        DISK                                                       CLE141
+     F***MCLONCL   O    F 2001        DISK                                             CLE141 CER050
+     FMCLONCL   O    F 2015        DISK                                                       CER050
 0019 F***MCLONCK*O***F     400            DISK                      S10227S01518
 0019 F***MCLONCK O   F     469            DISK                     S01518 CLE004
      F***MCLONCK*O   F    1103            DISK                     CLE004 123335
@@ -2974,6 +2979,8 @@ L118 I                             P   72   77 7RTSPL
      I                               1936 1965  LOCPR                                         CLE141
      I                               1966 1995  CCYPI                                         CLE141
      I                               1996 2025  LOCPI                                         CLE141
+     I                               2026 2026  APRC                                          CER050
+     I                               2027 2039 0PREM                                          CER050
 0194 I**
 0195 I**   /FIELDS TO DEFINE WHOLE RECORD
 0196 I**
@@ -4273,6 +4280,8 @@ L118 I                             P   72   77 7RTSPL
      I              BASR                        BASRX                                      AR1083279
      I              SLTP                        SLTPX                                      AR1083279
      I              SLST                        SLSTX                                      AR1083279
+     I              APRC                        XAPRC                                         CER050
+     I              PREM                        XPREM                                         CER050
       *                                                                                       185526
       **  Redefine some of the unneeded CLOANCK fields for safety                             185526
      ICLOANCKF
@@ -20945,6 +20954,8 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE134
      O                       XRFI              1864                                           CLE134
      O                       XRFN              1874                                           CLE134
+     O                       APRC              2026                                           CER050
+     O                       PREM              2039                                           CER050
       *                                                                   CAC001
       *                                                                   CAC001
 3450 ONCLONCK   D    62
@@ -21608,6 +21619,8 @@ C    C                   ENDIF                                                  
      O                       XRFI              1840                                           CLE134
      O                       XRFN              1850                                           CLE134
       *                                                                                       CLE134
+     O                       APRC              2002                                           CER050
+     O                       PREM              2015                                           CER050
       *                                                                   CAC001
 3450 OMCLONCK   D    63                                                         S10227
      O*                                                                   S01270

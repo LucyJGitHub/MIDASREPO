@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -110,6 +111,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
@@ -342,6 +344,8 @@
       ** Tax Code Fields                                                                      CGL165
      D  @IKTXC              2182   2185                                                       CGL165
                                                                                               CGL165
+     D  @IKAPR              2186   2186                                                       CER050
+                                                                                              CER050
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)                                  CDL018
       ** File - Payment Further Settlement Instructions                                       CDL018
                                                                                               CDL018
@@ -381,6 +385,7 @@
      D  @HKDET              2148   2181                                                       CDL096
       ** Tax Code Fields                                                                      CGL165
      D  @HKTXC              2182   2185                                                       CGL165
+     D  @HKAPR              2186   2186                                                       CER050
  
      D ChkDealFmt    E DS                  EXTNAME(MMDELDPP)                    CAP006
       ** Rename fields for Timestamp checking                                   CAP006
@@ -471,6 +476,7 @@
      D CDL006          S              1A                                                    BUG10725
      D CDL096          S              1A                                                      CDL096
      D CGL165          S              1A                                                      CGL165
+     D CER050          S              1A                                                      CER050
      D/COPY WNCPYSRC,MMLDNIMD02
      D CAP042          S              1A                                                      CAP042
      D PLnkFlag        S              1A                                                      CAP042
@@ -2103,6 +2109,10 @@
      C                   IF        CGL165 = 'Y'                                               CGL165
      C                   EVAL      @HKTXC = @IKTXC                                            CGL165
      C                   ENDIF                                                                CGL165
+                                                                                              CER050
+     C                   If        CER050 = 'Y'                                               CER050
+     C                   Eval      @HKAPR = @IKAPR                                            CER050
+     C                   Endif                                                                CER050
       *
      C                   ENDSR
      C*****************************************************************
@@ -3464,6 +3474,20 @@
      C                   EVAL      CGL165 = 'N'                                               CGL165
      C                   ENDIF                                                                CGL165
                                                                                               CGL165
+      ** Access SAR details file to determine if CER050 is on.                                CER050
+      *                                                                                       CER050
+     C                   CallB     'AOSARDR0'                                                 CER050
+     C                   Parm      *BLANKS       PRTCD                                        CER050
+     C                   Parm      '*VERIFY'     POPTN                                        CER050
+     C                   Parm      'CER050'      PSARD                                        CER050
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER050
+      *                                                                                       CER050
+     C                   If        PRtcd = *Blanks                                            CER050
+     C                   Eval      CER050 = 'Y'                                               CER050
+     C                   Else                                                                 CER050
+     C                   Eval      CER050 = 'N'                                               CER050
+     C                   Endif                                                                CER050
+                                                                                              CER050
      C                   ENDSR
       *****************************************************************
       *****************************************************************                       CSD015

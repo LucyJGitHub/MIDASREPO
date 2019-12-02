@@ -18,8 +18,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD022067           Date 27Aug13               *
-      *  Prev Amend No. CLE064             Date 06Dec10               *
+     F*  Last Amend No. MD051991           Date 26Nov19               *
+      *  Prev Amend No. MD022067           Date 27Aug13               *
+      *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -41,6 +42,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD051991 - LERSTS' REPDAT and STARMO not updated after run   *
+      *           - Applied for MD054487.                             *
       *  MD022067 - LERC21 interfere with LERC30A                     *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -393,6 +396,14 @@
      C** run                                                                0078
      C*                                                                     0078
      C           *LOCK     IN   LERSTS                                                      MD022067
+     C                     Z-ADDSMDY      STARMO  50                                        MD051991
+      ** If this is the first run of the day update the processing                          MD051991
+      ** date on the dataara LERSTS - this makes sure that the                              MD051991
+      ** profitability reporting is in line with the first level                            MD051991
+      ** file updates                                                                       MD051991
+     C           LASTF     IFLT RUND                                                        MD051991
+     C                     MOVE WREPDT    REPDAT  7                                         MD051991
+     C                     ENDIF                                                            MD051991
      C                     Z-ADDCODT      LASTFN  50                        0078
      C                     OUT  LERSTS                                      0078
      C*
@@ -1224,7 +1235,7 @@
      C                     END
      C*
      C                     Z-ADDZDAYNO    SMDY    50
-     C                     Z-ADDZDAYNO    STARMO  50                        0110
+     C**********           Z-ADDZDAYNO    STARMO  50                        0110            MD051991
      C*
      C*****CHECK*WHETHER*THE*NEXT*START*OF*MONTH*FALLS*BETWEEN*RUND*AND     0078
      C*****THE*DATE*OF*NEXT*WORKING*DAY********************************     0078
@@ -1331,15 +1342,16 @@
      C                     Z-ADDCODT      ZDAYNO
      C                     EXSR ZDATE2
      C                     Z-ADDZDATE     CODA    60
-     C*                                                                     0111
-     C** If this is the first run of the day update the processing          0111
-     C** date on the dataara LERSTS - this makes sure that the              0111
-     C** profitability reporting is in line with the first level            0111
-     C** file updates                                                       0111
-     C*                                                                     0111
-     C           LASTF     IFLT RUND                                        0111
-     C                     MOVE ZADATE    REPDAT  7                         0111
-     C                     END                                              0111
+      ****************************************************************      0111            MD051991
+      ***If*this*is*the*first*run*of*the*day*update*the*processing****      0111            MD051991
+      ***date*on*the*dataara*LERSTS*-*this*makes*sure*that*the********      0111            MD051991
+      ***profitability*reporting*is*in*line*with*the*first*level******      0111            MD051991
+      ***file*updates*************************************************      0111            MD051991
+      ****************************************************************      0111            MD051991
+     C********** LASTF     IFLT RUND                                        0111            MD051991
+     C**********           MOVE ZADATE    REPDAT  7                         0111            MD051991
+     C                     MOVE ZADATE    WREPDT  7                                         MD051991
+     C**********           END                                              0111            MD051991
      C*********************                                                 0078
      C*****IF*CODT*HAS*BEEN ADJUSTED TO THE END OF MONTH DATE THEN ON       0078
      C*****SECOND*RUN*PELAP MUST BE ADJUSTED TO THAT DATE                   0078

@@ -3,7 +3,7 @@
 /*EXI *  TEXT('Midas DL FORWARD RATES INPUT')                        */
 /********************************************************************/
 /*                                                                  */
-/*     Midas - DEALING                                      */
+/*     Midas - DEALING                                              */
 /*                                                                  */
 /*     DLC0208 - FORWARD RATES INPUT                                */
 /*                                                                  */
@@ -20,18 +20,18 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
-/      MD046248 - Finastra Rebranding                               */
+/*      MD046248 - Finastra Rebranding                              */
 /*     NEW PROGRAM AT RELEASE 10 TO ALLOW FOR SWITCHABLE FORWARD    */
 /*     RATES ENHANCEMENT (S01432)                                   */
 /*                                                                  */
 /********************************************************************/
              PGM
 /*/COPY WNCPYSRC,DLC0208001                                          */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
@@ -39,22 +39,22 @@
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
 /*/COPY WNCPYSRC,DLC0208002                                          */
- 
- 
+
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('S01432')
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
- 
+
              IF         COND(&RTCD *EQ '       ') THEN(CALL +
                         PGM(DL0090A))
 /*/COPY WNCPYSRC,DLC0208004                                          */
              ELSE       CMD(CALL PGM(DL0090))
- 
- 
+
+
              RTVJOBA    JOB(&JOB) SWS(&SWS)
              IF         COND((%SUBSTRING(&SWS 7 1) = '1') *OR +
                         (%SUBSTRING(&SWS 8 1) = '1')) THEN(DO)
@@ -64,11 +64,11 @@
                         TOMSGQ(&JOB)
 /*/COPY WNCPYSRC,DLC0208005                                          */
              ENDDO
- 
+
 /** Call AOSARDR0 with an option of '*FREE' to close the file.       */
              CHGVAR     VAR(&OPTN) VALUE('*FREE')
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /*/COPY WNCPYSRC,DLC0208003                                          */

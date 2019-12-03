@@ -32,7 +32,7 @@
      F*                                                               *
       *  MD054187 - Populate DS/SDCURR with currency details during   *
       *             initial processing and move the currency of the   *
-      *             posting being processed to PFKEY.                 *
+      *             posting being processed to PFKEY                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL127AQ - COB Restructure - GL COB Optimisation Phase 1     *
       *  CGL120 - GL COB Components Task Split                        *

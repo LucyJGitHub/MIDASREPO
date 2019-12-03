@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL127AQ           Date 06Aug12               *
+      *  Last Amend No. MD054187           Date 29Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL127AQ           Date 06Aug12               *
       *                 CGL120             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD054187 - Populate DS/SDCURR with currency details during   *
+      *             initial processing and move the currency of the   *
+      *             posting being processed to PFKEY.                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL127AQ - COB Restructure - GL COB Optimisation Phase 1     *
       *  CGL120 - GL COB Components Task Split                        *
@@ -55,7 +59,8 @@
      FACJXT     IS   E             DISK
      F** EOD Postings Extract Trailer
      F*
-     FSDCURRL1  IF   E             DISK                                                     CGL127AQ
+     F*SDCURRL1  IF   E             DISK                                           CGL127AQ MD054187
+     FSDCURRL1  IF   E           K DISK                                                     MD054187
       ** Midas SD Currency codes file                                                       CGL127AQ
       *                                                                                     CGL127AQ
      FGL4116P1  O    E             PRINTER INFDS(SPOOL)
@@ -254,6 +259,7 @@
      C**   ACCESS CURRENCY TABLE FOR CURRENCY NAME AND DECIMAL PLACES
      C   L4              SETOFF                                       0499
      C*
+     C   L4              EVAL      PFKEY = CCY                                              MD054187
      C   L4              EVAL      KEYTMPCR = PFKEY                                         CGL127AQ
      C   L4              EVAL      FoundInCache = FALSE                                     CGL127AQ
       *                                                                                     CGL127AQ
@@ -657,6 +663,7 @@
       *                                                                   CSD005
       ** Full Cache SDCURRPD                                                                CGL127AQ
       *                                                                                     CGL127AQ
+     C                   EVAL      %OCCUR(SDCURR) = 1                                       MD054187
      C                   READ      SDCURRL1                               13                CGL127AQ
      C                   IF        *IN13 = *OFF                                             CGL127AQ
      C                   EVAL      IDXTRLCR = 1                                             CGL127AQ
@@ -670,6 +677,7 @@
      C                   Z-ADD     1             IDXTRLCR                                   CGL127AQ
      C                   ENDIF                                                              CGL127AQ
       *                                                                                     CGL127AQ
+     C                   EVAL      %OCCUR(SDCURR) = IDXTRLCR                                MD054187
      C                   READ      SDCURRL1                               13                CGL127AQ
      C                   IF        *IN13 = *OFF                                             CGL127AQ
      C                   EVAL      CCURR(IDXTRLCR) = A6CYCD                                 CGL127AQ

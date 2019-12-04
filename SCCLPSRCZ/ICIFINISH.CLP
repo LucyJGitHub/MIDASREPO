@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC058             Date 06Aug12              */
+/*       Last Amend No. MD054423           Date 11Nov19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC058             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27089           Date 08Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054423 - GOC011501 failed due to GPGDRPPD overflow.       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC058 - Change to CCB016 - Bypass of DBBOB Save            */
 /*       BUG27089 - SCKOBJLCB failed                                 */
@@ -69,7 +71,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -87,7 +89,7 @@
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                         /*CSW025*/
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSW025*/
              DCL        VAR(&COMRTN) TYPE(*CHAR) LEN(1)                                   /*CSC058*/
- 
+
 /*/COPY WNCPYSRC,ICIFINIS04                                          */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
                                                                                           /*CSW025*/
@@ -159,7 +161,7 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,ICIFINIS01                                       */  /*S01408*/
                                                                       /*S01408*/
- 
+
              CHGVAR     VAR(&RTN) VALUE('       ')                                        /*CSC011*/
              CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*CSC011*/
              CHGVAR     VAR(&SARD) VALUE('CSC011')                                        /*CSC011*/
@@ -228,7 +230,7 @@
 /*----------------------> */
                 CHGDTAARA  DTAARA(SCSUPP (1 1)) VALUE('Y')                                /*CSC011*/
              ENDDO                                                                        /*CSC011*/
- 
+
 /**********  CHGDTAARA  DTAARA(MPHAS) VALUE('A') */                           /*077466*/ /*BUG5730*/
 /**********  SCWRTJREG EVENT(MPHAS) FLAG(A) TEXT('MPHAS changed from F to A') /*CSC020*/ /*BUG5730*/
                                                                       /*077466*/
@@ -263,10 +265,10 @@ SKIP:                                                                           
              SNDJRNE    JRN(ICJRN) TYPE('BJ') FORCE(*YES)                                /*BUG9619*/
 /* */                                                                 /*CSC001*/
 /*/COPY WNCPYSRC,ICIFINIS03                                          */
- 
+
 /* Access PF/SDMMODPD to determine which modules are live */          /*CPB002*/
              CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &FMT)       /*CPB002*/
- 
+
              IF         COND(%SST(&FMT 104 1) *EQ 'Y') THEN(DO)       /*CPB002*/
                ADDPFTRG   FILE(FWDRTFE) TRGTIME(*AFTER) +
                           TRGEVENT(*INSERT) PGM(PB6602)               /*CPB002*/
@@ -275,6 +277,20 @@ SKIP:                                                                           
                           TRGEVENT(*UPDATE) PGM(PB6602) +
                           TRGUPDCND(*CHANGE)                          /*CPB002*/
              ENDDO                                                    /*CPB002*/
+                                                                                        /*MD054423*/
+/** Clear physical file GPGDRPPD                                   **/                  /*MD054423*/
+                                                                                        /*MD054423*/
+             ALCOBJ     OBJ((GPGDRPPD *FILE *EXCL)) WAIT(0)                             /*MD054423*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                         /*MD054423*/
+             GOTO       CMDLBL(TAGC)                                                    /*MD054423*/
+             ENDDO                                                                      /*MD054423*/
+                                                                                        /*MD054423*/
+             CLRPFM     FILE(GPGDRPPD)                                                  /*MD054423*/
+             DLCOBJ     OBJ((GPGDRPPD *FILE *EXCL))                                     /*MD054423*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054423*/
+                                                                                        /*MD054423*/
+ TAGC:                                                                                  /*MD054423*/
+                                                                                        /*MD054423*/
                                                                                         /*BUG27089*/
 /* If background RCF distribution program is not running yet,      */                   /*BUG27089*/
 /* start it up                                                     */                   /*BUG27089*/
@@ -288,18 +304,18 @@ SKIP:                                                                           
                           INLLIBL(*JOBD)                                                /*BUG27089*/
                                                                                         /*BUG27089*/
              GOTO       CMDLBL(END)
- 
+
 /* Abnormal termination processing */
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,ICIFINIS07                                          */
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000)
- 
+
              SNDPGMMSG  MSG('Program ICIFINISH ended abnormally') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /*/COPY WNCPYSRC,ICIFINIS08                                          */

@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054610           Date 18Oct10               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD053634           Date 21Oct19               *
+      *  Prev Amend No. MD054610           Date 18Oct10               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052465           Date 10Jan19               *
       *                 CSD102             Date 08Jan19               *
@@ -150,6 +151,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053634 - Requested Customer “Authority Holders Link Report *
+      *             for KWG$24c” not generated.                       *
       *  MD054610 - Added the parameter TranInCRDD to SDFTCS5VL call  *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -4471,27 +4474,33 @@
      C                   PARM      *BLANKS       DACTN             1                          CSD028
      C                   PARM                    CTI006                                     MD030956
                                                                                               CER059
-     C                   IF        @RTCD = *BLANKS                                            CER059
-     C                             AND (DDACTN <> 'D'                                       AR741363
-     C                             AND DDACTN <> 'C')                                       AR741363
-     C                   CLEAR                   UpdKey                                       CER059
-     C                   CLEAR                   ValidCUAH                                    CER059
-     C                   EVAL      UpCust = V_CUCUST                                          CER059
-     C                   EVAL      V_ACTYLC = 'D'                                             CER059
-     C                   EVAL      V_ACCUST = V_CUCUST                                        CER059
-     C                   EXSR      SrUpdCUAH                                                  CER059
+     C**********         IF        @RTCD = *BLANKS                                   CER059 MD053634
+     C**********                   AND (DDACTN <> 'D'                              AR741363 MD053634
+     C**********                   AND DDACTN <> 'C')                              AR741363 MD053634
+     C**********         CLEAR                   UpdKey                              CER059 MD053634
+     C**********         CLEAR                   ValidCUAH                           CER059 MD053634
+     C**********         EVAL      UpCust = V_CUCUST                                 CER059 MD053634
+     C**********         EVAL      V_ACTYLC = 'D'                                    CER059 MD053634
+     C**********         EVAL      V_ACCUST = V_CUCUST                               CER059 MD053634
+     C**********         EXSR      SrUpdCUAH                                         CER059 MD053634
+      **********                                                                     CER059 MD053634
+     C**********         EVAL      Idy = 1                                           CER059 MD053634
+     C**********         DOW       Idy <= 50                                         CER059 MD053634
+     C**********                   AND V_CUAHArr(Idy) <> *BLANKS                     CER059 MD053634
+     C**********                   AND @RTCD = *BLANKS                               CER059 MD053634
+     C**********         EVAL      ValidCUAH  = V_CUAHArr(Idy)                       CER059 MD053634
+     C**********         EVAL      V_ACTYLC = 'I'                                    CER059 MD053634
+     C**********         EXSR      SrUpdCUAH                                         CER059 MD053634
+     C**********         EVAL      Idy = Idy + 1                                     CER059 MD053634
+     C**********         ENDDO                                                       CER059 MD053634
+     C**********         ENDIF                                                       CER059 MD053634
                                                                                               CER059
-     C                   EVAL      Idy = 1                                                    CER059
-     C                   DOW       Idy <= 50                                                  CER059
-     C                             AND V_CUAHArr(Idy) <> *BLANKS                              CER059
-     C                             AND @RTCD = *BLANKS                                        CER059
-     C                   EVAL      ValidCUAH  = V_CUAHArr(Idy)                                CER059
-     C                   EVAL      V_ACTYLC = 'I'                                             CER059
-     C                   EXSR      SrUpdCUAH                                                  CER059
-     C                   EVAL      Idy = Idy + 1                                              CER059
-     C                   ENDDO                                                                CER059
-     C                   ENDIF                                                                CER059
-                                                                                              CER059
+     C                   IF        @RTCD = *BLANKS                                          MD053634
+     C                             AND (DDACTN <> 'D'                                       MD053634
+     C                             AND DDACTN <> 'C')                                       MD053634
+     C                   EXSR      SrUpdCUAH                                                MD053634
+     C                   ENDIF                                                              MD053634
+                                                                                            MD053634
      C                   IF        @RTCD = *BLANKS                                            CER059
      C                             AND (DDACTN <> 'D'                                       AR741363
      C                             AND DDACTN <> 'C')                                       AR741363
@@ -4616,8 +4625,9 @@
                                                                                               CER059
      C                   CALLB     'SDCUAHUPD'                                                CER059
      C                   PARM      *BLANKS       @RTCD                                        CER059
-     C                   PARM                    UpdKey                                       CER059
-     C                   PARM                    ValidCUAH                                    CER059
+     C**********         PARM                    UpdKey                              CER059 MD053634
+     C**********         PARM                    ValidCUAH                           CER059 MD053634
+     C                   PARM                    V_CUAHArr                                  MD053634
                                                                                               CER059
      C                   ENDSR                                                                CER059
       *****************************************************************                       CER059

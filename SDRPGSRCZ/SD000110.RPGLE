@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. MD053634           Date 21Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132             Date 01May13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24229           Date 05Jun09               *
       *                 BUG24073           Date 25May09               *
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053634 - Requested Customer “Authority Holders Link Report *
+      *             for KWG$24c” not generated.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -287,6 +290,8 @@
                                                                                               CGL132
       ** Controlling Interest Percentage                                                      CGL132
      D WPcnt           S              3                                                       CGL132
+                                                                                            MD053634
+     D WTylc           S              1                                                     MD053634
       *
       ** Customer Shortname
       *
@@ -467,6 +472,8 @@
      C                   EVAL      WLTyp = CALTYP
      C                   EVAL      WCInt = CACINT                                             CGL132
      C                   EVAL      WPcnt = CAPCNT                                             CGL132
+                                                                                            MD053634
+     C                   EVAL      WTYLC = CATYLC                                           MD053634
       *
       ***If*Product*Group*=*procesed*Product*Goup*OT/LO/TD                                  BUG24229
       ** If Product Group = procesed Product Goup LE/RE/OT/MM/AL                            BUG24229
@@ -571,6 +578,8 @@
      C                   EVAL      WLTyp = CALTYP
      C                   EVAL      WCInt = CACINT                                             CGL132
      C                   EVAL      WPcnt = CAPCNT                                             CGL132
+                                                                                            MD053634
+     C                   EVAL      WTYLC = CATYLC                                           MD053634
       *
       ** Init, fill and output fileds
       *
@@ -846,6 +855,7 @@
      C                   EVAL      WLTyp = AALTYP                                           BUG24073
      C                   EVAL      WCInt = CACINT                                             CGL132
      C                   EVAL      WPcnt = CAPCNT                                             CGL132
+     C                   EVAL      WTYLC = AATYLC                                           MD053634
       *
       ** Fill the key-Authority Holder
       ** If Select by Customer - move Authority Holder, else fill
@@ -962,6 +972,7 @@
      C                   EVAL      RANAM = *BLANKS
      C                   EVAL      WCcSsn = *BLANKS
      C                   EVAL      WAcSsn = *BLANKS
+     C                   EVAL      RTYLC  = *BLANKS
       *
      C                   ENDSR
       *****************************************************************
@@ -1080,6 +1091,15 @@
      C                   EVAL      RLINK = WLTyp
      C                   EVAL      RCInt = WCInt                                              CGL132
      C                   EVAL      RPcnt = WPcnt                                              CGL132
+                                                                                            MD053634
+     C                   SELECT                                                             MD053634
+     C                   WHEN      WTYLC = 'I'                                              MD053634
+     C                   EVAL      RTYLC = 'Insert'                                         MD053634
+     C                   WHEN      WTYLC = 'A'                                              MD053634
+     C                   EVAL      RTYLC = 'Amend '                                         MD053634
+     C                   WHEN      WTYLC = 'D'                                              MD053634
+     C                   EVAL      RTYLC = 'Delete'                                         MD053634
+     C                   ENDSL                                                              MD053634
       *
       ** Reset following variables as there are not need for
       ** the next output

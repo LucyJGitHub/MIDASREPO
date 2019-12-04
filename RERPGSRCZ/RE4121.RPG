@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *  Last Amend No. MD054057           Date 05Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
       *                 CGL184             Date 07Dec16               *
@@ -115,10 +116,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD054057 - Failure to close an account.  Check correct       *
+      *             network files during account closure.             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
-      *            ZFREQ/ZFRQ*.                                       *     
+      *            ZFREQ/ZFRQ*.                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034451C - API: Repeated Held Item reversals are allowed.   *
       *              Recompiled due to changed PF/HELDIHB.            *
@@ -355,6 +358,10 @@
      FSWACB   IF  E           K        DISK         KINFSR *PSSR                              263834
      F            SWACSSAF                          KIGNORE                                   263834
      F            SWACSSCF                          KIGNORE                                   263834
+     FGLNWACL5IF  E           K        DISK         KINFSR *PSSR                            MD054057
+      **  Midas GL GLNWACPD - By Brch/Custno/ccy/acod/accseq       PREFIX 'G'               MD054057
+     FGLNW94L7IF  E           K        DISK         KINFSR *PSSR                            MD054057
+      ** Midas GL GLNW94PD - By Brch/Custno/ccy/acod/accseq        PREFIX 'H'               MD054057
       *                                                                                       263834
      FRE4121DFCF  E                    WORKSTN
      F** Display file - Retail account transfer
@@ -673,6 +680,44 @@
      I              MT94                            MT94SW                                    263834
      I              ACOD                            ACODSW                                    263834
       *                                                                                       263834
+     IGLNWACD0                                                                              MD054057
+     I              NARECI                          GRECI                                   MD054057
+     I              NANWRK                          GNWRK                                   MD054057
+     I              NABRCH                          GBRCA                                   MD054057
+     I              NACNUM                          GCNUM                                   MD054057
+     I              NACCY                           GCCY                                    MD054057
+     I              QQACOD                          GQACOD                                  MD054057
+     I              NAACSQ                          GACSQ                                   MD054057
+     I              NANATY                          GNATY                                   MD054057
+     I              NAG950                          GG950                                   MD054057
+     I              NA5SFQ                          G5SFQ                                   MD054057
+     I              NA5SDY                          G5SDY                                   MD054057
+     I              NA5NSD                          G5NSD                                   MD054057
+     I              NA5DSI                          G5DSI                                   MD054057
+     I              NA5LCB                          G5LCB                                   MD054057
+     I              NA5LSD                          G5LSD                                   MD054057
+     I              NA5LST                          G5LST                                   MD054057
+     I              NA5LSN                          G5LSN                                   MD054057
+     I              NALCDT                          GLCDT                                   MD054057
+     I              NACHTP                          GCHTP                                   MD054057
+     I              NAUSER                          GUSER                                   MD054047
+     I              NAACOD                          GACOD                                   MD054057
+      *                                                                                     MD054057
+     IGLNW94D0                                                                              MD054057
+     I              N4RECI                          HRECI                                   MD054057
+     I              N4NWRK                          HNWRK                                   MD054057
+     I              N4BRCA                          HBRCA                                   MD054057
+     I              N4CNUM                          HCNUM                                   MD054057
+     I              N4CCY                           HCCY                                    MD054057
+     I              QQACCD                          HQACCD                                  MD054057
+     I              N4ACSQ                          HACSQ                                   MD054057
+     I              N4NATY                          HNATY                                   MD054057
+     I              N4DSTN                          HDSTN                                   MD054057
+     I              N4DSTD                          HDSTD                                   MD054057
+     I              N4LCDT                          HLCDT                                   MD054057
+     I              N4CHTP                          HCHTP                                   MD054057
+     I              N4USER                          HUSER                                   MD054057
+     I              N4ACCD                          HACCD                                   MD054057
      IACNUMABF
      I**  Renamed fields in LF/ACNUM
      I              CCY                             ACCY
@@ -1331,12 +1376,46 @@
      C                     MOVELBRCA      WWBRCA                                              263834
      C                     MOVELACCY      WWCCY                                               263834
       *                                                                                       263834
+      ** If CGL013 is on, account should not have an attached GLNW record.                  MD054057
+      *                                                                                     MD054057
+     C           CGL013    IFEQ 'Y'                                                         MD054057
+     C           SWAKEY    CHAINGLNWACL5             80                                     MD054057
+     C           *IN80     IFEQ '0'                                                         MD054057
+     C           GRECI     ANDNE'*'                                                         MD054057
+     C                     MOVE '1'       *IN30                                             MD054057
+     C                     MOVE '1'       *IN69                                             MD054057
+     C                     MOVE 'USR1147' ZAMSID                                            MD054057
+     C                     CALL 'Y2SNMGC'                                                   MD054057
+     C                     PARM           ZAPGM                                             MD054057
+     C                     PARM           ZAPGRL                                            MD054057
+     C                     PARM           ZAMSID                                            MD054057
+     C                     PARM           ZAMSGF                                            MD054057
+     C                     PARM *BLANK    ZAMSDA                                            MD054057
+     C                     PARM           ZAMSTP                                            MD054057
+     C                     ELSE                                                             MD054057
+     C           SWAKEY    CHAINGLNW94L7             80                                     MD054057
+     C           *IN80     IFEQ '0'                                                         MD054057
+     C           HRECI     ANDNE'*'                                                         MD054057
+     C                     MOVE '1'       *IN30                                             MD054057
+     C                     MOVE '1'       *IN69                                             MD054057
+     C                     MOVE 'USR1147' ZAMSID                                            MD054057
+     C                     CALL 'Y2SNMGC'                                                   MD054057
+     C                     PARM           ZAPGM                                             MD054057
+     C                     PARM           ZAPGRL                                            MD054057
+     C                     PARM           ZAMSID                                            MD054057
+     C                     PARM           ZAMSGF                                            MD054057
+     C                     PARM *BLANK    ZAMSDA                                            MD054057
+     C                     PARM           ZAMSTP                                            MD054057
+     C                     ENDIF                                                            MD054057
+     C                     ENDIF                                                            MD054057
+     C                     ELSE                                                             MD054057
      C           SWAKEY    CHAINSWACSSBF             65                                       263834
      C           *IN65     IFEQ '0'                                                           263834
      C           RECISW    ANDNE'*'                                                           263834
      C                     MOVE '1'       *IN30                                               263834
      C                     MOVE '1'       *IN69                                               263834
-     C                     MOVE '5045554' ZAMSID                                              263834
+     C**********           MOVE '5045554' ZAMSID                                    263834  MD054057
+     C                     MOVE 'USR1147' ZAMSID                                            MD054057
      C                     CALL 'Y2SNMGC'                                                     263834
      C                     PARM           ZAPGM                                               263834
      C                     PARM           ZAPGRL                                              263834
@@ -1352,6 +1431,7 @@
      C                     MOVEL*BLANK    ZAMSDA                                              263834
      C                     MOVEL*BLANK    ZAMSTP                                              263834
      C                     ENDIF                                                              263834
+     C                     ENDIF                                                            MD054057
      C                     ENDIF                                                              263834
      C*
      C*                                                                   S01408
@@ -4620,6 +4700,20 @@
      C                     MOVELPFNCD     DBKEY
      C                     EXSR DBERR
      C                     END
+      *                                                                                     MD054057
+      ** Check if CGL013 is switched on                                                     MD054057
+     C*                                                                                     MD054057
+     C                     CALL 'AOSARDR0'                                                  MD054057
+     C                     PARM '*BLANKS' @RTCD                                             MD054057
+     C                     PARM '*VERIFY' @OPTN                                             MD054057
+     C                     PARM 'CGL013'  @SARD                                             MD054057
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD054057
+      *                                                                                     MD054057
+     C           @RTCD     IFEQ *BLANKS                                                     MD054057
+     C                     MOVE 'Y'       CGL013  1                                         MD054057
+     C                     ELSE                                                             MD054057
+     C                     MOVE 'N'       CGL013                                            MD054057
+     C                     END                                                              MD054057
       *                                                                   CRT007
       ** Determine if SAR CRT003 Cashier Interface is installed           CRT007
       *                                                                   CRT007

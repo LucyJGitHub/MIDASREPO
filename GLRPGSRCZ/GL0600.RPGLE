@@ -202,7 +202,7 @@
       *             are preserved also.                               *
       *  MD048056 - GPAMT of REOUTLPD should also be updated when     *
       *             holiday is before next working day                *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD046248 - Finastra Rebranding.                              *
       *  CGL184 - New Frequencies for Account Statements              *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  256758 - Bit 0 of PRIN should not be checked when updating   *

@@ -16,7 +16,8 @@
      C                   Move      PRNUM         DPSEQ                                        JMI106
      C                   MOVE      SSTTP         DPSTMT                                       JMI106
                                                                                               JMI106
-     C                   Call      'XXOPAYV0'                                                 JMI106
+     C**********         Call      'XXOPAYV0'                                                 JMI106
+     C                   Call      'XXPREFV0'                                                 JMI106
      C                   Parm      'I'           @ACTN             1                          JMI106
      C                   Parm                    DATA2                                        JMI106
      C                   Parm                    DATAI                                        JMI106

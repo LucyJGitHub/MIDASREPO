@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046592           Date 24Sep18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054492           Date 06Dec19               *
+      *  Prev Amend No. MD046592           Date 24Sep18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL186             Date 06Oct17               *
       *                 MD033576           Date 04Jun15               *
       *                 MD032194A          Date 20Jul15               *
@@ -140,6 +141,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054492 - Optiops 1 and 2 not working for modules other     *
+      *             than GL                                           *
       *  MD046592 - Narrative is being truncated. Restore the length  *
       *             of the Narrative back to 30 characters.           *
       *           - Applied for MD-51749                              *
@@ -445,6 +448,7 @@
       *    20  Invalid account entered                                *
       *    21  Single branch                                          *
       *    25  Rollup key pressed                                     *
+      *    27  Check for Transaction Type                             *                     MD054492
       *                                                               *
       *    47  Additional account balance record not found on         *
       *        memosm1/pronom1.                                       *
@@ -517,6 +521,9 @@
      F****GLACBTL0IF  E           K        DISK                                      117436 MD039988
      FACCNTL0 IF  E           K        DISK                                                 MD039988
      FREPMFWL1IF  E           K        DISK                               CRE009
+      *
+     FFDDTSTL0IF  E           K        DISK                                                 MD054492
+      *
       *
      FREEAUDPPO   E                    DISK                               CGL183
       *
@@ -741,6 +748,16 @@
      I*                                                                   S01408
      I/COPY WNCPYSRC,GL4443IIP1                                           S01408
      I*                                                                   S01408
+     IDLSDS     E DSDLDTA                                                                   MD054492
+     I              RECID                           DRECI                                   MD054492
+     I              PGN1D                           DPGN1                                   MD054492
+     I              PGT1D                           DPGT1                                   MD054492
+     I              PGL1D                           DPGL1                                   MD054492
+     I              PGO1D                           DPGO1                                   MD054492
+     I              PGN2D                           DPGN2                                   MD054492
+     I              PGT2D                           DPGT2                                   MD054492
+     I              RQDTD                           DRQDT                                   MD054492
+     I              RETND                           DRETN                                   MD054492
      I*
      IP@FMT2    E DSSDCURRPD
      IP@FMT3    E DSSDNOSTPD
@@ -968,6 +985,8 @@
       ** Long data structure for access programs                                              CGL186
      I*
      I              'GBSDUSRMSG'          C         XMSGFN                                  BUG26687
+     I              'FTOPAY1SN'           C         FTOPAY                                  MD054492
+     I              'FTIPAYSIN'           C         FTIPAY                                  MD054492
       *                                                                                       CGL183
      I              'UserEnqAccessAudit'  C         V#AAUD                                    CGL183
      I*
@@ -1144,6 +1163,7 @@
       *                                                                                      BUG5334
      C           *NAMVAR   DEFN           EMSDS                                              BUG5334
      C                     IN   EMSDS                                                        BUG5334
+     C           *NAMVAR   DEFN           DLSDS                                             MD054492
       *                                                                   CRE009
      C                     MOVE *BLANKS   SFLD31
      C                     MOVE *BLANKS   SFLD32
@@ -1251,6 +1271,61 @@
      C                     MOVE 'Y'       CAP204                                              CAP204
      C                     END                                                                CAP204
       *                                                                                       CAP204
+      ** Access SAR details file to determine if CAP131 is switched ON                      MD054492
+      *                                                                                     MD054492
+     C                     CALL 'AOSARDR0'                                                  MD054492
+     C                     PARM *BLANKS   @RTCD                                             MD054492
+     C                     PARM '*VERIFY' @OPTN                                             MD054492
+     C                     PARM 'CAP131'  PSARD   6                                         MD054492
+     C           SCSARD    PARM SCSARD    @DSFDY                                            MD054492
+     C                     MOVE 'N'       CAP131  1                                         MD054492
+      *                                                                                     MD054492
+      ** If core feature is switched ON, set on indicator that will                         MD054492
+      ** condition the rest of the processing                                               MD054492
+      *                                                                                     MD054492
+     C           @RTCD     IFEQ *BLANKS                                                     MD054492
+     C                     MOVE 'Y'       CAP131                                            MD054492
+     C                     ELSE                                                             MD054492
+      *                                                                                     MD054492
+      ** else, database error (return code other than *NRF)                                 MD054492
+      *                                                                                     MD054492
+     C           @RTCD     IFNE '*NRF   '                                                   MD054492
+     C                     Z-ADD011       DBASE            ***************                  MD054492
+     C                     MOVEL'SCSARDPD'DBFILE           *DB ERROR 011 *                  MD054492
+     C                     MOVEL'CAP131'  DBKEY            ***************                  MD054492
+     C                     EXSR *PSSR                                                       MD054492
+     C                     ENDIF                                                            MD054492
+     C                     ENDIF                                                            MD054492
+      *                                                                                     MD054492
+      ** Access SAR file to determine if CAP136 (New Maint.                                 MD054492
+      ** Funct - Incoming Payments) is installed.                                           MD054492
+      *                                                                                     MD054492
+     C                     CALL 'AOSARDR0'                                                  MD054492
+     C                     PARM *BLANKS   @RTCD                                             MD054492
+     C                     PARM '*VERIFY' @OPTN                                             MD054492
+     C                     PARM 'CAP136'  @SARD                                             MD054492
+     C           SCSARD    PARM SCSARD    @DSFDY                                            MD054492
+      *                                                                                     MD054492
+      ** An NRF (No Record Found) return code is valid.                                     MD054492
+      ** Issue database error only for error return codes.                                  MD054492
+      *                                                                                     MD054492
+     C           @RTCD     IFNE *BLANKS                                                     MD054492
+     C           @RTCD     ANDNE'*NRF   '                                                   MD054492
+     C                     Z-ADD012       DBASE            ***************                  MD054492
+     C                     MOVEL'CAP136'  DBKEY            *DB ERROR 012 *                  MD054492
+     C                     MOVEL'SCSARDPD'DBFILE           ***************                  MD054492
+     C                     EXSR *PSSR                                                       MD054492
+     C                     ENDIF                                                            MD054492
+      *                                                                                     MD054492
+     C           @RTCD     IFEQ *BLANK                                                      MD054492
+     C                     MOVEL'Y'       CAP136  1                                         MD054492
+     C                     MOVEL'FTIPAY'  PPGM   10                                         MD054492
+     C                     MOVE 'SIN '    PPGM                                              MD054492
+     C                     ELSE                                                             MD054492
+     C                     MOVEL'N'       CAP136                                            MD054492
+     C                     MOVE *BLANKS   PPGM                                              MD054492
+     C                     ENDIF                                                            MD054492
+      *                                                                                     MD054492
      C/COPY OFCPYSRCZ,CGL145_038                                                             CGL145B
      C/COPY WNCPYSRC,GL4443CCPG                                           S01408
      C*                                                                   S01408
@@ -1560,7 +1635,13 @@
      C           SELEC     IFEQ '1'                                                         BUG26687
      C           SELEC     OREQ '2'                                                         BUG26687
       *                                                                                     BUG26687
-     C           UFTRYP    IFEQ 'ME'                                                        BUG26687
+     C                     MOVE SFLDS3    SFLD31                                            MD054492
+     C                     MOVELSTNMR     RFRNUM  6 P                                       MD054492
+     C                     MOVELSTNMR     FTREF  15 P                                       MD054492
+      *                                                                                     MD054492
+     C                     SELEC                                                            MD054492
+     C********** UFTRYP    IFEQ 'ME'                                               BUG26687 MD054492
+     C           UFTRYP    WHEQ 'ME'                                                        MD054492
      C                     MOVE UFPTDT    PDATE                                             BUG26687
      C                     MOVE UFBTNB    PABTNB  3                                         BUG26687
      C                     MOVE UFBINB    PABINB  30                                        BUG26687
@@ -1575,10 +1656,39 @@
      C                     SETON                     46                                     BUG26687
      C                     MOVELEMSG,2    ERRDSP                                            BUG26687
      C                     ENDIF                                                            BUG26687
-     C                     ELSE                                                             BUG26782
+      *                                                                                     MD054492
+     C           MOD       WHEQ 'D'                                                         MD054492
+     C           *LOCK     IN   DLSDS                                                       MD054492
+     C                     MOVE ' '       DRETN                                             MD054492
+     C                     MOVE *BLANKS   DRQDW  18                                         MD054492
+     C                     MOVELRQDTW     DRQDT                                             MD054492
+     C                     MOVELRFRNUM    DRQDT                                             MD054492
+     C                     MOVE 'DL'      DRQDT                                             MD054492
+     C                     MOVEL'GL4442'  DPGN2                                             MD054492
+     C                     OUT  DLSDS                                                       MD054492
+      *                                                                                     MD054492
+     C                     CALL 'DL0170'                                                    MD054492
+      *                                                                                     MD054492
+     C           MOD       WHEQ 'L'                                                         MD054492
+     C           *LOCK     IN   EMSDS                                                       MD054492
+     C                     MOVE ' '       RETND                                             MD054492
+     C                     MOVE *BLANKS   RQDTW  18                                         MD054492
+     C                     MOVELRQDTW     RQDTD                                             MD054492
+     C                     MOVELRFRNUM    RQDTD                                             MD054492
+     C                     MOVE 'LE'      RQDTD                                             MD054492
+     C                     OUT  EMSDS                                                       MD054492
+      *                                                                                     MD054492
+     C                     CALL 'LE0190'                                                    MD054492
+      *                                                                                     MD054492
+     C           MOD       WHEQ 'T'                                                         MD054492
+     C                     EXSR FTENQ                                                       MD054492
+      *                                                                                     MD054492
+     C                     OTHER                                                            MD054492
+     C*********            ELSE                                                    BUG26687 MD054492
      C                     SETON                     46                                     BUG26782
      C                     MOVELEMSG,4    ERRDSP                                            BUG26782
-     C                     ENDIF                                                            BUG26687
+     C*********            ENDIF                                                   BUG26687 MD054492
+     C                     ENDSL                                                            MD054492
      C                     ELSE                                                             BUG26687
       ** ERROR MESSAGE FOR INVALID OPTION                                                   BUG26687
      C                     SETON                     46                                     BUG26687
@@ -4930,6 +5040,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVE *BLANKS   CHQN
      C                     END
+      *                                                                                     MD054492
+     C                     EXSR SRMOD                                                       MD054492
      C*
      C/COPY WNCPYSRC,GL4443C042
      C           *IN82     IFEQ '1'
@@ -5365,6 +5477,138 @@ E1   C                     END
       * Move stored entered Value Date back to correct field.             CGL017
      C                     Z-ADDWVALDN    VALDN                           CGL017
      C                     ENDSR                           ** FUTOPB **   CGL017
+      *****************************************************************                     MD054492
+      /TITLE         <<< FTENQ SR. >>>                                                      MD054492
+      *****************************************************************                     MD054492
+      *                                                               *                     MD054492
+      * FTENQ  --- SUBROUTINE TO ENQUIRE ON FT PAYMENTS               *                     MD054492
+      *                                                               *                     MD054492
+      * CALLED FROM: SUBROUTINE OPTN                                  *                     MD054492
+      *                                                               *                     MD054492
+      * CALLS: FTC0040 - Outgoing Payments Maintenance                *                     MD054492
+      *        FTC0050 - Incoming Payments Maintenance                *                     MD054492
+      *        FTC0051 - Incoming Payments Maintenance (NEW)          *                     MD054492
+      *        FTC0070 - Cheques for Collection Maintenance           *                     MD054492
+      *        FTC0080 - Cheques to be Paid Maintenance               *                     MD054492
+      *        FTC0100 - Nostro Transfer Maintenance                  *                     MD054492
+      *                                                               *                     MD054492
+      *****************************************************************                     MD054492
+      *                                                                                     MD054492
+     C           FTENQ     BEGSR                                                            MD054492
+      *                                                                                     MD054492
+     C                     MOVEL'G'       @RFTCD  1                                         MD054492
+     C                     MOVEL'E'       @ACTN   1                                         MD054492
+     C                     MOVEL'Y'       @LINK   1                                         MD054492
+      *                                                                                     MD054492
+     C           UFTRYP    IFEQ 'OP'                                                        MD054492
+      *                                                                                     MD054492
+      ** Call API PGM if new maintenance function active, else call FT0040                  MD054492
+      *                                                                                     MD054492
+     C           CAP131    IFEQ 'Y'                                                         MD054492
+      *                                                                                     MD054492
+     C                     CALL 'FTC0041'                                                   MD054492
+     C                     PARM FTOPAY    PPGM                                              MD054492
+     C                     PARM           @ACTN                                             MD054492
+     C                     PARM           FTREF                                             MD054492
+     C                     PARM           @RFTCD                                            MD054492
+      *                                                                                     MD054492
+     C                     ELSE                                                             MD054492
+      *                                                                                     MD054492
+     C                     CALL 'FTC0040'                                                   MD054492
+     C                     PARM           @ACTN                                             MD054492
+     C                     PARM           FTREF                                             MD054492
+     C                     PARM           @RFTCD                                            MD054492
+      *                                                                                     MD054492
+     C                     END                                                              MD054492
+      *                                                                                     MD054492
+     C                     END                                                              MD054492
+      *                                                                                     MD054492
+     C           UFTRYP    IFEQ 'IN'                                                        MD054492
+      *                                                                                     MD054492
+     C           CAP136    IFNE 'Y'                                                         MD054492
+     C                     CALL 'FTC0050'                                                   MD054492
+     C                     PARM           @ACTN                                             MD054492
+     C                     PARM           FTREF                                             MD054492
+     C                     PARM           @RFTCD                                            MD054492
+     C                     PARM           @LINK                                             MD054492
+     C                     ELSE                                                             MD054492
+     C                     CALL 'FTC0051'                                                   MD054492
+     C                     PARM FTIPAY    PPGM                                              MD054492
+     C                     PARM           @ACTN                                             MD054492
+     C                     PARM           FTREF                                             MD054492
+     C                     PARM           @RFTCD                                            MD054492
+     C                     PARM           @LINK                                             MD054492
+     C                     PARM '1'       PLEVEL  1                                         MD054492
+     C                     ENDIF                                                            MD054492
+      *                                                                                     MD054492
+     C                     END                                                              MD054492
+      *                                                                                     MD054492
+     C           UFTRYP    IFEQ 'CC'                                                        MD054492
+     C                     CALL 'FTC0070'                                                   MD054492
+     C                     PARM           @ACTN                                             MD054492
+     C                     PARM           FTREF                                             MD054492
+     C                     PARM           @RFTCD                                            MD054492
+     C                     END                                                              MD054492
+      *                                                                                     MD054492
+     C           UFTRYP    IFEQ 'CP'                                                        MD054492
+     C                     CALL 'FTC0080'                                                   MD054492
+     C                     PARM           @ACTN                                             MD054492
+     C                     PARM           FTREF                                             MD054492
+     C                     PARM           @RFTCD                                            MD054492
+     C                     PARM           @LINK                                             MD054492
+     C                     END                                                              MD054492
+      *                                                                                     MD054492
+     C           UFTRYP    IFEQ 'NT'                                                        MD054492
+     C                     CALL 'FTC0100'                                                   MD054492
+     C                     PARM           @ACTN                                             MD054492
+     C                     PARM           FTREF                                             MD054492
+     C                     PARM           @RFTCD                                            MD054492
+     C                     END                                                              MD054492
+      *                                                                                     MD054492
+     C                     ENDSR                                                            MD054492
+      *****************************************************************                     MD054492
+      /TITLE         <<< SRMOD SR. >>>                                                      MD054492
+      *****************************************************************                     MD054492
+      *                                                               *                     MD054492
+      * SRMOD  --- SUBROUTINE TO SETUP MOD SFL HIDDEN FIELD           *                     MD054492
+      *                                                               *                     MD054492
+      *****************************************************************                     MD054492
+      *                                                                                     MD054492
+     C           SRMOD     BEGSR                                                            MD054492
+      *                                                                                     MD054492
+     C                     MOVE *BLANKS   MOD                                               MD054492
+      *                                                                                     MD054492
+      ** Check if FT Module                                                                 MD054492
+     C           TRYPA     IFEQ 'OP'                                                        MD054492
+     C           TRYPA     OREQ 'IN'                                                        MD054492
+      *                                                                                     MD054492
+     C                     MOVE 'T'       MOD                                               MD054492
+      *                                                                                     MD054492
+     C                     ENDIF                                                            MD054492
+      *                                                                                     MD054492
+      ** Check if Dealing Module                                                            MD054492
+     C           TRYPA     CHAINFDDTSTL0             27                                     MD054492
+     C           *IN27     IFEQ '0'                                                         MD054492
+     C           TNMR      ANDNE*BLANKS                                                     MD054492
+      *                                                                                     MD054492
+     C                     MOVE 'D'       MOD                                               MD054492
+      *                                                                                     MD054492
+     C                     ELSE                                                             MD054492
+     C                     SETOF                     27                                     MD054492
+      *                                                                                     MD054492
+     C                     ENDIF                                                            MD054492
+      *                                                                                     MD054492
+      ** Check if Lending Module                                                            MD054492
+     C                     MOVELTRYPA     TMP     1                                         MD054492
+     C           TMP       SCAN 'HJKXYZ'                 27                                 MD054492
+     C           *IN27     IFEQ '1'                                                         MD054492
+      *                                                                                     MD054492
+     C                     MOVE 'L'       MOD                                               MD054492
+     C                     SETOF                         27                                 MD054492
+      *                                                                                     MD054492
+     C                     ENDIF                                                            MD054492
+     C                     CLEARTMP                                                         MD054492
+     C                     ENDSR                                                            MD054492
       *                                                                                     BUG26687
       /TITLE         <<< RTVMSG SR. >>>                                                     BUG26687
      C*****************************************************************                     BUG26687

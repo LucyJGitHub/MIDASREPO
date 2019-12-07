@@ -1,0 +1,117 @@
+      *****************************************************************
+      *                                                               *
+      *  FT0645 - Bank Transfers                                      *
+      *                                                               *
+      *  Last Amend No. ERZ238  *CREATE    Date 13Nov17               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  ERZ238 - Enhance  to MT202 Messages                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVE *BLANK    WORKTG  1
+      *
+     C           ERZ238    IFEQ 'Y'
+     C           FLDNO     ANDEQ'53'
+     C           SNMT      ANDEQ'N'
+      *
+     C                     MOVE SNCO      WSNCOC 10
+      *
+      ** Destination field contains a 6-digit Customer Number
+      *
+     C           DSTT      IFEQ 'C'
+      *
+      ** Nostro entered in Sender's Correspondent
+      *
+     C           SNCT      IFEQ 'N'
+     C                     MOVELSNCO      P@NONB
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM *BLANKS   P@CUST  6
+     C                     PARM PCCY      P@CYCD  3
+     C                     PARM *BLANKS   P@ACCD 10
+     C                     PARM *BLANKS   P@ACSN  2
+     C                     PARM           P@NONB  2
+     C                     PARM *BLANKS   P@BRCD  3
+     C                     PARM *BLANKS   P@CSSN 10
+     C                     PARM *BLANKS   P@PNOI  1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C                     ENDIF
+      *
+     C                     MOVELDST1      WKDEST  6
+     C           @RTCD     IFEQ *BLANKS
+     C           SNCT      ANDEQ'N'
+      *
+      ** Destination Customer = Sender's Correspondent Customer
+      *
+     C           A7CUST    ANDEQWKDEST
+      *
+      ** Sender's Correspondent Customer exists in SDNOSTPD
+      ** Our Account Number at Nostro
+      *
+     C           A7OACN    IFNE *BLANKS
+     C                     MOVEL'/'       WORK36 36 P
+     C                     MOVE A7OACN    WORK36
+     C                     MOVELWORK36    MFLD      P
+     C                     MOVE '/'       WORKTG
+     C                     ELSE
+      *
+      ** Full Midas account of Sender's Correspondent
+      *
+     C                     MOVE '/'       WORK0
+     C                     MOVELA7BRCD    WORK1     P
+     C                     MOVELA7CUST    WORK2     P
+     C                     MOVELA7CYCD    WORK3     P
+     C                     MOVELA7ACCD    WORK4     P
+     C                     MOVELA7ACSN    WORK5     P
+      *
+      ** Midas Full Account
+      *
+     C                     MOVELWORKDS    MFLD      P
+     C                     MOVE '/'       WORKTG
+     C                     ENDIF
+      *
+     C                     MOVE 'B'       OSTAG
+     C                     MOVE OSTAG     M2SCTT
+      *
+     C                     ENDIF
+      *
+      ** Sender's Correspondent is a Retail Account
+      *
+     C           SNCT      IFEQ 'R'
+     C                     MOVE SNCO      WKSNCO 100
+     C           WKSNCO    CHAINACCNTL1R             07
+      *
+     C           *IN07     IFEQ *OFF
+     C                     MOVE CNUM      WKCNUM  6
+     C           WKCNUM    IFEQ WKDEST
+      *
+      ** Sender's Correspondent Customer does not exist in SDNOSTPD
+      ** Full Midas account of Sender's Correspondent
+      *
+     C                     MOVE '/'       WORK0
+     C                     MOVELBRCA      WORK1     P
+     C                     MOVELCNUM      WORK2     P
+     C                     MOVELCCY       WORK3     P
+     C                     MOVELACOD      WORK4     P
+     C                     MOVELACSQ      WORK5     P
+      *
+      ** Midas Full Account
+      *
+     C                     MOVELWORKDS    MFLD      P
+     C                     MOVE '/'       WORKTG
+      *
+     C                     MOVE 'B'       OSTAG
+     C                     MOVE OSTAG     M2SCTT
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *

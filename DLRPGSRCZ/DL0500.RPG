@@ -13,8 +13,9 @@
       *  NOTE: Check DL5110 for changes that may apply to it if there *                       CAS005
       *        are amendments done to this program.                   *                       CAS005
       *                                                               *
-      *  Last Amend No. MD051152           Date 02Aug18               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD051554           Date 28Sep18               *   
+      *  Prev Amend No. MD051152           Date 02Aug18               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -120,6 +121,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *
       *  MD051152 - FRA/IRS Interest Calculation Basis 6.             *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
@@ -1533,6 +1537,7 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
+     C                     MOVE WCALC6    SCALC6  1                                         MD051554
      C*                                                                   CIR001
      C           KCFSC     KLIST                                          CIR001
      C                     KFLD           DLNO                            CIR001
@@ -1590,6 +1595,22 @@
      C                     EXSR ##ADDB                                                        CSC042
      C                     END                                            S01117
      C                     END                             *** E10                            CSC042
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C           DTYP      IFEQ 'FR'                                                        MD051554
+     C           DTYP      OREQ 'RS'                                                        MD051554
+     C           DTYP      OREQ 'RX'                                                        MD051554
+     C           DTYP      OREQ 'RR'                                                        MD051554
+     C           DTYP      OREQ 'RP'                                                        MD051554
+     C           DTYP      OREQ 'RF'                                                        MD051554
+     C                     MOVE 'N'       WCALC6                                            MD051554
+     C                     ELSE                                                             MD051554
+     C                     MOVE SCALC6    WCALC6                                            MD051554
+     C                     ENDIF                                                            MD051554
 *    C***41***             SETON                     U7U8LR               S01194
 *    C***41***             GOTO TOTAL                                     S01194
 0382 C   02                GOTO TAG2

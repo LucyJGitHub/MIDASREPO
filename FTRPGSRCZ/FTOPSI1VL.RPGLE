@@ -15,8 +15,9 @@
       *                                                                    *
       *  (c) Finastra International Limited 2002                           *
       *                                                                    *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035360           Date 06Aug15               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035360           Date 06Aug15               *
       *                 MD035030           Date 14Jul15               *
       *                 CFT148             Date 23Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -44,6 +45,9 @@
       *                                                                    *
       **********************************************************************
       *                                                                    *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035360 - Database error encountered due to parameter error *
       *             in FTVODCS                                        *
@@ -221,6 +225,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+     D PMode           S              6A                                                    MD021318
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -617,6 +622,8 @@
      C                   Parm                    OKFlagsDS
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
       *
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
@@ -653,6 +660,8 @@
       *  Funds Transfer Details                                                               257758
      C                   Parm                    SDFTFR                                       257758
      C                   PARM                    CFT142                                     MD035360
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
       *
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
@@ -685,6 +694,8 @@
      C                   Parm                    OKFlagsDS
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
       *
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
@@ -717,6 +728,8 @@
      C                   Parm                    OKFlagsDS
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
       *
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR920077           Date 13Mar15               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR920077           Date 13Mar15               *
       *                 MD025880           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CRE067             Date 05Oct10               *
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR920077 - Correct :77B: validation. (Child: AR922613)       *
       *  MD025880 - Validation of Regulatory Reporting field on FT    *
@@ -65,7 +69,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FSDCTRYL2  IF   E           K DISK                                                     MD025880
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -86,69 +90,69 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       /COPY FTCPYSRC,SFTVALCSLE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
      D WORDER          C                   CONST('/ORDERRES/')
      D WBENEF          C                   CONST('/BENEFRES/')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                               CSD089
@@ -160,24 +164,24 @@
                                                                                               CSD089
       ** Array of warning message data.                                                       CSD089
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                      CSD089
- 
+
       ** Incoming Transaction (Third screen level 2)
      D TranInThiB    E DS                  EXTNAME(FTOPY5PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY3PD)
- 
+
       ** Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** External data-structure for Country Codes file
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
- 
+
       ** Short Data structure for Access Objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D/COPY FTCPYSRC,SFTADDRILE
- 
+
      D WSRRPT          DS           105
      D  WSRRP1                 1     35
      D  WSRRP2                36     70
@@ -189,15 +193,15 @@
      D  WADIN2                38     70
      D  WADIN3                73    105
      D  WRL23                 36    105
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc                                          CSD089
      D WIx             S              3P 0                                                    CSD089
                                                                                               CSD089
@@ -205,12 +209,13 @@
      D ADSLON          S              1
      D ADFLDM          S              7
      D ADFLDF          S             10
- 
+     D PMode           S              6A                                                    MD021318
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -221,9 +226,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      FldNamXAr = *Blanks
      C                   Eval      MsgIDXAr  = *Blanks
@@ -233,17 +238,17 @@
      C                   Eval      WMsgIDXAr  = *Blanks                                       CSD089
      C                   Eval      WMsgDtXAr = *Blanks                                        CSD089
      C                   Eval      WIx = 0                                                    CSD089
- 
+
      C                   Eval      WSRRP1 = SRRP1
      C                   Eval      WSRRP2 = SRRP2
      C                   Eval      WSRRP3 = SRRP3
- 
+
       ** Regulatory Reporting validation
- 
+
      C                   ExSr      SrRegRpt
- 
+
       ** If an erro was found, set the return code appropriately
- 
+
      C                   If        (OKRRP1 = 'N') Or (OKRRP2 = 'N') Or
      C                             (OKRRP3 = 'N')
      C                   Eval      RetCodeIn = 'Error'
@@ -251,9 +256,9 @@
      C                             (OKRRP3 = 'W')                                             CSD089
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   EndIf
- 
+
      C                   Return
- 
+
       *****************************************************************
       /Title Sr/SrRegRpt
       *****************************************************************
@@ -266,65 +271,86 @@
       * ADCHK       - Address validation, checks for invalid char.    *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRegRpt      BegSr
- 
+
       ** Entry is optional but if entered, it must follow the correct
       ** syntax (Codeword + ISO Country Code + Additional Info) entered on
       ** the first line.
- 
+
      C                   If        (WSRRPT <> *Blank)
- 
+
       ** Check if an invalid character exists
- 
+
      C                   Eval      ADLINE = *Blank
      C                   Eval      ADFLDM = 'FTM3246'
      C                   Eval      ADFLDF = 'FTUSRMSG'
- 
+
      C                   Eval      ADDRSS = *Blanks
      C                   Eval      ADDRSS = WSRRPT
- 
+
      C                   ExSr      ADCHK
- 
+
       ** Illigal Characters found
- 
+
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKRRP1                                       CSD089
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRRP1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRRP1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRRP1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRRP1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRRP1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
- 
+
      C                   If        AD#2 = 'Y'
      C**********         Move      'N'           OKRRP2                                       CSD089
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRRP2'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRRP2                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRRP2'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRRP2                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRRP2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
- 
+
      C                   If        AD#3 = 'Y'
      C**********         Move      'N'           OKRRP3                                       CSD089
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRRP3'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRRP3                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRRP3'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRRP3                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRRP3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
- 
+
      C                   If        SRRP1 <> *Blank
- 
+
       ** '?' not available
- 
+
      C     '?'           Scan      SRRP1         Y#                3 0    90
       *
      C                   If        *IN90 = True
@@ -333,22 +359,22 @@
      C                   Movel     'SRRP1'       FldNamXAr(Idx)
      C                   Movel     'FTM3225'     MsgIdXAr(Idx)
      C                   EndIf
- 
+
       ** No error
- 
+
      C                   If        OKRRP1 <> 'N'
      C                   If        (WCWORD = WORDER) Or (WCWORD = WBENEF)
- 
+
       ***Access*ISO*Country*Code*via*access*object*AOCTRYR0***                              MD025880
- 
+
      C**********         Call      'AOCTRYR0'                                               MD025880
      C**********         Parm      *Blanks       WRTRN             7                        MD025880
      C**********         Parm      '*KEY   '     WOPTN             7                        MD025880
      C**********         Parm      WISOCD        WCTCD             2                        MD025880
      C*****SDCTRY        Parm      SDCTRY        DSFDY                                      MD025880
- 
+
       ** Validate Syntax
- 
+
      C**********         If        (WRTRN <> *Blank) Or (WADSLH <> '//')                    MD025880
      C     WISOCD        CHAIN     SDCTRYL2                                                 MD025880
      C                   If        (NOT %FOUND(SDCTRYL2)) Or (WADSLH <> '//')               MD025880
@@ -358,7 +384,7 @@
      C                   Movel     'SRRP1'       FldNamXAr(Idx)
      C                   Movel     'FTM3227'     MsgIdXAr(Idx)
      C                   EndIf
- 
+
      C**********         If        (WRTRN = *Blank) And (WADSLH = '//')                     MD025880
      C                   If        (%FOUND(SDCTRYL2)) And (WADSLH = '//')                   MD025880
      C                             And (WADINF = *Blank)
@@ -369,9 +395,9 @@
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
       ** 1st line is blank and the remaining lines are entered.
- 
+
      C                   Else
      C                   If        WRL23 <> *Blank
      C                   Move      'N'           OKRRP1
@@ -380,9 +406,9 @@
      C                   Movel     'FTM3228'     MsgIdXAr(Idx)
      C                   EndIf
      C                   EndIf
- 
+
       ** Additional info line 2 is entered.
- 
+
      C                   If        SRRP2 <> *Blank
      C                   MOVEL     WSRRP1        @@RRP1           10                        AR920077
      C                   MOVEL     WSRRP2        @@RRP2           10                        AR920077
@@ -402,9 +428,9 @@
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
       ** 2nd line is blank and the remaining line is entered.
- 
+
      C                   Else
      C                   If        SRRP3 <> *Blank
      C                   Move      'N'           OKRRP2
@@ -413,13 +439,13 @@
      C                   Movel     'FTM3229'     MsgIdXAr(Idx)
      C                   EndIf
      C                   EndIf
- 
+
       ** Additional info line 3 is entered.
- 
+
      C                   If        SRRP3 <> *Blank
- 
+
       ** Error, additional info must be preceded by '//'
- 
+
      C                   If        (WCWORD = WORDER) Or (WCWORD = WBENEF)
      C                   If        (%Subst(SRRP3:1:2)) <> '//'
      C                   Move      'N'           OKRRP3
@@ -437,9 +463,9 @@
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/*InzSr
       *****************************************************************
@@ -451,9 +477,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
      C     *Entry        Plist
      C                   PARM                    RetCodeIn
      C                   PARM                    TranInThiB
@@ -465,13 +491,14 @@
      C                   Parm                    WMsgDtXAr                                    CSD089
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
- 
+     C                   PARM                    PMode                                      MD021318
+
      C                   EndSr
- 
+
       *****************************************************************
       ** ADCHK subroutine
      C/COPY FTCPYSRC,SFTADDRCLE
- 
+
       ** SWSET subroutine
      C/COPY FTCPYSRC,SFTADDRSC1
       *****************************************************************

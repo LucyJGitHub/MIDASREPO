@@ -1,0 +1,154 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Update/retrieve JE header ext. file')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  XX0107U- Update/retrieve JE header extension file            *
+      *                                                               *
+      *  Function:  This program updates pf GLJENHX1 with relevant    *
+      *   (I/C)     user name for specified batch.                    *
+      *             It also returns user names of specified batch     *
+      *             to calling program for enquiry.                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. ERZ100   *CREATE   Date 18Jan13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  ERZ100 - Security Features for Journal Entries               *
+      *                                                               *
+      *****************************************************************
+     FGLJENHX1UF  E           K        DISK                      A    UC
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+      ** JE header extension file for update
+      *
+     FGLJENHY1IF  E           K        DISK
+     F            GLJENHD1                          KRENAMEGLJENHL1
+      ** JE header extension file for enquiry
+      *
+     FGLJEHHX1IF  E           K        DISK
+      ** JE history header extension file for enquiry
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *****************************************************************
+      *
+      * Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PBEDT   50
+     C                     PARM           PBTNB   3
+     C                     PARM           PUSAM  10
+     C                     PARM           PUSAC  10
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+      *
+      *---------------------------------------------------------------
+      * History batch - retrieve information
+      *---------------------------------------------------------------
+     C           PBEDT     IFNE *ZERO
+     C           KHIST     KLIST
+     C                     KFLD           PBEDT
+     C                     KFLD           PBTNB
+     C           KHIST     CHAINGLJEHHX1             99
+     C           *IN99     IFEQ *OFF
+     C                     MOVE USAM      PUSAM
+     C                     MOVE USAC      PUSAC
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------
+      * Current batch
+      *---------------------------------------------------------------
+     C                     ELSE
+      * Retrieve information
+     C           PUSAM     IFEQ *BLANKS
+     C           PUSAC     ANDEQ*BLANKS
+     C           PBTNB     CHAINGLJENHY1             99
+     C           *IN99     IFEQ *OFF
+     C                     MOVE USAM      PUSAM
+     C                     MOVE USAC      PUSAC
+     C                     ENDIF
+      *
+      * Update/add information
+     C                     ELSE
+     C                     OPEN GLJENHX1
+     C           PBTNB     CHAINGLJENHX1             99
+      *   Record exists
+     C           *IN99     IFEQ *OFF
+     C           PUSAM     IFNE *BLANKS
+     C                     MOVE PUSAM     USAM
+     C                     ENDIF
+     C           PUSAC     IFNE *BLANKS
+     C                     MOVE PUSAC     USAC
+     C                     ENDIF
+     C                     UPDATGLJENHD1
+      *   Add new record
+     C                     ELSE
+     C                     IN   RUNDAT
+     C                     Z-ADDAGRDNB    BEDT
+     C                     MOVE PBTNB     BTNB
+     C                     MOVE PUSAM     USAM
+     C                     MOVE PUSAC     USAC
+     C                     WRITEGLJENHD1
+     C                     ENDIF
+     C                     CLOSEGLJENHX1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+???  C                     SETON                     LR    ?????????
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1998

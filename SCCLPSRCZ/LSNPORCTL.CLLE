@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD023899C          Date 19Aug14              */
+/*       Last Amend No. MD034254           Date 29Aug16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD023899C          Date 19Aug14              */
 /*                      MD023899           Date 05May14              */
 /*                      AR1094242          Date 06Mar13              */
 /*                      AR1026350A         Date 07Mar13              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD034254 - BF PRB Verification of WAS availability in COB   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD023899C - Do not fail only when expected response         */
 /*                   received from application server regarding      */
@@ -52,13 +54,13 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PACT)
- 
+
 /* Declaration of variables */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2008')
- 
+
              DCL        VAR(&PACT)     TYPE(*CHAR) LEN(10)
              DCL        VAR(&PACA)     TYPE(*CHAR) LEN(10)                                /*CLE134*/
              DCL        VAR(&DQNME)    TYPE(*CHAR) LEN(10)  VALUE(' ')
@@ -71,7 +73,7 @@
              DCL        VAR(&DQKEY)    TYPE(*CHAR) LEN(10)  VALUE(' ')
              DCL        VAR(&DQSNDLEN) TYPE(*DEC)  LEN(3 0) VALUE(0)
              DCL        VAR(&DQSND)    TYPE(*CHAR) LEN(8)   VALUE(' ')
- 
+
              DCL        VAR(&PRTCD)    TYPE(*CHAR) LEN(7)   VALUE(' ')
              DCL        VAR(&PERMS)    TYPE(*CHAR) LEN(50)  VALUE(' ')
              DCL        VAR(&PFULLCK)  TYPE(*CHAR) LEN(7)   VALUE('Y')
@@ -81,7 +83,7 @@
              DCL        VAR(&PDNWD)    TYPE(*DEC)  LEN(5 0) VALUE(0)
              DCL        VAR(&PBCCY)    TYPE(*CHAR) LEN(3)   VALUE(' ')
              DCL        VAR(&PNJOB)    TYPE(*DEC)  LEN(1 0) VALUE(0)
- 
+
              DCL        VAR(&SVALK1)   TYPE(*CHAR) LEN(20)                                /*258836*/
              DCL        VAR(&SVALK2)   TYPE(*CHAR) LEN(20)                                /*258836*/
              DCL        VAR(&SVALK3)   TYPE(*CHAR) LEN(20)                                /*258836*/
@@ -119,14 +121,14 @@
              DCLF       FILE(GPWASCL1) OPNID(THIS2)                                     /*MD023899*/
                                                                                           /*CSC054*/
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area LDA */
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
                                                                                        /*AR1026350*/
@@ -154,7 +156,7 @@
              IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE134*/
                 CHGVAR     VAR(&CLE134) VALUE('Y')                                        /*CLE134*/
              ENDDO                                                                        /*CLE134*/
- 
+
 /* Get 'UseMQSeries' system value from file SDSVALPD */                                   /*258836*/
                                                                                           /*258836*/
              CHGVAR     VAR(&SVALK1) VALUE('UseMQSeries')                                 /*258836*/
@@ -190,15 +192,15 @@
                                                                                           /*CSC054*/
 LIST:                                                                                  /*MD023899C*/
 /* Retrieve Current Zone */
- 
+
              CALL       PGM(GOGETZONE) PARM(&PRTCD &PERMS &PFULLCK +
                           &PZONE &PSHTC &PRDNB &PDNWD &PBCCY &PNJOB)
- 
+
 /* Midas Standard Error Processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                              CMDLBL(ABNOR))
- 
+
              CLOF       OPNID(THIS1)                                                    /*MD023899*/
              MONMSG     MSGID(CPF4520)                                                  /*MD023899*/
              OPNDBF     FILE(GPWASCL0) OPTION(*INP) OPNID(THIS1)                        /*MD023899*/
@@ -209,34 +211,36 @@ LOOP1:                                                                          
                         GOTO LOOP1                                                      /*MD023899*/
              ENDDO                                                                      /*MD023899*/
 /* Send request to Listener Port Controller Application via D queue */
- 
+
 /**********  CHGVAR     VAR(&DQNME) VALUE('GPCOBRQSDQ')                                 /*MD023899*/
              CHGVAR     VAR(&DQNME) VALUE(&THIS1_AXREQD)                                /*MD023899*/
 /**********  CHGVAR     VAR(&DQDTA) VALUE(&PZONE || ' ' || &PACT)                      /*MD023899C*/
-             CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACT)                  /*MD023899C*/
- 
+/**********  CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACT) */  /*MD023899C*/ /*MD034254*/   
+
              CHGVAR     VAR(&COUNT) VALUE(1)                                           /*MD023899C*/
 RESEND1:                                                                               /*MD023899C*/
+             CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACT)                   /*MD034254*/
              CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXREQD *LIBL)                         /*MD023899*/
              CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXRSPD *LIBL)                         /*MD023899*/
              CHGVAR     VAR(&DQLEN) VALUE(100)                                          /*MD023899*/
              CALL       PGM(QSNDDTAQ) PARM(&DQNME &DQLIB &DQLEN &DQDTA)
- 
+
 /* Receive response from GPCOBRSPDQ */
- 
+
 /**********  CHGVAR     VAR(&DQNME) VALUE('GPCOBRSPDQ')                                 /*MD023899*/
              CHGVAR     VAR(&DQNME) VALUE(&THIS1_AXRSPD)                                /*MD023899*/
              CHGVAR     VAR(&DQKEY) VALUE(&PZONE)
              CHGVAR     VAR(&DQDTA) VALUE(' ')
- 
+
              CALL       PGM(QRCVDTAQ) PARM(&DQNME &DQLIB &DQLEN +
                           &DQDTA &DQWAIT &DQKEYSLT &DQKEYLEN &DQKEY +
                           &DQSNDLEN &DQSND)
- 
+
              IF         COND(&DQLEN = 0) THEN(DO)
              IF         COND(&COUNT <= 3) THEN(DO)                                     /*MD023899C*/
              CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)                                  /*MD023899C*/
              CHGVAR     VAR(&DQLEN) VALUE(100)                                         /*MD023899C*/
+             CHGVAR     VAR(&DQNME) VALUE(&THIS1_AXREQD)                                /*MD034254*/   
              GOTO       RESEND1                                                        /*MD023899C*/
              ENDDO                                                                     /*MD023899C*/
              ELSE       (DO)                                                           /*MD023899C*/
@@ -254,18 +258,18 @@ RESEND1:                                                                        
              ENDDO                                                                     /*MD023899C*/
              GOTO       CMDLBL(LOOP1)                                                   /*MD023899*/
              ENDDO
- 
+
 /* Normal program termination */
- 
+
              IF         COND(&PACT = 'START' *AND %SST(&DQDTA 12 7) = 'STARTED' *OR +
                              &PACT = 'STOP'  *AND %SST(&DQDTA 12 7) = 'STOPPED') THEN(DO)
 /**********  GOTO       CMDLBL(END)                                                       /*CLE134*/
 /**********  GOTO       CMDLBL(PDP)                                              /*CLE134 MD023899*/
              GOTO       CMDLBL(LOOP1)                                                   /*MD023899*/
              ENDDO
- 
+
 /* Incorrect response */
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           LSNPORCTL failed to receive expected response +
                           from Listener Port Controller +
@@ -302,12 +306,13 @@ LOOP2:                                                                          
              ENDDO                                                                        /*CLE134*/
                                                                                           /*CLE134*/
 /**********  CHGVAR     VAR(&DQDTA) VALUE(&PZONE || ' ' || &PACA)               /*CLE134 MD023899C*/
-             CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACA)                  /*MD023899C*/
+/**********  CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACA) */  /*MD023899C*/ /*MD034254*/ 
                                                                                           /*CLE134*/
 /**********  CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXREQD *LIBL)               /*MD023899 MD023899C*/
 /**********  CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXRSPD *LIBL)               /*MD023899 MD023899C*/
              CHGVAR     VAR(&COUNT) VALUE(1)                                           /*MD023899C*/
 RESEND2:                                                                               /*MD023899C*/
+             CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACA)                   /*MD034254*/       
              CALL       PGM(QCLRDTAQ) PARM(&THIS2_AXREQD *LIBL)                        /*MD023899C*/
              CALL       PGM(QCLRDTAQ) PARM(&THIS2_AXRSPD *LIBL)                        /*MD023899C*/
              CHGVAR     VAR(&DQLEN) VALUE(100)                                          /*MD023899*/
@@ -328,6 +333,7 @@ RESEND2:                                                                        
              IF         COND(&COUNT <= 3) THEN(DO)                                     /*MD023899C*/
              CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)                                  /*MD023899C*/
              CHGVAR     VAR(&DQLEN) VALUE(100)                                         /*MD023899C*/
+             CHGVAR     VAR(&DQNME) VALUE(&THIS2_AXREQD)                                /*MD034254*/  
              GOTO       RESEND2                                                        /*MD023899C*/
              ENDDO                                                                     /*MD023899C*/
              ELSE       (DO)                                                           /*MD023899C*/
@@ -361,20 +367,20 @@ RESEND2:                                                                        
                           from Listener Port Controller +
                           application - ' *CAT &DQDTA) TOMSGQ(MOPERQ)                  /*MD023899C*/
 /**********               application - ' || &DQDTA) TOMSGQ(MOPERQ)             /*CLE134 MD023899C*/
- 
+
 /* Abnormal termination */
- 
+
  ABNOR:      CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           LSNPORCTL ended abnormally - see joblog +
                           ') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              DMPCLPGM                                                                  /*MD023899C*/
- 
+
 /* End program */
- 
+
  END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited +
                           2008.')
- 
+
              ENDPGM

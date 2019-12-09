@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054559           Date 20Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD053762           Date 16Jun19               *
+      *  Prev Amend No. MD054559           Date 20Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 AR666241           Date 12Aug19               *
       *                 MD045084           Date 03Aug18               *
       *                 MD046248           Date 27Oct17               *
@@ -226,6 +227,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD053762 - Tiered Witholding Tax System Values               *
       *  MD054559 - Add WWHTAL condition for Alt processing.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  AR666241 - Discrepancy in RE3810 report due HISB being       *
@@ -1815,6 +1817,7 @@
      I              'REC64N    '          C         REC64N                085787
      I              'BasCcyTaxRoundDown'  C         C#BASE                                    CDL081
      I              'NBasCcyTaxRoundDown' C         C#NBAS                                    CDL081
+     I              'SuppressFCCYWHTConv' C         C#SCON                                  MD053762
       *                                                                   085787
      I              'MAIN TAX'            C         CPRITX                                  BUG23163
      I              'SECONDARY TAX'       C         C2NDTX                                  BUG23163
@@ -5971,6 +5974,43 @@
      C                     ELSE                                                               CGL165
      C                     MOVEL'N'       CGL165                                              CGL165
      C                     ENDIF                                                              CGL165
+     C           CDL013    IFEQ '1'                                                         MD053762
+     C                     CALL 'AOSVALR0'                                                  MD053762
+     C                     PARM *BLANKS   PRTCD                                             MD053762
+     C                     PARM C#SCON    SVALK1 20                                         MD053762
+     C                     PARM           SVAL1 200                                         MD053762
+     C                     PARM *BLANKS   SVALK2 20                                         MD053762
+     C                     PARM           SVAL2 200                                         MD053762
+     C                     PARM *BLANKS   SVALK3 20                                         MD053762
+     C                     PARM           SVAL3 200                                         MD053762
+     C                     PARM *BLANKS   SVALK4 20                                         MD053762
+     C                     PARM           SVAL4 200                                         MD053762
+     C                     PARM *BLANKS   SVALK5 20                                         MD053762
+     C                     PARM           SVAL5 200                                         MD053762
+     C                     PARM *BLANKS   SVALK6 20                                         MD053762
+     C                     PARM           SVAL6 200                                         MD053762
+     C                     PARM *BLANKS   SVALK7 20                                         MD053762
+     C                     PARM           SVAL7 200                                         MD053762
+     C                     PARM *BLANKS   SVALK8 20                                         MD053762
+     C                     PARM           SVAL8 200                                         MD053762
+     C                     PARM *BLANKS   SVALK9 20                                         MD053762
+     C                     PARM           SVAL9 200                                         MD053762
+     C                     PARM *BLANKS   SVALK0 20                                         MD053762
+     C                     PARM           SVAL10200                                         MD053762
+      *                                                                                     MD053762
+     C           PRTCD     IFNE *BLANKS                                                     MD053762
+     C           *LOCK     IN   LDA                                                         MD053762
+     C                     MOVEL'201'     DBASE                                             MD053762
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD053762
+     C                     MOVELSVALK1    DBKEY                                             MD053762
+     C                     OUT  LDA                                                         MD053762
+     C                     EXSR *PSSR                                                       MD053762
+     C                     ENDIF                                                            MD053762
+      *                                                                                     MD053762
+      ** Setup Suppress Conversion indicator                                                MD053762
+      *                                                                                     MD053762
+     C                     MOVELSVAL1     W#SCON  1                                         MD053762
+     C                     ENDIF                                                            MD053762
       *                                                                                     AR831847
       *                                                                                     AR831847
       ** Check if Net Interest is to be posted for German Taxes                             AR831847
@@ -12996,6 +13036,10 @@
      C           CCY       ORNE BJLCCY                                                        CGL165
      C           CGL165    ANDEQ'Y'                                                           CGL165
      C/COPY WNCPYSRC,RE3664C016
+      * Do not convert tax amount if SuppressFCCYWHTConv is 'Y'                             MD053762
+     C           CDL013    IFEQ '1'                                                         MD053762
+     C           W#SCON    ANDEQ'Y'                                                         MD053762
+     C                     ELSE                                                             MD053762
       *                                                                   CAC001
       **  Check if profit centre can hold FX Position                     CAC001
       *                                                                   CAC001
@@ -13228,6 +13272,7 @@
      C           BGN0ST    IFEQ 'Y'                                       CAC001
      C                     MOVE WSVPC     PRFC                            CAC001
      C                     ENDIF                                          CAC001
+     C                     ENDIF                                                            MD053762
      C                     END                             - E1
      C*
      C** POST TO WITHOLDING TAX ACCOUNT IN BASE CURRENCY CREDIT SIDE
@@ -13237,7 +13282,12 @@
      C                     MOVE WTWTAC    ATYP
      C                     MOVELCCY       WWCCY
      C/COPY WNCPYSRC,REH00455
-     C                     MOVELBACCY     CCY
+      * Post tax in account currency if SuppressFCCYWHTConv is 'Y'                          MD053762
+     C           CDL013    IFEQ '1'                                                         MD053762
+     C           W#SCON    ANDEQ'Y'                                                         MD053762
+     C                     ELSE                                                             MD053762
+     C                     MOVELBACCY     CCY                                               MD053762
+     C                     ENDIF                                                            MD053762
      C/COPY WNCPYSRC,RE3664C017
       * If CGL165 is On, set up correct internal tax account to post tax to                   CGL165
      C           CGL165    IFEQ 'Y'                                                           CGL165

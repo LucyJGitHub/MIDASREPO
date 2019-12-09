@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049950           Date 08Mar18               *      
-      *  Prev Amend No. MD048795           Date 30Jan18               *
+      *  Last Amend No. MD053762           Date 16Jun19               *
+      *  Prev Amend No. MD049950           Date 08Mar18               *
+      *                 MD048795           Date 30Jan18               *
       *                 MD048346           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -188,6 +189,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD053762 - Tiered Withholding Tax System Values              *
       *  MD049950 - No projection was created for FX deal with retail *
       *             settlement.  Check FX netting reference.          *
       *  MD048795 - Original Transasction Type is set to 'NT' when it *
@@ -1577,6 +1579,7 @@
      I              'DEALING ACCRUAL SUMM-C         ##DLAS                125828
      I              'ARY       '                                          125828
      I              'BasCcyTaxRoundDown'  C         C#BASE                                    CDL081
+     I              'SuppressFCCYWHTConv' C         C#SCON                                  MD053762
      I              'FXnetBranch'         C         FXSVAL                                  MD048346
      I**                                                                  S01117
 0925 I**                                                                  S01117
@@ -1842,6 +1845,57 @@
       *                                                                                       CGL165
      C                     MOVE 'N'       CGL165                                              CGL165
      C                     ENDIF                                                              CGL165
+      ** Check if 'CDL013' is switched 'ON'                                                 MD053762
+     C                     CALL 'AOSARDR0'                                                  MD053762
+     C                     PARM '       ' PRTCD                                             MD053762
+     C                     PARM '*VERIFY' POPTN                                             MD053762
+     C                     PARM 'CDL013'  PSARD   6                                         MD053762
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD053762
+      *                                                                                     MD053762
+     C           PRTCD     IFEQ *BLANKS                                                     MD053762
+     C                     MOVE 'Y'       CDL013  1                                         MD053762
+     C                     ELSE                                                             MD053762
+      *                                                                                     MD053762
+     C                     MOVE 'N'       CDL013                                            MD053762
+     C                     ENDIF                                                            MD053762
+      *                                                                                     MD053762
+     C           CDL013    IFEQ 'Y'                                                         MD053762
+     C                     CALL 'AOSVALR0'                                                  MD053762
+     C                     PARM *BLANKS   PRTCD                                             MD053762
+     C                     PARM C#SCON    SVALK1 20                                         MD053762
+     C                     PARM           SVAL1 200                                         MD053762
+     C                     PARM *BLANK    SVALK2 20                                         MD053762
+     C                     PARM           SVAL2 200                                         MD053762
+     C                     PARM *BLANK    SVALK3 20                                         MD053762
+     C                     PARM           SVAL3 200                                         MD053762
+     C                     PARM *BLANK    SVALK4 20                                         MD053762
+     C                     PARM           SVAL4 200                                         MD053762
+     C                     PARM *BLANK    SVALK5 20                                         MD053762
+     C                     PARM           SVAL5 200                                         MD053762
+     C                     PARM *BLANK    SVALK6 20                                         MD053762
+     C                     PARM           SVAL6 200                                         MD053762
+     C                     PARM *BLANK    SVALK7 20                                         MD053762
+     C                     PARM           SVAL7 200                                         MD053762
+     C                     PARM *BLANK    SVALK8 20                                         MD053762
+     C                     PARM           SVAL8 200                                         MD053762
+     C                     PARM *BLANK    SVALK9 20                                         MD053762
+     C                     PARM           SVAL9 200                                         MD053762
+     C                     PARM *BLANK    SVALK0 20                                         MD053762
+     C                     PARM           SVAL10200                                         MD053762
+      *                                                                                     MD053762
+     C           PRTCD     IFNE *BLANKS                                                     MD053762
+     C           *LOCK     IN   LDA                                                         MD053762
+     C                     MOVEL'201'     DBASE                                             MD053762
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD053762
+     C                     MOVELSVALK1    DBKEY                                             MD053762
+     C                     OUT  LDA                                                         MD053762
+     C                     GOTO ERROR                                                       MD053762
+     C                     ENDIF                                                            MD053762
+      *                                                                                     MD053762
+      ** Setup Suppress Conversion indicator                                                MD053762
+      *                                                                                     MD053762
+     C                     MOVELSVAL1     W#SCON  1                                         MD053762
+     C                     ENDIF                                                            MD053762
      C************************************************************ 080603 117028
      C** * CHECK 'BRT' SWITCH ON ********************************* 080603 117028
      C************************************************************ 080603 117028
@@ -3141,6 +3195,17 @@
      C           EVCOD     ANDEQ'M'                                                         MD034609
      C           ECCY      ANDNEBJLCCY                                                      MD034609
      C           *IN35     IFEQ '1'                                                         MD034609
+      *                                                                                     MD053762
+      * If system value set-up is to post tax in transaction currency introduce             MD053762
+      * similar processing to above fix and don't treat key as a tax key                    MD053762
+      *                                                                                     MD053762
+     C           *IN34     OREQ '1'                                                         MD053762
+     C           CDL013    ANDEQ'Y'                                                         MD053762
+     C           W#SCON    ANDEQ'Y'                                                         MD053762
+     C           *IN36     OREQ '1'                                                         MD053762
+     C           CDL013    ANDEQ'Y'                                                         MD053762
+     C           W#SCON    ANDEQ'Y'                                                         MD053762
+      *                                                                                     MD053762
      C                     MOVE '0'       *IN60                                             MD034609
      C                     ELSE                                                             MD034609
      C                     MOVE '1'       *IN60                                             MD034609

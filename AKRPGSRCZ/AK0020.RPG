@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054576           Date 14Oct19               *
+      *  Prev Amend No. MD053762           Date 16Jun19               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 MD031566           Date 13Feb15               *
       *                 MD027308B          Date 25Nov14               *
@@ -91,6 +93,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD054576 - Account keys not displayed in DKEYSDP report      *
+      *             (DL0280) and GEDLPD (DL0295) after Day 1 COBDL    *
+      *  MD053762 - Tiered Witholding Tax System Values               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
@@ -457,6 +462,7 @@
      I                                        6   8 CYD
      I                                        7   9 BB2                                       CAS009
      I                                        8   9 FEECD                                     CAS009
+     I                                        8   8 GRS                                     MD053762
      I                                        9   9 FBD
      I                                       10  10 AMTD
      I                                       11  14 CLASD                                     CDL038
@@ -4036,6 +4042,14 @@ E004 C                     ENDIF                                          S01460
 E003 C                     ENDIF                                          S01460
      C*                                                                   S01460
      C                     EXSR ACUP                                      S01460
+      * If CDL013 is On, also format Gross Taxable key XXIYY..GTI                           MD053762
+     C           CDL013    IFEQ 'Y'                                                         MD053762
+     C                     MOVE 'G'       GRS                                               MD053762
+     C                     MOVE '01'      PN1                                               MD053762
+     C                     MOVE '2'       PR1                                               MD053762
+     C                     EXSR ACUP                                                        MD053762
+     C                     MOVE *BLANKS   GRS                                               MD053762
+     C                     ENDIF                                                            MD053762
 E002 C                     ENDIF                                          080603
      C**                                                                  S01460
      C***Format*Key*XXMYY...N******                                S01460 080603
@@ -4054,6 +4068,14 @@ B002 C           *IN71     IFEQ *ON                                       080603
      C***********          ENDIF                                   S01460 080603
      C*                                                                   S01460
      C                     EXSR ACUP                                      S01460
+      * If CDL013 is On, also format Gross Net key XXIYY..G.N                               MD053762
+     C           CDL013    IFEQ 'Y'                                                         MD053762
+     C                     MOVE 'G'       GRS                                               MD053762
+     C                     MOVE *BLANKS   PN1                                               MD053762
+     C                     MOVE *BLANKS   PR1                                               MD053762
+     C                     EXSR ACUP                                                        MD053762
+     C                     MOVE *BLANKS   GRS                                               MD053762
+     C                     ENDIF                                                            MD053762
      C**                                                                  S01460
      C***Format*Key*XXMYY...T********                              S01460 080603
      C** Format Key XXIYY....T                                            080603
@@ -4067,6 +4089,14 @@ B002 C           *IN71     IFEQ *ON                                       080603
      C                     MOVE '01'      PN1                             080603
      C                     MOVE '1'       PR1                             080603
      C                     EXSR ACUP                                      080603
+      * If CDL013 is On, also format Gross Tax key XXIYY..G.T                               MD053762
+     C           CDL013    IFEQ 'Y'                                                         MD053762
+     C                     MOVE 'G'       GRS                                               MD053762
+     C                     MOVE '01'      PN4                                               MD053762
+     C                     MOVE '2'       PR4                                               MD053762
+     C                     EXSR ACUP                                                        MD053762
+     C                     MOVE *BLANKS   GRS                                               MD053762
+     C                     ENDIF
      C**                                                                  S01408
      C/COPY WNCPYSRC,AK0020CBD5                                           S01408
      C           CGL165    IFEQ 'Y'                                                           CGL165
@@ -4556,6 +4586,8 @@ E001 C                     END                             CL,CD          080603
       *                                                                                     BUG26326
       ** Stop double posting on maturity of MB and MUB keys                                 BUG26326
      C           SIPRT     IFEQ 'N'                                                         BUG26326
+     C           CGL031    ANDEQ'Y'                                                         MD053762
+     C           CDL013    OREQ 'Y'                                                         MD054576
      C                     MOVE '01'      PN1
      C                     MOVE '2'       PR1
      C                     ENDIF                                                            BUG26326
@@ -4564,6 +4596,12 @@ E001 C                     END                             CL,CD          080603
      C**                                                                  S01408
      C* Update file
      C                     EXSR ACUP
+      * If CDL013 is On, also format Gross key XXIYY..G.B                                   MD053762
+     C           CDL013    IFEQ 'Y'                                                         MD053762
+     C                     MOVE 'G'       GRS                                               MD053762
+     C                     EXSR ACUP                                                        MD053762
+     C                     MOVE *BLANKS   GRS                                               MD053762
+     C                     ENDIF                                                            MD053762
      C**                                                                  S01460
      C** Format Key XXMYY...TI                                            S01460
      C**                                                                  S01460
@@ -4638,6 +4676,14 @@ E001 C                     END                             CL,CD          080603
      C                     MOVE '01'      PN1                             080603
      C                     MOVE '1'       PR1                             080603
      C                     EXSR ACUP                                      080603
+      * If CDL013 is On, also format Gross tax key XXIYY..G.T                               MD053762
+     C           CDL013    IFEQ 'Y'                                                         MD053762
+     C                     MOVE 'G'       GRS                                               MD053762
+     C                     MOVE '01'      PN4                                               MD053762
+     C                     MOVE '2'       PR4                                               MD053762
+     C                     EXSR ACUP                                                        MD053762
+     C                     MOVE *BLANKS   GRS                                               MD053762
+     C                     ENDIF                                                            MD053762
      C**                                                                  S01408
      C/COPY WNCPYSRC,AK0020CBD5                                           S01408
      C           CGL165    IFEQ 'Y'                                                           CGL165
@@ -12264,6 +12310,18 @@ E001 C                     ENDIF                                          S01460
      C                     OUT  LDA                                                           CGL165
      C                     EXSR DBERR                                                         CGL165
      C                     ENDIF                                                              CGL165
+      *                                                                                     MD053762
+     C                     CALL 'AOSARDR0'                                                  MD053762
+     C                     PARM *BLANKS   PRTCD                                             MD053762
+     C                     PARM '*VERIFY' POPTN                                             MD053762
+     C                     PARM 'CDL013'  PSARD                                             MD053762
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD053762
+      *                                                                                     MD053762
+     C           PRTCD     IFEQ *BLANKS                                                     MD053762
+     C                     MOVE 'Y'       CDL013  1                                         MD053762
+     C                     ELSE                                                             MD053762
+     C                     MOVE 'N'       CDL013                                            MD053762
+     C                     ENDIF                                                            MD053762
      C**
      C** Check that all required Narrative Codes are present
      C** on SDNARRPD

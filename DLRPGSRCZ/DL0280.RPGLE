@@ -3323,7 +3323,6 @@
      C**********         MOVE      'N'           WCALC6                            MD035545 MD047993
      C**********         ENDIF                                                     MD035545 MD047993
      C                   ENDIF                                                              MD035545
-     C                   MOVE      WCALC6        SCALC6            1                        MD051554
       *                                                                                     MD035545
      C/COPY WNCPYSRC,DLH00133
 0646 C*
@@ -3841,22 +3840,6 @@
 0790 C*           DEAL GROUPING FOR EVENT DATE PROCESSING.
 0791 C*
 0792 C     DETERM        TAG                                                    ** DETERM TAG *
-      *                                                                                     MD051554
-      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
-      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
-      ** December will be one day shorter, and the period in January will be                MD051554
-      ** one day longer for calculation basis 6                                             MD051554
-      *                                                                                     MD051554
-     C                   IF        DTYP = 'FR' or                                           MD051554
-     C                             DTYP = 'RS' or                                           MD051554
-     C                             DTYP = 'RX' or                                           MD051554
-     C                             DTYP = 'RF' or                                           MD051554
-     C                             DTYP = 'RR' or                                           MD051554
-     C                             DTYP = 'RP'                                              MD051554
-     C                   EVAL      WCALC6 = 'N'                                             MD051554
-     C                   ELSE                                                               MD051554
-     C                   EVAL      WCALC6 = SCALC6                                          MD051554
-     C                   ENDIF                                                              MD051554
       *                                                                                       CDL017
       ** Set flag to indicate deal is a fixed loan/deposit deal type                          CDL017
       *                                                                                       CDL017

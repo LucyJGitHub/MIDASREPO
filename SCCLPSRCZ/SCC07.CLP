@@ -9,9 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. ERZ178             Date 15Mar13              */
-/*       Prev Amend No. MD054045           Date 27Aug19              */
-/*                      MD046248           Date 27Oct17              */
+/*       Last Amend No. MD054045           Date 27Aug19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                      MD037757           Date 26Apr16              */
 /*                      MD031644           Date 12Jan15              */
 /*                      MD023896           Date 06May14              */
@@ -130,9 +129,6 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       ERZ178 - COB Save Enhancements + MIMIX                      */
-/*                Amended hooks:                                     */
-/*                - SCH00005, SCH00006, SCC07002                     */
 /*       MD054045 - Not able to reopen i/c after the 1st attempt     */
 /*                  to reopen failed.                                */
 /*       MD046248 - Finastra Rebranding                              */

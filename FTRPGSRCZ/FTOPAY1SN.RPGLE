@@ -16,9 +16,6 @@
       *                                                               *
       *  Last Amend No. MD054131           Date 13Sep19               *
       *  Prev Amend No. MD054130           Date 28Aug19               *
-      *                 MD021318           Date 26Jul13               *
-      *                 262474             Date 29Jan13               *
-      *                 ERZ123             Date 29Jan13               *
       *                 MD052529           Date 12Feb19               *
       *                 MD050619           Date 24Apr18               *
       *                 MD050574           Date 20Apr18               *
@@ -183,16 +180,6 @@
       *  MD052529 - If incoming pay MT202 message has no 50 field,    *
       *             Ordering Customer lines 2-5 should not be         *
       *             populated with values of field 52A details 1-4.   *
-      *  MD021318 - OPAY allowed input of account with block debit    *
-      *           - Fix is to condition CSD089 overridable error      *
-      *             changes when input is from HATS screen            *
-      *  262474 - ERZ123 : Set new fields to blanks for CAR and F12   *
-      *           Replication                                         *
-      *           Added hook: FTH00656                                *
-      *           Amended hook: FTH00661                              *
-      *  ERZ123 - FT Select Payment on Beneficiary Line 1             *
-      *           Added hooks: FTH00657, FTH00659, FTH00660, FTH00661 *
-      *           Amended hooks: FTH00207                             *
       *           - Initialization of work field ORCFLD should be     *
       *             performed before the OPAY screen mapping.         *
       *  MD050619 - No payment reference generated when routing via   *
@@ -1311,8 +1298,7 @@
       ** +----------------------------------------------------------------+
       *                                                                                      BUG7029
       ** Retrieve ZMUSER details.                                                            BUG7029
-      *         D PMode           S              6A   INZ('*SIN  ')                                    MD021318
-                                                                                  BUG7029
+      *                                                                                      BUG7029
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
      C                   UNLOCK    ZMUSER                                                    BUG7029
@@ -2468,9 +2454,7 @@
      C     WIdx_PVAL     ANDNE     0                                                          206893
      C     NewPmtSc1b    ORNE      PrvPmtSc1b                                                 206893
      C     WIdx_PVAL     ANDEQ     PrvN_Warn                                                  206893
-     C     WIdx_PVAL     ANDNE     0           ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-                                                     206893
+     C     WIdx_PVAL     ANDNE     0                                                          206893
      C                   GOTO      EndVAL@P
      C                   END
       *
@@ -2735,9 +2719,7 @@
      C                   MOVE      *ALL'Y'       FTEOPY2
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
-     C                   MOVEL     *BLANK      ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-        WMsgDtaArr
+     C                   MOVEL     *BLANK        WMsgDtaArr
       *
       * Level 2 details now set up so  so disable F16 key
      C                   MOVE      'Y'           Level2Dtl
@@ -3096,9 +3078,7 @@
      C     WIdx_BVAL     AndNe     0                                            CFT014
      C     NewPmtSc3b    OrNe      PrvPmtSc3b                                   CFT014
      C     WIdx_BVAL     AndEq     PrvN_Warn                                    CFT014
-     C     WIdx_BVAL     AndNe     0                     ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-                             CFT014
+     C     WIdx_BVAL     AndNe     0                                            CFT014
      C                   Goto      EndVAL@B                                     CFT014
      C                   EndIf                                                  CFT014
                                                                                 CFT014
@@ -3529,9 +3509,7 @@
       * 'N' as those are errors not warnings in FTEOPY4                         CFT009
       *                                                                         CFT009
      C*******************MOVE      *ALL'Y'       FTEOPY4                  CFT014CFT009
-     C           ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-              EVAL      *IN81 = *ON                                  CFT009
+     C                   EVAL      *IN81 = *ON                                  CFT009
                                                                                 CFT009
      C                   DOW       *IN81 = *ON                                  CFT009
      C     'W'           SCAN      FTEOPY4:1     @p                3 0    81    CFT009

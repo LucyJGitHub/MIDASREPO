@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 261960             Date 26Apr13               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
-      *                 MD039617           Date 16Jun19               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD039617           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039575           Date 07Jul16               *
@@ -75,8 +74,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  261960 - Use Interest Rate(HKINTR) instead of Input Interest *
-      *           Rate for display of Interest Rate.                  *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD039617 - Corrupted data in CDL096 fields                   *
@@ -583,17 +580,12 @@
      C     HKBSRC        IFNE      *ZEROS
      C                   MOVE      HKBSRC        DDBSRC
      C                   END
-     C*****************************************************************                       261960
-     C****Spread/Rate*-*if*no*Base*Rate*Code*has*been*entered,*use*the*                       261960
-     C****Input*Interest*Rate,*otherwise*use*the*Spread.***************                       261960
-     C*****************************************************************                       261960
-      *                                                                                       261960
-      ** Spread/Rate - if no Base Rate Code has been entered, use the                         261960
-      ** Interest Rate, otherwise use the Spread.                                             261960
-      *                                                                                       261960
+     C*
+     C**  Spread/Rate - if no Base Rate Code has been entered, use the
+     C**  Input Interest Rate, otherwise use the Spread.
+     C*
      C     DDBSRC        IFEQ      *BLANKS
-     C**********         Z-ADD     HKIIRT        WWIIRT           11 7                 211926 261960
-     C                   Z-ADD     HKINTR        WWIIRT           11 7                        261960
+     C                   Z-ADD     HKIIRT        WWIIRT           11 7                        211926
      C*****HKIIRT        IFLT      0                                                          208051
      C**********         Z-SUB     HKIIRT        HKIIRT                                       208051
      C**********         END                                                                  208051

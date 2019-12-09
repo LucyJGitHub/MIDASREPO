@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR926400           Date 19Jun13               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
@@ -112,8 +111,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR926400 - Unable to update Front Office ID. Allow changes   *
-      *             on HKFRNT. (Child: AR926403)                      *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -2030,9 +2027,9 @@
       *                                                                         CAP013
       ** Front office transaction ID                                            CAP013
       *                                                                         CAP013
-     C*****IKFRNT        IFNE      *BLANKS                                           227465 AR926400
+     C     IKFRNT        IFNE      *BLANKS                                                    227465
      C                   MOVEL     IKFRNT        HKFRNT                         CAP013
-     C**********         ENDIF                                                       227465 AR926400
+     C                   ENDIF                                                                227465
       *                                                                         CAP013
       ** Associated front office transaction ID                                 CAP013
       *                                                                         CAP013
@@ -2162,9 +2159,9 @@
       *                                                                         CAP013
       ** Front office transaction ID                                            CAP013
       *                                                                         CAP013
-     C*****IKFRNT        IFNE      *BLANKS                                           227465 AR926400
+     C     IKFRNT        IFNE      *BLANKS                                                    227465
      C                   MOVEL     IKFRNT        HKFRNT                         CAP013
-     C**********         ENDIF                                                       227465 AR926400
+     C                   ENDIF                                                                227465
       *                                                                         CAP013
       ** Associated front office transaction ID                                 CAP013
       *                                                                         CAP013
@@ -2461,9 +2458,6 @@
      C     @Type         IFEQ      '1'                                          168345
      C     IKLACT        ANDEQ     'I'                                          168345
      C     IKFRNT        ANDNE     *BLANKS                                      168345
-     C     @Type         OREQ      '1'                                                      AR926400
-     C     IKLACT        ANDEQ     'A'                                                      AR926400
-     C     IKFRNT        ANDNE     *BLANKS                                                  AR926400
       *                                                                         168345
      C                   MOVE      '*FRONT'      @@MODE                         168345
       *                                                                         168345
@@ -2476,9 +2470,6 @@
      C     @Type         IFEQ      '0'                                          CAP006
      C     IKLACT        ANDEQ     'I'                                          CAP013
      C     IKMTYP        ANDNE     'ID'                                                       CAP042
-     C     @Type         OREQ      '0'                                                      AR926400
-     C     IKLACT        ANDEQ     'A'                                                      AR926400
-     C     IKMTYP        ANDNE     'ID'                                                     AR926400
      C                   MOVE      '*FRONT'      @@MODE                         CAP006
      C                   ELSE                                                   CAP006
      C                   MOVE      *BLANKS       @@MODE                         CAP006

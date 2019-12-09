@@ -28,8 +28,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD049574           Date 07Feb18               *
+      *  Prev Amend No. MD047859           Date 19Sep17               *      
+      *                 AR933170           Date 19Jun13               *
+      *                 MD054095           Date 17Oct19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSD095CC1          Date 13Sep16               *
@@ -83,6 +86,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049574 - Correct buffer positions for Principal Change     *
+      *             schedule fields                                   *
+      *  MD047859 - Correct buffer conflict of AR933171 fix           *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *           - DDFOID as parameters. (Child: AR933171)           *
+      *           - Partially applied by MD047859.                    *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -429,6 +438,7 @@
      D SFEBO           S             10    DIM(10) PERRCD(1) CTDATA
      D #0FEBO          S             10    DIM(10) ALT(SFEBO)
      D LETT            S              1    DIM(7) CTDATA PERRCD(7)              BUG5403
+     D DDFOID          S             20A                                                    AR933170
 
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -816,11 +826,16 @@
      C                   EVAL      STINFD=%SUBST(Buffer:2079)                               MD031861
      C                   EVAL      #1STAT=%SUBST(Buffer:2085)                               MD031861
      C                   EVAL      FORMULAOPC=%SUBST(Buffer:2109)                           MD031861
+     C                   EVAL      DDFOID=%SUBST(Buffer:2134)                               MD047859
      C**********         EVAL      PCSAST=%SUBST(Buffer:4228) + Buffer2 +            MD031861 CSW216
      C**********                   BufferEx2                                         MD031861 CSW216
-     C                   EVAL      PCSAST=%SUBST(Buffer:4268) + Buffer2 +                     CSW216
-     C                             BufferEx2                                                  CSW216
+     C**********         EVAL      PCSAST=%SUBST(Buffer:4268) + Buffer2 +            CSW216 MD047859
+     C**********                   BufferEx2                                         CSW216 MD047859
+     C**********         EVAL      PCSAST=%SUBST(Buffer:4248) + Buffer2 +          MD047859 MD049574
+     C                   EVAL      PCSAST=%SUBST(Buffer:4288) + Buffer2 +                   MD049574
+     C                             BufferEx2                                                MD047859
      C
+     C                   EVAL      APFOTranID = DDFOID                                      AR933170
      C                   MOVEA     PCSAST        PCSA                           BUG5403
 
       * If CAP041 is installed, move Fees/Buy-Outs fields to one DS for
@@ -1020,6 +1035,7 @@
      C                                  + SUINFD + STINFD + #1STAT                           BUG5871
      C**********                        + FORMULAOPC + PCSAST                         BUG5871 CSW213
      C                                  + FORMULAOPC                                          CSW213
+     C                                  + DDFOID                                            AR933170
      C                                  + OutSwift2013                                        CSW213
      C                                  + PCSAST                                              CSW213
      C**********         EVAL      Buffer2=%SUBST(PCSAST:4857)                  BUG5403      BUG6377
@@ -1042,8 +1058,12 @@
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5983)                     CSW214 MD031861
      C**********         EVAL      Buffer2=%SUBST(PCSAST:1774)                         CSW214 CSW216
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5773)                       CSW214 CSW216
-     C                   EVAL      Buffer2=%SUBST(PCSAST:1734)                                CSW216
-     C                   EVAL      BufferEx2=%SUBST(PCSAST:5733)                              CSW216
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1734)                       CSW216 MD047859
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5733)                     CSW216 MD047859
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1754)                     MD047859 MD049574
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5753)                   MD047859 MD049574
+     C                   EVAL      Buffer2=%SUBST(PCSAST:1714)                              MD049574
+     C                   EVAL      BufferEx2=%SUBST(PCSAST:5713)                            MD049574
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -1246,6 +1266,16 @@
       *                                                               *
       *****************************************************************
      C     SrValActCde   BEGSR
+      *                                                                                     AR933170
+      ** Set retrieve mode to '*FRONT' (Access using Front Office ID)                       AR933170
+      ** Otherwise                                                                          AR933170
+      ** Set retrieve mode to blank (Access using Midas transaction ID)                     AR933170
+      *                                                                                     AR933170
+     C     DDFOID        IFNE      *BLANKS                                                  AR933170
+     C                   MOVEL     '*FRONT'      ModeofOp                                   AR933170
+     C                   ELSE                                                               AR933170
+     C                   MOVEL     '      '      ModeofOp                                   AR933170
+     C                   ENDIF                                                              AR933170
 
       ** Validate Action code versus Deal number supplied
 

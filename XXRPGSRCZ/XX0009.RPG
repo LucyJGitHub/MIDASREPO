@@ -1,0 +1,162 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Copy MTCASH 940 statements to MultiCash')     *
+/*XBIA*: OVRDBF XXREFL0  XXOREFL0                                   : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  XX0009 - Midas ME Copy MTCASH 940 statement Lines            *
+      *           to MultiCash.                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. ERZ212   *CREATE   Date 22Feb13               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  ERZ212 - Midas MT940 Interface to MultiCash                  *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Master Messages retrieval - MTCASH, MT940, RSND ONLY
+     FXXREFL0 IF  E           K        DISK         KINFSR *PSSR
+     F            MGOREFD0                          KRENAMEMGOREFD9
+      *
+      ** Master Messages update
+     FMGOREFL1UF  E           K        DISK         KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Master Message data file
+     FMGOMSGPDIF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Midas MT940s for MultiCash
+     FXXO940TDO   E                    DISK         KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      *****************************************************************
+      * Arrays                                                        *
+      *****************************************************************
+      *
+     E                    DTA       256  1
+      ** Array containing Copyright statement.
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      * Data Structures                                               *
+      *****************************************************************
+      *
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                      254 263 @USER
+      **  Field Containing User ID
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *****************************************************************
+      * Mainline Program                                              *
+      *****************************************************************
+      *
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           REPLY   7
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      ** Define Local Data Area for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Get first master record
+     C                     READ XXREFL0                  90
+      *
+      ** Do until file end master
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Save the transaction reference number for later use
+     C                     MOVE TRNO      TRNX   16
+      *
+      ** Point to message data and read all for the same transaction
+     C           TRNO      SETLLMGOMSGPD
+     C                     READEMGOMSGPD                 89
+      *
+      ** Do until file end data
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Write the data record
+     C                     EXSR SRWRIT
+      *
+      ** Get next data record
+     C                     READEMGOMSGPD                 89
+     C                     ENDDO
+      *
+      ** Update master record
+     C           TRNX      CHAINMGOREFL1             88
+     C           *IN88     IFEQ '1'
+     C                     MOVEL'MGOREFL1'DBFILE
+     C                     MOVEL'001'     DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBASE 01 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+     C                     MOVE 'TRAN'    MGST
+     C                     MOVE '2'       MGSG
+     C                     UPDATMGOREFD0
+     C                     COMIT
+      *
+      ** Get next master record
+     C                     READ XXREFL0                  90
+     C                     ENDDO
+      *
+      ** End program
+     C                     MOVE *BLANKS   REPLY
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      * S U B R O U T I N E S                                         *
+      *****************************************************************
+      * SRWRIT                                                        *
+      * Subroutine to write data records                              *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+     C           PTDL      IFEQ ' '                        not deleted
+     C                     MOVE *BLANKS   MSDATA           clear record
+     C                     MOVEA*BLANKS   DTA              clear array
+     C                     MOVEAMTAG      DTA
+     C           DTA,5     IFEQ ' '                        move data
+     C                     MOVEAMFLD      DTA,5            next to tag
+     C                     ELSE                            losing blank
+     C                     MOVEAMFLD      DTA,6            if present
+     C                     END
+     C                     MOVEADTA       MSDATA
+     C                     WRITEXXO940T0                   write
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+      * *PSSR                                                         *
+      * Subroutine to handle error termination                        *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ROLBK
+     C                     MOVE '*ERROR ' REPLY
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2013

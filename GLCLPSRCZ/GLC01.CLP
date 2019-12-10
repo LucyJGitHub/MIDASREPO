@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*       Last Amend No. ERZ100             Date 18Jan13              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031966           Date 27Jul15              */
 /*                      MD026439           Date 24Apr14              */
 /*                      AR1096788          Date 18Mar13              */
 /*                      AR1005423          Date 09Aug12              */
@@ -47,6 +48,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       ERZ100 - Security Features for Journal Entries             */
+/*                Added copysource: GLH00806                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       MD026439 - Field tag 61 Posting Date of the generated      */
@@ -121,7 +124,7 @@
              DCL        VAR(&REPNAM) TYPE(*CHAR) LEN(10) VALUE('''GL3572''') +
                           /*MD031966*/
              DCL        VAR(&REPPER) TYPE(*CHAR) LEN(3) VALUE('''N''')                  /*MD031966*/
- 
+
 /**/                                                                                      /*CER001*/
 /** Check if Automatic Batches acceptance is installed. */                                /*CER001*/
 /**/                                                                                      /*CER001*/
@@ -196,7 +199,7 @@
 /************CLRPFM GLBRREP*/                              /*S01229*/ /*S01154*/
 /************CLRPFM GLBSREP*/                              /*S01229*/ /*S01154*/
 /************CLRPFM GLBTREP*/                              /*S01229*/ /*S01154*/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,GLC01001                                     */      /*S01408*/
                                                                                           /*CER001*/

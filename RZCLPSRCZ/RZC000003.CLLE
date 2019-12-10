@@ -1,0 +1,88 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(TOFILEMBRS) TOFILE(QAFDMBRL)                    */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RZ Check from and to File Members')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - RZ Developments                                     */
+/*                                                                   */
+/*       RZC000003 - Check from and to file members                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Note: This program is modelled on UPC0262. Any changes to   */
+/*             this program should take this into account.           */
+/*             At creation the only differences between this program */
+/*             and UPC0262 are that there are separate variables     */
+/*             for 'from' and 'to' files.                            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Last Amend No. ERZ054   *CREATE   Date 29Jan13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       ERZ054 - RZB Data Warehouse Extraction Requirements         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMFILE &FROMLIB &TOFILE &TOLIB)
+ 
+             DCL        VAR(&FROMFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&NOOFRCDS) TYPE(*DEC) LEN(10 0)
+ 
+             DCLF       FILE(TOFILEMBRS)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message                                            */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Check if 'to' file exists.                                        */
+             CHKOBJ     OBJ(&TOLIB/&TOFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Create outfile of all members in the 'to' library file.           */
+             DSPFD      FILE(&TOLIB/&TOFILE) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/TOFILEMBRS)
+ 
+READ:        RCVF
+             MONMSG     MSGID(CPF0864) EXEC(+
+                GOTO       CMDLBL(END))
+ 
+/* If number of members = 0 then end processing.                     */
+ 
+             IF         COND(&MLNOMB *EQ 0) THEN(+
+                GOTO       CMDLBL(END))
+ 
+/* Check if member exists in 'from' file.                            */
+ 
+             RTVMBRD    FILE(&FROMLIB/&FROMFILE) MBR(&MLNAME) +
+                          NBRCURRCD(&NOOFRCDS)
+ 
+/* If it doesn't exist then remove member from 'to' file.            */
+ 
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                RMVM       FILE(&TOLIB/&TOFILE) MBR(&MLNAME)
+                GOTO       CMDLBL(READ)
+             ENDDO
+ 
+/* If number of records = 0 then clear 'to' member.                  */
+ 
+             IF         COND(&NOOFRCDS *EQ 0) THEN(+
+                CLRPFM     FILE(&TOLIB/&TOFILE) MBR(&MLNAME))
+ 
+             GOTO       CMDLBL(READ)
+ 
+ABNOR:       CHGJOB     SWS(XXXXXX11)
+ 
+END:         ENDPGM

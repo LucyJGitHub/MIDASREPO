@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD027054           Date 04Jun15              */
+/*       Last Amend No. MD044835           Date 29Mar17              */   
+/*       Prev Amend No. MD026710           Date 22Sep16              */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD027054           Date 04Jun15              */
 /*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
 /*                      CGL155             Date 21Mar14              */
@@ -93,29 +95,29 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&ZONECHG)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
              DCL        VAR(&ZONECHG) TYPE(*CHAR) LEN(1)
- 
+
 /*/COPY SDCPYSRC,SDSVALDCL                                           */
- 
+
 /** Program Call Return Codes               **/
- 
+
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')
              DCL        VAR(&RETCDE) TYPE(*CHAR) LEN(10) VALUE(' ')
- 
+
 /** Define variables for AOUSERR0 */
- 
+
              DCL        VAR(&JOBUSR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)
              DCL        VAR(&COBAUT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&TELLER) TYPE(*CHAR) LEN(3) VALUE('   ')                      /*245369*/
- 
+
 /** Define variables for AOSARDR0 */
- 
+
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
@@ -129,31 +131,31 @@
              DCL        VAR(&CAP205) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CAP205*/
              DCL        VAR(&CSD083) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD083*/
 /*/COPY OFCPYSRCZ,CGL155_001                                         */                   /*CGL155*/
- 
+
 /** Define work variables for CSC011 */
- 
+
              DCL        VAR(&CURR) TYPE(*CHAR) LEN(2)
              DCL        VAR(&MAIN) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SUPP) TYPE(*CHAR) LEN(2)
              DCL        VAR(&S3STRT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&S4STRT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
- 
+
 /** Define variables for AOWMNUR0 */
- 
+
              DCL        VAR(&KEY) TYPE(*CHAR) LEN(10)
              DCL        VAR(&WFMT) TYPE(*CHAR) LEN(400)
              DCL        VAR(&WRKSTN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ROUTE) TYPE(*CHAR) LEN(1)
- 
+
 /** Define and initialise transfer job indicator */
- 
+
              DCL        VAR(&TFRJOB) TYPE(*CHAR) LEN(1) VALUE('Y')
- 
+
              DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
+
              DCL        VAR(&CBSTS)  TYPE(*CHAR) LEN(1)
              DCL        VAR(&SPECMSG) TYPE(*CHAR) LEN(6)
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
@@ -166,10 +168,10 @@
              DCL        VAR(&USRID) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BLNK338) TYPE(*CHAR) LEN(338) +
                         VALUE(' ')
- 
+
              DCL        VAR(&MMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&SOVR) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&APIBKJOB) TYPE(*CHAR) LEN(1) VALUE('Y')
              DCL        VAR(&PARM1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&PARM2) TYPE(*CHAR) LEN(200)
@@ -181,94 +183,96 @@
              DCL        VAR(&ERRDTA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1)
              DCL        VAR(&FRSTAT) TYPE(*CHAR) LEN(1)                                /*BUG27831A*/
- 
+                                                                                        /*MD026710*/
+             DCL        VAR(&COUNTR) TYPE(*DEC) LEN(1) VALUE(0)                         /*MD026710*/
+             DCL        VAR(&COUNTR2) TYPE(*DEC) LEN(1) VALUE(0)                        /*MD044835*/      
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))                                                 /*243665*/
 /*******                  CMDLBL(ERROR))                                                 /*243665*/
- 
+
              ENDCMTCTL
 /*********** MONMSG     MSGID(CPF8350)     */                                            /*226108*/
              MONMSG     MSGID(CPF8350 CPF8355)                                           /*226108*/
- 
+
 /* Submit Jobs to check that the subsystems for the zone are running and if not */
 /* start them                                                                   */
- 
+
 /* Check whether the Midas system is locked */
- 
+
              CALL       PGM(AOSVALR0) PARM(&RTCD 'SystemLockStatus' +
                           &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
                           &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
                           &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
                           &SVALK9 &SVAL9 &SVALK10 &SVAL10)
- 
+
              IF         COND(%SST(&SVAL1 1 8) *EQ '*UPGRADE') THEN(DO)
- 
+
 /* Call SCC0010 to inform the user that an error has occurred */
- 
+
                 RTVMSG     MSGID(SCM0185) MSGF(GBMIDASMSG) MSG(&MESSAGE)
                 MONMSG     MSGID(CPF0000 MCH0000)
- 
+
                 CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
                 MONMSG     MSGID(CPF0000 MCH0000)
- 
+
                 RTVMSG     MSGID(SCM0037) MSGF(GBMIDASMSG) MSG(&MESSAGE)
                 MONMSG     MSGID(CPF0000 MCH0000)
- 
+
                 CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
                 MONMSG     MSGID(CPF0000 MCH0000)
- 
+
                 CALL       PGM(SCC0010) PARM('SCC0001001' 'ENTER' ' ')
                 MONMSG     MSGID(CPF0000 MCH0000)
- 
+
                 SIGNOFF
- 
+
              ENDDO
- 
+
 /* Determine whether the user is a COB user */
- 
+
              RTVJOBA    JOB(&WRKSTN) USER(&JOBUSR)
              CHGVAR     VAR(&JOB) VALUE(&WRKSTN)                                          /*243665*/
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*KEY')
- 
+
              CALL       PGM(AOUSERR0) PARM(&RTCD &OPTN &JOBUSR +
                           &DSSDY)
              IF         COND(&RTCD *EQ '      ') THEN(DO)
                CHGVAR     VAR(&COBAUT) VALUE(%SST(&DSSDY 225 1))
                CHGVAR     VAR(&TELLER) VALUE(%SST(&DSSDY 236 3))                          /*245369*/
              ENDDO
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*FREE')
- 
+
              CALL       PGM(AOUSERR0) PARM(&RTCD &OPTN &JOBUSR +
                           &DSSDY)
- 
+
 /** Check if 24x7 Midas Availability Feature is on */
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&SARD) VALUE('CSC011')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CALL      PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)
- 
+
 /** If error occured in AOSARDR0, perform abnormal termination */
- 
+
              IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
                           '*NRF   ') THEN(DO)
                 SNDPGMMSG  MSG('Program error in AOSARDR0') +
                            TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              IF         COND(&RTCD *EQ '       ') THEN(DO)
                 CHGVAR     VAR(&CSC011) VALUE('Y')
              ENDDO
- 
+
 /*  Check if the API Switchable Feature is on                         */
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&SARD) VALUE('CAP002')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
@@ -453,7 +457,7 @@
 /*/COPY OFCPYSRCZ,CGL155_003                                         */                   /*CGL155*/
 /** If switchable CSC011 is installed, determine if job needs */
 /** to be routed to support system.                           */
- 
+
              IF         COND(&CSC011 *EQ 'Y') THEN(DO)
                 RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&CURR)
                 RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&MAIN)
@@ -462,19 +466,19 @@
                 RTVDTAARA  DTAARA(SC24X7 (11 1)) RTNVAR(&MMODE)
                 RTVDTAARA  DTAARA(SCSUPP (1 1)) RTNVAR(&S3STRT)
                 RTVDTAARA  DTAARA(SCREOP (1 1)) RTNVAR(&S4STRT)
- 
+
 /** When user is in main system and transition is not yet started, */
 /** Data Replication should be processed.                          */
- 
+
              IF         COND((&MAIN *EQ &CURR) *AND (&SOVR *EQ +
                           ' ') *AND (&S3STRT *EQ ' ') *AND (&S4STRT *EQ ' ')) +
                           THEN(CALL PGM(SCC000600))
- 
+
 /** Verify if the reroute field for this user is set to 'Y' in       */
 /** SFWMNUPD file. If 'Y', it means that he is the operator and he   */
 /** can sign on to the main system even if switchover mode has       */
 /** started.                                                         */
- 
+
                 CHGVAR     VAR(&RTCD) VALUE('       ')
                 CHGVAR     VAR(&OPTN) VALUE('*KEY   ')
                 CHGVAR     VAR(&KEY) VALUE(&WRKSTN)
@@ -484,73 +488,73 @@
                                                                                          /*243665A*/
              CHGVAR     VAR(&OPTN) VALUE('*FREE')                                        /*243665A*/
              CALL       PGM(AOWMNUR0) PARM(' ' &OPTN ' ' ' ')                            /*243665A*/
- 
+
 /** If error occured in AOWMNUR0, perform abnormal termination */
- 
+
                 IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
                           '*NRF   ') THEN(DO)
                    SNDPGMMSG  MSG('Program error in AOWMNUR0') +
                               TOMSGQ(MOPERQ)
                    GOTO       CMDLBL(ABNOR)
                 ENDDO
- 
+
                 IF         COND(&RTCD *EQ '       ') THEN(DO)
                 CHGVAR     VAR(&USER) VALUE(%SST(&WFMT 11 10))
                 CHGVAR     VAR(&ROUTE) VALUE(%SST(&WFMT 258 1))
                 ENDDO
- 
+
 /** If current user is same as retrieved user and reroute field is   */
 /** 'Y', do not perform transfer job since operator has access to    */
 /** main system even if switchover has started.                      */
- 
+
                 IF  COND((&RTCD *EQ '       ') *AND (&JOBUSR *EQ +
                         &USER) *AND (&ROUTE *EQ 'Y')) THEN(CHGVAR +
                         VAR(&TFRJOB) VALUE('N'))
- 
+
 /** If current user is flagged as a COB User on MUSER then do not    */
 /** perform transfer job since operator has access to main system    */
 /** even if switchover has started.                                  */
- 
+
                 IF         COND(&COBAUT *EQ 'Y') THEN(CHGVAR +
                              VAR(&TFRJOB) VALUE('N'))
- 
+
 /** If switchover mode is 'S' and current system is the main  */
 /** system, then transfer this job to the support system.     */
- 
+
                 IF        COND((&MODE *EQ 'S') *AND (&CURR *NE &SUPP) +
                           *AND (&TFRJOB *EQ 'Y')) THEN(DO)
- 
+
                    CALL       PGM(SCC004316) PARM(&SUPP)
- 
+
 /** If error occured in SCC004316, perform abnormal termination */
- 
+
                    IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                       SNDPGMMSG  MSG('Program error occurred in +
                                  SCC004316') TOMSGQ(MOPERQ)
                       GOTO       CMDLBL(ABNOR)
                    ENDDO
- 
+
                 ENDDO
- 
+
 /***If*the*SF*is*on,*start*API*background*functions********************/ /*BUG8037*/
- 
+
 /******************IF        COND(&CAP002 *EQ 'Y') THEN(DO)           */ /*BUG8037*/
- 
+
 /** If 24x7 Midas availability is on, API background jobs in        */
 /** the support system should not be started unless the support sys */
 /** is ready to accept data from Meridian (i.e. API pgms in the     */
 /** support sys are in maintenance mode already.)                   */
- 
+
                          IF      COND(((&CURR *EQ &SUPP) *AND (&MMODE *EQ +
                                  'E')) *OR ((&SOVR *EQ 'S')  *AND (&CURR +
                                  *EQ &MAIN))) +
                                  THEN(CHGVAR VAR(&APIBKJOB) VALUE('N'))
                       ENDDO
- 
+
 /*  If the SF is on, start API background functions                   */ /*BUG8037*/
- 
+
                    IF        COND(&CAP002 *EQ 'Y') THEN(DO)              /*BUG8037*/
- 
+
                       IF         COND(&APIBKJOB *EQ 'Y') THEN(DO)
 /************            SBMJOB     CMD(CALL PGM(MLC0000) PARM('APC0410' &PARM1 +         /*CSC023*/
 /************                         &PARM2 &PARM3 &PARM4 &PARM5)) +                     /*CSC023*/
@@ -564,15 +568,15 @@
                                       *SECLVL) LOGCLPGM(*YES) OUTQ(*JOBD)                 /*CSC023*/
                       ENDDO
                    ENDDO
- 
+
 /* Retrieve the multibranch indicator */
- 
+
              RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
- 
+
 /* If multibranching is on then create and initialise SPF data areas  */
- 
+
              IF         COND(&MBIN *EQ 'Y') THEN(CALL PGM(SFC0400))
- 
+
 /** Check if Retail Teller feature is on */                                               /*245369*/
                                                                                           /*245369*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*245369*/
@@ -599,77 +603,106 @@
 /*********** CHGVAR     VAR(&RTCD) VALUE('       ')                         */ /*TDA035*/ /*249977*/
                                                                                           /*TDA035*/
 /* Alter message queue status */
- 
+
              CALL       PGM(SCC2451)
- 
+
 /* Reset message queue MSPECIAL */
- 
+
+RETRY:                                                                                  /*MD026710*/
              CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
- 
+
 /* If MSPECIAL is allocated to another job then send message and end */
- 
+
              MONMSG     MSGID(CPF2451) EXEC(DO)
- 
+                                                                                        /*MD026710*/
+/*Retry CHGMSGQ for 3 times */                                                          /*MD026710*/
+                                                                                        /*MD026710*/
+             CHGVAR     VAR(&COUNTR) VALUE(&COUNTR + 1)                                 /*MD026710*/
+             IF         COND(&COUNTR *LT 3) THEN(DO)                                    /*MD026710*/
+             GOTO       CMDLBL(RETRY)                                                   /*MD026710*/
+             ENDDO                                                                      /*MD026710*/
+                                                                                        /*MD026710*/   
 /***Free*the SCSARDPD file                                        */                     /*243665A*/
 /*********      CHGVAR     VAR(&OPTN) VALUE('*FREE')                                     /*243665A*/
 /*********                                                                               /*243665A*/
 /*********      CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                 /*243665A*/
- 
+
 /* Call SCC0010 to inform user that the job cannot be run now */
- 
+
                 RTVMSG     MSGID(SCM0026) MSGF(MIDASMSG) MSG(&MESSAGE)
                 CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
 SNDMSG:
                 CHGDTAARA  DTAARA(MIDASMSG (10 1)) VALUE('1')
                 CALL       PGM(SCC0010) PARM('SCC0102' 'ENTER' ' ')
- 
+
                 SIGNOFF    LOG(*LIST)
              ENDDO
- 
+
 /* If APIs SF is on, create the API DUMP information data area.    */
- 
+
              IF        COND(&CAP002 *EQ 'Y') THEN(DO)
                 CALL       PGM(APCCRTQTO) PARM(&RETCDE)
              ENDDO
- 
+
 /* Reset message queue MSTATUS */
- 
+
+RETRY2:                                                                                 /*MD044835*/   
              CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)
- 
+/* Check If MSTATUS is allocated to another job */                                      /*MD044835*/
+                                                                                        /*MD044835*/
+             MONMSG     MSGID(CPF2451) EXEC(DO)                                         /*MD044835*/
+                                                                                        /*MD044835*/
+/*Retry CHGMSGQ for 3 times */                                                          /*MD044835*/
+                                                                                        /*MD044835*/
+             CHGVAR     VAR(&COUNTR2) VALUE(&COUNTR2 + 1)                               /*MD044835*/
+             IF         COND(&COUNTR2 *LT 3) THEN(DO)                                   /*MD044835*/
+             GOTO       CMDLBL(RETRY2)                                                  /*MD044835*/
+             ENDDO                                                                      /*MD044835*/
+                                                                                        /*MD044835*/
+/* Call SCC0010 to inform user that the job cannot be run now */                        /*MD044835*/
+                                                                                        /*MD044835*/
+                RTVMSG     MSGID(SCM0026) MSGF(MIDASMSG) MSG(&MESSAGE)                  /*MD044835*/
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)                    /*MD044835*/
+                CHGDTAARA  DTAARA(MIDASMSG (10 1)) VALUE('1')                           /*MD044835*/
+                CALL       PGM(SCC0010) PARM('SCC0102' 'ENTER' ' ')                     /*MD044835*/
+                                                                                        /*MD044835*/
+                SIGNOFF    LOG(*LIST)                                                   /*MD044835*/
+             ENDDO                                                                      /*MD044835*/
+                                                                                        /*MD044835*/ 
 /* Check if this is a restart after a machine failure */
- 
+
 /* If DTAARA/CBSTAT position 45 is 'Y' and 'EOD' is on       */
 /* MSGQ/MSPECIAL then there must have been a machine failure */
- 
+
              RTVDTAARA  DTAARA(CBSTAT (45 1)) RTNVAR(&CBSTS)
- 
+
              IF         COND(&CBSTS *NE 'Y') THEN(GOTO CMDLBL(RCVMSG))
              RCVMSG     MSGQ(MSPECIAL) RMV(*NO) MSG(&SPECMSG)
              CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
- 
+
              IF         COND(&SPECMSG *EQ 'EOD') THEN(DO)
                 RCVMSG     MSGQ(MSPECIAL) RMV(*YES)
                 CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
              ENDDO
- 
+
              DLCOBJ     OBJ((CBCHK *DTAARA *EXCL))
- 
+
 /* Examine the contents of the message queue MSPECIAL */
- 
+
  RCVMSG:
              RCVMSG     MSGQ(MSPECIAL) RMV(*NO) MSG(&SPECMSG)
- 
+
 /* This code assumes that the message is blank */
- 
+
              IF         COND(&SPECMSG *EQ '      ') THEN(DO)
- 
+
                 SNDPGMMSG  MSG('MIDAS') TOMSGQ(MSTATUS)
- 
+
 /* If the phase is 'A' or 'X' then try to allocate TSTATUS *SHRRD */
 /* to see if another job is running one of the recovery functions */
- 
+
                 RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
- 
+
                 IF         COND((&MPHAS *EQ 'A') *OR (&MPHAS *EQ +
                              'X')) THEN(DO)
                    ALCOBJ     OBJ((TSTATUS *DTAARA *SHRRD)) WAIT(10)
@@ -680,32 +713,32 @@ SNDMSG:
                       SIGNOFF    LOG(*LIST)
                    ENDDO
                 ENDDO
- 
+
                 RTVDTAARA  DTAARA(TSTATUS) RTNVAR(&TSTATUS)
- 
+
                 IF         COND(&TSTATUS *EQ 'RECOVERY') THEN(DO)
                    SNDBRKMSG  MSG('Recovery must be run before +
                                 normal input can continue') +
                                 TOMSGQ(&JOB)
 /*************     STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +                        /*BG5616*/
 /*************            CMTSCOPE(*JOB)                                                  /*BG5616*/
- 
+
 /* Start commitment control */
- 
+
                    CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
- 
+
                    CALL       PGM(RRMENUN)
                 ENDDO
- 
+
                 IF         COND((&TSTATUS *NE 'DRSRECOV') *AND +
                              (&TSTATUS *NE 'RECOVERY')) THEN(DO)
- 
- 
+
+
                    CHGDTAARA  DTAARA(TSTATUS) VALUE('        ')
                    RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
- 
+
 /* If the phase is Input Cycle */
- 
+
 /**********        IF         COND(&MPHAS *EQ 'A') THEN(DO)           */                /*MD027054*/
                    IF         COND(&MPHAS *EQ 'A' *OR &MPHAS = 'G') +
                               THEN(DO)                                                  /*MD027054*/
@@ -713,11 +746,11 @@ SNDMSG:
 /*************              CMTSCOPE(*JOB)                                                /*BG5616*/
 /**********          SNDJRNE    JRN(ICJRN) TYPE('BJ') */                                 /*BUG9619*/
                      SNDJRNE    JRN(ICJRN) TYPE('BJ') FORCE(*YES)                        /*BUG9619*/
- 
+
 /* Start commitment control */
- 
+
                      CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
- 
+
                      CHGVAR     VAR(&WSID) VALUE(&JOB)
                      CHGVAR     VAR(&WSTI) VALUE(&JOB)
                      RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&TIME)
@@ -731,9 +764,9 @@ SNDMSG:
                      OPNDBF     FILE(SDBANKPD) OPTION(*INP) +
                                   COMMIT(*YES)
                      MONMSG     MSGID(CPF4125) EXEC(DO)
- 
+
 /* Call SCC0010 to inform user that an error has occurred */
- 
+
                      RTVMSG     MSGID(SCM0076) MSGF(MIDASMSG) +
                                   MSG(&MESSAGE)
                      CHGDTAARA  DTAARA(MIDASMSG (251 50)) +
@@ -751,27 +784,27 @@ SNDMSG:
                                   'ENTER' ' ')
                      GOTO       CMDLBL(ABNOR)
                    ENDDO
- 
+
                    COMMIT     CMTID(&CMTTXT)
- 
+
                    CLOF       OPNID(SDBANKPD)
- 
+
 /************SBMJOB     JOB(SCC0204) JOBD(MBATCH) JOBQ(INTERFACE) +                       /*CSC023*/
 /************             PRTDEV(*CURRENT) USER(*JOBD) +                                  /*CSC023*/
 /************             RTGDTA(*JOBD) RQSDTA('CALL SCC0204')                            /*CSC023*/
- 
+
 /**********  SBMJOB     JOB(SCC0204) JOBD(MBATCH) JOBQ(INTERFACE) +
                           PRTDEV(*CURRENT) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL SCC0204') OUTQ(*JOBD) */    /*CSC023 AR687098*/
              SBMJOB     JOB(SCC0204) JOBD(MBATCHIC) JOBQ(INTERFACE) +
                           PRTDEV(*CURRENT) USER(*JOBD) RTGDTA(*JOBD) +
                           RQSDTA('CALL SCC0204') OUTQ(*JOBD)                            /*AR687098*/
- 
+
                   ENDDO
- 
+
 /* Add 'EOD' to MSGQ/MSPECIAL, reset MSTATUS and restart COB */
 /* by calling CBRUN                                          */
- 
+
 /*********      ELSE       CMD(IF COND((&MPHAS *EQ 'B') *OR (&MPHAS *EQ +                /*243665A*/
 /*********                   'C') *OR (&MPHAS *EQ 'D') *OR (&MPHAS *EQ +                 /*243665A*/
 /*********                   'E') *OR (&MPHAS *EQ 'F')) THEN(DO))                        /*243665A*/
@@ -779,7 +812,7 @@ SNDMSG:
                           *NE 'X')) THEN(DO))                                            /*243665A*/
                    RRTJOB     RTGDTA(EODRST)
                 ENDDO
- 
+
                 ELSE       CMD(DO)
                   SNDBRKMSG  MSG('Job cannot be run at this time') +
                                TOMSGQ(&JOB)
@@ -787,53 +820,53 @@ SNDMSG:
                   SIGNOFF    LOG(*LIST)
                 ENDDO
              ENDDO
- 
+
 /* Processing on return from application called */
- 
+
              ALCOBJ     OBJ((MSTATUS *MSGQ *EXCL)) WAIT(9999)
- 
+
              CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)
- 
+
              RCVMSG     MSGQ(MSTATUS) RMV(*YES)
- 
+
              RCLACTGRP  ACTGRP(*ELIGIBLE)
              MONMSG     MSGID(MCH3402) EXEC(DO)                                           /*238655*/
                 DLCOBJ     OBJ((MSTATUS *MSGQ *EXCL))                                     /*238655*/
                 GOTO       CMDLBL(ERROR)                                                  /*238655*/
              ENDDO                                                                        /*238655*/
- 
+
              RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
- 
+
 /* If the system is in Input Cycle */
- 
+
              IF         COND(&MPHAS *EQ 'A') THEN(DO)
- 
+
 /* Check to see if both queues are empty                          */
 /* Allocation MSPECIAL during phase A processing to prevent other */
 /* users signing on                                               */
- 
+
                 ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(9999)
- 
+
                 CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
- 
+
                 RCVMSG     MSGQ(MSTATUS) RMV(*NO) MSG(&STATMSG)
- 
+
                 RCVMSG     MSGQ(MSPECIAL) RMV(*NO) MSG(&SPECMSG)
- 
+
                 IF         COND((&STATMSG *EQ '     ') *AND +
                              (&SPECMSG *EQ '      ')) THEN(DO)
                    RCLRSC
                       CHGDTAARA  DTAARA(TSTATUS) VALUE('NORMAL  ')
                       DLCOBJ     OBJ((TSTATUS *DTAARA *SHRRD))
                    ENDDO
- 
+
                    DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
                 ENDDO
- 
+
                 DLCOBJ     OBJ((MSTATUS *MSGQ *EXCL))
- 
+
              ENDDO
- 
+
 /**If*the*system is in close of business */                                              /*243665A*/
 /*********                                                                               /*243665A*/
 /*********   ELSE       CMD(IF COND(&SPECMSG *EQ 'EOD   ') THEN(DO))                     /*243665A*/
@@ -850,36 +883,36 @@ SNDMSG:
 /*********                   TOMSGQ(&JOB)                                                /*243665A*/
 /*********      SIGNOFF    LOG(*LIST)                                                    /*243665A*/
 /*********   ENDDO                                                                       /*243665A*/
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              SNDPGMMSG  MSG('Entry to Midas system processing +
                           terminated abnormally') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /* Call SCC0010 to inform the user that an error has occurred */
- 
+
              RTVMSG     MSGID(SCM0084) MSGF(MIDASMSG) MSG(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              RTVMSG     MSGID(SCM0022) MSGF(MIDASMSG) MSG(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CALL       PGM(SCC0010) PARM('SCC0102' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              SIGNOFF    LOG(*LIST)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 ERROR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:
              ENDPGM

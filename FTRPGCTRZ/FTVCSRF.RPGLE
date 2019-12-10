@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD021128           Date 01Jul13               *
       *                 AR1097264          Date 27Mar13               *
       *                 AR1080200          Date 24Jan13               *
@@ -54,6 +56,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
@@ -299,6 +306,7 @@
      D WDATE           S              5  0
      D Ccy             S              3A                                                      CFT120
      D CFT120          S              1A                                                      CFT120
+     D PMode           S              6A                                                    MD021318
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -845,14 +853,25 @@
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SCDRO'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0014'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKCdro                                     MD021318
+     C                   MOVE      'N'           OKCdbr                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SCDRO'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0014'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKCdro                                       CSD089
      C                   MOVE      'W'           OKCdbr                                       CSD089
-     C                   IF        SCDRC <> *Blanks AND CFT120 = 'Y'                          CFT120
-     C                   MOVE      'N'           OKCdrc                                       CFT120
-     C                   ENDIF                                                                CFT120
+     C**********         IF        SCDRC <> *Blanks AND CFT120 = 'Y'                 CFT120 MD021318
+     C**********         MOVE      'N'           OKCdrc                              CFT120 MD021318
+     C**********         ENDIF                                                       CFT120 MD021318
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SCDRO'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0014'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
+     C                   IF        SCDRC <> *Blanks AND CFT120 = 'Y'                        MD021318
+     C                   MOVE      'N'           OKCdrc                                     MD021318
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bankrupt/Liquidated                                                                  240689
@@ -864,14 +883,25 @@
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SCDRO'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0015'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKCdro                                     MD021318
+     C                   MOVE      'N'           OKCdbr                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SCDRO'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0015'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKCdro                                       CSD089
      C                   MOVE      'W'           OKCdbr                                       CSD089
-     C                   IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                          CFT120
-     C                   MOVE      'N'           OKCdrc                                       CFT120
-     C                   ENDIF                                                                CFT120
+     C**********         IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                 CFT120 MD021318
+     C**********         MOVE      'N'           OKCdrc                              CFT120 MD021318
+     C**********         ENDIF                                                       CFT120 MD021318
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SCDRO'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0015'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
+     C                   IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                        MD021318
+     C                   MOVE      'N'           OKCdrc                                     MD021318
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bad Debt                                                                             240689
@@ -883,29 +913,40 @@
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SCDRO'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0016'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKCdro                                     MD021318
+     C                   MOVE      'N'           OKCdbr                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SCDRO'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0016'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKCdro                                       CSD089
      C                   MOVE      'W'           OKCdbr                                       CSD089
-     C                   IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                          CFT120
-     C                   MOVE      'N'           OKCdrc                                       CFT120
-     C                   ENDIF                                                                CFT120
+     C**********         IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                 CFT120 MD021318
+     C**********         MOVE      'N'           OKCdrc                              CFT120 MD021318
+     C**********         ENDIF                                                       CFT120 MD021318
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SCDRO'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0016'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
+     C                   IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                        MD021318
+     C                   MOVE      'N'           OKCdrc                                     MD021318
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Inactive                                                                             240689
       *                                                                                       240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
-     C                   MOVE      'N'           OKCdro                                       240689
-     C                   MOVE      'N'           OKCdbr                                       240689
-     C                   IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                          CFT120
-     C                   MOVE      'N'           OKCdrc                                       CFT120
-     C                   ENDIF                                                                CFT120
-     C                   ADD       1             WIx                                          240689
-     C                   MOVEL     'SCDRO'       WFldNmXAr(WIx)                               240689
-     C                   MOVEL     'FTM0017'     WMsgIdXAr(WIx)                               240689
-     C                   ENDIF                                                                240689
+     C************       TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48**       IFEQ      '1'                                                 240689 259576
+     C************       MOVE      'N'           OKCdro                                240689 259576
+     C************       MOVE      'N'           OKCdbr                                240689 259576
+     C************       IF        SCDRC <> *BLANKS AND CFT120 = 'Y'                   CFT120 259576
+     C************       MOVE      'N'           OKCdrc                                CFT120 259576
+     C************       ENDIF                                                         CFT120 259576
+     C************       ADD       1             WIx                                   240689 259576
+     C************       MOVEL     'SCDRO'       WFldNmXAr(WIx)                        240689 259576
+     C************       MOVEL     'FTM0017'     WMsgIdXAr(WIx)                        240689 259576
+     C************       ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Debit                                                                       240689
       *                                                                                       240689
@@ -1041,6 +1082,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       ** ACCESS BANK DETAILS
       *

@@ -17,8 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD021318A          Date 08Aug13               *
+      *                 MD021318           Date 26Jul13               *
+      *                 AR884141           Date 19Jun13               *
+      *                 MD039547           Date 20Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
       *                 MD045920           Date 31May17               *
       *                 MD044074           Date 19Apr17               *
@@ -115,6 +119,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
+      *  MD021318A - Array index error due to incorrect position of   *
+      *              adding 1 to Idx                                  *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
+      *  AR884141 - Remove MMA1411 and MMA1410 validation.            *
+      *             (Child: AR884142)                                 *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
@@ -668,6 +681,7 @@
  
      D WNUMX           S              7P 0                                                  BUG26002
      D X#CNUM          S              6  0                                                  BUG26002
+     D PMode           S              6A                                                    MD021318
                                                                                             BUG26002
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -803,18 +817,18 @@
      C                   LeaveSr                                                            BUG24679
      C                   ENDIF                                                              BUG24679
                                                                                               CFT032
-      ** Settlement type should be 08 or 01                                                   CFT032
-                                                                                              CFT032
+      ***Settlement*type*should*be*08*or*01****************************              CFT032 AR884141
+      *****************************************************************              CFT032 AR884141
      C                   If        CFT142 = 'N'                                               CFT142
-     C                   If        SSTTP <> '08' And                                          CFT032
-     C                             SSTTP <> '01'                                              CFT032
-     C                   Eval      OKOrc1 = 'N'                                               CFT032
-     C                   Eval      Idx = Idx + 1                                              CFT032
-     C                   Eval      FldNamXAr(Idx) = 'SORC1'                                   CFT032
+     C**********         If        SSTTP <> '08' And                                 CFT032 AR884141
+     C**********                   SSTTP <> '01'                                     CFT032 AR884141
+     C**********         Eval      OKOrc1 = 'N'                                      CFT032 AR884141
+     C**********         Eval      Idx = Idx + 1                                     CFT032 AR884141
+     C**********         Eval      FldNamXAr(Idx) = 'SORC1'                          CFT032 AR884141
      C**********         Eval      MsgIdXAr(Idx) = 'MMAnn11'                         CFT032 BUG14042
-     C                   Eval      MsgIdXAr(Idx) = 'MMA1411'                                BUG14042
-     C                   LeaveSr                                                              CFT032
-     C                   EndIf                                                                CFT032
+     C**********         Eval      MsgIdXAr(Idx) = 'MMA1411'                       BUG14042 AR884141
+     C**********         LeaveSr                                                     CFT032 AR884141
+     C**********         EndIf                                                       CFT032 AR884141
      C                   Else                                                                 CFT142
      C                   Movea     P@VL01        PayST                                        CFT142
      C     SPYST         Lookup    PayST                                  50                  CFT142
@@ -1015,10 +1029,17 @@ E4   C**********         End                                                    
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SORC1'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0014'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKOrc1                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SORC1'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0014'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKOrc1                                       CSD089
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SORC1'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bankrupt/Liquidated                                                                  240689
@@ -1029,10 +1050,17 @@ E4   C**********         End                                                    
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SORC1'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0015'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKOrc1                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SORC1'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0015'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKOrc1                                       CSD089
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SORC1'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0015'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bad Debt                                                                             240689
@@ -1043,24 +1071,31 @@ E4   C**********         End                                                    
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SORC1'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0016'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKOrc1                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SORC1'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0016'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKOrc1                                       CSD089
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SORC1'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0016'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Inactive                                                                             240689
       *                                                                                       240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+     C**********         TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48         IFEQ      '1'                                                 240689 259576
      C**********         MOVE      'N'           OKOrc1                                       240689
-     C     OKOrc1        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKOrc1                                       240689
-     C                   ENDIF                                                                240689
-     C                   ADD       1             WIx                                          240689
-     C                   MOVEL     'SORC1'       WFldNmXAr(WIx)                               240689
-     C                   MOVEL     'FTM0017'     WMsgIdXAr(WIx)                               240689
-     C                   ENDIF                                                                240689
+     C*****OKOrc1        IFNE      'N'                                                 240689 259576
+     C**********         MOVE      'W'           OKOrc1                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C**********         ADD       1             WIx                                   240689 259576
+     C**********         MOVEL     'SORC1'       WFldNmXAr(WIx)                        240689 259576
+     C**********         MOVEL     'FTM0017'     WMsgIdXAr(WIx)                        240689 259576
+     C**********         ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Debit                                                                       240689
       *                                                                                       240689
@@ -1399,20 +1434,40 @@ E2   C                   EndIf                                                  
      C                   If        *IN31 = *On                                              BUG15037
       * Send error to screen                                                                BUG15037
      C**********         Add       1             Idx                                 BUG15037 CSD089
-     C                   Add       1             WIx                                          CSD089
+     C**********         Add       1             WIx                                 CSD089 MD021318
      C                   If        ADSLSH <> '/'                                            BUG15037
      C**********         Move      'N'           OKOrc1                              BUG15037 CSD089
      C**********         Movel     'SORC1'       FldNamXAr(Idx)                      BUG15037 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Add       1             Idx                                       MD021318A
+     C                   Move      'N'           OKOrc1                                     MD021318
+     C                   Movel     'SORC1'       FldNamXAr(Idx)                             MD021318
+     C                   ELSE                                                               MD021318
+     C                   Add       1             WIx                                       MD021318A
      C                   Move      'W'           OKOrc1                                       CSD089
      C                   Movel     'SORC1'       WFldNmXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   Else                                                               BUG15037
      C**********         Move      'N'           OKOrc2                              BUG15037 CSD089
      C**********         Movel     'SORC2'       FldNamXAr(Idx)                      BUG15037 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Add       1             Idx                                       MD021318A
+     C                   Move      'N'           OKOrc2                                     MD021318
+     C                   Movel     'SORC2'       FldNamXAr(Idx)                             MD021318
+     C                   ELSE                                                               MD021318
+     C                   Add       1             WIx                                       MD021318A
      C                   Move      'W'           OKOrc2                                       CSD089
      C                   Movel     'SORC2'       WFldNmXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End                                                                BUG15037
      C**********         Movel     'MMA1428'     MsgIdXAr(Idx)                       BUG15037 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C**********         Add       1             Idx                              MD021318 MD021318A
+     C                   Movel     'MMA1428'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
+     C**********         Add       1             WIx                                CSD089 MD021318A
      C                   Movel     'MMA1428'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
       *                                                                                     BUG15037
      C                   Else                                                               BUG15037
      C**********         If        ##CSID = 'Y' And                                  CFT032 BUG15037
@@ -1864,10 +1919,17 @@ E2   C                   EndIf                                                  
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0938'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKOrc1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SORC1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0938'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKOrc1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SORC1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0938'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1882,10 +1944,17 @@ E2   C                   EndIf                                                  
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC2'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0939'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKOrc2                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SORC2'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0939'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKOrc2                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SORC2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0939'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1900,10 +1969,17 @@ E2   C                   EndIf                                                  
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC3'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0940'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKOrc3                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SORC3'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0940'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKOrc3                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SORC3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0940'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1918,10 +1994,17 @@ E2   C                   EndIf                                                  
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC4'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0941'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKOrc4                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SORC4'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0941'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKOrc4                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SORC4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0941'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1937,10 +2020,17 @@ E2   C                   EndIf                                                  
      C**********         Movel     'SORC1'       FldNamXAr(Idx)                               CFT032
      C**********         Eval      FldNamXAr(Idx) = 'SORC5'                            CFT032 CSD089
      C**********         Movel     'MMA0942'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKOrc5                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Eval      FldNamXAr(Idx) = 'SORC5'                                 MD021318
+     C                   Movel     'MMA0942'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKOrc5                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Eval      WFldNmXAr(WIx) = 'SORC5'                                   CSD089
      C                   Movel     'MMA0942'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -2653,29 +2743,29 @@ E2   C                   EndIf                                                  
                                                                                               CSW207
      C**********         If        PRtCd = *Blanks And                             BUG15065 BUG25228
      C**********         IF        OKORC1 = 'Y' AND                                BUG25228 MD039547
-     C                   IF        OKORC1 <> 'N' AND                                        MD039547
-     C                             %SUBST(SORC1:1:1) <> '/' And                             BUG15065
-     C                             SORC5 <> *Blank                                          BUG15065
-     C                   If        %SUBST(SORC5:1:2) <> '1/' And                            BUG15065
-     C                             %SUBST(SORC5:1:2) <> '2/' And                            BUG15065
-     C                             %SUBST(SORC5:1:2) <> '3/' And                            BUG15065
-     C                             %SUBST(SORC5:1:2) <> '4/' And                            BUG15065
-     C                             %SUBST(SORC5:1:2) <> '5/' And                            BUG15065
-     C                             %SUBST(SORC5:1:2) <> '6/' And                            BUG15065
-     C                             %SUBST(SORC5:1:2) <> '7/' And                            BUG15065
-     C                             %SUBST(SORC5:1:2) <> '8/'                                BUG15065
-      * as CFT032 is not Switchable 50K can be input with 5 lines                           BUG15065
-     C                   EVAL      OKORC1 = 'N'                                             BUG25228
-     C                   EVAL      OKORC2 = 'N'                                             BUG25228
-     C                   EVAL      OKORC3 = 'N'                                             BUG25228
-     C                   EVAL      OKORC4 = 'N'                                             BUG25228
-     C                   Move      'N'           OKOrc5                                     BUG15065
-     C                   Eval      Idx = Idx + 1                                            BUG15065
-     C                   Eval      FldNamXAr(Idx) = 'SORC5'                                 BUG15065
-     C                   Eval      MsgIdXAr(Idx) = 'MMA1410'                                BUG15065
-     C                   EndIf                                                              BUG15065
-     C                   EndIf                                                              BUG15065
-                                                                                            BUG15065
+     C**********         IF        OKORC1 <> 'N' AND                               MD039547 AR884141
+     C**********                   %SUBST(SORC1:1:1) <> '/' And                    BUG15065 AR884141
+     C**********                   SORC5 <> *Blank                                 BUG15065 AR884141
+     C**********         If        %SUBST(SORC5:1:2) <> '1/' And                   BUG15065 AR884141
+     C**********                   %SUBST(SORC5:1:2) <> '2/' And                   BUG15065 AR884141
+     C**********                   %SUBST(SORC5:1:2) <> '3/' And                   BUG15065 AR884141
+     C**********                   %SUBST(SORC5:1:2) <> '4/' And                   BUG15065 AR884141
+     C**********                   %SUBST(SORC5:1:2) <> '5/' And                   BUG15065 AR884141
+     C**********                   %SUBST(SORC5:1:2) <> '6/' And                   BUG15065 AR884141
+     C**********                   %SUBST(SORC5:1:2) <> '7/' And                   BUG15065 AR884141
+     C**********                   %SUBST(SORC5:1:2) <> '8/'                       BUG15065 AR884141
+      **as*CFT032*is*not*Switchable*50K*can*be*input*with*5*lines******            BUG15065 AR884141
+     C**********         EVAL      OKORC1 = 'N'                                    BUG25228 AR884141
+     C**********         EVAL      OKORC2 = 'N'                                    BUG25228 AR884141
+     C**********         EVAL      OKORC3 = 'N'                                    BUG25228 AR884141
+     C**********         EVAL      OKORC4 = 'N'                                    BUG25228 AR884141
+     C**********         Move      'N'           OKOrc5                            BUG15065 AR884141
+     C**********         Eval      Idx = Idx + 1                                   BUG15065 AR884141
+     C**********         Eval      FldNamXAr(Idx) = 'SORC5'                        BUG15065 AR884141
+     C**********         Eval      MsgIdXAr(Idx) = 'MMA1410'                       BUG15065 AR884141
+     C**********         EndIf                                                     BUG15065 AR884141
+     C**********         EndIf                                                     BUG15065 AR884141
+      *****************************************************************            BUG15065 AR884141
      C                   ENDSR                                                                CSW207
                                                                                               CSW207
       ************************************************************                            CSW207
@@ -2717,6 +2807,8 @@ E2   C                   EndIf                                                  
       *  Funds Transfer Details                                                               257361
      C                   Parm                    SDFTFR                                       257361
      C                   Parm                    CFT142            1                          CFT142
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       ** ACCESS BANK DETAILS
       *

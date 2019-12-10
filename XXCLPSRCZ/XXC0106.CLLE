@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL JE batch acceptance')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       XXC0106 - Midas GL JE Batch Acceptance                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. ERZ100  *CREATE    Date 18Jan13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       ERZ100 - Security Features for Journal Entries              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*/COPY WNCPYSRC,XXC0106INT                                          */
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,XXC0106MPS                                          */
+ 
+             CRTDTAARA  DTAARA(QTEMP/GL0106) TYPE(*CHAR) LEN(3)
+             MONMSG     MSGID(CPF1023)
+             OVRDBF     FILE(GLJENHL0) SHARE(*NO)
+/**/
+             CALL       PGM(XX0106D) PARM(' ')
+             DLTDTAARA  DTAARA(QTEMP/GL0106)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*/COPY WNCPYSRC,XXC0106MPE                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,XXC0106ERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSG('Program XXC0106 ended abnormally') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ END:
+             DLTOVR     FILE(GLJENHL0)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/*/COPY WNCPYSRC,XXC0106END                                          */
+ 
+             ENDPGM

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD039547           Date 20Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
       *                 MD020347           Date 08May13               *
       *                 CFT120             Date 28Sep12               *
@@ -50,6 +52,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
@@ -103,14 +110,14 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
- 
+
      FACNUMA    IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACNUMAF)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -129,52 +136,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       /COPY WNCPYSRC,FTVSNCRD01                                                               GBO008
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       /COPY FTCPYSRC,SFTVALCSLE
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       *                                                                                       240689
@@ -190,36 +197,36 @@
       *                                                                                       240689
       ** Array of Warning message data.                                                       240689
       *                                                                                       240689
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       * External DS for Midas SD Retail Details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
- 
+
       * External data structure for Nostro customer number
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
      D  NLOC                  29     31
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D DST1DS          DS            35
      D  NCUR                   1      3
      D  DSCY                   7      9
- 
+
       *  Define full account to be passed for FT IMM update
      D*#SNCDS***       DS            18                                                       CGL029
      D #SNCDS          DS                                                                     CGL029
@@ -232,13 +239,13 @@
      D**IMACOD**              10     13  0                                                    CGL029
      D**IMACSQ**              14     15  0                                                    CGL029
      D**IMBRCA**              16     18                                                       CGL029
- 
+
       * Sender's Correspondent
      D SSNCODS         DS
      D  SNOS                   1      2
      D  S02R                   3     10
      D  SRET                   1     10
- 
+
       * Data structure redefining Account key fields
      D*AKEYF****       DS            18                                                       CGL029
      D AKEYF           DS                                                                     CGL029
@@ -256,26 +263,26 @@
      D**K#ACSQ**              14     15  0                                                    CGL029
      D**WACSQA**              14     15                                                       CGL029
      D**K#BRCA**              16     18                                                       CGL029
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                       240689
      D WIx             S              3P 0                                                    240689
       ** Index for arrays of warning message ids etc                                          240689
- 
+
      D K#ACNO          S                   LIKE(ACNO)
- 
+
      D*C#ACCD***       S              4                                                       CGL029
      D C#ACCD          S             10                                                       CGL029
      D C#ACSN          S              2
@@ -287,15 +294,16 @@
      D C#OPTN          S              7
      D C#PNOI          S              1
      D C#RTCD          S              7
- 
+
      D WRETA           S             10
      D WRETL           S             11P 0
      D R               S              2  0
      D Q               S              2  0
- 
+
       * This prog only
      D WCURR           S              5
- 
+     D PMode           S              6A                                                    MD021318
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -310,7 +318,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Initialization
      C                   Eval      RetCodeIn = *BlankS
      C                   Eval      FldNamXAr = *BlankS
@@ -321,10 +329,10 @@
      C                   Eval      WMsgDtaXAr = *Blanks                                       240689
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0                                                    240689
- 
+
       * Sender's Correspondent
      C                   Exsr      VSNDCOR
- 
+
       * If an error was found, set the return code appropriately
      C                   If        OKSnco = 'N'
      C                   Eval      RetCodeIn = 'Error'
@@ -333,9 +341,9 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
- 
+
       * RETURN
- 
+
      C                   RETURN
       ******************************************************************
       /EJECT
@@ -344,16 +352,16 @@
       ******************************************************************
      C*
      C     VSNDCOR       BEGSR
- 
+
      C                   Eval      @SNCT = *Blank
      C                   Eval      @ACST2 = *Blank
      C                   Eval      @SCOPN = 0
      C                   Eval      DST1DS = SDST1
      C                   Eval      SSNCODS = SSNCO
      C                   BITOFF    '01234567'    WRETB             1                          240689
- 
+
      C                   If        SSNCO = *Blanks
- 
+
       * Error if blank and destination is of type C , S or A
      C                   If        @DSTT = 'C' or
      C                             @DSTT = 'A' or
@@ -364,9 +372,9 @@
      C                   Movel     'SSNCO '      FldNamXAr(Idx)
      C                   Movel     'MMA0957'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   Eval      @SNCT = *Blanks
- 
+
      C                   Else
       * No entry allowed if Destination is Full Account, NOSTRO or
       * Retail Account No. and Pay Currency = Dest. Type Currency
@@ -382,7 +390,7 @@
      C                   Movel     'SSNCO'       FldNamXAr(Idx)
      C                   Movel     'MMA0958'     MsgIdXAr(Idx)
      C                   End
- 
+
       ** Check if Sender's Correspondent field contains '?'.                                  216150
       ** If it does, display error message:                                                   216150
       ** "Standing Data enquiry processing not allowed for this field."                       216150
@@ -403,16 +411,16 @@
      C/COPY WNCPYSRC,FTVSNCRC01                                                               GBO008
       * If only 2 char entered must be a NOSTRO number
      C                   If        Idx = 0
- 
+
      C                   If        S02R = *Blanks
      C                   EXSR      VNOSTRO
- 
+
      C                   Else
      C                   Exsr      VRETAIL
      C                   End
- 
+
      C                   End
- 
+
       * Set pay location
      C*
      C                   If        @SNCT <> 'R' and
@@ -421,13 +429,13 @@
      C                   Eval      @NOWRK = 'S'
      C                   End
      C                   End
- 
+
       * If a valid account has been entered,
       * store full account details for FT Transaction Status File
       * record update.
      C**********         If        OKSnco = 'Y'                                             MD039547
      C                   If        OKSnco <> 'N'                                            MD039547
- 
+
       * Set up @SNCDS data structure
      C                   If        @SNCT = 'N' or
      C                             @SNCT = 'R'
@@ -448,10 +456,17 @@
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SSNCO'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0015'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKSnco                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SSNCO'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0015'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKSnco                                       CSD089
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SSNCO'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0015'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bad Debt                                                                             240689
@@ -462,24 +477,31 @@
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SSNCO'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0016'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKSnco                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SSNCO'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0016'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKSnco                                       CSD089
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SSNCO'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0016'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Inactive                                                                             240689
       *                                                                                       240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+     C**********         TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48         IFEQ      '1'                                                 240689 259576
      C**********         MOVE      'N'           OKSnco                                       240689
-     C     OKSnco        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKSnco                                       240689
-     C                   ENDIF                                                                240689
-     C                   ADD       1             WIx                                          240689
-     C                   MOVEL     'SSNCO'       WFldNmXAr(WIx)                               240689
-     C                   MOVEL     'FTM0017'     WMsgIdXAr(WIx)                               240689
-     C                   ENDIF                                                                240689
+     C*****OKSnco        IFNE      'N'                                                 240689 259576
+     C**********         MOVE      'W'           OKSnco                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C**********         ADD       1             WIx                                   240689 259576
+     C**********         MOVEL     'SSNCO'       WFldNmXAr(WIx)                        240689 259576
+     C**********         MOVEL     'FTM0017'     WMsgIdXAr(WIx)                        240689 259576
+     C**********         ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Credit                                                                      240689
       *                                                                                       240689
@@ -493,10 +515,10 @@
      C                   MOVEL     'SSNCO'       WFldNmXAr(WIx)                               240689
      C                   MOVEL     'FTM0020'     WMsgIdXAr(WIx)                               240689
      C                   ENDIF                                                                240689
- 
+
      C                   End
      C                   End
- 
+
      C                   ENDSR
      C************************************************************
      C* END OF SENDER'S CORRESPONDENT VALIDATION
@@ -505,17 +527,17 @@
      C******************************************************************
      C* VNOSTRO - VALIDATION OF NOSTRO                                 *
       ******************************************************************
- 
+
      C     VNOSTRO       BEGSR
- 
+
      C                   If        SPCCY = *Blanks
      C                   Eval      SPCCY = SSMCY
      C                   End
- 
+
      C                   MOVE      '0'           *IN90                                        200462
      C                   Movel     SPCCY         WCURR
      C                   Move      SNOS          WCURR
- 
+
      C                   CALLB     'AONOSTR0'
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
@@ -528,7 +550,7 @@
      C                   Parm      *Blanks       C#CSSN
      C                   Parm      *Blanks       C#PNOI
      C     SDNOST        Parm      SDNOST        DSFDY
- 
+
      C                   If        C#RTCD = *Blanks
       * Move new SYNON field names to old field names
      C                   Move      A7CUST        K#CNUM
@@ -538,20 +560,20 @@
      C                   Else
      C                   Eval      *IN90 = *On
      C                   End
- 
+
      C                   If        *IN90 = *On
       * Send error to screen
      C                   Move      'N'           OKSnco
      C                   Add       1             Idx
      C                   Movel     'SSNCO'       FldNamXAr(Idx)
      C                   Movel     'MMA0959'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   Eval      @SNCT = 'N'
       * Set pay location
      C                   Eval      @PLOC = NLOC
      C                   Eval      @NOWRK = 'N'
- 
+
      C                   If        WCURR = SDST1
      C                   Move      'N'           OKSnco
      C                   Add       1             Idx
@@ -559,13 +581,13 @@
      C                   Movel     'MMA0960'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
       * Find if Retail
      C**********         If        OKSnco = 'Y'                                             MD039547
      C                   If        OKSnco <> 'N'                                            MD039547
      C                   Eval      K#CCY = SPCCY
      C                   Eval      @CCY = SPCCY
- 
+
       * Read Account
      C     AKEY          CHAIN     ACCNTABF                           90
      C                   If        *IN90 = *On or
@@ -597,21 +619,28 @@
      C**********         Add       1             Idx                                  BUG4581 CSD089
      C**********         Movel     'SSNCO'       FldNamXAr(Idx)                       BUG4581 CSD089
      C**********         Movel     'FTM0019'     MsgIdXAr(Idx)                        BUG4581 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKSnco                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SSNCO'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'FTM0019'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKSnco                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SSNCO'       WFldNmXAr(WIx)                               CSD089
      C**********         Movel     'FTM0019'     WMsgIdXAr(Idx)                      CSD089 MD020347
      C                   Movel     'FTM0019'     WMsgIdXAr(WIx)                             MD020347
+     C                   ENDIF                                                              MD021318
      C                   End                                                                 BUG4581
      C                   End
- 
+
      C                   Eval      @ACST2 = ACST
- 
+
      C**********         If        ATYP = 'R'                                               MD037223
      C                   Eval      @SCOPN = DACO
      C**********         End                                                                MD037223
      C                   End
- 
+
      C                   ENDSR
      C************************************************************
      C* END OF NOSTRO VALIDATION
@@ -622,7 +651,7 @@
       ******************************************************************
      C*
      C     VRETAIL       BEGSR
- 
+
      C                   Movel     SRET          WRETL
      C                   Movel     WRETL         WRETA
      C                   If        SRET = WRETA
@@ -630,16 +659,16 @@
      C     K#ACNO        Chain     ACNUMAF                            90
      C                   Eval      @CCY = CCY
      C                   End
- 
+
       * Check to see if retail account number is allowed
- 
+
      C                   If        BMRANR = 'N'
       * Send error to screen
      C                   Move      'N'           OKSnco
      C                   Add       1             Idx
      C                   Movel     'SSNCO'       FldNamXAr(Idx)
      C                   Movel     'MMA0943'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   If        SRET <> WRETA or
      C                             RECI <> 'D'  or
@@ -651,7 +680,7 @@
      C                   Movel     'MMA0961'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
      C**********         If        OKSnco = 'Y'                                             MD039547
      C                   If        OKSnco <> 'N'                                            MD039547
       *                                                                                     AR750736
@@ -673,16 +702,23 @@
      C**********         Add       1             Idx                                  BUG4581 CSD089
      C**********         Movel     'SSNCO'       FldNamXAr(Idx)                       BUG4581 CSD089
      C**********         Movel     'FTM0019'     MsgIdXAr(Idx)                        BUG4581 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKSnco                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SSNCO'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'FTM0019'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKSnco                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SSNCO'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'FTM0019'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End                                                                 BUG4581
- 
+
      C                   If        SPCCY = *Blanks
      C                   Eval      SPCCY = SSMCY
      C                   End
- 
+
      C                   If        @CCY <> SPCCY
       * Send error to screen
      C                   Move      'N'           OKSnco
@@ -690,22 +726,22 @@
      C                   Movel     'SSNCO'       FldNamXAr(Idx)
      C                   Movel     'MMA0962'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
       *
      C**********         If        OKSnco = 'Y'                                             MD039547
      C                   If        OKSnco <> 'N'                                            MD039547
- 
+
      C                   MOVE      RETB          WRETB                                        240689
      C                   Eval      K#CNUM = CNUM
      C                   Eval      K#CCY= @CCY
      C                   Eval      K#ACOD = ACOD
      C                   Eval      K#ACSQ = ACSQ
      C                   Eval      K#BRCA = BRCA
- 
+
      C                   Eval      @SNCT = 'R'
      C                   Eval      @ACST2 = ACST
- 
+
      C                   CALLB     'AONOSTR0'
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
@@ -718,19 +754,19 @@
      C                   Parm      *Blanks       C#CSSN
      C                   Parm      *Blanks       C#PNOI
      C     SDNOST        Parm      SDNOST        DSFDY
- 
+
      C                   If        C#RTCD = *Blanks
       * Set pay location
      C                   Eval      @PLOC = NLOC
      C                   Eval      @NOWRK = 'N'
      C                   End
- 
+
      C**********         If        ATYP = 'R'                                               MD037223
      C                   Eval      @SCOPN = DACO
      C**********         End                                                                MD037223
       *
      C                   End
- 
+
      C                   ENDSR
      C*****************************************************************
      C* END OF RETAIL ACCOUNT VALIDATION
@@ -740,15 +776,15 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
- 
+
       * OUTPUTS
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -758,13 +794,15 @@
      C                   Parm                    WFldNmXAr                                    240689
      C                   Parm                    WMsgIDXAr                                    240689
      C                   Parm                    WMsgDtaXAr                                   240689
- 
+
       ** OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -806,7 +844,7 @@
      C                   Parm      '*FIRST'      @OPTN
      C     SDRETL        Parm      SDRETL        DSFDY
      C                   End
- 
+
       * Key list for account validation
      C     AKEY          KLIST
      C                   KFLD                    K#CNUM
@@ -815,15 +853,15 @@
      C                   KFLD                    K#ACSQ
      C                   KFLD                    K#BRCA
      C/COPY WNCPYSRC,FTVSNCRC02                                                               GBO008
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

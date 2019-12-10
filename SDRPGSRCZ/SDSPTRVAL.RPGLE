@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD031740           Date 09Nov15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23931           Date 11May09               *
       *                 CER048             Date 19May08               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031740 - Change the Spot Rate validation to warning.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -51,15 +53,15 @@
       *  CAP057 - Conversion of SPOT Rates into Modular APIs         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDSPTRV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -71,79 +73,79 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Transaction Details in screen format
      D TrnDets       E DS                  EXTNAME(SDSPTRPD)
- 
+
       ** Transaction Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(SDESPTRPD)
- 
+
       ** External DS for Dealing Details
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
- 
+
       ** Data structure for general ledger
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  QQACD1       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       **  Externally described DS for Currency Access Object
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      D ValidSPTR     E DS                  EXTNAME(SDVSPTRPD)
       * Valid Transaction Details layout
      D  QQSPAE1      E                     EXTFLD(QQSPAE)                                     CGL029
@@ -156,17 +158,17 @@
       ** Data Structure for AOSARDR0                                                          CER048
       *                                                                                       CER048
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER048
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
       ** Use working variables as some validations change value of
       ** AVSPRT
      D PrvSPRT         S                   LIKE(AVSPRT)
@@ -182,33 +184,33 @@
      D PRtcd           S              7A                                                      CER048
      D POptn           S              7A                                                      CER048
      D PSard           S              6A                                                      CER048
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDSPTRV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       /COPY WNCPYSRC,SDSPTRV003
- 
+
       ** Initialise program
      C                   EXSR      INIPGM
       *
@@ -218,8 +220,8 @@
      C                   EXSR      VCSPRT
       /COPY WNCPYSRC,SDSPTRV005
       *
- 
- 
+
+
       *
       ** Validate Multiply Divide Indicator
       *
@@ -227,21 +229,21 @@
      C                   EXSR      VCMDIN
       /COPY WNCPYSRC,SDSPTRV007
       *
- 
+
       *
       ** Validate Time Stamp
       *
       /COPY WNCPYSRC,SDSPTRV008
      C                   EXSR      VCTMST
       /COPY WNCPYSRC,SDSPTRV009
- 
+
       *
       ** Validate Base Limit Currency (Hidden)
       *
       /COPY WNCPYSRC,SDSPTRV010
      C                   EXSR      VCBLCY
       /COPY WNCPYSRC,SDSPTRV011
- 
+
      C                   IF        CER048 = 'Y'                                               CER048
       *                                                                                       CER048
       ** Validate tax conversion rate margin points                                           CER048
@@ -257,12 +259,12 @@
      C                   ENDIF                                                                CGL165
       *                                                                                       CGL165
      C                   EXSR      CvtToFile
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDSPTRV012
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -271,10 +273,10 @@
      C     INIPGM        BEGSR
      C                   EVAL      #1INER = 0
      C                   EVAL      #1INMD = *BLANK
- 
+
       ** Retrieve value of reciprocal flag for the currency
      C                   EXSR      GETRECIP
- 
+
      C     CEU002        IFEQ      'Y'
       ** Some validation modules need to know the previous value of
       ** spot rate.
@@ -285,7 +287,7 @@
      C                   EVAL      SprtFrDEU = AVSPRT
      C                   EVAL      MdinFrDEU = AVMDIN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       ** CvtToFile Convert to file
@@ -319,14 +321,14 @@
      C                   PARM                    #1INMD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      AVDFTS = NewMdfTmsp                          CSD006
      C                   EVAL      AVSPRT = NewSPRT
      C     Recip         IFNE      'Y'                                                        240652
      C                   EVAL      AVMDIN = DDMDIN
      C                   ENDIF                                                                240652
      C                   EVAL      AVDTFR = DDDTFR
- 
+
      C                   Z-ADD     #1ERLC        AVERLC
      C     Recip         IFEQ      'Y'
      C                   Z-ADD     AVSPRT        AVINER
@@ -338,7 +340,7 @@
       *                                                                                       240652
      C**********         MOVEL     #1INMD        AVMDIN                                       240652
      C                   ENDIF
- 
+
       * Ensure that Cons. Euro is maintained at Euro rate
      C     DDCYCD        IFEQ      BKEURO
      C                   Z-ADD     AVSPRT        WEUSPR
@@ -348,7 +350,7 @@
      C                   Z-ADD     WEUSPR        AVSPRT
      C                   MOVEL     WEUMDI        AVMDIN
      C                   ENDIF
- 
+
       *                                                                                       CER048
       ** Move tax conversion rate margin points to valid file if 'OK'                         CER048
       *                                                                                       CER048
@@ -372,9 +374,9 @@
       ** VCSPRT Validate spot rate
       *****************************************************************
      C     VCSPRT        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Spot Rate
@@ -393,9 +395,12 @@
      C                   PARM                    DDSPRTOK
      C                   PARM                    AVTLEX
      C                   PARM                    NewSPRT
+     C                   PARM                    WFldNmXAr                                  MD031740
+     C                   PARM                    WMsgIDXAr                                  MD031740
+     C                   PARM                    WMsgDtXAr                                  MD031740
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
       * Save the Spot Rate flag for CGL165 processing
@@ -410,9 +415,9 @@
       ** VCMDIN : validate multiply divide indicator
       *****************************************************************
      C     VCMDIN        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Multiply Divide indicator
@@ -428,7 +433,7 @@
      C                   PARM                    DDMDINOK
       *
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -467,9 +472,9 @@
       ** VCBLCY Validate Base Limit Currency
       *****************************************************************
      C     VCBLCY        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Base Limit Currency
@@ -492,7 +497,7 @@
      C                   PARM      'N'           WUBCLC            1
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -503,7 +508,7 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -513,7 +518,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -535,7 +540,7 @@
      C     *LIKE         DEFINE    DLSW          DLSW2
      C     *LIKE         DEFINE    DLSW          DDDLSW
      C     *LIKE         DEFINE    DLSW          DDDSW2
- 
+
      C                   CALLB     'SDSPTRDEU'                          90
      C                   PARM      *BLANK        RetCodeIn
      C                   PARM      AVCYCD        PrvCycd
@@ -551,14 +556,14 @@
      C                   PARM      *BLANK        #SPRA2
      C                   PARM      *BLANK        DLSW2
      C                   PARM      *BLANK        #SMDI2
- 
+
      C                   IF        RetCodeIn <> *BLANK OR *IN90
      C                   MOVEL     'SDSPTRDEU'   DBFILE
      C                   MOVEL     '902'         DBASE
      C                   MOVEL     PrvCycd       DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok          1
      C                   PARM      SprtFrDEUA    ZFIELD           16
@@ -571,7 +576,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   MOVE      ZFIELD        SprtFrDEU
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -621,42 +626,42 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Transaction Details
      C                   PARM                    TrnDets
- 
+
       * OUTPUTS
- 
+
       ** Transaction Details OK inds
      C                   PARM                    OKTrnDets
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Transaction details layout (DS) from/to caller
       ** IS USED ALSO AS INPUT PARAMETER (MUST HOLD PREVIOUS RECORD)
      C                   PARM                    ValidSPTR
- 
+
       *
      C     *LIKE         DEFINE    AVINER        #1INER
      C     *LIKE         DEFINE    AVINMD        #1INMD
@@ -665,13 +670,13 @@
      C     *LIKE         DEFINE    A6SPRT        WEUSPR                     6103
      C     *LIKE         DEFINE    A6MDIN        WEUMDI                     6103
      C     *LIKE         DEFINE    A6CYCD        @CYCD                      6103
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** Retrieve base currency limit
      C**********         CALLB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
@@ -686,7 +691,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   EVAL      CcyLim = BNCYCD
- 
+
       ** Check if switchable feature CEU002 is switched on.
       ** Euro rates
      C                   CALLB     'AOSARDR0'
@@ -708,7 +713,7 @@
      C                   ELSE
      C                   MOVE      'N'           CEU002
      C                   ENDIF
- 
+
       ** Access general ledger for Euro currency name
       *
      C     CEU002        IFEQ      'Y'
@@ -727,7 +732,7 @@
      C                   ENDIF
       *
       * Set up store of Euro rate details for a change of Cons. Euro
- 
+
      C     CEU002        IFEQ      'Y'
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
@@ -768,7 +773,7 @@
       *                                                                                       CER048
      C                   EVAL      CER048 = 'N'                                               CER048
      C                   ENDIF                                                                CER048
- 
+
       *                                                                                       CGL165
       ** Check if the feature CGL165 is installed                                             CGL165
       *                                                                                       CGL165
@@ -784,10 +789,10 @@
       *                                                                                       CGL165
      C                   EVAL      CGL165 = 'N'                                               CGL165
      C                   ENDIF                                                                CGL165
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDSPTRV013
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -795,19 +800,19 @@
       * GETRECIP - Retrieve Value of the Reciprocal Flag for Currency *
       *****************************************************************
      C     GETRECIP      BEGSR
- 
+
      C                   CALLB     'SDSPTR1EU'                          90
      C                   PARM                    RetCodeIn
      C                   PARM                    DDCYCD
      C                   PARM                    Recip             1
- 
+
      C                   IF        RetCodeIn <> *BLANK  OR *IN90
      C                   MOVEL     'SDSPTR1EU'   DBFILE
      C                   MOVEL     '907'         DBASE
      C                   MOVEL     DDCYCD        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT

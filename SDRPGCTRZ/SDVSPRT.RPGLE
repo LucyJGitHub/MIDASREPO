@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD031740           Date 09Nov15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CER059             Date 19Jul10               *
       *                 CER048             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031740 - Change the Spot Rate validation to warning.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -48,8 +50,8 @@
       *  CAP057 - Conversion of SPOT Rates into Modular APIs          *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -61,19 +63,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
@@ -83,7 +85,7 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** EXTERNAL DS FOR CURRENCY DETAILS
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Market data feed installation control data                             CSD006
@@ -103,36 +105,37 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+     D WIdx            S              3P 0                                                  MD031740
+                                                                                            MD031740
      D CSD006F         S              1A
- 
+
       ** field to calculate difference between rates                                          196570
      D WACTRDIF        S             29P 8                                                    196570
       ** +--------------------------------------+
@@ -149,18 +152,22 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
+     C                   MOVE      *BLANK        WFldNmXAr                                  MD031740
+     C                   MOVE      *BLANK        WMsgIDXAr                                  MD031740
+     C                   MOVE      *BLANK        WMsgDtXAr                                  MD031740
+     C                   Z-ADD     0             WIdx                                       MD031740
      C                   EVAL      AVTLEX = 'N'
      C                   Z-ADD     AVSPRT        PrevSprt
- 
+
       *
       ** VALIDATION
       *
@@ -186,7 +193,7 @@
       ** VALIDATION RELATED TO MARKET DATA FEED                                 CSD006
       *****************************************************************         CSD006
      C     MDFSPRT       BEGSR                                                  CSD006
- 
+
       ** Value of ICD tolerance allows tolerance checking ?                     CSD006
      C                   IF        WSETMAX = 'N'                                CSD006
      C                   CALLB     'SDVMDIN'                                    CSD006
@@ -198,7 +205,7 @@
      C                   PARM      *BLANKS       MsgIdArr                       CSD006
      C                   PARM      *BLANKS       MsgDtaArr                      CSD006
      C                   PARM      'Y'           DDMDINOK          1
- 
+
       ** Impossible to check the spot rate against the tolerance                CSD006
      C                   IF        DDMDINOK <> 'Y'                              CSD006
      C                   EVAL      DDSPRTOK = 'N'                               CSD006
@@ -207,11 +214,11 @@
      C                   EVAL      MsgIdXAr(Idx) = 'SDM0086'                    CSD006
      C                   GOTO      EDFRSPR                                      CSD006
      C                   ENDIF                                                  CSD006
- 
- 
+
+
      C                   EXSR      SrTOLERNCE                                   CSD006
      C                   ENDIF                                                  CSD006
- 
+
      C     EDFRSPR       ENDSR                                                  CSD006
       *****************************************************************
       /EJECT
@@ -219,14 +226,14 @@
       ** EXISTING VALIDATION
       *****************************************************************
      C     EXSSPRT       BEGSR
- 
+
       ** Does the amended spot rate exceed the allowed margin ?
      C                   IF        CEU002 = 'Y'
      C                   EVAL      ForceCheck = 'N'
      C                   ELSE
      C                   EVAL      ForceCheck = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'SDSPTRAMG'                          90
      C                   PARM                    ReturnCode
      C                   PARM                    ForceCheck        1
@@ -236,13 +243,13 @@
      C                   PARM      1.1           PIUPLM
      C                   PARM      0.9           PILWLM
      C                   PARM                    Figure           10
- 
+
      C     *LIKE         DEFINE    A6INCY        PIINCY
      C     *LIKE         DEFINE    A6SPRT        PINSRT
      C     *LIKE         DEFINE    A6SPRT        PIOSRT
      C     *LIKE         DEFINE    A6SPRT        PIUPLM
      C     *LIKE         DEFINE    A6SPRT        PILWLM
- 
+
      C                   IF        RetCodeIn <> *BLANK  OR *IN90
      C                   MOVEL     'SDSPTRAMG'   DBFILE
      C                   MOVEL     '004'         DBASE
@@ -251,10 +258,15 @@
      C                   ENDIF
       *
      C                   IF        Figure = '*LOWER' OR Figure = '*UPPER'
-     C                   EVAL      DDSPRTOK = 'N'
-     C                   EVAL      Idx = Idx + 1
-     C                   EVAL      FldNamXAr(Idx) = 'DDSPRT    '
-     C                   EVAL      MsgIdXAr(Idx) = 'USR0363'
+     C**********         EVAL      DDSPRTOK = 'N'                                           MD031740
+     C**********         EVAL      Idx = Idx + 1                                            MD031740
+     C**********         EVAL      FldNamXAr(Idx) = 'DDSPRT    '                            MD031740
+     C**********         EVAL      MsgIdXAr(Idx) = 'USR0363'                                MD031740
+      *                                                                                     MD031740
+     C                   EVAL      WIdx = WIdx + 1                                          MD031740
+     C                   EVAL      WFldNmXAr(WIdx) = 'DDSPRT    '                           MD031740
+     C                   EVAL      WMsgIDXAr(WIdx) = 'USR0363'                              MD031740
+      *                                                                                     MD031740
      C                   GOTO      EEXSPRT
      C                   ENDIF
       *
@@ -265,7 +277,7 @@
       ** COMMON VALIDATION
       *****************************************************************
      C     COMSPRT       BEGSR
- 
+
       ** Mandatory
      C                   IF        DDSPRT = *BLANK
      C                   EVAL      DDSPRTOK = 'N'
@@ -274,7 +286,7 @@
      C                   EVAL      MsgIdXAr(Idx) = 'USR1144'
      C                   GOTO      ECOMSPR
      C                   ENDIF
- 
+
       ** Must be numeric
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok          1
@@ -289,7 +301,7 @@
      C                   GOTO      ECOMSPR
      C                   ENDIF
      C                   MOVE      ZFIELD        CurrSprt
- 
+
       ** Ensure CurrSprt is non-zero                                                          196570
       **                                                                                      196570
      C                   IF        CurrSprt = 0                                               196570
@@ -299,7 +311,7 @@
      C                   EVAL      MsgIdXAr(Idx) = 'USR5588'                                  196570
      C                   GOTO      ECOMSPR                                                    196570
      C                   ENDIF                                                                196570
- 
+
       ** To determine whether the spot rate is amendable we need to
       ** retrieve the details of the currency
      C                   IF        DDCYCD = *BLANK
@@ -309,7 +321,7 @@
      C                   EVAL      MsgIdXAr(Idx) = 'SDM0087'
      C                   GOTO      ECOMSPR
      C                   ENDIF
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANK        @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -322,7 +334,7 @@
      C                   EVAL      MsgIdXAr(Idx) = 'USR0071'
      C                   GOTO      ECOMSPR
      C                   ENDIF
- 
+
       ** Is spot rate amendable ?
      C                   CALLB     'SDSPTRAEU'                          90
      C
@@ -331,14 +343,14 @@
      C                   PARM                    A6INCY
      C                   PARM                    A6TPSD
      C                   PARM                    SprtAmd           1
- 
+
      C                   IF        RetCodeIn <> *BLANK  OR *IN90
      C                   MOVEL     'SDSPTRAEU'   DBFILE
      C                   MOVEL     '001'         DBASE
      C                   MOVEL     DDCYCD        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Field not amendable, for EMU Currencies passed their
       ** transition start date
      C                   IF        CEU002 = 'Y' AND SprtAmd = 'N'
@@ -350,8 +362,8 @@
      C                   GOTO      ECOMSPR
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
      C     ECOMSPR       ENDSR
       *****************************************************************
       /EJECT                                                                    CSD006
@@ -407,7 +419,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -444,6 +456,10 @@
      C                   PARM                    AVTLEX
       ** New Spot Rate
      C                   PARM                    CurrSprt
+      * Warning fields/message IDs/message data (arrays) from/to caller                     MD031740
+     C                   PARM                    WFldNmXAr                                  MD031740
+     C                   PARM                    WMsgIDXAr                                  MD031740
+     C                   PARM                    WMsgDtXAr                                  MD031740
       *
      C     *LIKE         DEFINE    A6DTFR        DDDTFR
      C     *LIKE         DEFINE    A6CYCD        DDCYCD
@@ -474,7 +490,7 @@
      C                   ELSE
      C                   MOVE      'N'           CEU002
      C                   ENDIF
- 
+
      C                   CALL      'AOSARDR0'                                                 CSD006
      C                   PARM      *BLANKS       @RTCD                                        CSD006
      C                   PARM      '*VERIFY'     @OPTN                                        CSD006
@@ -499,24 +515,24 @@
      C                   MOVEL     @OPTN         DBKEY                                        CSD006
      C                   EXSR      *PSSR                                                      CSD006
      C                   ENDIF                                                                CSD006
- 
+
       ** Check if the Interest Rate Tolerance is set to maximum (999.99)
- 
+
      C     MDSRTL        IFEQ      999.99
      C                   MOVE      'Y'           WSETMAX           1
      C                   ELSE
      C                   MOVE      'N'           WSETMAX
      C                   ENDIF
      C                   ENDIF                                                                CSD006
- 
+
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

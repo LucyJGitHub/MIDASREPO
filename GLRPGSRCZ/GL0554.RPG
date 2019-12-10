@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051925           Date 18Sep18               *
-      *  Prev Amend No. MD047513A          Date 23Feb18               *
+      *  Last Amend No. MD053950           Date 16Jul19               *
+      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *                 MD051925           Date 18Sep18               *
+      *                 MD047513A          Date 23Feb18               *
       *                 MD048346           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -133,6 +135,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053950 - Incorrect Value Date for fee payment when CLE031  *
+      *             is ON and settlement currency is not blank.       *
+      *             Include event types FX and FY in checking of the  *
+      *             actual event date.                                *
+      *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *  MD051925 - SP18 Build Issue, remove excess ENDIF             *
       *  MD047513A - No reversal projections for swap deals.  Output  *
       *              FX net reference for swaps.                      *
@@ -1270,6 +1277,7 @@
      C                     Z-ADDPARI      PARI2
      C**********           Z-ADDCPAR      CPAR2                                               CSD027
      C                     MOVE CPAR      CPAR2                                               CSD027
+     C                     MOVE *BLANKS   ZZ0056                                            MD052216
      C                     END
       *                                                                   S01473
       ** If processing Leo records, check for LEO trailer or detail       S01473
@@ -1749,6 +1757,20 @@
      C                     MOVE *BLANKS   LNRF2                           045634
      C                     MOVE FLNRF     LNRF2                           045634
      C                     END                                            045634
+      *                                                                                     MD052216
+      ** If Customer Lending Fee Event, save fee seq to Filler field                        MD052216
+      *                                                                                     MD052216
+     C           *IN13     IFEQ *ON                                                         MD052216
+     C********** ETYP      ANDEQ'71F1'                                             MD052216 MD053950
+     C********** *IN13     OREQ *ON                                                MD052216 MD053950
+     C********** ETYP      ANDEQ'71F2'                                             MD052216 MD053950
+     C           ETYP      IFEQ '71F1'                                                      MD053950
+     C           ETYP      OREQ '71F2'                                                      MD053950
+     C           ETYP      OREQ '71FX'                                                      MD053950
+     C           ETYP      OREQ '71FY'                                                      MD053950
+     C                     MOVE LASN      ZZ0056                                            MD052216
+     C                     ENDIF                                                            MD052216
+     C                     ENDIF                                                            MD053950
      C*
      C                     MOVE ETYP      ALPH2   2
      C*

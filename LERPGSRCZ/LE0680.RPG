@@ -10,8 +10,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *  Last Amend No. MD054101           Date 08Aug19               *
+      *  Prev Amend No. MD053873           Date 10Jul19               *
+      *                 MD052216           Date 04Apr19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CLE154             Date 02Aug12               *
       *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
@@ -76,6 +79,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD054101 - When loan fee and CLE141 is ON, access CLOAN to   *
+      *             ensure that correct currency/location combination *
+      *             was used in holiday checking.                     *
+      *  MD053873 - Set fee currency as first basis for checking      *
+      *             currency holiday setup. Then, use settlement      *
+      *             currency when CLE031 is ON and value is not blank *
+      *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *           (Amendable Payment Type)                            *
@@ -175,6 +185,8 @@
      F            CLOANHHF                          KIGNORE                                   237466
      F            CLOANCKF                          KIGNORE                                   237466
      F            CLOANZ1F                          KIGNORE                                   237466
+     FLEFEEDL0IF  E           K        DISK                                                 MD052216
+     FLEFEEXQDIF  E           K        DISK                                                 MD052216
 0012 F*SLDEX***IS**F*****128*10AI*****2 DISK                           U1 S01339
 0013 F*TABLE***IF  F      96 12AI     2 DISK
 0014 FLVEDIH2 O   F     128            DISK
@@ -208,6 +220,7 @@
 0028 F*****19**-*HOLIDAY*RECS.****)************************************   S01194
 0029 F*****20**-*TABLE*ACCESS*ERROR************************************   S01194
 0029 F*    21  - Identifies Loan fee event                            *   MOF60
+      *    23  - Read of Fee Detail Main and Extension File           *                     MD052216
      F*    27  - LVENT DETAIL RECS - TYPE 'R3'                            S01392
      F*    28  - LVENT DETAIL RECS - TYPE 'R4'                            S01392
 0030 F*                                                               *
@@ -658,6 +671,14 @@
      C                     KFLD           LNRF                                                237466
      C                     KFLD           KRTP    1                                           237466
      C                     MOVE 'A'       KRTP                                                237466
+      *                                                                                     MD052216
+      ** Key list for Fee Main and Extension File                                           MD052216
+      *                                                                                     MD052216
+     C           KFEE      KLIST                                                            MD052216
+     C                     KFLD           CNUM                                              MD052216
+     C                     KFLD           WFACL                                             MD052216
+     C                     KFLD           WLNRF                                             MD052216
+     C                     KFLD           WFSEQ                                             MD052216
      C*                                                                   S01194
      C                     Z-ADD0         ZERO15 150                                          CLE042
 0258 C     N01             GOTO BY01
@@ -873,6 +894,18 @@
      C                     ELSE                                                               CLE154
      C                     MOVE 'N'       CLE154                                              CLE154
      C                     ENDIF                                                              CLE154
+      *                                                                                     MD053873
+      ** Check if CLE031 is switched on                                                     MD053873
+      *                                                                                     MD053873
+     C                     MOVEL'N'       CLE031  1                                         MD053873
+     C                     CALL 'AOSARDR0'                                                  MD053873
+     C                     PARM *BLANKS   PRTCD                                             MD053873
+     C                     PARM '*VERIFY' POPTN                                             MD053873
+     C                     PARM 'CLE031'  PSARD                                             MD053873
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD053873
+     C           PRTCD     IFEQ *BLANKS                                                     MD053873
+     C                     MOVEL'Y'       CLE031                                            MD053873
+     C                     ENDIF                                                            MD053873
       *                                                                   CLE005
 0278 C*****N20**           GOTO BY02                                      S01194
 0279 C**********           MOVEL'02'      DBASE            ** DBASE  02 **S01194
@@ -1225,6 +1258,54 @@
      C                     ENDIF                                                              237466
       *                                                                                       237466
      C                     ENDIF                                                              237466
+      *                                                                                     MD052216
+      ** Get fee payment base date to reflect actual event date                             MD052216
+      *                                                                                     MD052216
+     C           *IN09     IFEQ *ON                                                         MD052216
+     C           LASN      ANDNE*ZEROS                                                      MD052216
+     C           *IN21     OREQ *ON                                                         MD052216
+     C           LASN      ANDNE*ZEROS                                                      MD052216
+      *                                                                                     MD052216
+     C           ETYP      IFEQ '71F2'                                                      MD052216
+     C                     MOVELFTYP      WFACL   50                                        MD052216
+     C                     MOVE FSEQ      WFACL                                             MD052216
+     C                     MOVEL*BLANKS   WLNRF   6                                         MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C           ETYP      IFEQ '71F1'                                                      MD052216
+     C                     Z-ADD*ZEROS    WFACL                                             MD052216
+     C                     MOVELLNRF      WLNRF                                             MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C                     MOVE LASN      WFSEQ   20                                        MD052216
+     C           KFEE      CHAINLEFEEDL0             23                                     MD052216
+     C           *IN23     IFEQ *OFF                                                        MD052216
+     C           KFEE      CHAINLEFEEXQD             23                                     MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C           *IN23     IFEQ *OFF                                                        MD052216
+     C           FECALT    ANDNE*BLANKS                                                     MD052216
+      *                                                                                     MD052216
+      ** Set fee payment date                                                               MD052216
+      *                                                                                     MD052216
+     C           FELPDT    IFGT RUND                                                        MD052216
+     C                     Z-ADDFELPDT    WENPYD  50                                        MD052216
+     C                     ELSE                                                             MD052216
+     C                     Z-ADDFENPYD    WENPYD                                            MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C           WENPYD    IFEQ *ZEROS                                                      MD052216
+     C                     Z-ADDFEPEND    WENPYD                                            MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C                     Z-ADDFQFPBD    WEDAT                                             MD052216
+     C                     EXSR CHKPAY                                                      MD052216
+     C           WEDAT     IFEQ EDAT                                                        MD052216
+     C                     Z-ADDWENPYD    EDAT                                              MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C                     ENDIF                                                            MD052216
+     C                     ENDIF                                                            MD052216
 0342 C*
 0343 C*  CHECK EVENT DATE TO SEE IF RECORD TO BE OUTPUT
 0344 C********** EDAT      COMP ZDYNBR                 3030                                   237466
@@ -1369,6 +1450,151 @@
 0371 C*
 0373 C           LVDEND    ENDSR                           ** LVDEND-SR **
       *
+      *****************************************************************                     MD052216
+      /EJECT                                                                                MD052216
+      *****************************************************************                     MD052216
+      *                                                                                     MD052216
+      *  CHKPAY - Check Payment Taken Day Indicator                                         MD052216
+      *                                                                                     MD052216
+      *  CALLED FROM: LVDT                                                                  MD052216
+      *                                                                                     MD052216
+      *  CALLS: CCYLOC                                                                      MD052216
+      *                                                                                     MD052216
+      *****************************************************************                     MD052216
+     C           CHKPAY    BEGSR                                                            MD052216
+      *                                                                                     MD052216
+     C                     Z-ADDWEDAT     ZDAYNO                                            MD052216
+     C                     Z-ADDWEDAT     ZDYNBR                                            MD052216
+     C                     Z-ADD*ZEROS    ZNRDYS                                            MD052216
+     C                     EXSR CCYLOC                                                      MD052216
+      *                                                                                     MD052216
+     C           CLE141    IFEQ 'Y'                                                         MD052216
+     C           FELOAN    ANDNE*BLANKS                                                     MD052216
+      *                                                                                     MD052216
+     C           FELOAN    CHAINCLOAN                97                                     MD054101
+     C           FQPTDI    IFEQ *BLANK                                                      MD052216
+     C                     MOVEL'M'       PAYIND                                            MD052216
+     C                     ELSE                                                             MD052216
+     C                     MOVELFQPTDI    PAYIND                                            MD052216
+     C                     ENDIF                                                            MD052216
+     C                     CALL 'LEZBDYCD'BDCHK                                             MD052216
+     C                     MOVELZADJDT    ZDYNBR                                            MD052216
+      *                                                                                     MD052216
+     C                     ELSE                                                             MD052216
+     C                     SELEC                                                            MD052216
+      *                                                                                     MD052216
+     C           FQPTDI    WHEQ 'P'                                                         MD052216
+     C                     EXSR ZBKDT                                                       MD052216
+      *                                                                                     MD052216
+     C           FQPTDI    WHEQ 'N'                                                         MD052216
+     C                     EXSR ZFWDT                                                       MD052216
+      *                                                                                     MD052216
+     C           FQPTDI    WHEQ 'M'                                                         MD052216
+     C           FQPTDI    OREQ *BLANK                                                      MD052216
+     C                     EXSR ZDATE2                                                      MD052216
+     C           *IN98     IFEQ *OFF                                                        MD052216
+     C                     MOVE ZDATE     MMYY      P                                       MD052216
+     C                     MOVELMMYY      MMNLCD    P                                       MD052216
+     C                     ELSE                                                             MD052216
+     C                     MOVELZDATE     MMNLCD    P                                       MD052216
+     C                     ENDIF                                                            MD052216
+     C                     Z-ADDZDAYNO    @DAYNO                                            MD052216
+     C                     EXSR ZFWDT                                                       MD052216
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD052216
+     C                     EXSR ZDATE2                                                      MD052216
+     C           *IN98     IFEQ *OFF                                                        MD052216
+     C                     MOVE ZDATE     MMYY      P                                       MD052216
+     C                     MOVELMMYY      MMNWKD    P                                       MD052216
+     C                     ELSE                                                             MD052216
+     C                     MOVELZDATE     MMNWKD    P                                       MD052216
+     C                     ENDIF                                                            MD052216
+     C           MMNLCD    IFNE MMNWKD                                                      MD052216
+     C                     Z-ADD@DAYNO    ZDAYNO                                            MD052216
+     C                     EXSR ZBKDT                                                       MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C                     ENDSL                                                            MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C                     Z-ADDZDYNBR    WEDAT                                             MD052216
+      *                                                                                     MD052216
+     C                     ENDSR                                                            MD052216
+      *****************************************************************                     MD052216
+      /EJECT                                                                                MD052216
+      *****************************************************************                     MD052216
+      *                                                                                     MD052216
+      *  CCYLOC - Set currency & location depending on settlement type                      MD052216
+      *                                                                                     MD052216
+      *  CALLED FROM: CHKPAY                                                                MD052216
+      *                                                                                     MD052216
+      *  CALLS:                                                                             MD052216
+      *                                                                                     MD052216
+      *****************************************************************                     MD052216
+     C           CCYLOC    BEGSR                                                            MD052216
+      *                                                                                     MD052216
+      ** If Fee Settlement type is '01', '02', '07', '08' or '12',                          MD052216
+      ** use Fee Currency and Nostro location                                               MD052216
+      *                                                                                     MD052216
+     C           FESTTL    IFEQ 01                                                          MD052216
+     C           FESTTL    OREQ 02                                                          MD052216
+     C           FESTTL    OREQ 07                                                          MD052216
+     C           FESTTL    OREQ 08                                                          MD052216
+     C           FESTTL    OREQ 12                                                          MD052216
+      *                                                                                     MD052216
+     C                     MOVELFEFCCY    PCURR                                             MD053873
+      *                                                                                     MD053873
+     C           CLE031    IFEQ 'Y'                                                         MD053873
+      *                                                                                     MD053873
+     C           PTFI      IFEQ *BLANKS                                                     MD053873
+     C           FESCCY    ANDNE*BLANKS                                                     MD053873
+     C                     MOVELFESCCY    PCURR                                             MD053873
+     C                     ENDIF                                                            MD053873
+      *                                                                                     MD053873
+     C           PTFI      IFNE *BLANKS                                                     MD053873
+     C           FEPSCY    ANDNE*BLANKS                                                     MD053873
+     C                     MOVELFEPSCY    PCURR                                             MD053873
+     C                     ENDIF                                                            MD053873
+      *                                                                                     MD053873
+     C                     ENDIF                                                            MD053873
+      *                                                                                     MD053873
+     C                     CALL 'AONOSTR0'                                                  MD052216
+     C                     PARM *BLANKS   PRTCD   7                                         MD052216
+     C                     PARM '*KEY   ' POPTN   7                                         MD052216
+     C                     PARM *BLANKS   PCUSN   6                                         MD052216
+     C**********           PARM FEFCCY    PCURR   3                                MD052216 MD053873
+     C                     PARM           PCURR   3                                         MD053873
+     C                     PARM *BLANKS   PACCD  10                                         MD052216
+     C                     PARM *BLANKS   PACSN   2                                         MD052216
+     C                     PARM FEOURS    PNONB   2                                         MD052216
+     C                     PARM *BLANKS   PBRCA   3                                         MD052216
+     C                     PARM *BLANKS   PCSSN  10                                         MD052216
+     C                     PARM *BLANKS   PPNOI   1                                         MD052216
+     C           SDNOST    PARM SDNOST    DSFDY                                             MD052216
+      *                                                                                     MD052216
+     C           PRTCD     IFNE *BLANKS                                                     MD052216
+     C           *LOCK     IN   LDA                                                         MD052216
+     C                     MOVEL'AONOSTR0'DBFILE                                            MD052216
+     C                     Z-ADD56        DBASE                                             MD052216
+     C                     MOVELFEFCCY    DBKEY                                             MD052216
+     C                     OUT  LDA                                                         MD052216
+     C                     EXSR *PSSR                                                       MD052216
+     C                     ELSE                                                             MD052216
+      *                                                                                     MD052216
+     C**********           MOVELFEFCCY    ZCCY                                     MD052216 MD053873
+     C                     MOVELPCURR     ZCCY                                              MD053873
+     C                     MOVE CSNM      ZLOC                                              MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C                     ELSE                                                             MD052216
+      *                                                                                     MD052216
+      ** For other settlement types, use Local Currency & Location                          MD052216
+      *                                                                                     MD052216
+     C                     MOVE LOCY      ZCCY                                              MD052216
+     C                     MOVE SYSL      ZLOC                                              MD052216
+      *                                                                                     MD052216
+     C                     ENDIF                                                            MD052216
+      *                                                                                     MD052216
+     C                     ENDSR                                                            MD052216
       *****************************************************************
       /EJECT
       *****************************************************************   S01153

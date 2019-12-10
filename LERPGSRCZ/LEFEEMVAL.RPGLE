@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053837           Date 28Aug19               *
+      *  Last Amend No. MD053942           Date 23Jul19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD053837           Date 28Aug19               *
       *                 MD021377           Date 18Jul18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046370           Date 07Nov17               *
@@ -110,6 +111,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053942 - Incorrect defaulting of DDEXRT for loan fees. Add *
+      *             exchange rate default process for loan fee only   *
+      *             when fee currency not equal to loan currency.     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053837 - Classification out of range for initial date if   *
       *             rundate falls on the last day of classification.  *
@@ -2458,6 +2462,8 @@
      C     *IN77         ANDEQ     '0'
      C     DDECUR        ANDNE     FA_FCCY
      C     FA_FCCY       ANDNE     *BLANKS                                                  MD028931
+     C     DDFACT        ANDNE     *BLANKS                                                  MD053942
+     C     DDFCNO        ANDNE     *BLANKS                                                  MD053942
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANK        PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -2469,6 +2475,23 @@
      C                   EXSR      ZXRATE
      C                   Z-ADD     ZRATEX        WERAT
      C                   ENDIF
+      *                                                                                     MD053942
+     C     DDECUROK      IFEQ      'Y'                                                      MD053942
+     C     *IN77         ANDEQ     '0'                                                      MD053942
+     C     DDECUR        ANDNE     CL_CCY                                                   MD053942
+     C     CL_CCY        ANDNE     *BLANKS                                                  MD053942
+     C     DDLNRF        ANDNE     *BLANKS                                                  MD053942
+     C                   CALL      'AOCURRR0'                                               MD053942
+     C                   PARM      *BLANK        PRTCD                                      MD053942
+     C                   PARM      '*KEY   '     POPTN                                      MD053942
+     C                   PARM      CL_CCY        PCURR                                      MD053942
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD053942
+      *                                                                                     MD053942
+     C                   MOVE      A6MDIN        ZMDI1                                      MD053942
+     C                   Z-ADD     A6SPRT        ZRATE1                                     MD053942
+     C                   EXSR      ZXRATE                                                   MD053942
+     C                   Z-ADD     ZRATEX        WERAT                                      MD053942
+     C                   ENDIF                                                              MD053942
       *
      C                   ENDIF
       *
@@ -2506,6 +2529,13 @@
      C     DDMDIN        ANDEQ     *BLANKS
      C     DDECUR        ANDNE     FA_FCCY
      C     FA_FCCY       ANDNE     *BLANKS                                                  MD028931
+     C     DDFACT        ANDNE     *BLANKS                                                  MD053942
+     C     DDFCNO        ANDNE     *BLANKS                                                  MD053942
+     C     DDEXRT        OREQ      *BLANKS                                                  MD053942
+     C     DDMDIN        ANDEQ     *BLANKS                                                  MD053942
+     C     DDECUR        ANDNE     CL_CCY                                                   MD053942
+     C     CL_CCY        ANDNE     *BLANKS                                                  MD053942
+     C     DDLNRF        ANDNE     *BLANKS                                                  MD053942
      C                   MOVE      ZMDIX         WMDIN
       *                                                                                      BUG8565
      C                   EVAL      ZFLD15=WERAT*100000000                                    BUG8565

@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053607           Date 19Jul19               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD052216           Date 04Apr19               *
+      *  Prev Amend No. MD053607           Date 19Jul19               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD050139           Date 23Mar18               *
       *                 CLE071             Date 18Jul18               *
       *                 CLE159             Date 18Jul18               *
@@ -189,6 +190,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *  MD053607 - Matured Fee did not appear on fees screen.        *
       *           - Recompile due to changes in LEFHSTL1, LEFHSTL2 and*
       *             LEFHSTL9.                                         *
@@ -516,6 +518,7 @@
      FLEFHSTL9IF  E           K        DISK                                                 MD031473
      F            LEFHSTF                           KRENAMELEFHSTLO                         MD031473
      FLEFEADL2IF  E           K        DISK
+     FLEFEEQL0IF  E           K        DISK                                                 MD052216
      FLEFEED  IF  E           K        DISK
      FFACHISH IF  E           K        DISK                               BH3414
      FFACHSAL1IF  E           K        DISK                               BH3414
@@ -560,6 +563,7 @@
      F*  14    - Matching record found on Fees Master File            *
      F*  15    - Loan or facility for screen output format            *
      F*  16    - Expanded details requested                           *
+     F*  23    - Read of Fee Detail Extension File                    *                     MD052216
       *   24  - Execute SR/SRPRTC                                     *   181729
       *   26  - EOF indicator for LF/LEFCLTLB                         *   181729
      F*  30    - CLE005 is Present                                    *   CLE005
@@ -1182,6 +1186,14 @@
      C                     KFLD           FELOAN                                             243496B
      C                     KFLD           FEFSEQ                                             243496B
       *                                                                                      243496B
+      ** Key List to access LEFEEQL0                                                        MD052216
+      *                                                                                     MD052216
+     C           KEY008    KLIST                                                            MD052216
+     C                     KFLD           WCNUM                                             MD052216
+     C                     KFLD           WFREF                                             MD052216
+     C                     KFLD           WLNRF                                             MD052216
+     C                     KFLD           FEFSEQ                                            MD052216
+      *                                                                                     MD052216
      C/COPY WNCPYSRC,LER115C001
      C** Set up KLIST for accessing Facility file                         BH3414
      C*                                                                   BH3414
@@ -3648,6 +3660,8 @@
      C                     MOVEL*BLANKS   SDSAMT                                              245012
      C                     MOVEL*BLANKS   SDPDUE                                              245012
      C                     MOVEL*BLANKS   SDADJA                                              245012
+     C                     MOVE *BLANKS   SDPDDI                                            MD052216
+     C                     MOVE *BLANKS   SDPTDI                                            MD052216
      C                     MOVE *BLANKS   SDPIND                                           AR1090331
      C                     MOVE *BLANKS   SDPYON                                           AR1090331
      C                     MOVE *BLANKS   SDAUTO                                           AR1090331
@@ -3977,6 +3991,34 @@
      C                     ELSE
      C                     MOVE FECALT    SDCALT
      C                     END
+      *                                                                                     MD052216
+     C           KEY008    CHAINLEFEEQL0             23                                     MD052216
+      *                                                                                     MD052216
+      ** Format payment due day                                                             MD052216
+      *                                                                                     MD052216
+     C                     MOVE *BLANKS   SDPDDI                                            MD052216
+     C                     SELEC                                                            MD052216
+     C           FQPDDI    WHEQ 'A'                                                         MD052216
+     C                     MOVEL'ACTUAL  'SDPDDI                                            MD052216
+     C           FQPDDI    WHEQ 'P'                                                         MD052216
+     C                     MOVEL'PREVIOUS'SDPDDI                                            MD052216
+     C           FQPDDI    WHEQ 'N'                                                         MD052216
+     C                     MOVEL'NEXT    'SDPDDI                                            MD052216
+     C           FQPDDI    WHEQ 'M'                                                         MD052216
+     C                     MOVEL'MODIFIED'SDPDDI                                            MD052216
+     C                     ENDSL                                                            MD052216
+      *                                                                                     MD052216
+      ** Format payment taken day                                                           MD052216
+      *                                                                                     MD052216
+     C                     MOVE *BLANKS   SDPTDI                                            MD052216
+     C                     SELEC                                                            MD052216
+     C           FQPTDI    WHEQ 'P'                                                         MD052216
+     C                     MOVEL'PREVIOUS'SDPTDI                                            MD052216
+     C           FQPTDI    WHEQ 'N'                                                         MD052216
+     C                     MOVEL'NEXT    'SDPTDI                                            MD052216
+     C           FQPTDI    WHEQ 'M'                                                         MD052216
+     C                     MOVEL'MODIFIED'SDPTDI                                            MD052216
+     C                     ENDSL                                                            MD052216
       *
      C                     MOVE FEPIND    SDPIND
       *

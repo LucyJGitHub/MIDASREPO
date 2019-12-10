@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054696           Date 29Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 MD046910           Date 25Jul17               *
       *                 MD045854           Date 25May17               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
@@ -336,6 +339,8 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
+      ** JE Headers Shadow Post Indicator                                                   MD054696
+     D DDSHPI          S              1A                                                    MD054696
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -487,6 +492,7 @@
      C**********                                 + PExtData                                   CAP086
      C                                           + PEAHeader                                  CSC054
      C                                           + PInfData + PExtData                        CAP086
+     C                                           + DDSHPI                                   MD054696
  
      C                   SETON                                        LR
  
@@ -639,6 +645,9 @@
       *
       ** SDGELR - Mandatory Batch No./ No. of Items
      C                   PARM                    BKMHTN
+      *                                                                                     MD054696
+      ** Batch Header - Shadow Post Indicator                                               MD054696
+     C                   PARM                    DDSHPI                                     MD054696
       *
       ** OUTPUT
       ** ======
@@ -923,6 +932,9 @@
       ** Extra Transaction information in a single large field
       ** from source system
      C                   PARM                    PExtData500
+      *                                                                                     MD054696
+      ** Batch Header - Shadow Post Indicator                                               MD054696
+     C                   PARM                    DDSHPI                                     MD054696
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

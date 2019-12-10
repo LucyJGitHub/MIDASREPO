@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL182             Date 11May17               *
+      *  Last Amend No. MD054696           Date 29Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL182             Date 11May17               *
       *                 246752             Date 29Oct15               *
       *                 MD027587           Date 19Jun14               *
       *                 AR1078953          Date 18Jan13               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  246752 - Batches remain Held after Accepting. Wrong valida-  *
@@ -306,6 +309,9 @@
       *                                                                                       CER046
      D CER046          S              1A                                                      CER046
      D CGL182          S              1A                                                      CGL182
+                                                                                            MD054696
+      ** JE Headers Shadow Post Indicator                                                   MD054696
+     D DDSHPI          S              1A                                                    MD054696
       *
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
@@ -440,6 +446,10 @@
      C*********          EXSR      SRMEAB                                              CSC024 CSC054
      C                   EXSR      SRPEAB                                                     CSC054
                                                                                               CSC024
+      ** Validate Shadow Post Indicator field                                               MD054696
+                                                                                            MD054696
+     C                   EXSR      SRSHPI                                                   MD054696
+                                                                                            MD054696
       /COPY WNCPYSRC,GLBITHV015
  
       ** Validate Batch Held/Accepted Indicator.
@@ -1359,6 +1369,50 @@
       *                                                                                       248749
      C                   ENDSR                                                                248749
       *                                                                                       248749
+      *****************************************************************                     MD054696
+      /EJECT                                                                                MD054696
+      *****************************************************************                     MD054696
+      *                                                               *                     MD054696
+      *  SRSHPI - Validate Shadow Post Indicator                      *                     MD054696
+      *                                                               *                     MD054696
+      *****************************************************************                     MD054696
+      *                                                                                     MD054696
+     C     SRSHPI        BEGSR                                                              MD054696
+      *                                                                                     MD054696
+      ** Reset error fields.                                                                MD054696
+      *                                                                                     MD054696
+     C                   EXSR      SRRESET                                                  MD054696
+      *                                                                                     MD054696
+     C                   CALLB     'GLVSHPI'                                                MD054696
+      *                             =======                                                 MD054696
+      ** INPUT                                                                              MD054696
+      ** =====                                                                              MD054696
+      *                                                                                     MD054696
+      ** Return Code                                                                        MD054696
+     C                   PARM                    RetCodeOut                                 MD054696
+      *                                                                                     MD054696
+      ** Shadow Post Indicator                                                              MD054696
+     C                   PARM                    DDSHPI                                     MD054696
+      *                                                                                     MD054696
+      ** OUTPUT                                                                             MD054696
+      ** ======                                                                             MD054696
+      *                                                                                     MD054696
+      ** Error fields/message IDs/message data (arrays) from/to caller                      MD054696
+     C                   PARM                    FldNamXAr                                  MD054696
+     C                   PARM                    MsgIDXAr                                   MD054696
+     C                   PARM                    MsgDtaXAr                                  MD054696
+      *                                                                                     MD054696
+      ** Shadow Post Ind - OK indicator                                                     MD054696
+     C                   PARM                    DDSHPIOK                                   MD054696
+      *                                                                                     MD054696
+      ** Valid JE Header (DS) - for file update                                             MD054696
+     C                   PARM                    PVBITH                                     MD054696
+      *                                                                                     MD054696
+      ** Update error information.                                                          MD054696
+      *                                                                                     MD054696
+     C                   EXSR      SRUPDERR                                                 MD054696
+      *                                                                                     MD054696
+     C                   ENDSR                                                              MD054696
       *****************************************************************                       248749
       /EJECT                                                                                  248749
       *****************************************************************
@@ -1399,6 +1453,9 @@
       *
       ** SDGELR - Mandatory Batch No./ No. of Items
      C                   PARM                    BKMHTN            1
+      *                                                                                     MD054696
+      ** Batch Header - Shadow Post Indicator                                               MD054696
+     C                   PARM                    DDSHPI                                     MD054696
       *
       ** OUTPUT
       ** ======

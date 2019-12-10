@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD050772           Date 28May18               *
-      *  Prev Amend No. MD050775           Date 12May18               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD050772           Date 28May18               *
+      *                 MD050775           Date 12May18               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054604 - Deliverable Data Split for SDSVALPD               *
       *  MD050772 - Duplicate entries appears when running the normal *
       *             accounts tool in Information Mode                 *
       *  MD050775 - When pressing F11, the screen refreshed and       *
@@ -72,7 +74,7 @@
 
       ** External DS for Bank Details ICD retrieval
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                                MD054605
      D SCRN_WVAL     E DS                  EXTNAME(SD000315DF:SD000315D0)
      D                                     PREFIX(W)
       ** External DS for Customer Details

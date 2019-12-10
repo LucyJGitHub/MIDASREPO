@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -44,6 +45,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*  CCB020 - COB Restructure - Secondary COB Infrastructure         */
 /*  CLE035 - Lending Enhancements for Nordea Phase 1 Priority 2:    */
@@ -82,7 +84,7 @@
 /*                                                                  */
 /********************************************************************/
              PGM
- 
+
              DCL        VAR(&WLEJNSQ) TYPE(*CHAR) LEN(10)
              DCL        VAR(&P#RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&WORK) TYPE(*DEC) LEN(10 0)
@@ -92,21 +94,21 @@
              DCL        VAR(&CURRRCV) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)                          */ /*216709 CCB020*/
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
              DCL        &STRRCV  TYPE(*CHAR)  LEN(10)                                     /*CSC020*/
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                /*BUG7286*/
 /*/COPY WNCPYSRC,LEC2016001                                          */
- 
+
 /**/
 /**  Global Monitor Message:                                         */
 /**   If an unmonitorred message occurs perform error processing     */
 /**/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
 /*                                                                                          CSC020*/
 /*  Determine journal receiver of next day set up.                                          CSC020*/
@@ -121,10 +123,10 @@
              RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) TOENT(*FIRST) +
                           RTNRCV(&STRRCV)                                                 /*CSC020*/
              ENDDO                                                                        /*CSC020*/
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF0000)
- 
+
              ALCOBJ     OBJ((LEDRIP *DTAARA *EXCLRD)) WAIT(30)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
                 SNDPGMMSG  MSG('Attempt to start Lending Drip Feed +
@@ -132,26 +134,26 @@
                            TOMSGQ(MOPERQ MRUNQ)
                 GOTO       CMDLBL(END)
              ENDDO
- 
- 
+
+
 /* Send a message to all Loan Manager servers to indicate that the */
 /* drip feed job has started                                       */
- 
+
              CALL       PGM(LEC2017) PARM(&P#RTCD 'STRD' 'ALL' '   ')
              IF         COND(%SWITCH(XXXXXX11) *OR (&P#RTCD *NE +
                           '*SENT')) THEN(GOTO CMDLBL(ABNOR))
              CHGVAR     VAR(&P#RTCD) VALUE('       ')
- 
- 
+
+
  START:
- 
+
 /* Get last sequence number used from journal */
- 
+
              RTVDTAARA  DTAARA(LEJNSQ (1 10)) RTNVAR(&WLEJNSQ)
- 
+
 /* Check if last sequence number read as held on LEJNSQ is valid */
 /* for current receiver range                                    */
- 
+
              CHGVAR     VAR(&WORK) VALUE(&WLEJNSQ)
              RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(&WORK) +
                           TOENT(&WORK) SEARCH(*DESCEND)
@@ -162,19 +164,19 @@
                    current receiver range') TOMSGQ(MOPERQ MRUNQ)
                 GOTO CMDLBL(ABNOR)
              ENDDO
- 
+
 /*   Determine currently attached receiver and save the value.   */
              RTVJRNE    JRN(ICJRN) FROMENT(*LAST) SEARCH(*DESCEND) +
                           RTNRCV(&RCVSAV)
              MONMSG     MSGID(CPF7073)
 /*   Add 1 to set up first journal sequence number of the range of */
 /*   sequence numbers which have not yet been read                 */
- 
+
              CHGVAR     VAR(&LJNSQ) VALUE(&WORK + 1)
- 
+
 /*/COPY WNCPYSRC,LEC2016002                                          */
 /*/COPY WNCPYSRC,LEC2016OMT                                          */
- 
+
 /**********  RCVJRNE    JRN(ICJRN) EXITPGM(LE2016) FILE((FCLTYFM) +
 /**********               (FCLTYFN) (CLOANCL) (CLOANCK) (LOAMSDK) +
 /**********               (ACCNTAB) (SDMMODPD) (SDBANKPD) +
@@ -246,6 +248,24 @@
 /**********               RCVRNG(&STRRCV *CURRENT) FROMENT(&LJNSQ) +*/             /*CSC020 CLE035*/
 /**********               JRNCDE((U) (R)) ENTTYP(PT UP DL UR DR YJ +*/             /*CSC020 CLE035*/
 /**********               YE) DELAY(*NEXTENT)                       */             /*CSC020 CLE035*/
+/**********  RCVJRNE    JRN(ICJRN) EXITPGM(LE2016) FILE((FCLTYFM) + */                  /*MD054605*/
+/**********               (FCLTYFN) (CLOANCL) (CLOANCK) (LOAMSDK) + */                  /*MD054605*/
+/**********               (ACCNTAB) (SDMMODPD) (SDBANKPD) +         */                  /*MD054605*/
+/**********               (SDGELRPD) (SDRETLPD) (SDCLNDPD) +        */                  /*MD054605*/
+/**********               (SDPORTPD) (SDCUSTPD) (SDALTNPD) +        */                  /*MD054605*/
+/**********               (SDFACTPD) (SDBRCHPD) (SDCURRPD) +        */                  /*MD054605*/
+/**********               (SDCTRYPD) (SDINDSPD) (SDACOFPD) +        */                  /*MD054605*/
+/**********               (SDPRFCPD) (SDPRFMPD) (SDBOOKPD) +        */                  /*MD054605*/
+/**********               (SDLOANPD) (SDBSRTPD) (SDBSHSPD) +        */                  /*MD054605*/
+/**********               (SDNOSTPD) (SDCNSTPD) (SDEXSTPD) +        */                  /*MD054605*/
+/**********               (PMPORTPD) (SDPLCSPD) (SDHOLPD) +         */                  /*MD054605*/
+/**********               (SDCODEPD) (SDTRADPD) (SDCCSYPD) (LETISPPD) + */              /*MD054605*/
+/**********               (LEPARTPD) (SDPCACPD) (LEFCAMPD) +        */                  /*MD054605*/
+/**********               (LESTALPD) (LEFEEAD) (SDFEEPD) (MUSERDD) +*/                  /*MD054605*/
+/**********               (LEFEED) (SCSARDPD) (SDSVALPD)) +         */                  /*MD054605*/
+/**********               RCVRNG(&STRRCV *CURRENT) FROMENT(&LJNSQ) +*/                  /*MD054605*/
+/**********               JRNCDE((U) (R)) ENTTYP(PT UP DL UR DR YJ +*/                  /*MD054605*/
+/**********               YE) DELAY(*NEXTENT)                       */           /*CLE035 MD054605*/
              RCVJRNE    JRN(ICJRN) EXITPGM(LE2016) FILE((FCLTYFM) +
                           (FCLTYFN) (CLOANCL) (CLOANCK) (LOAMSDK) +
                           (ACCNTAB) (SDMMODPD) (SDBANKPD) +
@@ -260,10 +280,10 @@
                           (SDCODEPD) (SDTRADPD) (SDCCSYPD) (LETISPPD) +
                           (LEPARTPD) (SDPCACPD) (LEFCAMPD) +
                           (LESTALPD) (LEFEEAD) (SDFEEPD) (MUSERDD) +
-                          (LEFEED) (SCSARDPD) (SDSVALPD)) +
+                          (LEFEED) (SCSARDPD) (SDSVLXTD)) +
                           RCVRNG(&STRRCV *CURRENT) FROMENT(&LJNSQ) +
                           JRNCDE((U) (R)) ENTTYP(PT UP DL UR DR YJ +
-                          YE) DELAY(*NEXTENT)                                             /*CLE035*/
+                          YE) DELAY(*NEXTENT)                                           /*MD054605*/
 /**/
 /* If lock prevents access to the journal or no new entries on ICJRN */
 /**/
@@ -272,18 +292,18 @@
                 GOTO       CMDLBL(START)
                 ENDDO
              MONMSG     MSGID(CPF7062)
- 
+
 /*/COPY WNCPYSRC,LEC2016003                                          */
- 
+
 /* Current journal receiver is about to change                       */
- 
+
              IF         COND(%SWITCH(XXXXX100)) THEN(DO)
              CHGJOB     SWS(00000000)
                DLYJOB     DLY(30)
- 
+
 /*   Processing to avoid termination if journal receiver changed. */
 /*   Determine currently attached receiver.                       */
- 
+
                RTVJRNE    JRN(ICJRN) SEARCH(*DESCEND) RTNRCV(&CURRRCV)
                MONMSG     MSGID(CPF7073)
 /*   If receiver is different from when last checked, restart processing. */
@@ -291,19 +311,19 @@
                  GOTO       CMDLBL(START)
                ENDDO
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
- 
+
              GOTO       CMDLBL(END)
- 
+
 /*     Abnormal termination                                          */
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSG('Lending Drip Feed Process +
                           has ENDED ABNORMALLY') TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
 /*     Normal termination                                            */
  END:
              DLCOBJ     OBJ((LEDRIP *DTAARA *EXCLRD))
@@ -314,8 +334,8 @@
              IF         COND(&MPHAS *EQ '*NO ') THEN(DO)                                  /*CCB020*/
              CALL       PGM(LEC2017) PARM(&P#RTCD 'ENDD' 'ALL' '   ')
              ENDDO                                                                        /*216709*/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

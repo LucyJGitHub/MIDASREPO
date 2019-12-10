@@ -12,10 +12,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD054605           Date 17Oct19              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. BUG27240           Date 12Mar10              */
+/*       Prev Amend No. BUG27240           Date 12Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CSM010             Date 22Jun07              */
+/*                      CSM010             Date 22Jun07              */
 /*                      CPK027             Date 21May07              */
 /*                      CUP033             Date 18Sep06              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       BUG27240- Applied CPK029 file locking fix                   */
 /*       CPK029 - Stop lock on file.                                 */
 /*       CSM010 - Applied by CPK027.                                 */
@@ -36,7 +38,7 @@
 /*********************************************************************/
 /**********  PGM                                                                       */ /*CUP033*/
              PGM        PARM(&GPFXSVAL)                                                   /*CUP033*/
- 
+
              DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
 /**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
@@ -46,31 +48,32 @@
              DCL        VAR(&SUBSYSTEM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+
 /**********  DCLF       FILE(UPSBSDOF)                                                 */ /*CUP033*/
              DCLF       FILE(UPSBSDOF) OPNID(A)                                           /*CUP033*/
-             DCLF       FILE(UPGSVALJ0) OPNID(B)                                          /*CUP033*/
- 
+/**********  DCLF       FILE(UPGSVALJ0) OPNID(B) */                            /*CUP033* *MD054605*/
+             DCLF       FILE(UPGSVALJ0) OPNID(B) ALWNULL(*YES)                          /*MD054065*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
 /**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
 /**Check*if*all*relevant*fields*have*been*entered*in*ICD**/ /*                         */ /*CUP033*/
 /**********  IF         COND(&GPSBSID *EQ ' ') THEN(DO)                                */ /*CUP033*/
- 
+
 VALIDATE:                                                                                 /*CUP033*/
              RCVF       OPNID(B)                                                          /*CUP033*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&B_GISVAL *EQ &GPFXSVAL) THEN(DO)                            /*CUP033*/
                 IF         COND(&B_GIVAL *EQ ' ') THEN(DO)                                /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -80,9 +83,9 @@ VALIDATE:                                                                       
                 ENDDO                                                                     /*CUP033*/
 /**********     GOTO       CMDLBL(CHECK)                                    */ /*CUP033*/ /*CPK029*/
              ENDDO                                                                        /*CUP033*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
  CHECK:                                                                                   /*CUP033*/
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
                 ?    SYSTEMID
@@ -91,17 +94,17 @@ VALIDATE:                                                                       
                 ENDDO                                                                     /*CUP033*/
                 RTVDTAARA  DTAARA(QTEMP/SYSID) RTNVAR(&GPSBSID)
              ENDDO
- 
+
 /* Save library list. */
              SAVLIBL    SAVDTL(UPC000121)
- 
+
 /* Set up library list */
              CALL       PGM(GPC000016) PARM(&GPSBSID)
- 
+
              CHGVAR     VAR(&GXLIB) VALUE(&GPSBSID *TCAT 'GXLIB')
              CHGVAR     VAR(&SUBSYSTEM) VALUE('M' *TCAT &GPSBSID *TCAT +
                           'GSBS')
- 
+
 /* Check to see if the susbsystem is correctly named yet. */
              CHKOBJ     OBJ(&GXLIB/&SUBSYSTEM) OBJTYPE(*SBSD)
 /* If it is not found the attempt to find it in the XLIB and rename it. */
@@ -122,29 +125,29 @@ VALIDATE:                                                                       
                    GOTO       CMDLBL(END)
                 ENDDO
              ENDDO
- 
+
 /* Display subsystem description to print */
              DSPSBSD    SBSD(&GXLIB/&SUBSYSTEM) OUTPUT(*PRINT)
- 
+
 /* Create physical file to receive subsystem data */
              DLTF       FILE(QTEMP/UPSBSD)
              MONMSG     MSGID(CPF0000)
              CRTPF      FILE(QTEMP/UPSBSD) RCDLEN(132) TEXT('Midas +
                           UP Subsystem description - from spool file')
- 
+
 /* Copy spool file to physical file */
              CPYSPLF    FILE(QPRTSBSD) TOFILE(QTEMP/UPSBSD) +
                           SPLNBR(*LAST)
- 
+
 /* Call program to process file and change routing entries */
              CHGVAR     VAR(&ERROR) VALUE(' ')
              CALL       PGM(UP000121) PARM(&GPSBSID &ERROR)
              IF         COND(&ERROR *EQ 'Y') THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -153,10 +156,10 @@ VALIDATE:                                                                       
                 SNDPGMMSG  MSGID(UPM0002) MSGF(UTMSGF) +
                           MSGDTA('UPC000121') MSGTYPE(*ESCAPE)                            /*CPK027*/
              ENDDO
- 
+
  END:
 /* Restore original library list. */
              RSTLIBL    SAVEDLIBL(UPC000121)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDPGM

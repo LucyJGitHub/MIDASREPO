@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC043             Date 18Jun10              */
 /*                      BUG27785           Date 17May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27639           Date 07May10              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG27785 - Use overrides rather than renames.               */
@@ -40,14 +42,14 @@
 /**********  PGM        PARM(&MODE)                                                   */ /*CPK025*/
              PGM        PARM(&MODE &PFXSVAL &SRCSVAL &BRGSVAL +
                           &GPPFXSVAL)                                                    /*CPK025*/
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CPK025*/
              DCL        VAR(&SRCSVAL) TYPE(*CHAR) LEN(20)                                 /*CPK025*/
              DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CPK025*/
              DCL        VAR(&GPPFXSVAL) TYPE(*CHAR) LEN(20)                               /*CPK025*/
              DCL        VAR(&COMPARE) TYPE(*CHAR) LEN(8)                                  /*CUP094*/
- 
+
 /**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*             */ /*CPK025*/
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CPK025*/
              DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)                                  /*CPK025*/
@@ -58,34 +60,35 @@
 /**********  DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)  */                                /*CSC043*/
              DCL        VAR(&XPLIB) TYPE(*CHAR) LEN(10)                                   /*CSC043*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
-             DCLF       FILE(UPSVALJ0)                                                    /*CPK025*/
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                      /*CPK025* *MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area /MIDASMSG in QTEMP. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CPK025*/
- 
+
 /* Check that System Values have an entry. */                                             /*CPK025*/
 VALIDATE:                                                                                 /*CPK025*/
              RCVF                                                                         /*CPK025*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CPK025*/
                 GOTO       CMDLBL(CHECK)                                                  /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CPK025*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CPK025*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CPK025*/
@@ -94,7 +97,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CPK025*/
                 ENDDO                                                                     /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              IF         COND(&GISVAL *EQ &SRCSVAL) THEN(DO)                               /*CPK025*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CPK025*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CPK025*/
@@ -103,7 +106,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&PTFSRC) VALUE(&GIVAL)                                  /*CPK025*/
                 ENDDO                                                                     /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CPK025*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CPK025*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CPK025*/
@@ -112,7 +115,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CPK025*/
                 ENDDO                                                                     /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              IF         COND(&MODE *EQ '*IMP') THEN(DO)                                   /*CPK025*/
                 IF         COND(&GISVAL *EQ &GPPFXSVAL) THEN(DO)                          /*CPK025*/
                    IF         COND(&GIVAL *EQ ' ') THEN(DO)                               /*CPK025*/
@@ -123,9 +126,9 @@ VALIDATE:                                                                       
                    ENDDO                                                                  /*CPK025*/
                 ENDDO                                                                     /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CPK025*/
- 
+
 /**********  IF         COND(&SBSID *EQ ' ' *OR &PTFSRC *EQ ' ' *OR +                  */ /*CPK025*/
 /**********               &PTFUPG *EQ ' ') THEN(DO)                                    */ /*CPK025*/
  CHECK:                                                                                   /*CPK025*/
@@ -137,22 +140,22 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('UPC002002' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Set up zone library list. */
              CALL       PGM(UPC0014) PARM(&SBSID)
- 
+
 /* Delete the driving file in QTEMP if it already exists. */                              /*CUP033*/
              DLTF       FILE(QTEMP/UPDLVC*)                                               /*CUP033*/
              MONMSG     MSGID(CPF0000)                                                    /*CUP033*/
- 
+
              RMVLIBLE   LIB(&PTFUPG)
              MONMSG     MSGID(CPF0000)
              ADDLIBLE   LIB(&PTFUPG) POSITION(*FIRST)
- 
+
 /**********  CHGVAR     VAR(&XLIB) VALUE(&SBSID *TCAT 'XLIB')  */                         /*CSC043*/
              CHGVAR     VAR(&XPLIB) VALUE(&SBSID *TCAT 'XPLIB')                           /*CSC043*/
              CHGVAR     VAR(&COMPARE) VALUE('SQLSRCZ')                                    /*CUP094*/
- 
+
 /**Rename*SDBANKPD/SDBANKL1*/ /*                                        */ /*BUG27639*/ /*BUG27785*/
 /**********  RNMOBJ     OBJ(SDBANKL1) OBJTYPE(*FILE) +                               */ /*BUG27785*/
 /**********               NEWOBJ(SDBANKL#)                              */ /*BUG27639*/ /*BUG27785*/
@@ -160,7 +163,7 @@ VALIDATE:                                                                       
 /**********  RNMOBJ     OBJ(SDBANKPD) OBJTYPE(*FILE) +                               */ /*BUG27785*/
 /**********               NEWOBJ(SDBANKP#)                              */ /*BUG27639*/ /*BUG27785*/
 /**********  MONMSG     MSGID(CPF2105)                                  */ /*BUG27639*/ /*BUG27785*/
- 
+
              IF         COND(&MODE *EQ '*IMP') THEN(DO)
 /* Call program to build driving file for SQL procedures. */
 /**********     CALL       PGM(UPC000002) PARM(&PTFSRC 'SQLSRCZ ')                     */ /*CUP094*/
@@ -177,7 +180,7 @@ VALIDATE:                                                                       
                 OVRDBF     FILE(UPDLVCPD) TOFILE(QTEMP/UPDLVCPD) +
                              OVRSCOPE(*JOB)
              ENDDO
- 
+
 /* Call program to drop and create procedures. */
 /**********  CALL       PGM(UPC000001) PARM(&XLIB &PTFSRC)                             */ /*CUP094*/
 /**********  CALL       PGM(UPC000001) PARM(&XLIB &PTFSRC &COMPARE)  */            /*CUP094 CSC043*/
@@ -187,7 +190,7 @@ VALIDATE:                                                                       
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /**Rename*objects*back*to*original*/ /*                                 */ /*BUG27639*/ /*BUG27785*/
 /**********  RNMOBJ     OBJ(SDBANKL#) OBJTYPE(*FILE) +                               */ /*BUG27785*/
 /**********               NEWOBJ(SDBANKL1)                              */ /*BUG27639*/ /*BUG27785*/
@@ -195,7 +198,7 @@ VALIDATE:                                                                       
 /**********  RNMOBJ     OBJ(SDBANKP#) OBJTYPE(*FILE) +                               */ /*BUG27785*/
 /**********               NEWOBJ(SDBANKPD)                              */ /*BUG27639*/ /*BUG27785*/
 /**********  MONMSG     MSGID(CPF2105)                                  */ /*BUG27639*/ /*BUG27785*/
- 
+
              GOTO       CMDLBL(ENDPGM)
 ABNOR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
@@ -208,6 +211,6 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('UPC002002' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

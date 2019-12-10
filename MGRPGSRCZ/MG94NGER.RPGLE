@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 263479             Date 20Jan10               *
       *                 BUG26853           Date 15Dec09               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -236,7 +238,7 @@
       *
      D SDNTTI        E DS                  EXTNAME(SDNTTIPD)
       *                                                                                     BUG26814
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)                                BUG26814
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                       BUG26814 MD054605
       *
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
       *                                                                                    BUG23280A

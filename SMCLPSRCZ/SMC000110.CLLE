@@ -9,50 +9,53 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP004  *CREATE    Date 15Oct10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP004  *CREATE    Date 15Oct10              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP004 - New utility to replace SCBEGIN.                    */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &MODE)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
- 
+
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10) VALUE(' ')
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPSVALJ0)
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                               /*MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXX000)
- 
+
 /* Create data area MIDASMSG in QTEMP for screen error handling. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -61,9 +64,9 @@ VALIDATE:
                    CHGVAR     VAR(&PFX) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -73,9 +76,9 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000110' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CALL       PGM(UPC0014) PARM(&PFX)
- 
+
              IF         COND(&MODE *EQ '*OFF') THEN(DO)
                 CALL       PGM(SD9999)
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -83,7 +86,7 @@ VALIDATE:
                    GOTO       CMDLBL(ERROR)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&MODE *EQ '*ON ') THEN(DO)
                 CALL       PGM(SD9998)
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -91,9 +94,9 @@ VALIDATE:
                    GOTO       CMDLBL(ERROR)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -117,9 +120,9 @@ ERROR:
                 CALL       PGM(SCC0010) PARM('SMC000110' 'ENTER' ' ')
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
 ENDPGM:
              RCLRSC
              MONMSG     MSGID(CPF0000)
- 
+
              ENDPGM

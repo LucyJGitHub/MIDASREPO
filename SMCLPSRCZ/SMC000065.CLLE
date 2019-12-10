@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG27785           Date 09Jul10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BG26993            Date 26Jan10              */
@@ -18,6 +19,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG27785 -  Remove copy of SDBANKPD.                        */
@@ -27,11 +29,11 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &PFXSVALO &PSMUFET)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&PFXSVALO) TYPE(*CHAR) LEN(20)
              DCL        VAR(&PSMUFET ) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&ZSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&ZSBSIDO) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
@@ -39,31 +41,32 @@
              DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100) VALUE(' ')
              DCL        VAR(&DMLIBF)  TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&DMLIBT)  TYPE(*CHAR) LEN(10)                 */ /* 26993*/ /*BUG27785*/
- 
-             DCLF       FILE(UPSVALJ0) OPNID(A)
+
+/**********  DCLF       FILE(UPSVALJ0) OPNID(A) */                                      /*MD054605*/
+             DCLF       FILE(UPSVALJ0) OPNID(A) ALWNULL(*YES)                           /*MD054605*/
              DCLF       FILE(SMCARZPD) OPNID(B)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                             2009')
- 
+
  /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                             CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area /MIDASMSG in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                             VALUE(' ')
- 
+
 VALIDATE:
              RCVF       OPNID(A)
              MONMSG     MSGID(CPF0864) EXEC(DO)
                GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&A_GISVAL *EQ &PFXSVAL) THEN(DO)
                   IF         COND(&A_GIVAL *EQ ' ') THEN(DO)
                      CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -72,7 +75,7 @@ VALIDATE:
                     CHGVAR     VAR(&ZSBSID) VALUE(&A_GIVAL)
                  ENDDO
              ENDDO
- 
+
              IF         COND(&A_GISVAL *EQ &PFXSVALO) THEN(DO)
                   IF         COND(&A_GIVAL *EQ ' ') THEN(DO)
                      CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -81,9 +84,9 @@ VALIDATE:
                     CHGVAR     VAR(&ZSBSIDO) VALUE(&A_GIVAL)
                  ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                  RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -93,17 +96,17 @@ VALIDATE:
                  CALL       PGM(SCC0010) PARM('SMC000065' 'ENTER' ' ')
                  GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CALL       PGM(UPC0014) PARM(&ZSBSID)
- 
+
              CHGVAR     VAR(&DMLIBF) VALUE(&ZSBSIDO *CAT 'DMLIB')
 /**********  CHGVAR     VAR(&DMLIBT) VALUE(&ZSBSID *CAT 'DMLIB')          */ /* 26993*/ /*BUG27785*/
- 
+
 /**Copy*SDBANKPD*from*'to'*system*to*the*Bridge*library*so*that*migration**/ /* 26993*/ /*BUG27785*/
 /***uses*correct*data.*****************************************************/ /* 26993*/ /*BUG27785*/
 /**********  CPYF       FROMFILE(&DMLIBT/SDBANKPD) TOFILE(SDBANKPD) +                */ /*BUG27785*/
 /**********               MBROPT(*REPLACE) FMTOPT(*MAP *DROP)             */ /* 26993*/ /*BUG27785*/
- 
+
 /* Create temporary file to hold error messages for report. */
              DLTF       FILE(QTEMP/UPERRMQT)
              MONMSG     MSGID(CPF2105)
@@ -115,12 +118,12 @@ VALIDATE:
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* If feature is not to be processed then read next record. */
              IF         COND(&B_SMUFET *NE &PSMUFET) THEN(DO)
                 GOTO       CMDLBL(READNEXT)
              ENDDO
- 
+
 /* Call program if required. */
              IF         COND(&B_SMACTN *EQ 'P') THEN(DO)
                 IF         COND(&B_SMMPGM *EQ '*STANDARD') THEN(DO)
@@ -138,13 +141,13 @@ VALIDATE:
                 ENDDO
                 GOTO       CMDLBL(READNEXT)
              ENDDO
- 
+
 /* Perform copy if required. */
              IF         COND(&B_SMACTN *EQ 'C') THEN(DO)
                 CPYF       FROMFILE(&DMLIBF/&B_SMFRFL) +
                              TOFILE(&B_SMTOFL) MBROPT(*REPLACE) +
                              FMTOPT(*MAP *DROP)
- 
+
 /* If from-file or to-file is locked, or to-file is in use. */
                 MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
                    GOTO       CMDLBL(WRITEERROR)
@@ -172,14 +175,14 @@ VALIDATE:
                 ENDDO
                 GOTO CMDLBL(READNEXT)
              ENDDO
- 
+
  WRITEERROR:
              CHGVAR     VAR(&ERRORMSG) VALUE('File' *BCAT &B_SMTOFL +
                           *BCAT 'was not migrated to.')
              CALL       PGM(UP008010) PARM('*WRITE ' 'SMC000065 ' +
                           &ERRORMSG)
              GOTO       CMDLBL(READNEXT)
- 
+
              GOTO       CMDLBL(ENDPGM)
  ERROR:
  /* Set up messages for Midas Information Screen. */
@@ -193,11 +196,11 @@ VALIDATE:
               MONMSG     MSGID(CPF0000)
               CALL       PGM(SCC0010) PARM('SMC000065' 'JOBLOG' 'Y')
               MONMSG     MSGID(CPF0000)
- 
+
  ENDPGM:
              IF         COND(&ERRORMSG *NE ' ') THEN(DO)
                 CALL       PGM(UP008010) PARM('*REPORT' 'SMC000065 ' ' ')
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              ENDPGM

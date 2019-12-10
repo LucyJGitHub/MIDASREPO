@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP023             Date 17Mar11              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP023             Date 17Mar11              */
 /*                      BUG27791 *CREATE   Date 28May10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP023 - Addition of sequence numbers for release levels    */
 /*       BUG27791 - Identify 'from' release more easily              */
@@ -22,10 +24,10 @@
 /*********************************************************************/
 /**********  PGM        PARM(&OPFXSVAL)                                                */ /*CUP023*/
              PGM        PARM(&PFXSVAL &OPFXSVAL)                                          /*CUP023*/
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP023*/
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CUP023*/
              DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&FMDMLIB) TYPE(*CHAR) LEN(10)
@@ -40,25 +42,26 @@
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)                                 /*CUP023*/
- 
-             DCLF       FILE(UPSVALJ0) OPNID(A)
+
+/**********  DCLF       FILE(UPSVALJ0) OPNID(A) */                                      /*MD054605*/
+             DCLF       FILE(UPSVALJ0) OPNID(A) ALWNULL(*YES)                           /*MD054605*/
 /**********  DCLF       FILE(SCRELHPD) OPNID(B)                                        */ /*CUP023*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area /MIDASMSG in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /* Create and rename temporary source file for RUNSQLSTM. */                              /*CUP023*/
              DLTF       FILE(QTEMP/RUNSQLSTM)                                             /*CUP023*/
              MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
@@ -69,14 +72,14 @@
                           file for SMC000069')                                            /*CUP023*/
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)                                                  /*CUP023*/
- 
+
 /* Check that System Values have an entry. */
 VALIDATE:
              RCVF       OPNID(A)
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&A_GISVAL *EQ &PFXSVAL) THEN(DO)                             /*CUP023*/
                 IF         COND(&A_GIVAL *EQ ' ') THEN(DO)                                /*CUP023*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP023*/
@@ -85,7 +88,7 @@ VALIDATE:
                    CHGVAR     VAR(&SBSID) VALUE(&A_GIVAL)                                 /*CUP023*/
                 ENDDO                                                                     /*CUP023*/
              ENDDO                                                                        /*CUP023*/
- 
+
              IF         COND(&A_GISVAL *EQ &OPFXSVAL) THEN(DO)
                 IF         COND(&A_GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -94,9 +97,9 @@ VALIDATE:
                    CHGVAR     VAR(&OLDSBSID) VALUE(&A_GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -106,15 +109,15 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000069' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Set up library list. */                                                                /*CUP023*/
              CALL       PGM(UPC0014) PARM(&SBSID)                                         /*CUP023*/
- 
+
 /* Create temporary data area to store release data. */
              DLTDTAARA  DTAARA(QTEMP/SMBRGRELDA)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/SMBRGRELDA) TYPE(*CHAR) LEN(256)
- 
+
 /* Attempt to  get release level from System Values. */
              CALL       PGM(AOSVALR0) PARM(&AORTN +
                           'BrgOldSystemRlsLvl' &SVAL ' ' ' ' ' ' ' +
@@ -134,7 +137,7 @@ VALIDATE:
                    GOTO       CMDLBL(PROMPT)
                 ENDDO
              ENDDO
- 
+
 RELH:
 /* Check if SCRELHPD exists in 'from' system. */
              CHGVAR     VAR(&FMDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
@@ -142,10 +145,10 @@ RELH:
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 GOTO       CMDLBL(MIDAS)
              ENDDO
- 
+
              DLTF       FILE(QTEMP/RELH)                                                  /*CUP023*/
              MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
- 
+
 /* Create copy of the latest RELH file and copy 'from' version to it. */                  /*CUP023*/
              DLTF       FILE(QTEMP/RELHOLD)                                               /*CUP023*/
              MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
@@ -159,7 +162,7 @@ RELH:
              MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
              CPYF       FROMFILE(SCRELHPD) TOFILE(QTEMP/RELHNEW) +
                           MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CUP023*/
- 
+
 /* Build view to get sequential list of release levels. */                                /*CUP023*/
              CHGVAR     VAR(&STM_STR) VALUE('create view QTEMP/RELH +
                           as select b.AXSEQ1 concat b.AXSEQ2 concat +
@@ -178,13 +181,13 @@ RELH:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)                                                   /*CUP023*/
              MONMSG     MSGID(SQL9010)                                                    /*CUP023*/
- 
+
 /* If SCRELHPD is found then read file and find out latest record. */
 /**********  OVRDBF     FILE(GPRELHPD) TOFILE(&FMDTALIB/SCRELHPD)                      */ /*CUP023*/
              CALL       PGM(SM000006) PARM(&PRODUCT &REL &SUBRLS)
 /**********  DLTOVR     FILE(GPRELHPD)                                                 */ /*CUP023*/
              GOTO       CMDLBL(PROMPT)
- 
+
 MIDAS:
              CHGVAR     VAR(&FMDMLIB) VALUE(&OLDSBSID *TCAT 'DMLIB')
              CHGVAR     VAR(&PRODUCT) VALUE('Midas     ')
@@ -209,7 +212,7 @@ MIDAS:
                 CHGVAR     VAR(&SUBRLS) VALUE(%SST(&RELDA500 29 2))
              ENDDO
              GOTO       CMDLBL(PROMPT)
- 
+
 MIDASDBA:
              CHKOBJ     OBJ(&FMDMLIB/MIDASDBA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -223,7 +226,7 @@ MIDASDBA:
                 CHGVAR     VAR(&SUBRLS) VALUE(%SST(&RELDA500 23 2))
              ENDDO
              GOTO       CMDLBL(PROMPT)
- 
+
 MIDASDBAR2:
              CHKOBJ     OBJ(&FMDMLIB/MIDASDBAR2) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -242,7 +245,7 @@ MIDASDBAR2:
                    CHGVAR     VAR(&SUBRLS) VALUE(%SST(&RELDA200 21 2))
                 ENDDO
              ENDDO
- 
+
 PROMPT:
 /* Update temporary data area to supply prompt override program; if values */
 /*  are blank then enter default values.                                   */
@@ -254,14 +257,14 @@ PROMPT:
              CHGDTAARA  DTAARA(QTEMP/SMBRGRELDA (1 10)) VALUE(&PRODUCT)
              CHGDTAARA  DTAARA(QTEMP/SMBRGRELDA (11 10)) VALUE(&REL)
              CHGDTAARA  DTAARA(QTEMP/SMBRGRELDA (21 2)) VALUE(&SUBRLS)
- 
-             OVRDBF     FILE(GPSVALL0) TOFILE(SDSVALL0) OVRSCOPE(*JOB)
+
+/**********  OVRDBF     FILE(GPSVALL0) TOFILE(SDSVALL0) OVRSCOPE(*JOB) */               /*MD054605*/
 /**********  ?          RELEASELVL                                                     */ /*CUP023*/
              ?          RELEASELVL ??PRODUCT(&PRODUCT) ??REL(&REL) +
                           ??SUBRLS(&SUBRLS)                                               /*CUP023*/
              MONMSG     MSGID(CPF6801)
-             DLTOVR     FILE(GPSVALL0) LVL(*JOB)
- 
+/**********  DLTOVR     FILE(GPSVALL0) LVL(*JOB) */                                     /*MD054605*/
+
              GOTO       CMDLBL(ENDPGM)
 ERROR:
 /* Set up messages for Midas Information Screen. */
@@ -278,6 +281,6 @@ ERROR:
 /**********  CALL       PGM(SCC0010) PARM('SMC000067' 'ENTER' ' ')                     */ /*CUP023*/
              CALL       PGM(SCC0010) PARM('SMC000069' 'ENTER' ' ')                        /*CUP023*/
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

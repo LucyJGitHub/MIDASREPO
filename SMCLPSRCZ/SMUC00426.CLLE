@@ -9,11 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD053090           Date 26Mar19              */
-/*       Prev Amend No. CSD101  *CREATE    Date 07Dec18              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD053090           Date 26Mar19              */
+/*                      CSD101  *CREATE    Date 07Dec18              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*        MD054605 - Deliverable Data Split for SDSVALPD             */
 /*        MD053090 - Create a back up file for REAPWDPD              */
 /*        CSD101 - Password Encryption                               */
 /*                                                                   */
@@ -25,6 +27,7 @@
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')                 /*MD053090*/
              DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(8) VALUE('  DTALIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')                 /*MD054605*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2018')
@@ -42,6 +45,7 @@
 
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                             /*MD053090*/
              CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)                       /*MD053090*/
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)                       /*MD054605*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
@@ -57,9 +61,12 @@ CHECK1:
              DLTF       FILE(ZREAPWDPD)                                                 /*MD053090*/
                                                                                         /*MD053090*/
 CHECK2:                                                                                 /*MD053090*/
-             CPYF       FROMFILE(&DTALIB/SDSVALPD) +
+/**********  CPYF       FROMFILE(&DTALIB/SDSVALPD) +
                         TOFILE(&DPLIB/ZSDSVALPD) MBROPT(*REPLACE) +
-                        CRTFILE(*YES)
+                        CRTFILE(*YES) */                                                /*MD054605*/
+             CPYF       FROMFILE(&DVLIB/SDSVLJW0) +
+                        TOFILE(&DPLIB/ZSDSVALPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)                                                   /*MD054605*/
              MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
              SNDUSRMSG  MSG('SMUC00426 - Error occured in copying +
                           PF/SDSVALPD to PF/ZSDSVALPD. Process +

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042897           Date 29Nov16               *
       *                 MD039670           Date 26Jul16               *
       *                 MD039196           Date 21Jul16               *
@@ -21,6 +22,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054604 - Deliverable Data Split for SDSVALPD               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042897 - Customer/Non-Account Holders with FATCA Exceptions*
@@ -64,7 +66,7 @@
       ** +--------------------------------------+                     *
       ** FATCA Customers with Exceptions - List
      FSDFTCSL6  IF   E           K DISK
- 
+
       ** FATCA Non-Account Holders with Exceptions - List
      F***SDFTNHL6  IF   E             DISK                                                  MD039670
      FSDFTNHL6  IF   E           K DISK                                                     MD039670
@@ -74,87 +76,87 @@
                                                                                               CGL177
       ** CRS Non-Account Holders with Exceptions - List                                       CGL177
      FSDCRNHL2  IF   E           K DISK                                                       CGL177
- 
+
       ** Non - Account Holder Details
      FSDNAHOL0  IF   E           K DISK
- 
+
       ** Customer Details
      FSDCUSTL0  IF   E           K DISK
- 
+
       ** FATCA Exception Messages File
      FSDEXMAL0  IF   E           K DISK
- 
+
       ** FATCA Exceptions by Customers/Non-Account Holders Report
      FSD000554P1O    E             PRINTER INFSR(*PSSR)
      F                                     OFLIND(*IN05)
      F                                     USROPN
      F                                     INFDS(SPOOL)
- 
+
       ** FATCA Exceptions by Customers/Non-Account Holders Audit
      FSD000554AUO    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLU)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                                MD054605
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                MD039670
- 
+
      DPSDS            SDS
- 
+
       ** Procedure name
      D PSProcName        *PROC
- 
+
       ** Job name
      D PSJobName             244    253
- 
+
       ** User name
      D PSUser                254    263
- 
+
       ** Input DS
      D POutFlds        DS           100
      D  PExceptions            1     30A
- 
+
       *
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
      D SPOOL           DS
       ** SPOOL Information Data Structure for ZSFILE
- 
+
      D  SFILE                 83     92
      D  SFNUM                123    124B 0
      D SPOOLU          DS
       ** SPOOL Information Data Structure for ZSFILE - AU Report
- 
+
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
      D WCOMM           DS
      D  WCOM1                  1     64
      D  WCOM2                 65    128
      D  WCOM3                129    192
      D  WCOM4                193    256
- 
+
      D WDTMST          DS
      D  WWMn                   1      2
      D  WWDy                   3      4
      D  WWYr                   5      6
- 
+
      DExcpts           S              1A   DIM(30)
      DSelEx            S              1A   DIM(30)
      D*MsgLines         S             64A   DIM(4)                                            CGL177
@@ -163,7 +165,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D*WMatch***       S              1  0                                                    CGL177
      D WMatch          S              2  0                                                    CGL177
      D*WIdx*****       S              1  0                                                  MD025220
@@ -195,27 +197,27 @@
      D WcheckCH        S              5  0                                                    CGL177
      D WcheckCI        S              5  0                                                    CGL177
      D WxCUST          S              6A                                                      CGL177
- 
+
      ** ZSFILE Parameters
      D ZSERR           S              1
      D ZSNUM           S              6  0
      D KCUST           S              6
- 
+
      ** ZDATE2 Parameters
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7
- 
+
      ** PLIST Parameters
      D PMODE           S              1
- 
+
      D RTYPE           S              5
- 
+
       * ZDATE1  parms
      D ZDATEA          S              6  0
      D ZDATFMT         S              1
      D ErrorFlag       S              1
- 
+
      D PRTCD           S              7                                                     MD039670
      D POPTN           S              7                                                     MD039670
      D PKEY1           S             10                                                     MD039670
@@ -224,7 +226,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       *                                                               *
       * M A I N   P R O C E D U R E                                   *
@@ -269,7 +271,7 @@
       *                                                               *
       *****************************************************************
      C     SRREPT        BEGSR
- 
+
      C                   EVAL      *IN05 = *ON
       *
       ** Loop through all customers with exceptions
@@ -376,7 +378,7 @@
      C                   IF        *IN05 = *ON
      C                   EVAL      *IN05 = *OFF
      C                   ENDIF
- 
+
      C                   IF        Excpts(1) <> *Blanks
       *
       ** Write detail record to SD000554P1
@@ -395,7 +397,7 @@
      C**********         READ      SDFTCSD0                               14                  CGL177
      C                   READ      SDCUSTL0                               14                  CGL177
      C                   ENDDO
- 
+
      C                   EVAL      *IN05 = *ON
      C                   IF        *IN50 = *ON
      C                   IF        WCALCC = 0
@@ -564,7 +566,7 @@
      C                   EXSR      SRCLOS
      C                   CLOSE     SD000554P1
      C                   ENDIF
- 
+
      C                   IF        WCALC = 0
      C                   OPEN      SD000554P1
      C                   WRITE     SD000554R0
@@ -573,11 +575,11 @@
      C                   EXSR      SRCLOS
      C                   CLOSE     SD000554P1
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C     MEND          ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -590,7 +592,7 @@
       *                                                               *
       *****************************************************************
      C     SRDETAIL      BEGSR
- 
+
      C**********         EVAL      XRREFR = *BLANKS                                           CGL177
      C**********         EVAL      XRRPNM = *BLANKS                                           CGL177
      C**********         EVAL      XRRPTN = *BLANKS                                           CGL177
@@ -694,7 +696,7 @@
       *                                                               *
       *****************************************************************
      C     SRHDRD        BEGSR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -704,13 +706,13 @@
       *                                                               *
       *****************************************************************
      C     SRDATE1       BEGSR
- 
+
      C                   CALL      'ZDATE1'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM                    ZDATEA
      C                   PARM                    ZDATFMT
      C                   PARM                    ZDAYNO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -724,13 +726,13 @@
       *                                                               *
       *****************************************************************
      C     SRDATE2       BEGSR
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -776,19 +778,19 @@
      C                   PARM                    PLevel
      C                   PARM                    PEntity
      C                   PARM                    POutFlds
- 
+
      C                   MOVEA     PExceptions   SelEx
- 
+
       ** access installation control data
       ** access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** if access program fails call SR. *PSSR
- 
+
      C                   IF        PRetCode <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -797,29 +799,29 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** if fails goto END
- 
+
      C                   IF        *IN80 = *ON
      C                   GOTO      IEND
      C                   ENDIF
- 
+
       ** load printer file fields with date and title
- 
+
      C                   EVAL      RRTITL = BJURPT
      C                   EVAL      RRRUNA = BJMRDT
      C                   EVAL      XRTITL = BJURPT                                          MD025220
      C                   EVAL      XRRUNA = BJMRDT                                          MD025220
      C                   EVAL      DRUND  = BJRDNB
- 
+
       ** set number of records read to Zero
- 
+
      C                   Z-ADD     0             WCALC
      C                   Z-ADD     0             WCALCC
      C                   Z-ADD     0             WCALCN
- 
+
      C     IEND          ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -832,9 +834,9 @@
       *                                                               *
       *****************************************************************
      C     SRCLOS        BEGSR
- 
+
       ** call ZSFILE for audit report
- 
+
      C*                  Z-ADD     SFNUMU        ZSNUM
      C*                  CALL      'ZSFILE'
      C*                  PARM                    PSequence
@@ -842,38 +844,38 @@
      C*                  PARM                    SFILEU
      C*                  PARM                    ZSNUM
      C*                  PARM                    ZSERR
- 
+
       ** if error code = 'Y', then terminare the program
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** if database error has occured, output total report headings;
       ** print error message and exit program.
- 
+
      C                   IF        *IN80 = *ON
      C                   WRITE     CONTROL
      C                   WRITE     DBERROR
      C                   GOTO      TEND
      C                   ENDIF
- 
- 
+
+
       ** if a database error has occured, bypass further processing
- 
+
      C     *INU7         CABEQ     *ON           TEND
- 
+
       ** prints 'END OF REPORT' if *IN50 ON.
- 
+
      C                   IF        *IN50 = *ON
      C                   WRITE     SD000554R4
      C                   ENDIF
- 
+
      C     TEND          ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -885,19 +887,19 @@
       *                                                               *
       *****************************************************************
      C     SRFCP         BEGSR
- 
+
       ** set-up calculated number of records fields
- 
+
      C                   Z-ADD     WCALC         RRCALC
      C                   Z-ADD     WCALCC        RRCALCC
      C                   Z-ADD     WCALCN        RRCALCN
- 
+
       ** print standard totals report
- 
+
      C                   WRITE     CONTROL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -1,0 +1,267 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Install SDSVALPD and its dependents')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000050 - Install SDSVALPD and its dependent              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD054605 *CREATE   Date 17Oct19              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRFX &LIBUPG &LIBDTA)
+
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIBUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDTA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)
+
+             DCL        VAR(&SDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2019')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+
+/* Set up file for SQL statements. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UTC000001')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+
+/* Create data area /MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+             CHGVAR     VAR(&TALIB) VALUE(&PRFX *TCAT 'DTALIB')
+             CHGVAR     VAR(&MLIB) VALUE(&PRFX *TCAT 'DMLIB')
+             CHGVAR     VAR(&PLIB) VALUE(&PRFX *TCAT 'DPLIB')
+             CHGVAR     VAR(&VLIB) VALUE(&PRFX *TCAT 'DVLIB')
+             CHGVAR     VAR(&OWNER) VALUE(&PRFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&PRFX *TCAT 'DATABASE')
+
+/* Delete files in case or re-run */
+             DLTF       FILE(UPSVALJ0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVLJI0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVRJI0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVLJW1)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVLJW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVRJW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVLUW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVRUW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVLXTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVRXTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVLBTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVRBTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVLCTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(SDSVRCTD)
+             MONMSG     MSGID(CPF2105)
+
+/* Create SDSVLCTD - core */
+             CALL       PGM(UPC000034) PARM('SDSVLCTD' 'SDSQLSRCDT' +
+                          &LIBUPG &TALIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVRCTD -core */
+             CALL       PGM(UPC000034) PARM('SDSVRCTD' 'SDSQLSRCDT' +
+                          &LIBUPG &TALIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVLBTD - bespoke */
+             CALL       PGM(UPC000034) PARM('SDSVLBTD' 'SDSQLSRCDM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVRBTD - bespoke */
+             CALL       PGM(UPC000034) PARM('SDSVRBTD' 'SDSQLSRCDM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVLXTD - extension */
+             CALL       PGM(UPC000034) PARM('SDSVLXTD' 'SDSQLSRCDM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVRXTD - extension */
+             CALL       PGM(UPC000034) PARM('SDSVRXTD' 'SDSQLSRCDM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVLUW0 - union */
+             CALL       PGM(UPC000034) PARM('SDSVLUW0' 'SDSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVRUW0 - union */
+             CALL       PGM(UPC000034) PARM('SDSVRUW0' 'SDSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVLJW0 - joint */
+             CALL       PGM(UPC000034) PARM('SDSVLJW0' 'SDSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVLJW1 - joint */
+             CALL       PGM(UPC000034) PARM('SDSVLJW1' 'SDSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVRJW0 - joint */
+             CALL       PGM(UPC000034) PARM('SDSVRJW0' 'SDSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVLJI0 - index */
+             CALL       PGM(UPC000034) PARM('SDSVLJI0' 'SDSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create SDSVRJI0 - index */
+             CALL       PGM(UPC000034) PARM('SDSVRJI0' 'SDSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create UPGSVALJ0 - view */
+             CALL       PGM(UPC000034) PARM('UPSVALJ0' 'UPSQLSRCDV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Copy delivered SDSVLCTD */
+             CPYF       FROMFILE(&LIBDTA/SDSVLCTD) +
+                          TOFILE(&TALIB/SDSVLCTD) MBROPT(*ADD)
+
+             CALL       PGM(UP000701) PARM(&RETURN 'SDSVLCTD' +
+                          &TALIB)
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+             CALL       PGM(UP000703) PARM(&RETURN 'SDSVLCTD' +
+                          &TALIB 'SDSVALPD')
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+
+/* Delete from the Bespoke, SysVal removed by CSD101 */
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVLBTD where ' +
+                        *BCAT ' GISVAL = ''PEASystemPassword''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVLBTD where ' +
+                        *BCAT ' GISVAL = ''FTPUserPassword''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVLBTD where ' +
+                        *BCAT ' GISVAL = ''KYCPassword''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)
+             DLTSPLF    FILE(RUNSQLSTM) SPLNBR(*LAST)
+
+
+/* Copy delivered SDSVRCTD */
+             CPYF       FROMFILE(&LIBDTA/SDSVRCTD) +
+                          TOFILE(&TALIB/SDSVRCTD) MBROPT(*ADD)
+
+             CALL       PGM(UP000701) PARM(&RETURN 'SDSVRCTD' +
+                          &TALIB)
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+             CALL       PGM(UP000703) PARM(&RETURN 'SDSVRCTD' +
+                          &TALIB 'SDSVRFPD')
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+
+/* Delete from the Bespoke, SysVal removed by CSD101 */
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVRBTD where ' +
+                        *BCAT ' GJSVAL = ''PEASystemPassword''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVRBTD where ' +
+                        *BCAT ' GJSVAL = ''PEAFTPUserID''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVRBTD where ' +
+                        *BCAT ' GJSVAL = ''PEASystemUsername''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVRBTD where ' +
+                        *BCAT ' GJSVAL = ''FTPUserPassword''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVRBTD where ' +
+                        *BCAT ' GJSVAL = ''FTPUserLogin''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVRBTD where ' +
+                        *BCAT ' GJSVAL = ''KYCPassword''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from SDSVRBTD where ' +
+                        *BCAT ' GJSVAL = ''KYCDBUser''' *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)
+             DLTSPLF    FILE(RUNSQLSTM) SPLNBR(*LAST)
+
+/* Generate *CONFLICT report */
+             CALL       PGM(UPC000702) PARM('SDSVLCTD' &LIBDTA)
+             CALL       PGM(UPC000702) PARM('SDSVRCTD' &LIBDTA)
+
+/* Start journalling */
+             STRJRNPF   FILE(SDSVLCTD) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(SDSVLBTD) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(SDSVLXTD) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(SDSVRCTD) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(SDSVRBTD) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(SDSVRXTD) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000050') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000029' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+
+ENDPGM:
+             ENDPGM

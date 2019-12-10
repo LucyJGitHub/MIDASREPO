@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. BUG27785           Date 13May10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      BUG27785           Date 13May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG27785 - Override to remove renames.                      */
 /*       CUP024 - Use systems value maintenance.                     */
@@ -26,35 +28,36 @@
 /*********************************************************************/
 /**********  PGM                                                                     */ /*BUG27785*/
              PGM        PARM(&MODE)                                                     /*BUG27785*/
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                                   /*BUG27785*/
- 
+
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2003')
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
- 
+
 /* Create data area /MIDASMSG in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /* Override system value logical to Bridge logical. */
-             OVRDBF     FILE(SDSVALJ0) TOFILE(*LIBL/UPSVALJ0) +
-                          OVRSCOPE(*JOB)
+/**********  OVRDBF     FILE(SDSVALJ0) TOFILE(*LIBL/UPSVALJ0) +
+                          OVRSCOPE(*JOB) */                                             /*MD054605*/
              IF         COND(&MODE *EQ '*IMP') THEN(DO)                                 /*BUG27785*/
                 OVRDBF     FILE(SDBANKL1) TOFILE(*LIBL/SMBANKL1) +
                              OVRSCOPE(*JOB)                                             /*BUG27785*/
              ENDDO                                                                      /*BUG27785*/
-             CALL       PGM(SD009500) PARM(' ' 'M')
-             DLTOVR     FILE(SDSVALJ0) LVL(*JOB)
+/**********  CALL       PGM(SD009500) PARM(' ' 'M') */                                  /*MD054605*/
+             CALL       PGM(SD009500) PARM(' ' 'B')                                     /*MD054605*/
+/**********  DLTOVR     FILE(SDSVALJ0) LVL(*JOB) */                                     /*MD054605*/
              IF         COND(&MODE *EQ '*IMP') THEN(DO)                                 /*BUG27785*/
                 DLTOVR     FILE(SDBANKL1) LVL(*JOB)                                     /*BUG27785*/
              ENDDO                                                                      /*BUG27785*/
- 
+
              GOTO       CMDLBL(ENDPGM)
 ERROR:
 /* Set up messages for Midas Information Screen  */
@@ -68,6 +71,6 @@ ERROR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('UPC000000' 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

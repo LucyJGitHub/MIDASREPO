@@ -6,12 +6,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP205             Date 23Mar10               *
+      *                 CAP205             Date 23Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP205 - Teller Related APIs - Account Balance Check         *
       *                                                               *
@@ -24,6 +26,7 @@
      C                   PARM                    I#TRAP            1
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
+     C                   PARM                    I#FILE           10                        MD054605
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GPSDSVALPD'
      C                   EXSR      *PSSR

@@ -1,0 +1,5498 @@
+     H
+      *****************************************************************
+/**** *  RPGBASE                                                      *                     MD054605
+/*STD *  RPGSQLBND                                                    *                     MD054605
+/*EXI *  TEXT('Midas SD Installation control details report')         *
+      *****************************************************************
+      *                                                               *
+      *     Midas - Standing Data Module                              *
+      *                                                               *
+      ******SD0560 - SYNON SD I.C.D. Print.                           *
+      *     SD9000P - SYNON SD I.C.D. Print.                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CTI006             Date 31Mar14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 207288             Date 11Jul12               *
+      *                 AR787620           Date 10Jun11               *
+      *                 CER051             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG24574           Date 07Jul09               *
+      *                 BUG23674           Date 03Apr09               *
+      *                 BUG23100           Date 26FEB09               *
+      *                 CER048             Date 18Nov08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12434           Date 15Nov06               *
+      *                 BUG12479           Date 08Oct06               *
+      *                 CDL048             Date 26Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL013             Date 09Jun06               *
+      *                 BUG9570            Date 15Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 233862             Date 07Jul05               *
+      *                 232543             Date 31Mar05               *
+      *                 CGL032             Date 05Jul04               *
+      *                 233545             Date 18May05               *
+      *                 CAS009             Date 04May04               *
+      *                 CSW037A            Date 02May05               *
+      *                 228948             Date 27Sep04               *
+      *                 227373             Date 26May04               *
+      *                 CAS007             Date 26Apr04               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3130            Date 23Jun04               *
+      *                 CTI004             Date 12Apr04               *
+      *                 CFX001             Date 20Oct03               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 207670             Date 22Jul02               *
+      *                 CSD013             Date 09Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CIR008             Date 13Mar02               *
+      *                 CLE023             Date 19Nov01               *
+      *                 CSD011             Date 04Mar02               *
+      *                 CAS002             Date 14Jan02               *
+      *                 CAS001             Date 23Nov01               *
+      *                 CFT017             Date 12Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CTI003             Date 12Mar01               *
+      *                 CSD006             Date 05Oct00               *
+      *                 185237             Date 24Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 167480             Date 17Jan00               *
+      *                 CAP032             Date 26Apr99               *
+      *                 CTI099             Date 06Jul99               *
+      *                 CGL010             Date 08Nov99               *
+      *                 CSE006             DATE 21May99               *
+      *                 CPB001             Date 11Jun99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL009             Date 18May99               *
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158624             Date 07Apr99               *
+      *                 CSC010             Date 13May99               *
+      *                 CAP006             Date 11Feb99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 137886             DATE 14Jul98               *
+      *                 135060             Date 12OCT98               *
+      *                 CSC007             Date22May98                *
+      *                 CEU017             Date 03Mar98               *
+      *                 CSE007             Date 01Dec97               *
+      *                 110533             Date 30OCT97               *
+      *                 CEU008             Date 24Nov97               *
+      *                 CLE005             Date 22May97               *
+      *                 123857             Date 17Oct97               *
+      *                 CLE004             Date 28Feb97               *
+      *                 CTI001             DATE 14AUG97               *
+      *                 CGL004             Date 20Nov97               *
+      *                 CFF003             Date 09Apr97               *
+      *                 CAC003             Date 25Feb97               *
+      *                 CDL004             Date 17Sep97               *
+      *                 CDL002             Date 17Sep97               *
+      *                 CSW009             Date 10Mar97               *
+      *                 CRT002             DATE 01DEC95               *
+      *                 096179             Date 24NOV95               *
+      *                 CSW005             Date 01Aug96               *
+      *                 CAC002             Date 17Sep96               *
+      *                 CPM005             Date 22Jul96               *
+      *                 S01408             Date 07Aug96               *
+      *                 CAC001             Date 01Feb96               *
+      *                 097353             Date 13Jun96               *
+      *                 S01408             DATE 04APR96               *
+      *                 S01408             DATE 29FEB96               *
+      *                 100025             DATE 26FEB96               *
+      *                 099942             DATE 26FEB96               *
+      *                 S01408             DATE 08FEB96               *
+      *                 096624             DATE 30NOV95               *
+      *                 CCM002             DATE 04OCT95               *
+      *                 093024             DATE 27SEP95               *
+      *                 S01408             DATE 07SEP95               *
+      *                 S01408             DATE 04AUG95               *
+      *                 CRT001             DATE 31MAR95               *
+      *                 S01408             DATE 06MAR95               *
+      *                 CRM001             DATE 21FEB95               *
+      *                 S01408             DATE 16JAN95               *
+      *                 CAAA01             DATE 10JAN95               *
+      *                 078155             DATE 21DEC94               *
+      *                 S01530             DATE 21DEC94               *
+      *                 080072             DATE 16DEC94               *
+      *                 S01517             DATE 25NOV94               *
+      *                 070946             DATE 09SEP94               *
+      *                 072766             DATE 04JUL94               *
+      *                 S01502             DATE 18AUG94               *
+      *                 S01491             DATE 14JUN94               *
+      *                 S01493             DATE 23MAY94               *
+      *                 069672             DATE 19APR94               *
+      *                 S01465             DATE 14APR94               *
+      *                 S01464             DATE 04APR94               *
+      *                 S01470             DATE 09MAR94               *
+      *                 064335             DATE 09MAR94               *
+      *                 S01413             DATE 13APR93               *
+      *                 066562             DATE 10FEB94               *
+      *                 062031             DATE 09FEB94               *
+      *                 066762             DATE 08FEB94               *
+      *                 S01461             DATE 08FEB94               *
+      *                 S01455             DATE 11NOV93               *
+      *                 055176             DATE 09NOV93               *
+      *                 039137             DATE 08NOV93               *
+      *                 049956             DATE 07FEB94               *
+      *                 S01460             DATE 23NOV93               *
+      *                 S01431             DATE 22OCT93               *
+      *                 S01448             DATE 14OCT93               *
+      *                 S01446             DATE 14OCT93               *
+      *                 S01434             DATE 13OCT93               *
+      *                 S01443             DATE 01OCT93               *
+      *                 S01440             DATE 01OCT93               *
+      *                 S01442             DATE 01OCT93               *
+      *                 S01423             DATE 30JUN93               *
+      *                 050717             DATE 28JUN93               *
+      *                 049980             DATE 01FEB93               *
+      *                 E42412             DATE 19JAN93               *
+      *                 S01390             DATE 10NOV92               *
+      *                 S01403             DATE 10NOV92               *
+      *                 S01393             DATE  5NOV92               *
+      *                 S10736             DATE  4NOV92               *
+      *                 S01379             DATE 17SEP92               *
+      *                 S01339             DATE 31JUL92               *
+      *                 S01382             DATE 29JUL92               *
+      *                 S01340             DATE 17MAR91               *
+      *                 E29133             DATE 03OCT91               *
+      *                 S01310             DATE 01OCT91               *
+      *                 E28496             DATE 23SEP91               *
+      *                 S01319             DATE 11SEP91               *
+      *                 S01310             DATE 03JUN91               *
+      *                 LN1284             DATE 30MAY91               *
+      *                 LN1104             DATE 14FEB91               *
+      *                 LN1076             DATE 12DEC90               *
+      *                 LN0936             DATE 05NOV90               *
+      *                 S01269             DATE 05NOV90               *
+      *                 S01267             DATE 18SEP90               *
+      *                 E22634             DATE 10OCT90               *
+      *                 S01314             DATE 09MAR91               *
+      *                 S01304             DATE 13SEP90               *
+      *                 S01184             DATE 13MAR90               *
+      *                 E22895             DATE 21JUL90               *
+      *                 E22392             DATE 13JUN90               *
+      *                 LN0500             DATE 10JLY90               *
+      *                 S01117             DATE 02JUL90               *
+      *                 S01117             DATE 20JUN90               *
+      *                 S01251             DATE 03FEB90               *
+      *                 E20939             DATE 31JAN90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
+      *  CSD101 - Password Encryption (Recompile)                     *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  207288 - Recompile over changes in SDTOFPD.                  *
+      *           Applied for AR999664 (Child: AR999668)              *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,SDH00075                                 *
+      *             WNCPYSRC,SDH00076                                 *
+      *  CER051 - Portuguese Upgrade Split Spot Revaluation (Profit   *
+      *           and Loss) (Recompile)                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG24574 - Withholding Tax - R4 vs M+                        *
+      *  BUG23674 - Specific file not specified in DBErr = 57         *
+      *  BUG23100 - Specific file not specified in DBErr = 58         *
+      *  CER048 - German Features - Taxes                             *
+      *  BUG12434 - Recompiled due to changes in printer file.        *
+      *  BUG12479 - Missing SDICDRPD                                  *
+      *  CDL048 - IAS - Forward Revaluation Processing                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *  BUG9570- Include other missing hedge ICD fields in th report.*
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  233862 - EU Tax Details not included in the report           *
+      *  232543 - Fix to CGL031                                       *
+      *  CGL032 - Automatic Exchange of Information                   *
+      *  233545 - Cut-off Date                                        *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  228948 - Add 'Exclude Accrued Interest in Unrealized Profit  *
+      *           or Loss'. (Recompile)                               *
+      *  227373 - Show number of months to backup NPV in SD ICD       *
+      *           Details Report                                      *
+      *  CAS007 - Hedge Accounting Control                            *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3130 - Add SWIFT Address Code and Alternate Prime Address *
+      *            for MidasPlus-TI Integration (Recompilation)       *
+      *  CTI004 - MidasPlus-TI Integration Enchancements              *
+      *           FX Deals Integration (Recompilation)                *
+      *  CFX001 - FX Margin Trading                                   *
+      *  CGL014 - Collaterals Processing                              *
+      *  CLE025 - Credit Lines                                        *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value                                        *
+      *  207670 - CFT017 code processed regardless of switch.  Fix is *
+      *           to make entirely switchable.                        *
+      *  CSD013 - Generic Midas ICD Project.                          *
+      *           Addition of System Values listing.                  *
+      *  CIR008 - FRA/IRS Deals Authorisation                         *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  CSD011 - Performance Incentive Fees.                         *
+      *  CAS002 - Hedge Strategy/Linkage                              *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  CFT017 - Multilateral Inter-bank Exchange Fee.               *
+      *  CSE022 - Depository Definition Enhancement                   *
+      *  CTI003 - Patch D. New fields on ICD. Recompile only.         *
+      *  CSD006 - Market Data Feeds                                   *
+      *  185237 - Recompiled due to changes done in SD9000PM.         *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+      *  167480 - Changes to printer file SD9000PM (Recompiled)       *
+      *           Added new field 'TICUSN' to flag whether the Midas  *
+      *           Customer Number or Midas Customer Shortname is to   *
+      *           used as the TI Customer Identifier.                 *
+      *  CAP032 - Conversion of Journal Batch Entry inputs into       *
+      *           modular structure to use as APIs.                   *
+      *  CTI099 - Utility to open accounts for Midas/TI Interface     *
+      *  CGL010 - Future Value Dated Journal Entries for              *
+      *           Non-Retail Accounts                                 *
+      *  CSE006 - Repurchase Agreement (REPOS) enhancement. If        *
+      *           switchable feature (CSE006) is active then new      *
+      *           field (BDBYSL) will be displayed.                   *
+      *  CPB001 - Private Banking Module:                             *
+      *           - New ICD file - Midas-TOF Interface ICD.           *
+      *  CGL009 - Midas-Fontis Inter-Account Transfers (IAT) and      *
+      *           Third Party Payments (TPP) Interface                *
+      *  CDL006 - Dealing Fiduciary                                   *
+      *  158624 - File SD9000PM changed (recompile)                   *
+      *  CSC010 - Disable/Enable Switchable features processing added *
+      *  CAP006 - Application Program Interfaces (APIs)               *
+      *  CTI002 - File SDEXPMPD changed (recompile)                   *
+      *  137886 - Corporate Actions: Add the possibility to allocate  *
+      *           (or not) the balancing difference directly to the   *
+      *           Dummy Customer.                                     *
+      *           (Recompiled Only)                                   *
+     F*  135060 - LDA cannot be allocated by called program . Change  *
+     F*           declaration of LDA from UDS to DS.                  *
+      *  CSC007 - Switchable Features Enhancements phase 2.           *
+      *           Amendments to Switchable Features suite of          *
+      *           programs to allow switching on via passwords.       *
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *  CSE007 - Corporate Action Feature                            *
+      *  110533 - Merva Interface : Semaphore path format depends on  *
+      *           OS/2 or AIX flag on ICD (Recompilation only)
+      *  CEU008 - EMU - Addition of fields Euro Currency Code and     *
+      *           Consolidated Euro Currency code to GL ICD details   *
+      *  CLE005 - Customer Lending Enhancements - Tranche 3           *
+      *  123857 - Add field for Authorisation to Review All Screens   *
+      *           for Lending ICD - Recompile only.                   *
+      *  CLE004 - Customer Lending Enhancements - Syndication         *
+      *  CTI001 - Midas/Trade Innovation Interface Phase 1            *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *  CFF003 - ENHANCED OTC PROCESSING - PHASE 2                   *
+      *           upgrade from BLI LBL001                             *
+      *  CAC003 - Profit Centre Accounting Development Phease 3.      *
+      *  CDL004 - Multibranch FX Netting                              *
+      *  CDL002 - FX Netting                                          *
+      *  CSW009 - Midas-SWIFT Alliance Automated File Transfer        *
+      *  CRT002 - Retail Branch Access.                               *
+      *  096179 - Add Default Transaction Types for Interbranch and   *
+      *           Main Branch Generated Entries.  Recompile.          *
+      *  CSW005 - MG34n and MG36n message generation                  *
+      *  CAC002 - Profit Centre Accounting Development Phase 2:       *
+      *           If Analytical Accounting is installed, add the      *
+      *           Teller Profit Centre to the printer file.           *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *           Recompiled Only.                                    *
+      *  S01408 - Addition of core hook SD9000PCP9                    *
+      *  CAC001 - Profit Centre Accounting Development                *
+      *  097353 - Recompiled over amended SD9000PM                    *
+      *  S01408 - Addition of core hook SD9000PCP7                    *
+      *           Addition of core hook SD9000PCP8                    *
+      *  S01408 - Addition of core hook SD9000PCP6                    *
+      *  100025 - Addition of 'COB Control Profile' to SDCOBPPD,      *
+      *           recompiled over changed SD9000PM.                   *
+      *  099942 - Addition of 'Apply Modulus 10 Check' to             *
+      *           SDBANKPD, recompiled over changed SD9000PM.         *
+      *  S01408 - Addition core hook SD9000PFP1.                      *
+      *           Addition core hook SD9000PIP2.                      *
+      *           Addition core hook SD9000PCP5.                      *
+      *  096624 - Warning error when compiling program that too few   *
+      *           source elements exist for arrays. Caused by         *
+      *           previous fix 093024 which also uses array indices   *
+      *           which don't exist.                                  *
+      *  CCM002 - Midas/Citydealer Interface (Phases V and VI).       *
+      *           If feature is on, print the Transmission Delay      *
+      *           Period.                                             *
+      *  093024 - Include Portfolio Management & Lending              *
+      *  S01408 - Addition core hook SD9000PCP2.                      *
+      *           Addition core hook SD9000PCP3.                      *
+      *           Addition core hook SD9000PCP4.                      *
+      *           Addition core hook SD9000PEP2.                      *
+      *  S01408 - Addition core hook SD9000PEP1.                      *
+      *           Addition core hook SD9000PIP1.                      *
+      *           Addition core hook SD9000PCP1.                      *
+      *  CRT001 - Retail Teller System Detail.                        *
+      *  S01408 - Addition core hook SD9000PRET.                      *
+      *           Addition core hook SD9000PIPG.                      *
+      *  CRM001 - Changed 'Strategic Risk Management' to 'Interest    *
+      *           Risk Management'.                                   *
+      *           Removed the following fields:                       *
+      *           Run Day in Month, Previous Run Date and Processing  *
+      *           Basis for FRNs.                                     *
+      *           Addition of the new field 'Nominal Days to          *
+      *           Maturity for Call Deals'.                           *
+      *  S01408 - Addition core hook SD9000PFPG.                      *
+      *           Addition core hook SD9000PCPG.                      *
+      *           Addition core hook SD9000PTRD.                      *
+      *  CAAA01 - Addition of 'Graphical User Interface Active' to    *
+      *           SDCOBPPD, recompiled over changed SD9000PM.         *
+      *           This field will appear on the report only if the    *
+      *           switchable feature CAAA01 is present.               *
+      *  078155 - Addition of 'User Download Option' to Optical       *
+      *           Disk file, recompiled over changed SD9000PM.        *
+      *  S01530 - Addition of 'User Data Option' to RCF data file     *
+      *           Recompiled over changed SD9000PM.                   *
+      *  080072 - Early redemptions detail not printed on report.     *
+      *  S01517 - BLI Allow Component Bypass in COB                   *
+      *           Recompiled over changed SD9000PM.                   *
+      *  070946 - Funds Transfer details missing.                     *
+      *           Report Switchable Features installed                *
+      *  072766 - Retail ICD Extension File will be set up only       *
+      *           if Statement Charges or Fixed Account Charges       *
+      *           switched on.                                        *
+      *  S01502 - Addition of new fields to SDSTRDPD.                 *
+      *           - 'Telekurs Interface' field.                       *
+      *  S01491 - Addition of new fields to SDCOBPPD                  *
+      *           - 'Initiate ECS' field.                             *
+      *           - 'Telephone Number' field.                         *
+      *           - Several 'Pager Number' fields.                    *
+      *           These fields will appear on the report only if      *
+      *           S01491 is present.                                  *
+      *  S01493 - Midas Export Data Module development.               *
+      *  069672 - Recompiled over changed SD9000PM.                   *
+      *  S01465 - Recompiled over changed SD9000PM.                   *
+      *  S01464 - Safe Custody Fees.                                  *
+      *  S01470 - Recompiled over changed SD9000PM.                   *
+      *  064335 - Recompiled over changed SD9000PM.                   *
+      *  S01413 - Retail 3 Incorporation                              *
+      *  066562 - Recompiled over changed SD9000PM.                   *
+      *  062031 - Recompiled over changed SD9000PM.                   *
+      *  066762 - Move the Customer Service Fees EXSR to before       *
+      *           the audit processing.                               *
+      *         - Correct the DBERR numbers and arrays (correction    *
+      *           to SC 049956).                                      *
+      *  S01461 - Add Export Data Data Import Application to report.  *
+      *  S01455 - BLI Development, Futures & Options:                 *
+      *           Addition of 'Processing Type on Account Key' and    *
+      *           'Instrument Type on Account Key' to SDFODAPD.       *
+      *  055176 - Recompiled over changed SD9000PM.                   *
+      *  039137 - Recompiled over changed SD9000PM.                   *
+      *  049956 - PROGRAM REPORTED WRONG DBERR BECAUSE WHEN           *
+      *           SYNDICATED LOANS WAS REMOVED FROM THE SYSTEM        *
+      *           THE ARRAYS AT THE END OF THE PROGRAM WERE           *
+      *           NOT UPDATED CORRECTLY.                              *
+      *  S01460 - The text for existing field 'Hong Kong Tax Rate'    *
+      *           should be 'Withholding Tax Rate' if S01460 is       *
+      *           present.                                            *
+      *  S01431 - Merva/2 Direct Link Details                         *
+      *           - Add Merva/2 Dirct Link Details format             *
+      *  S01448 - Bulk Input Enhancements:                            *
+      *           - Add 'Default Agency Trade' field.                 *
+      *           - Add 'Review Bulk Trades Default' field.           *
+      *           - Add 'Allow Trades Between Portfolio               *
+      *             Customers' field.                                 *
+      *           - Added the new fields to the TABTB36 call.         *
+      *  S01446 - Customer Commissions Development:                   *
+      *           - Add 'Charges Currency' field.                     *
+      *           - Add 'Adjust Commissions Same Day Trade' field.    *
+      *           - Added the new fields to the TABTB36 call.         *
+      *  S01434 - Enhanced Rollover Processing:                       *
+      *           - Added new field "Number of Working Days Before    *
+      *             Maturity Date" to SDDEALPD.                       *
+      *  S01443 - Add 'Loan/Deposits Interest Rate Tolerance' field   *
+      *           to SDDEALPD.                                        *
+      *  S01440 - Add 'Accruals on Interest Outright' field to        *
+      *           SDDEALPD.                                           *
+      *  S01442 - Add 'Ccy for Rate Fix Holiday' field to SDFAISPD.   *
+      *  S01423 - New Customer Service Fees ICD file added as input   *
+      *           only.Also changes made to the prtf SD9000PM.        *
+      *           Code in program changed to allow for the switchable *
+      *           Feature option which,if opted for,will print        *
+      *           record format CSFDRCD in SD9000PM                   *
+      *  050717 - Recompiled due to fix 050717 on prtf SD9000PM.      *
+      *  049980 - Recompiled due to fix 049980 on prtf SD9000PM.      *
+      *  E42412 - Recompiled due to fix E42412 on prtf SD9000PM       *
+      *  S01390 - PROGRAM RECOMPILED(ADDITION OF AUSTRALIAN           *
+      *           DOLLAR CURRENCY CODE). TRADING                      *
+      *  S01403 - PROGRAM RECOMPILED(ADDITION OF BOOK CODE OPTIONAL   *
+      *           & DEFAULT BOOK CODE).  DEALING                      *
+      *  S01393 - ADDITION OF STRATEGIC RISK MANAGEMENT MODULE.       *
+      *  S10736 - ADDITION OF MANAGEMENT ACCOUNTS MODULE.             *
+      *  S01379 - HISTORY AND AUDIT FACILITY DEVELOPMENT.             *
+      *  S01339 - REMOVE CODE FOR SYNDICATED LOANS MODULE.            *
+      *  S01382 - OPTICAL DISK DEVELOPMENT                            *
+      *  S01340 - RECOMPILED FOR MIS R10 - BATCH RETENTION            *
+      *  E29133 - INCLUDE CHANGES TO SDBANKPD IN NO OF CHANGES        *
+      *  E28496 - Remove Filler from SDFAISPD - recompile only        *
+      *  S01319 - Include new fields on SDDEALPD and file SDTRMAPD    *
+      *  S01310 - SWIFT RATIONALISATION                               *
+      *  LN1284 - INCORPORATE DT0021:- REMOVE 'HEDGED EVENTS ON       *
+      *           CASHFLOW' FROM FRA/IRS ICD. RECOMPILE ONLY.         *
+      *  LN1104 - RECOMPILE DUE TO CHANGE IN SDCUSTPD                 *
+      *  LN1076 - PREVENT ERROR IF NO CUSTOMER FOR THE GENERAL        *
+      *           LEDGER ICD, CORRECT INFORMATION DISPLAYED IN        *
+      *           THE LDA FOR DB ERRORS.                              *
+      *  LN0936 - ADD CALL ZSFILE TO LOG REPORT REQUEST               *
+      *  S01269 - TRADE AUTHORISATION ADDED TO SE (LN0952)            *
+      *  S01267 - RECOMPILED FOR MIS RELEASE 2.2 CHANGES.             *
+      *  E22634 - RECOMPILED FOR CHANGE TO PF/SDEXPMPD                *
+      *  S01314 - CHANGES MADE TO CONFIRMATION MATCHING DBERR         *
+      *           PROCESSING DURING INCORPORATION OF R1/2 PTFS        *
+      *           IN ORDER TO BRING IT IN LINE WITH R10 MODS          *
+      *  S01304 - CHANGES MADE DURING CONFIRMATION MATCHING           *
+      *           INCORPORATION.                                      *
+      *  S01184 - CONFIRMATION MATCHING INCORPORATION. ASTERISKED     *
+      *           OUT CODE NOW INCLUDED.                              *
+      *  E22895 - MIDAS TELEX 'DROP MESSAGE' INDICATOR USES SWIFT     *
+      *           FIELD RATHER THAN TELEX FIELD                       *
+      *  E22392 - LENGTH OF PARAMETERS PASSED TO AOCUSTR0 FOR         *
+      *           SE I.C.D MAINTENENCE ARE INCORRECT                  *
+      *           (NO CHANGES MADE TO R10 PROGRAM FOR THIS FIX        *
+      *            AS REQUIRED CODE ALREADY PRESENT UNDER S01117)     *
+      *  LN0500 - ADDITION OF DUMMY PARAMETER                         *
+      *  S01117 - DATA BASE ERROR PROCESSING FOR ACCESS PROGRAMS.     *
+      *           PARAMETER LENGTHS ON ACCESS PROGRAMS INCORRECT.     *
+      *  S01117 - RELEASE 10 ENHANCEMENTS.                            *
+      *  S01251 - SYNON FIELD/PROGRAM NAME CHANGES                    *
+      *  E20939 - PROGRAM RECOMPILED DUE TO PRINTER FILE CHANGES      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *     THE LINES CORRESPONDING TO THE CONFIRMATION MATCHING      *
+      *     PRODUCT HAVE BEEN INCLUDED BUT ARE ASTERISKED OUT. THEY   *
+      *     SHOULD BE RE-INSTATED WHEN THE PRODUCT IS RELEASED        *
+      *                                                               *
+      *****************************************************************   S01184
+      *                                                               *   S01184
+      *     THE LINES CORRESPONDING TO THE CONFIRMATION MATCHING      *   S01184
+      *     PRODUCT HAVE BEEN INCLUDED.                               *   S01184
+      *                                                               *   S01184
+      *****************************************************************
+     FSDMMODPD  IF   E             DISK
+     F*                                                               *
+     FSDBANKPD  IF   E             DISK
+     FSDGELRPD  IF   E             DISK
+     F/COPY WNCPYSRC,SD9000PF03
+     FSDTRADPD  IF   E             DISK
+     F*                                                                   S01408
+      *                                                                                       CDL013
+      ** Tiered Withholding Tax Extension File                                                CDL013
+     FSDSTAXPA  IF   E           K DISK
+      *                                                                                       CDL013
+     F/COPY WNCPYSRC,SD9000PFPG                                           S01408
+     F*                                                                   S01408
+     FSDRCFPD   IF   E             DISK                                         S01117
+     FSDCOBPPD  IF   E             DISK                                         S01117
+     FSDDEALPD  IF   E             DISK
+     FSDTRMAPD  IF   E             DISK                                         S01319
+     FSDFAISPD  IF   E             DISK
+     F/COPY WNCPYSRC,SD9000PF02
+     FSDSTRDPD  IF   E             DISK
+     FSDFODAPD  IF   E             DISK
+     FSDCLNDPD  IF   E             DISK
+     F**SDSYLNPDIF**E                    DISK                             S01339
+     FSDRETLPD  IF   E             DISK
+     F**SDMSDLPDIF  E                    DISK                             S01310
+     F*SDMTLXPDIF  E                    DISK                        S01117S01310
+     F******************************************************************
+     F* THIS FILE IS TO BE ADDED WHEN CONFIRMATION MATCHING IS AVAILABLE
+     F*SDCONFPDIF**E********************DISK****************************
+     F******************************************************************
+     F* THIS FILE IS ADDED FOR CONFIRMATION MATCHING                      S01184
+     FSDCONFPD  IF   E             DISK                                         S01184
+     FSDFTFRPD  IF   E             DISK
+     FSDEXPMPD  IF   E             DISK
+     FSDMCFCPD  IF   E             DISK                                         S01117
+     FSDOPTCPD  IF   E             DISK                                         S01382
+     FSDHAFDPD  IF   E             DISK                                         S01379
+     FSDRISKPD  IF   E             DISK                                         S01393
+     F* ------ Pay/Recieve Priorities ------ Midas Swift Direct Link -*
+     F********TABTB40 IF  E                    DISK                       S01117
+     F* ------ Drop Messages Flag -------- MSDL & MTLX ---------------*
+     F*TABTB11*IF**E                    DISK                              E22895
+     FSDMGMEPD  IF   E             DISK                                         S01310
+     F/COPY WNCPYSRC,SD9000PF04
+     FSDSTAXPD  IF   E             DISK                                         S01413
+     FTABTBRE   IF   E             DISK                                         S01413
+     FTABTREXC  IF   E             DISK                                         S01413
+     FSDTCHGPD  IF   E             DISK                                         CRT001
+     FSDFCTLL0  UF   E           K DISK
+     FSDCSFDL1  IF   E           K DISK                                         S01423
+     FSDMEXPPD  IF   E           K DISK                                         S01493
+     F*****SCSARDPDIF  E                    DISK                   070946 CSC010
+     FSDPORTPD  IF   E             DISK                                         093024
+     FSDLOMBPD  IF   E             DISK                                         093024
+     FSDPCACPD  IF   E             DISK                                         CAC001
+     FSDFONTPD  IF   E             DISK                                         CGL004
+     FSDTIINPD  IF   E             DISK                                         CTI001
+     FSDAPIPD   IF   E             DISK                                         CAP006
+     FSCSAREL1  IF   E           K DISK                                         CSC010
+     FSDTOFPD   IF   E             DISK                                         CPB001
+     FSDMDFCPD  IF   E             DISK                                         CSD006
+     F***SDHEDGPDIF  E                    DISK                                         CAS002 CAS009
+     F***SDHEDGPDIF  F      61            DISK                                         CAS009 233545
+     FSDHEDGPD  IF   F   76        DISK
+     F*SDSVALJ1* IF   E           K DISK                                                    MD054605
+     FSDMMIDL1  IF   E           K DISK
+     FSDCOCCPD  IF   E             DISK
+     F*                                                               *
+     F*
+     F/COPY WNCPYSRC,SD9000PFP1
+     F*
+     FSDDEALY0  IF   E           K DISK
+     F*********SD0560P1O   E                    PRINTER                   S01117
+     F*D9000PMO***E                    PRINTER                      S01117070946
+     F/COPY WNCPYSRC,SDH00114
+     FSD9000PM  O    E             PRINTER OFLIND(*IN88)                        070946
+     F                                     INFDS(INFDS$)                        LN1076
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F* 01            SDBANKPD - Bank Details                         *
+     F* 02            SDMMODPD - Midas Modules                        *
+     F* 03            SDGELRPD - General Ledger Details               *
+     F* 04            SDTRADPD - Trading Data                         *
+     F* 22            SDRCFPD  - RCF Data                             *   S01117
+     F* 23            SDCOBPPD - COB Processing                       *   S01117
+     F**05************TABTB40  -                                      *
+     F**05**DBERR*no.*SDCUSTPD*-*Client*Details*via*Access*Program*****   LN1076
+     F* 05  DBERR no. SDCUSTPD - Stat Authority Cust (General Ledger) *   LN1076
+     F* 06            SDDEALPD - Dealing Data                         *
+     F* 07            SDFAISPD - Fwd Rate Agmt/Int Rate Sw            *
+     F* 08            SDSECSPD - Securities Trading Data              *
+     F* 09            SDFOCSPD - Futures & Options Data               *
+     F* 10            SDCLNDPD - Customer Lending Data                *
+     F**11************SDSYLNPD*-*Syndicated Loans**********************   S01339
+      * 11            CFT013 is installed                             *                       219241
+     F* 12            SDRETLPD - Retail Details                       *
+     F**13************SDMSDLPD*-*Midas/Swift*Direct*Link***************   S01310
+     F* 13            SDMGMEPD - Message Management                   *   S01310
+     F* 14            TABTB11  - Drop Swift Messages                  *
+     F* 15            COB Batch Monitor present                       *   100025
+     F* 16            TABTB11  - Drop Swift Messages                  *
+     F**15************SDMTLXPD - MIdas/Telex Data                     *   S01310
+     F* 17            SDFTFRPD - Funds Transfer DetaIls               *
+     F* 18            SDEXPMPD - Exposure Management Data             *
+     F* 24            SDMCFCPD - Microfiche Data                      *   S01117
+     F**19************SDCONFPD - Confirmation Matching                *
+     F* 19  DBERR no. SDCURRPD - Currency Codes via Access Program    *
+     F* 20            SDFCTLPD - File Controls                        *
+     F* 21            SDFCTLPD - File Controls                        *
+     F* 25            SDCUSTPD - Depot 1 (Securities Trading)         *   LN1076
+     F* 26            SDCUSTPD - Depot 2 (Securities Trading)         *   LN1076
+     F* 27            SDCUSTPD - Depot 3 (Securities Trading)         *   LN1076
+     F* 28            SDCUSTPD - Depot 4 (Securities Trading)         *   LN1076
+     F* 29            SDCUSTPD - Depot 5 (Securities Trading)         *   LN1076
+     F* 30            SDCUSTPD - Depot 6 (Securities Trading)         *   LN1076
+     F* 31            SDCUSTPD - Depot 7 (Securities Trading)         *   LN1076
+     F* 32            SDCUSTPD - Depot 8 (Securities Trading)         *   LN1076
+     F* 33            SDCUSTPD - Depot 9 (Securities Trading)         *   LN1076
+     F* 34            SDCUSTPD - Depot 10 (Securities Trading)        *   LN1076
+     F* 35            SDCONFPD - Confirmation Matching                *   S01314
+     F* 36            SDTRMAPD - Treasury Management                  *   S01319
+     F* 37            SDOPTCPD - Optical Disk                         *   S01382
+     F* 38            SDHAFDPD - History and Audit Facility           *   S01379
+     F* 39            Management Accounts Module present              *   S10736
+     F**40************SDRISKPD - Security Risk Management             *   S01393
+     F* 40            SDRISKPD - Interest Risk Management           S01393CRM001
+     F* 41            SDSTAXPD - Withholding Tax                      *   S01413
+     F* 42            TABTBRE  - Retail III Details                   *   S01413
+     F* 43            TABTREXC - New Retail Extension File            *   S01413
+     F* 41            Enhanced rollover processing present            *   S01434
+     F* 43            Bulk input enhancements present                 *
+     F* 44            Customer commissions present                    *   S01446
+     F* 45            Withholding Tax is present.                     *   S01460
+     F* 46            Midas-Export Data Module Interface.             *   S01493
+     F* 47            S01491 is present.                              *   S01491
+     F* 48            Safe Custody Fees Present                       *   S01464
+     F* 49            CAAA01 is present                               *   CAAA01
+     F* 51            CRT001 and RTS Default Charges are present.     *   CRT001
+     F* 52            Citydealer Non-Front Office cashflows interface *   CCM002
+     F* 53            SDPCACPD - Profit Centre Accounting             *   CAC001
+     F* 54            SDTIINPD - Midas/Trade Innovation Interface     *   CTI001
+     F* 56            CFF003 is present - Enhanced OTC phase 2        *   CFF003
+     F* 58            Private Banking (CPB001)                        *   CPB001
+      * 59            Customer Lending Enhancements (CLE023)          *   CLE023
+     F* 60            CAP032 indicator is installed                   *   CAP032
+      * 61            PCA Default Matrix Enhancement is installed     *   CSD009
+      * 64            CLE071 is Enabled                               *                       CLE071
+     F* 65            Analytical Accounting Module is Installed       *   CAC002
+     F* 66            CDL002 is present.(FX Netting)                  *   CDL002
+     F* 67            CDL004 is present.                              *   CDL002
+     F* 68            Midas-Fontis Interface - SDFONTPD               *   CGL004
+     F* 69            Customer Lending Enhancements (CLE004)          *   CLE004
+     F* 70            Customer Lending Enhancements (CLE005)          *   CLE005
+     F* 71            CEU008 is present.(EMU)                         *   CEU008
+     F* 72            APIs present.                                   *   CAP006
+      * 73            Fontis IAT/TPP Interface (CGL009)               *   CGL009
+     F* 74            Repos enhancement additional fields on          *   CSE006
+     F*               switchable feature.                             *   CSE006
+     F* 75            Market Data Feeds present.                      *   CSD006
+      * 76            Automatic Exchenge of Information.              *                       CGL032
+     F*                                                               *
+     F*              SDMMODPD File Postions                           *
+     F*                                                               *
+     F*                               15 - Midas Telex Module Ind.    *
+     F*                               16 - Swift Funds Transfer.      *
+     F*                               17 - Swift SecuritIes Trading.  *
+     F*                               18 - Swift Customer Lending.    *
+     F********************************19*-*Swift*Syndicated*Loans.*****   S01339
+     F*                               19 - Redundant module.          *   S01339
+     F*                               20 - Swift Statements.          *
+     F*                               21 - Swift Dealing.             *
+     F*                               22 - S.D. & General Ledger.     *
+     F*                               23 - Dealing: FX.               *
+     F********************************24*-*Syndicated*Loans.***********   S01339
+     F*                               24 - Redundant module.          *   S01339
+     F*                               25 - Exposure Management.       *
+     F*                               26 - Financial Modeller.        *
+     F*                               27 - Statutary Returns.         *
+     F*                               28 - Customer LendIng.          *
+     F*                               29 - RetaIl BankIng.            *
+     F*                               30 - MIdas/SwIft DIrect LInk.   *
+     F*                               31 - SecurItIes.                *
+     F*                               32 - Auto-ReconcIlIatIons.      *
+     F*                               33 - Bond Dealers Interface.    *
+     F*                               34 - DRS StandIng Data.         *
+     F*                               35 - ..  Control Module.        *
+     F*                               36 - ..  ForeIgn Exchange.      *
+     F*                               37 - ..  Money Market.          *
+     F*                               38 - ..  ArbItrage.             *
+     F*                               39 - Funds Transfer.            *
+     F*                               40 - DRS Common ApplIcatIons.   *
+     F*                               41 - Futures & OptIons.         *
+     F********************************42*-*Midas/Telex*Synd.*Loans.****   S01339
+     F*                               42 - Redundant module.          *   S01339
+     F*                               43 -  ..    ..   DealIng.       *
+     F*                               44 -  ..    ..   General Ledger.*
+     F*                               45 -  ..    ..   Cust. LendIng. *
+     F*                               46 - Network MIdas.             *
+     F*                               47 - FRA/IRS IndIcator.         *
+     F*                               48 - DealIng : MM.              *
+     F*                               49 - Internal Contracts.        *
+     F*                               50 - Treasury Management.       *
+     F***********                     51 - Risk Management.           *   CRM001
+     F*                               51 - Interest Risk Management.  *   CRM001
+     F*                               52 - Testkey.                   *
+     F*                               53 - MIdas/Q.                   *
+     F*                               54 - MIcrofIche.                *
+     F*                               55 - Interest on Accounts.      *
+     F*                               70 - Confirmation Matching      *
+     F*                               72 - RCF Data.                  *   S01117
+     F*                               85 - Optical Disk               *   S01382
+     F*                               93 - Withholding Taxes          *   S01413
+     F*                               94 - History and Audit Facility *   S01379
+     F*                               95 - Management Accounts        *   S10736
+     F*                               97 - Retail III                 *   S01413
+     F*                               98 - Interest on Accounts       *   S01413
+     F*                     99 - Midas-Export Data Module Interface   *   S01493
+     F*                                                               *
+     F*       55      Customer Fees ICD access error                  *   S01423
+     F*       70      Currency Access Object Error                    *
+     F*       76      SDSVALJ1 - Available System Values (ON if EOF)  *                       CSD013
+     F*       77      SDMMIDL1 - Module Information (Record not found)*                       CSD013
+     F*       80      Accrual/Profit Frequency Code Meaning           *
+      *       82      CFT014 is installed                             *                       219241
+     F*       86      MIDAS TELEX Messages Dropped At End Of Day      *
+     F*       87      MIDAS TELEX Payments Verified                   *
+     F*       88      MIDAS TELEX Interface Selected                  *
+     F*       90-95   USED IN Z-SUBROUTINES.                          *
+     F*       98      Date Format Is MMDDYY.                          *
+     F*       99      Z-Subroutines Error Indicator.                  *
+     F*          U7+U8   DATABASE ERROR, REQUIRED Record NOT FOUND.   *
+     F**                                                              *
+     F*****************************************************************
+     F**                                                              *
+     F*      S01216 - PROGRAM HAS BEEN RE-WRITTEN                     *
+     F**                                                              *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SD9000PF01
+     D CPY#            S              1    DIM(1) CTDATA PERRCD(1)                          MD054605
+     D AFQ1            S              1    DIM(13) CTDATA PERRCD(1)             FREQ. CODES
+     D AFQ2            S             32    DIM(13) CTDATA PERRCD(1)             FREQ. MEANINGS
+     D********************DBF     1  21  5               DB FILE          S01117
+     D********************DBF     1  24  5               DB FILE  S01117  S01314
+     D********************DBK     1  21 29               DB KEY           S01117
+     D********************DBK     1  24 29               DB KEY   S01117  S01314
+     D********************DB     21  21  2               ERR NO           S01117
+     D********************DB     24  24  2               ERR NO   S01117  S01314
+     D***********         DBF     1  35  8               DB FILE    S01314S01382
+     D***********         DBK     1  35 29               DB KEY     S01314S01382
+     D***********         DBF     1  36  8               DB FILE    S01382S01339
+     D***********         DBK     1  36 29               DB KEY     S01382S01339
+     D***********         DBF     1  35  8               DB FILE    S01339S01423
+     D***********         DBK     1  35 29               DB KEY     S01339S01423
+     D***********         DBF     1  37  8               DB FILE    S01423049956
+     D***********         DBK     1  37 29               DB KEY     S01423049956
+     D***********         DBF     1  38  8               DB FILE    049956066762
+     D***********         DBK     1  38 29               DB KEY     049956066762
+     D***********         DBF     1  40  8               DB FILE    066762S01413
+     D***********         DBK     1  40 29               DB KEY     066762S01413
+     D***********         DBF     1  43  8               DB FILE    S01413S01464
+     D***********         DBK     1  43 29               DB KEY     S01413S01464
+     D***********         DBF     1  44  8               DB FILE    S01464S01493
+     D***********         DBK     1  44 29               DB KEY     S01464S01493
+     D***********         DBF     1  45  8               DB FILE    S01493CRT001
+     D***********         DBK     1  45 29               DB KEY     S01493CRT001
+     D*                                                                   S01408
+     D/COPY WNCPYSRC,SD9000PEP2                                           S01408
+     D*                                                                   S01408
+     D*******             DBF     1  46  8               DB FILE   CRT001 093024
+     D*******             DBK     1  46 29               DB KEY    CRT001 093024
+     D***********         DBF     1  47  8               DB FILE   093024 096624
+     D***********         DBK     1  47 29               DB KEY    093024 096624
+     D***********         DBF     1  48  8               DB FILE   096624 CAC001
+     D***********         DBK     1  48 29               DB KEY    096624 CAC001
+     D***********         DBF     1  49  8               DB FILE   CAC001 CTI001
+     D***********         DBK     1  49 29               DB KEY    CAC001 CTI001
+     D*******             DBF     1  50  8               DB FILE   CTI001 CAP006
+     D*C*PY*WNCPYSRC,SD9000PE01****************                           CAP006
+     D*******             DBK     1  50 29               DB KEY    CTI001 CAP006
+     D***********         DBF     1  51  8               DB FILE   CAP006 CDL006
+     D***********         DBF     1  52  8                         CDL006 CPB001
+     D***********         DBF     1  53  8                         CPB001 CSD006
+     D**********          DBF     1  54  8                                             CSD006 CFT017
+     D**********          DBF     1  56  8                                             CFT017 CAS001
+     D**********          DBF     1  57  8                                             CAS001 CAS002
+     D**********          DBF     1  58  8                                             CAS002 CLE025
+     D**********          DBF     1  59  8                                             CLE025 CDL048
+     D**********          DBF     1  60  8                                           CDL048 BUG23100
+     D DBF             S              8    DIM(61) CTDATA PERRCD(1)
+     D*C*PY*WNCPYSRC,SD9000PEP1****************                           CAP006
+     D***********         DBK     1  51 29               DB KEY    CAP006 CDL006
+     D***********         DBK     1  53 29                         CDL006 CPB001
+     D***********         DBK     1  53 29                         CPB001 CSD006
+     D**********          DBK     1  54 29                                             CSD006 CFT017
+     D**********          DBK     1  56 29                                             CFT017 CAS001
+     D**********          DBK     1  57 29                                             CAS001 CAS002
+     D**********          DBK     1  58 29                                             CAS002 CLE025
+     D**********          DBK     1  59 29                                             CLE025 CDL048
+     D**********          DBK     1  60 29                                           CDL048 BUG23100
+     D DBK             S             29    DIM(61) CTDATA PERRCD(1)
+     D**********                             29  29 FSAMRM                             CAS009 233545
+     D**********                          P  30  372FSNRSV                             CAS009 233545
+     D**********                             38  420FSNRNI                             CAS009 233545
+     D**********                          P  43  502FSSB1S                             CAS009 233545
+     D**********                          P  51  582FSSB2S                             CAS009 233545
+     D**********                             59  61 FSNDYR                             CAS009 233545
+     D*                                                                                       CAS009
+     I*COPY*ZSRSRC,ZDATE2Z1                                               S01117            MD054605
+     D/COPY ZSRSRC,ZDATE2Z1LE                                                               MD054605
+     I*COPY*ZSRSRC,ZALIGNZ1                                               S01117            MD054605
+     D/COPY ZSRSRC,ZALIGNZ1LE                                                               MD054605
+     D @@CNUM          DS
+     D  @CWHL1                 1      2
+     D  @CDPNT                 3      3
+     D  @CDEC1                 4     15
+      *                                                                                       CAS009
+     D                 DS
+     D  @@ZNUM                 1     14  0
+     D  @ZWHL1                 1      2  0
+     D  @ZDEC1                 3     14  0
+      *                                                                                       CAS009
+     D*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION        *
+     D CPYR@#          DS
+     D  CPY@                   1     80
+     D                                     DIM(1) CTDATA PERRCD(1)                           *
+     D**                                                              *
+     D KTABSE          DS
+     D  KEY                    1     12
+     D  KTYPE                  1      2  0
+     D  KCCY                   9     11
+     D**                                                              *
+     D*  DATA STRUCTURE FOR ZERO SUPRESSION OF IRS AND FRA PERIODS    *
+     D**                                                              *
+     D PER0            DS             4    OCCURS(1)
+     D  PER1                   1      1
+     D  PER2                   2      2
+     D  PER3                   3      3
+     D  PER4                   4      4
+     D*                                                                   S01408
+     D/COPY WNCPYSRC,SD9000PIP1                                           S01408
+     D*                                                                   S01408
+     D MSSTAT         UDS           256
+     D  SWPOS                  1      1
+     D***LDA*****UDS                            256                       135060
+     D LDA             DS           256                                         135060
+     D***********                           134 138 DBFILE                LN1076
+     D  DBFILE               134    141                                         LN1076
+     D***********                           139 167 DBKEY                 LN1076
+     D  DBKEY                142    170                                         LN1076
+     D***********                           168 175 DBPGM                 LN1076
+     D  DBPGM                171    180                                         LN1076
+     D***********                           176 177 DBASE                 LN1076
+     D  DBASE                181    183  0                                      LN1076
+     D**                                                              *
+     D RUNDAT          DS
+     D***********                             1   7 AANA                  S01251
+     D***********                         P   8  100AKTX                  S01251
+     D***********                            11  11 AUST                  S01251
+     D***********                            12  12 E3ST                  S01251
+     D***********                            13  13 F1ST                  S01251
+     D  MRDT                   1      7                                         S01251
+     D  RDNB                   8     10P 0                                      S01251
+     D  SUC                   11     11                                         S01251
+     D  DFF                   12     12                                         S01251
+     D  MBIN                  13     13                                         S01251
+     D**                                                              *                       CSD013
+     D* Date structure for spliting System Value (GIVAL 200A) into two                        CSD013
+     D* values with 100A each.                                                                CSD013
+     D**                                                                                      CSD013
+     D                 DS
+     D  GIVAL                  1    200
+     D  @VAL1                  1    100
+     D  @VAL2                101    200
+     D**                                                              *
+     D**
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)                    S01117
+     D**  Currency Details                                                S01117
+     D*                                                                   S01117
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)                    S01117
+     D SDMMOD        E DS                  EXTNAME(SDMMODPD)                    CAC003
+     D*                                                                   S01408
+     D/COPY WNCPYSRC,SD9000PIPG                                           S01408
+     D*                                                                   S01408
+     D**********P@FMT     E DSSDCUSTPD                                    S01117
+     D**  Safe Custody ICD                                                S01464
+     D SDSCFE        E DS                  EXTNAME(SDSCFEPD)                    S01464
+     D P@FMT         E DS                  EXTNAME(DSSDY)                       S01117
+     D*                                                                   CSW005
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CSW005
+     D** EXTERNAL DS FOR SAR DETAILS                                      CSW005
+     D*                                                                   CSW005
+     D DSFDY         E DS                  EXTNAME(DSFDY)                       CSW005
+     D* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CSW005
+      *                                                                   CSW005
+     D*
+     D/COPY WNCPYSRC,SD9000PIP2
+     D*
+     D INFDS$        E DS                  EXTNAME(Y2I$DSP)                     LN0936
+     D SDSVAL        E DS                  EXTNAME(SDSVLJW1)                                MD054605
+     D                                     PREFIX(X)                                        MD054605
+     D NullInds        s              5i 0 dim(21)                                          MD054605
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,SD9000PEP1                                           S01408
+     I*                                                                   S01408
+     I**                                                              *
+     I@AHREAU
+     I**********    AHAANB                          NREC                  S01251
+     I**********    AHABNB                          NINS                  S01251
+     I**********    AHACNB                          NAMD                  S01251
+     I**********    AHADNB                          NDEL                  S01251
+     I              AHNORC                      NREC                            S01251
+     I              AHNOIN                      NINS                            S01251
+     I              AHNOAM                      NAMD                            S01251
+     I              AHNODL                      NDEL                            S01251
+     I/COPY WNCPYSRC,SD9000PI01
+     I**
+     I* DATA STRUCTURE FOR SDHEDGPD                                                           CAS009
+     ISDHEDGPD  NS
+     I                                  1   10  FSHEDG
+     I                             P   11   14 4FSOPCT
+     I                                 15   16 0FSDROP
+     I                                 17   17  FSSETV
+     I                                 18   18  FSSEMK
+     I                                 19   19  FSCHTP
+     I                             P   20   22 0FSLCD
+     I                             P   23   24 1FSCLVL
+     I                             P   25   26 0FSNMBU
+     I                             P   27   28 0FSNDDP
+     I                                 29   30 0FSHLTO
+     I                                 31   31  FSEXRL
+     I                                 32   32  FSAMRM
+     I                             P   33   40 2FSNRSV
+     I                                 41   45 0FSNRNI
+     I                             P   46   53 2FSSB1S
+     I                             P   54   61 2FSSB2S
+     I                                 62   64  FSNDYR
+     I                             P   65   70 0FSOAMT
+     I                             P   71   73 0FSNLAC
+     I                             P   74   76 0FSSWDT
+     C**
+     C** -----------------------------------------------------------------
+     C**
+     C     *ENTRY        PLIST
+     C                   PARM                    @@PAR1            7            DUMMY PARM     LN050
+     C                   PARM                    P@MODE            1            I:Pgm Mode
+     C                   PARM                    @@PAR2            5            DUMMY PARM     LN050
+     C                   PARM                    @@PAR3            1            Dummy Parm     LN050
+     C                   PARM                    @@PAR4            3            DUMMY PARM     LN050
+     C**
+     C** -----------------------------------------------------------------
+     C**
+     C*                                                                   LN0936
+     C** ZSFILE - WRITE REPORT REQUEST                                    LN0936
+     C*                                                                   LN0936
+     C                   Z-ADD     @$FNB         WUSFNB            6 0                         LN093
+     C                   MOVE      *BLANK        WUZSER            1                           LN093
+     C                   CALL      'ZSFILE'                             90      ZSFILE - write LN093
+     C                   PARM      @@PAR2        UURSQN            5            RCF sequence nuLN093
+     C                   PARM      @@PAR4        UUENTY            3            Entity         LN093
+     C                   PARM      @$FVN         UUSFNM           10            Spool file nameLN093
+     C                   PARM      WUSFNB        UUSFNB            6 0          Spool file numbLN093
+     C     WUZSER        PARM      *BLANK        UUZSER            1            ZSFILE error   LN093
+     C     WUZSER        IFEQ      'Y'                                                         LN093
+     C                   GOTO      ENDT                                                        LN093
+     C                   END                                                                   LN093
+      * Get Rundate - Rundate  *
+     C     *DTAARA       DEFINE                  RUNDAT
+     C                   IN        RUNDAT
+     C***********          MOVE AANA      ##AANA  7        Alpha Rundate  S01251
+     C***********          MOVE AANA      WUAANA  7        Alpha Rundate  S01251
+     C***********          MOVE AKTX      WUAKTX  50       Numeric RundateS01251
+     C***********          MOVE AUST      WUAUST  1        Set-up CompleteS01251
+     C***********          MOVE E3ST      WUE3ST  1        Date Format IndS01251
+     C***********          MOVE F1ST      WUF1ST  1        Multi-Branch InS01251
+     C                   MOVE      MRDT          ##AANA            7            Alpha Rundate  S0125
+     C                   MOVE      MRDT          WUMRDT            7            Alpha Rundate  S0125
+     C                   MOVE      RDNB          WURDNB            5 0          Numeric RundateS0125
+     C                   MOVE      SUC           WUSUC             1            Set-up CompleteS0125
+     C                   MOVE      DFF           WUDFF             1            Date Format IndS0125
+     C                   MOVE      MBIN          WUMBIN            1            Multi-Branch InS0125
+     C**
+     C*********************MOVE 'SD0560'  ##PGM                           S01117
+     C                   MOVE      'SD9000P'     ##PGM                                         S0111
+     C**
+     C                   Z-ADD     0             NROF              5 0
+     C**
+     C**   Check that Bank Details Have Been Set-up.
+     C**
+     C                   READ      SDBANKPD                               01
+     C     *IN01         IFEQ      '1'                                          IF  IN01 On
+     C                   MOVE      1             N                 2 0
+     C                   EXSR      DBERR                                        Bank Details Er
+     C                   GOTO      ENDT
+     C                   END                                                    FI *01 = '1'
+     C**
+     C**   Determine Date Format.
+     C********** BJFKST    COMP 'M'                      98MMDDYY, 98 ON  S01251
+     C     BJDFIN        COMP      'M'                                    98    MMDDYY, 98 ON  S0125
+     C**
+     C**   Extract Report Title..
+     C**********           MOVE BJAGNA    ##AGNA                          S01251
+     C                   MOVE      BJURPT        ##AGNA                                        S0125
+      *                                                                   S01434
+      **   Determine which switchable features are present.               S01434
+      *                                                                   S01434
+      **   Enhanced OTC processing phase 2 switchable feature present?    CFF003
+      *                                                                   CFF003
+     C                   MOVE      'N'           CFF003            1                           CFF00
+     C                   CALL      'AOSARDR0'                             90                   CFF00
+     C                   PARM                    WUAPRC            7                           CFF00
+     C                   PARM      '*VERIFY'     OPTION            7                           CFF00
+     C                   PARM      'CFF003'      WUSARN            6                           CFF00
+     C                   PARM      *BLANK        RCD3             76                           CFF00
+      *                                                                   CFF003
+     C     WUAPRC        IFEQ      *BLANK                                                      CFF00
+     C                   SETON                                        56                       CFF00
+     C                   MOVE      'Y'           CFF003                                        CFF00
+     C                   ENDIF                                                                 CFF00
+      *                                                                   CFF003
+      ** Check if CSD011 (Performance Incentive Fees) is switched ON.                         CSD011
+      *                                                                                       CSD011
+     C                   CALL      'AOSARDR0'                             90
+     C                   PARM                    WUAPRC
+     C                   PARM      '*VERIFY'     OPTION
+     C                   PARM      'CSD011'      WUSARN
+     C                   PARM      *BLANK        RCD3
+      *                                                                                       CSD011
+     C     WUAPRC        IFEQ      *BLANK
+     C                   SETON                                        59
+     C                   MOVE      'Y'           CSD011            1
+     C                   ENDIF
+      *                                                                   CAC003
+      **   Access Module Details file AOMMODR0.                           CAC003
+      *                                                                   CAC003
+     C                   CALL      'AOMMODR0'                                                  CAC00
+     C                   PARM      *BLANK        P@RTCD            7                           CAC00
+     C                   PARM      '*FIRST'      P@OPTN            7                           CAC00
+     C     SDMMOD        PARM      *BLANK        P@FMT                                         CAC00
+      *                                                                   CAC003
+     C     P@RTCD        IFNE      *BLANK                                                      CAC00
+     C                   MOVE      50            N                              ***********    CAC00
+     C                   EXSR      DBERR                                        *   50    *    CAC00
+     C                   GOTO      ENDT                                         ***********    CAC00
+     C                   ENDIF                                                                 CAC00
+      **   Enhanced Rollover Processing switchable feature present?       S01434
+      *                                                                   S01434
+     C                   CALL      'AOSARDR0'                             90                   S0143
+     C                   PARM                    WUAPRC            7                           S0143
+     C                   PARM      '*VERIFY'     OPTION            7                           S0143
+     C                   PARM      'S01434'      WUSARN            6                           S0143
+     C                   PARM      *BLANK        RCD3             76                           S0143
+      *                                                                   S01434
+     C     WUAPRC        IFEQ      *BLANK                                                      S0143
+     C                   SETON                                        41                       S0143
+     C                   ENDIF                                                                 S0142
+      *                                                                   S01446
+      **   Customer Commissions switchable feature present?               S01446
+      *                                                                   S01446
+     C                   MOVE      *BLANKS       WUAPRC                                        S0144
+      *                                                                   S01446
+     C                   CALL      'AOSARDR0'                             90                   S0144
+     C                   PARM                    WUAPRC                                        S0144
+     C                   PARM      '*VERIFY'     OPTION                                        S0144
+     C                   PARM      'S01446'      WUSARN                                        S0144
+     C                   PARM      *BLANK        RCD3                                          S0144
+      *                                                                   S01446
+     C     WUAPRC        IFEQ      *BLANK                                                      S0144
+     C                   SETON                                        44                       S0144
+     C                   ENDIF                                                                 S0144
+      *                                                                   100025
+      **   Close of Business Batch Monitor feature present?               100025
+      *                                                                   100025
+     C                   MOVE      *BLANKS       WUAPRC                                        10002
+      *                                                                   100025
+     C                   CALL      'AOSARDR0'                             90                   10002
+     C                   PARM                    WUAPRC                                        10002
+     C                   PARM      '*VERIFY'     OPTION                                        10002
+     C                   PARM      'S01420'      WUSARN                                        10002
+     C                   PARM      *BLANK        RCD3                                          10002
+      *                                                                   100025
+     C     WUAPRC        IFEQ      *BLANK                                                      10002
+     C                   SETON                                        15                       10002
+     C                   ENDIF                                                                 10002
+      *                                                                   S01448
+      **   Bulk input enhancements switchable feature present?            S01448
+      *                                                                   S01448
+     C                   MOVE      *BLANKS       WUAPRC                                        S0144
+      *                                                                   S01448
+     C                   CALL      'AOSARDR0'                             90                   S0144
+     C                   PARM                    WUAPRC                                        S0144
+     C                   PARM      '*VERIFY'     OPTION                                        S0144
+     C                   PARM      'S01448'      WUSARN                                        S0144
+     C                   PARM      *BLANK        RCD3                                          S0144
+      *                                                                   S01448
+     C     WUAPRC        IFEQ      *BLANK                                                      S0144
+     C                   SETON                                        43                       S0144
+     C                   ENDIF                                                                 S0144
+      *                                                                   S01460
+      **   BLI phase 2 - Withholding Tax?                                 S01460
+      *                                                                   S01460
+     C                   MOVE      *BLANKS       WUAPRC                                        S0146
+      *                                                                   S01460
+     C                   CALL      'AOSARDR0'                             90                   S0146
+     C                   PARM                    WUAPRC                                        S0146
+     C                   PARM      '*VERIFY'     OPTION                                        S0146
+     C                   PARM      'S01460'      WUSARN                                        S0146
+     C                   PARM      *BLANK        RCD3                                          S0146
+      *                                                                   S01460
+     C     WUAPRC        IFEQ      *BLANK                                                      S0146
+     C                   SETON                                        45                       S0146
+     C                   ENDIF                                                                 S0146
+      *                                                                   S01434
+      **   Autocall fields on SDCOBPPD are switchable, S01491 present?    S01491
+      *                                                                   S01491
+     C                   MOVE      *BLANKS       WUAPRC                                        S0149
+      *                                                                   S01491
+     C                   CALL      'AOSARDR0'                             90                   S0149
+     C                   PARM                    WUAPRC                                        S0149
+     C                   PARM      '*VERIFY'     OPTION                                        S0149
+     C                   PARM      'S01491'      WUSARN                                        S0149
+     C                   PARM      *BLANK        RCD3                                          S0149
+      *                                                                   S01491
+     C     WUAPRC        IFEQ      *BLANK                                                      S0149
+     C                   SETON                                        47                       S0149
+     C                   ENDIF                                                                 S0149
+      *                                                                   S01491
+      **   Graphical User Interface Active on SDCOBPPD CAAA01, present?   CAAA01
+      *                                                                   CAAA01
+     C                   MOVE      *BLANKS       WUAPRC                                        CAAA0
+      *                                                                   CAAA01
+     C                   CALL      'AOSARDR0'                             90                   CAAA0
+     C                   PARM                    WUAPRC                                        CAAA0
+     C                   PARM      '*VERIFY'     OPTION                                        CAAA0
+     C                   PARM      'CAAA01'      WUSARN                                        CAAA0
+     C                   PARM      *BLANK        RCD3                                          CAAA0
+      *                                                                   CAAA01
+     C     WUAPRC        IFEQ      *BLANK                                                      CAAA0
+     C                   SETON                                        49                       CAAA0
+     C                   ENDIF                                                                 CAAA0
+      *                                                                   CRT001
+      **   Retail Teller System, CRT001 present?                          CRT001
+      *                                                                   CRT001
+     C                   MOVE      *BLANKS       WUAPRC                                        CRT00
+      *                                                                   CRT001
+     C                   CALL      'AOSARDR0'                             90                   CRT00
+     C                   PARM                    WUAPRC                                        CRT00
+     C                   PARM      '*VERIFY'     OPTION                                        CRT00
+     C                   PARM      'CRT001'      WUSARN                                        CRT00
+     C                   PARM      *BLANK        RCD3                                          CRT00
+      *                                                                   CRT001
+     C     WUAPRC        IFEQ      *BLANK                                                      CRT00
+     C                   SETON                                        51                       CRT00
+     C                   ENDIF                                                                 CRT00
+      *                                                                   CSW005
+      *                                                                   CLE004
+      **   Customer Lending Enhancements, CLE004 present?                 CLE004
+      *                                                                   CLE004
+     C                   MOVE      *BLANKS       WUAPRC                                        CLE00
+      *                                                                   CLE004
+     C                   CALL      'AOSARDR0'                             90                   CLE00
+     C                   PARM                    WUAPRC                                        CLE00
+     C                   PARM      '*VERIFY'     OPTION                                        CLE00
+     C                   PARM      'CLE004'      WUSARN                                        CLE00
+     C                   PARM      *BLANK        RCD3                                          CLE00
+      *                                                                   CLE004
+     C     WUAPRC        IFEQ      *BLANK                                                      CLE00
+     C                   SETON                                        69                       CLE00
+     C                   ENDIF                                                                 CLE00
+      *                                                                   CLE005
+      **  Check if CLE005 is installed                                    CLE005
+      *                                                                   CLE005
+     C                   MOVE      *BLANKS       WUAPRC                                        CLE00
+      *                                                                   CLE005
+     C                   CALL      'AOSARDR0'                             90                   CLE00
+     C                   PARM                    WUAPRC                                        CLE00
+     C                   PARM      '*VERIFY'     OPTION                                        CLE00
+     C                   PARM      'CLE005'      WUSARN                                        CLE00
+     C                   PARM      *BLANK        RCD3                                          CLE00
+      *                                                                   CLE005
+     C     WUAPRC        IFEQ      *BLANK                                                      CLE00
+     C                   MOVE      '1'           *IN70                                         CLE00
+     C                   ENDIF                                                                 CLE00
+      *                                                                   CLE005
+      *                                                                                       CLE023
+      ** Lending Facility History Improvements, CLE023 present?                               CLE023
+      *                                                                                       CLE023
+      *                                                                                       CLE023
+     C                   CALL      'AOSARDR0'                             90
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY'     @OPTN
+     C                   PARM      'CLE023'      @SARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CLE023
+     C     @RTCD         IFEQ      *BLANK
+     C                   MOVE      '1'           *IN59
+     C                   ENDIF
+      *
+      **   Retail Branch Access, CRT002 present?                          CRT002
+      *                                                                   CRT002
+     C                   MOVE      *BLANKS       WUAPRC                                        CRT00
+      *                                                                   CRT002
+     C                   CALL      'AOSARDR0'                             90                   CRT00
+     C                   PARM                    WUAPRC                                        CRT00
+     C                   PARM      '*VERIFY'     OPTION                                        CRT00
+     C                   PARM      'CRT002'      WUSARN                                        CRT00
+     C                   PARM      *BLANK        RCD3                                          CRT00
+      *                                                                   CRT002
+     C     WUAPRC        IFEQ      *BLANK                                                      CRT00
+     C                   SETON                                        51                       CRT00
+     C                   ENDIF                                                                 CRT00
+      *                                                                   CRT002
+      ** Check if CSW005 is a valid record in SCSARDPD                    CSW005
+      *                                                                   CSW005
+     C                   CALL      'AOSARDR0'                                                  CSW00
+     C                   PARM      '       '     @RTCD             7                           CSW00
+     C                   PARM      '*VERIFY'     @OPTN             7                           CSW00
+     C                   PARM      'CSW005'      @SARD             6                           CSW00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CSW00
+     C*                                                                   CSW005
+     C                   MOVE      'N'           CSW005            1                           CSW00
+     C                   MOVE      '0'           *IN81                                         CSW00
+     C     @RTCD         IFEQ      *BLANKS                                                     CSW00
+     C                   MOVE      'Y'           CSW005            1                           CSW00
+     C                   MOVE      '1'           *IN81                                         CSW00
+     C                   ENDIF                                                                 CSW00
+      *                                                                   CDL002
+      ** Check if CDL002 a valid record on SCSARDPD (FX Netting)          CDL002
+      *                                                                   CDL002
+     C                   CALL      'AOSARDR0'                                                  CDL00
+     C                   PARM      '       '     @RTCD                                         CDL00
+     C                   PARM      '*VERIFY'     @OPTN                                         CDL00
+     C                   PARM      'CDL002'      @SARD                                         CDL00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CDL00
+     C*                                                                   CDL002
+     C     @RTCD         IFEQ      *BLANKS                                                     CDL00
+     C                   MOVE      'Y'           CDL002            1                           CDL00
+     C                   MOVE      *ON           *IN66                                         CDL00
+     C                   ELSE                                                                  CDL00
+     C                   MOVE      'N'           CDL002                                        CDL00
+     C                   MOVE      *OFF          *IN66                                         CDL00
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL004
+      ** Check if CDL004 a valid record on SCSARDPD                       CDL004
+      *                                                                   CDL004
+     C                   CALL      'AOSARDR0'                                                  CDL00
+     C                   PARM      '       '     @RTCD                                         CDL00
+     C                   PARM      '*VERIFY'     @OPTN                                         CDL00
+     C                   PARM      'CDL004'      @SARD                                         CDL00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CDL00
+     C*                                                                   CDL004
+     C     @RTCD         IFEQ      *BLANKS                                                     CDL00
+     C                   MOVE      'Y'           CDL004            1                           CDL00
+     C                   MOVE      *ON           *IN67                                         CDL00
+     C                   ELSE                                                                  CDL00
+     C                   MOVE      'N'           CDL004                                        CDL00
+     C                   MOVE      *OFF          *IN67                                         CDL00
+     C                   ENDIF                                                                 CDL00
+      *                                                                                       CFT017
+      ** Check if CFT017 is a valid record on SCSARDPD                                        CFT017
+      *                                                                                       CFT017
+     C                   MOVE      'N'           CFT017            1
+     C                   MOVE      *OFF          *IN83
+     C                   CALL      'AOSARDR0'
+     C                   PARM      '       '     @RTCD
+     C                   PARM      '*VERIFY'     @OPTN
+     C                   PARM      'CFT017'      @SARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CFT017
+     C     @RTCD         IFNE      *BLANKS
+     C     @RTCD         ANDNE     '*NRF'
+     C                   MOVE      55            N
+     C                   MOVEL     'SCSARDPD'    DBF(N)
+     C                   MOVEL     'CFT017'      DBK(N)
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ELSE
+      *                                                                                       CFT017
+     C     @RTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CFT017
+     C                   MOVE      *ON           *IN83
+     C                   ENDIF
+      *                                                                                       CFT017
+     C                   ENDIF
+     C*                                                                   CRT001
+     C/COPY WNCPYSRC,SD9000PC18
+     C*                                                                   CRT001
+      **   PCA phase 3, CAC003 present?                                   CAC003
+      *                                                                   CAC003
+     C                   MOVE      *BLANKS       WUAPRC                                        CAC00
+      *                                                                   CAC003
+     C                   CALL      'AOSARDR0'                                                  CAC00
+     C                   PARM                    WUAPRC                                        CAC00
+     C                   PARM      '*VERIFY'     OPTION                                        CAC00
+     C                   PARM      'CAC003'      WUSARN                                        CAC00
+     C                   PARM      *BLANKS       RCD3                                          CAC00
+      *                                                                   CAC003
+     C     WUAPRC        IFEQ      *BLANK                                                      CAC00
+     C     BGN0ST        ANDEQ     'Y'                                                         CAC00
+     C                   SETON                                        86                       CAC00
+     C                   ENDIF                                                                 CAC00
+      *                                                                   CGL004
+      ** Check if CGL004 a valid record on SCSARDPD (Midas-Fontis         CGL004
+      ** Interface)                                                       CGL004
+      *                                                                   CGL004
+     C                   CALL      'AOSARDR0'                                                  CGL00
+     C                   PARM      '       '     @RTCD                                         CGL00
+     C                   PARM      '*VERIFY'     @OPTN                                         CGL00
+     C                   PARM      'CGL004'      @SARD                                         CGL00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CGL00
+     C*                                                                   CGL004
+     C     @RTCD         IFEQ      *BLANKS                                                     CGL00
+     C                   MOVE      'Y'           CGL004            1                           CGL00
+     C                   ELSE                                                                  CGL00
+     C                   MOVE      'N'           CGL004                                        CGL00
+     C                   ENDIF                                                                 CGL00
+      *                                                                   CGL004
+      **   EMU switchable feature is present?                             CEU008
+      *                                                                   CEU008
+     C                   CALL      'AOSARDR0'                                                  CEU00
+     C                   PARM      *BLANKS       @RTCD             7                           CEU00
+     C                   PARM      '*VERIFY'     @OPTN             7                           CEU00
+     C                   PARM      'CEU008'      @SARD             6                           CEU00
+      *                                                                   CEU008
+     C     @RTCD         IFEQ      *BLANK                                                      CEU00
+     C                   MOVE      'Y'           CEU008            1                           CEU00
+     C                   SETON                                        71                       CEU00
+     C                   ELSE                                                                  CEU00
+     C                   MOVE      'N'           CEU008                                        CEU00
+     C                   SETOFF                                       71                       CEU00
+     C                   ENDIF                                                                 CEU00
+      *                                                                   CEU008
+      ** Check if CSE007 is a valid record in SCSARDPD                    CSE007
+      *                                                                   CSE007
+     C                   CALL      'AOSARDR0'                                                  CSE00
+     C                   PARM      *BLANKS       @RTCD             7                           CSE00
+     C                   PARM      '*VERIFY'     @OPTN             7                           CSE00
+     C                   PARM      'CSE007'      @SARD             6                           CSE00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CSE00
+      *                                                                   CSE007
+     C                   MOVE      *OFF          *IN57                                         CSE00
+     C     @RTCD         IFEQ      *BLANKS                                                     CSE00
+     C                   MOVE      *ON           *IN57                                         CSE00
+     C                   ENDIF                                                                 CSE00
+      *                                                                   CEU017
+      ** Check if CEU017 is a valid record in SCSARDPD                    CEU017
+      *                                                                   CEU017
+     C                   CALL      'AOSARDR0'                                                  CEU01
+     C                   PARM      *BLANKS       @RTCD             7                           CEU01
+     C                   PARM      '*VERIFY'     @OPTN             7                           CEU01
+     C                   PARM      'CEU017'      @SARD             6                           CEU01
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CEU01
+      *                                                                   CEU017
+     C     @RTCD         IFEQ      *BLANKS                                                     CEU01
+     C                   MOVE      *ON           *IN57                                         CEU01
+     C                   ENDIF                                                                 CEU01
+      *                                                                   CEU017
+      *                                                                   CEU008
+      ** Check if CAP006 is a valid record in SCSARDPD (APIs)             CAP006
+      *                                                                   CAP006
+     C                   CALL      'AOSARDR0'                                                  CAP00
+     C                   PARM      *BLANKS       @RTCD             7                           CAP00
+     C                   PARM      '*VERIFY'     @OPTN             7                           CAP00
+     C                   PARM      'CAP002'      @SARD             6                           CAP00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CAP00
+      *                                                                   CAP006
+     C                   MOVE      *OFF          *IN72                                         CAP00
+     C                   MOVE      'N'           CAP002            1                           CAP00
+     C     @RTCD         IFEQ      *BLANKS                                                     CAP00
+     C                   MOVE      *ON           *IN72                                         CAP00
+     C                   MOVE      'Y'           CAP002                                        CAP00
+     C                   ENDIF                                                                 CAP00
+      *                                                                   CGL009
+      **  Check if CGL009 is installed                                    CGL009
+      *                                                                   CGL009
+     C                   MOVE      *BLANKS       WUAPRC                                        CGL00
+      *                                                                   CGL009
+     C                   CALL      'AOSARDR0'                             90                   CGL00
+     C                   PARM                    WUAPRC                                        CGL00
+     C                   PARM      '*VERIFY'     OPTION                                        CGL00
+     C                   PARM      'CGL009'      WUSARN                                        CGL00
+     C                   PARM      *BLANK        RCD3                                          CGL00
+      *                                                                   CGL009
+     C     WUAPRC        IFEQ      *BLANK                                                      CGL00
+     C                   MOVE      '1'           *IN73                                         CGL00
+     C                   ENDIF                                                                 CGL00
+     C/COPY WNCPYSRC,SD9000PC16
+      *                                                                   CGL010
+      ** Check if CGL010 is installed                                     CGL010
+      *                                                                   CGL010
+     C                   MOVE      *BLANKS       WUAPRC                                        CGL01
+      *                                                                   CGL010
+     C                   CALL      'AOSARDR0'                             70                   CGL01
+     C                   PARM                    WUAPRC                                        CGL01
+     C                   PARM      '*VERIFY '    OPTION                                        CGL01
+     C                   PARM      'CGL010'      WUSARN                                        CGL01
+     C                   PARM      *BLANK        RCD3                                          CGL01
+      *                                                                   CGL010
+     C     WUAPRC        IFEQ      *BLANKS                                                     CGL01
+     C                   MOVE      '1'           *IN53                                         CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CAP006
+      *                                                                   CAP006
+      ** Check if CSE006 if switchable feature is on.                     CSE006
+      *                                                                   CSE006
+     C                   CALL      'AOSARDR0'                                                  CSE00
+     C                   PARM      *BLANKS       @RTCD             7                           CSE00
+     C                   PARM      '*VERIFY'     @OPTN             7                           CSE00
+     C                   PARM      'CSE006'      @SARD             6                           CSE00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CSE00
+      *                                                                   CSE006
+     C     @RTCD         IFEQ      *BLANKS                                                     CSE00
+     C                   MOVE      *ON           *IN74                                         CSE00
+     C                   ELSE                                                                  CSE00
+     C                   MOVE      *OFF          *IN74                                         CSE00
+     C                   ENDIF                                                                 CSE00
+      *                                                                   CSE006
+      ** Check if CSD006 if switchable feature is on.                     CSD006
+      *                                                                   CSD006
+     C                   CALL      'AOSARDR0'                                                  CSD00
+     C                   PARM      *BLANKS       @RTCD             7                           CSD00
+     C                   PARM      '*VERIFY'     @OPTN             7                           CSD00
+     C                   PARM      'CSD006'      @SARD             6                           CSD00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CSD00
+      *                                                                   CSD006
+     C     @RTCD         IFEQ      *BLANKS                                                     CSD00
+     C                   MOVE      *ON           *IN75                                         CSD00
+     C                   MOVE      'Y'           CSD006            1                           CSD00
+     C                   ELSE                                                                  CSD00
+     C                   MOVE      *OFF          *IN75                                         CSD00
+     C                   MOVE      'N'           CSD006                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+      *                                                                   CAP032
+      ** Check if CAP032 is installed.                                    CAP032
+      *                                                                   CAP032
+     C                   CALL      'AOSARDR0'                                                  CAP03
+     C                   PARM      *BLANKS       @RTCD                                         CAP03
+     C                   PARM      '*VERIFY'     @OPTN                                         CAP03
+     C                   PARM      'CAP032'      @SARD                                         CAP03
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CAP03
+      *                                                                   CAP032
+     C                   MOVE      '0'           *IN60                                         CAP03
+      *                                                                   CAP032
+     C     @RTCD         IFEQ      *BLANKS                                                     CAP03
+     C                   MOVE      '1'           *IN60                                         CAP03
+     C                   ENDIF                                                                 CAP03
+      *                                                                   CSD009
+      ** Check if CSD009 - 'PCA Default Matrix Enhancement' is installed  CSD009
+      *                                                                   CSD009
+     C                   CALL      'AOSARDR0'                                                  CSD00
+     C                   PARM      *BLANKS       @RTCD                                         CSD00
+     C                   PARM      '*VERIFY'     @OPTN                                         CSD00
+     C                   PARM      'CSD009'      @SARD                                         CSD00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CSD00
+      *                                                                   CSD009
+     C                   MOVE      '0'           *IN61                                         CSD00
+      *                                                                   CSD009
+     C     @RTCD         IFEQ      *BLANKS                                                     CSD00
+     C                   MOVE      '1'           *IN61                                         CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                                       CDL013
+      ** Check if Tiered Withholding Tax switchable feature is present                        CDL013
+      *                                                                                       CDL013
+     C                   MOVE      *BLANKS       WUAPRC
+      *                                                                                       CDL013
+     C                   CALL      'AOSARDR0'                             90
+     C                   PARM                    WUAPRC
+     C                   PARM      '*VERIFY'     OPTION
+     C                   PARM      'CDL013'      WUSARN
+     C                   PARM      *BLANK        RCD3
+      *                                                                                       CDL013
+     C     WUAPRC        IFEQ      *BLANK
+     C                   SETON                                        14
+     C                   MOVE      '1'           CDL013            1
+     C                   ENDIF
+      *                                                                                       CDL013
+     C/COPY WNCPYSRC,SD9000PCPG                                           S01408
+     C*                                                                   S01408
+      ** Determine if CAS001 is installed                                                     CAS001
+      *                                                                                       CAS001
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD             7
+     C                   PARM      '*VERIFY '    POPTN             7
+     C                   PARM      'CAS001'      PSARD             6
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CAS001
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   Z-ADD     55            N
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       CAS001
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      *ON           *IN55
+     C                   ELSE
+     C                   MOVE      *OFF          *IN55
+     C                   ENDIF
+      *                                                                                       CAS002
+      ** Determine if CAS002 is installed                                                     CAS002
+      *                                                                                       CAS002
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY '    POPTN
+     C                   PARM      'CAS002'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CAS002
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CAS002            1
+     C                   MOVE      *ON           *IN85
+     C                   ELSE
+     C                   MOVE      'N'           CAS002
+     C                   MOVE      *OFF          *IN85
+     C                   ENDIF
+      *                                                                                       CIR008
+      ** Determine if CIR008 is installed                                                     CIR008
+      *                                                                                       CIR008
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD             7
+     C                   PARM      '*VERIFY '    POPTN             7
+     C                   PARM      'CIR008'      PSARD             6
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CIR008
+     C                   MOVE      *OFF          *IN25
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      *ON           *IN25
+     C                   ENDIF
+      *                                                                                       219241
+      ** Determine if CFT013 is installed                                                     219241
+      *                                                                                       219241
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY '    POPTN
+     C                   PARM      'CFT013'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       219241
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C**********           Z-ADD58        N                                                   219241
+     C                   Z-ADD     60            N
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       219241
+     C                   MOVE      *OFF          *IN11
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      *ON           *IN11
+     C                   ENDIF
+      *                                                                                       219241
+      ** Determine if CFT014 is installed                                                     219241
+      *                                                                                       219241
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY '    POPTN
+     C                   PARM      'CFT014'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       219241
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   Z-ADD     59            N
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       219241
+     C                   MOVE      *OFF          *IN82
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      *ON           *IN82
+     C                   ENDIF
+     C/COPY WNCPYSRC,SDH00110
+      *                                                                                       CLE025
+      ** Check if CLE025 is on                                                                CLE025
+      *                                                                                       CLE025
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY '    POPTN
+     C                   PARM      'CLE025'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CLE025
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CLE025            1
+     C                   MOVE      *ON           *IN26
+     C                   ELSE
+     C                   MOVE      'N'           CLE025
+     C                   ENDIF
+      *                                                                                       CGL014
+      ** Check if CGL014 is on                                                                CGL014
+      *                                                                                       CGL014
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY '    POPTN
+     C                   PARM      'CGL014'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CGL014
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CGL014            1
+     C                   MOVE      *ON           *IN28
+     C                   ELSE
+     C                   MOVE      'N'           CGL014
+     C                   ENDIF
+      *                                                                                       CFX001
+      ** Check if CFX001 is on                                                                CFX001
+      *                                                                                       CFX001
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY '    POPTN
+     C                   PARM      'CFX001'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CFX001
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CFX001            1
+     C                   MOVE      *ON           *IN26
+     C                   ELSE
+     C                   MOVE      'N'           CFX001
+     C                   ENDIF
+      *                                                                   CAAA01
+      ** Access SAR Details to see if CAS009 is installed                                     CAS009
+      *                                                                                       CAS009
+     C                   MOVE      'N'           CAS009            1
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY '    @OPTN
+     C                   PARM      'CAS009'      @SARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CAS009
+     C     @RTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CAS009
+     C                   MOVE      *ON           *IN82
+     C                   ENDIF
+      *                                                                                       CGL032
+      ** Check if CGL032 is switched on in SCSARDPD                                           CGL032
+      *                                                                                       CGL032
+     C                   CALL      'AOSARDR0'
+     C                   PARM      '       '     PRTCD             7
+     C                   PARM      '*VERIFY'     POPTN             7
+     C                   PARM      'CGL032'      PSARD             6
+     C     SCSARD        PARM      SCSARD        DSFDY
+     C*                                                                                       CGL032
+      ** DB Error Management.                                                                 CGL032
+      *                                                                                       CGL032
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   MOVE      60            N
+     C                   MOVEL     'SCSARDPD'    DBF(N)
+     C                   MOVEL     PSARD         DBK(N)
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       CGL032
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CGL032            1
+     C                   ELSE
+     C                   MOVE      'N'           CGL032
+     C                   ENDIF
+      *                                                                                       232543
+      ** Check if CGL031 is switched on in SCSARDPD                                           232543
+      *                                                                                       232543
+     C                   CALL      'AOSARDR0'
+     C                   PARM      '       '     PRTCD             7
+     C                   PARM      '*VERIFY'     POPTN             7
+     C                   PARM      'CGL031'      PSARD             6
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       232543
+      ** DB Error Management                                                                  232543
+      *                                                                                       232543
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   MOVE      59            N
+     C                   MOVEL     'SCSARDPD'    DBF(N)
+     C                   MOVEL     PSARD         DBK(N)
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       232543
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CGL031            1
+     C                   ELSE
+     C                   MOVE      'N'           CGL031
+     C                   ENDIF
+      *                                                                                       CDL048
+      ** Access switchable feature details, check if CDL048 is                                CDL048
+      ** switched on.                                                                         CDL048
+      *                                                                                       CDL048
+     C                   MOVE      'N'           CDL048            1
+     C                   MOVE      *OFF          *IN76
+      *                                                                                       CDL048
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD             7
+     C                   PARM      '*VERIFY '    POPTN             7
+     C                   PARM      'CDL048'      PSARD             6
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CDL048
+     C     PRTCD         IFNE      *BLANK
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   MOVE      60            N                              ***********
+     C                   EXSR      DBERR                                        *   83    *
+     C                   GOTO      ENDT                                         ***********
+      *                                                                                       CDL048
+     C                   ELSE
+     C     PRTCD         IFEQ      *BLANK
+     C                   MOVE      'Y'           CDL048
+     C                   MOVE      *ON           *IN76
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CER048
+     C                   CALL      'AOSARDR0'
+     C                   PARM      '       '     PRTCD
+     C                   PARM      '*VERIFY'     POPTN
+     C                   PARM      'CER048'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CER048
+      ** DB Error Management                                                                  CER048
+      *                                                                                       CER048
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CER048            1
+     C                   MOVE      *ON           *IN16
+     C                   ELSE
+     C                   MOVE      'N'           CER048
+     C                   MOVE      *OFF          *IN16
+     C                   ENDIF
+      *                                                                                       CER048
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   MOVEL     'SCSARDPD'    DBF(N)
+     C                   MOVEL     PSARD         DBK(N)
+     C                   MOVE      002           N
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       CTI006
+      ** Check if CTI006 is on                                                                CTI006
+      *                                                                                       CTI006
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY '    POPTN
+     C                   PARM      'CTI006'      PSARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CTI006
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CTI006            1
+     C                   ELSE
+     C                   MOVE      'N'           CTI006
+     C                   ENDIF
+      *                                                                                       CTI006
+      ** Check if CLE071 is Enabled                                                           CLE071
+      *                                                                                       CLE071
+     C                   MOVE      'N'           CLE071            1
+     C                   CALL      'AOSARDR0'
+     C                   PARM      '       '     PRTCD             7
+     C                   PARM      '*VERIFY'     POPTN             7
+     C                   PARM      'CLE071'      PSARD             6
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CLE071
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CLE071
+     C                   ENDIF
+      *                                                                                       CLE071
+     C     CLE071        IFEQ      'Y'
+     C     *IN69         ANDEQ     *ON
+     C                   SETON                                        64
+     C                   ELSE
+     C                   SETOFF                                       64
+     C                   ENDIF
+      *                                                                                       CLE071
+     C/COPY WNCPYSRC,SDH00113
+     C**
+     C**   Process Midas Modules
+     C                   EXSR      MMODSR
+      *                                                                   070946
+      **   Process Switchable Features                                    070946
+      *                                                                   070946
+     C                   EXSR      SARDSR                                                      07094
+      *                                                                                       CSD013
+      **   Process Available Midas System Values                                              CSD013
+      *                                                                                       CSD013
+     C                   EXSR      SVALSR
+     C**
+     C**   Determine Modules Present In System and Produce Report Pages.
+     C**
+     C********** BGDHST    IFEQ 'Y'                        IF SDGL Module S01251
+     C     BGSDGL        IFEQ      'Y'                                          IF SDGL Module S0125
+     C                   EXSR      SDGLSR                                       S.D. & G.L.
+     C**********           END                             FI BGDHST = 'Y'S01251
+     C                   END                                                    FI BGSDGL = 'Y'S0125
+     C********** BGDIST    IFEQ 'Y'                        IF Dealing: FX S01251
+     C********** BGI7ST    OREQ 'Y'                        Dealing: MM    S01251
+     C********** BGDKST    OREQ 'Y'                        Syndicated LoanS01251
+     C********** BGDQST    OREQ 'Y'                        Customer LendinS01251
+     C********** BGEDST    OREQ 'Y'                        Futures & OptioS01251
+     C********** BGDYST    OREQ 'Y'                        Securities     S01251
+     C     BGDLFX        IFEQ      'Y'                                          IF Dealing: FX S0125
+     C     BGDLMM        OREQ      'Y'                                          Dealing: MM    S0125
+     C********** BGSYLN    OREQ 'Y'                        SyndicateS01251S01339
+     C     BGCSLN        OREQ      'Y'                                          Customer LendinS0125
+     C     BGFUOP        OREQ      'Y'                                          Futures & OptioS0125
+     C     BGSECS        OREQ      'Y'                                          Securities     S0125
+     C                   EXSR      TRADSR                                       Trading Data
+     C*********************EXSR PYRCSR                     Pay Recieve Pri
+     C**********           END                             FI BGDIST = 'Y'S01251
+     C                   END                                                    FI BGDLFX = 'Y'S0125
+     C* RCF & COB ARE MANDATORY MODULES, HENCE ALWAYS PRINTED             S01117
+     C                   EXSR      RCFSR                                        RCF Data       S0111
+     C                   EXSR      COBPSR                                       COB Processing S0111
+     C********** BGDIST    IFEQ 'Y'                        IF Dealing: FX.S01251
+     C********** BGI7ST    OREQ 'Y'                        Dealing: MM.   S01251
+     C     BGDLFX        IFEQ      'Y'                                          IF Dealing: FX.S0125
+     C     BGDLMM        OREQ      'Y'                                          Dealing: MM.   S0125
+     C                   EXSR      DEALSR                                       Dealing Data
+     C**********           END                             FI BGDIST = 'Y'S01251
+     C                   END                                                    FI BGDLFX = 'Y'S0125
+     C     BGTRMG        IFEQ      'Y'                                          Trea Manage    S0131
+     C                   EXSR      TRMASR                                                      S0131
+     C                   END                                                                   S0131
+     C     BGRKMG        IFEQ      'Y'                                          IF Risk is ON  S0139
+     C                   EXSR      SRMDSR                                       SRM            S0139
+     C                   END                                                    FI BGRKMG = 'Y'S0139
+     C********** BGGNST    IFEQ 'Y'                        IF  FRA/IRS    S01251
+     C     BGFIIN        IFEQ      'Y'                                          IF  FRA/IRS    S0125
+     C                   EXSR      FAISSR                                       FRA/IRS Data
+     C**********           END                             FI BGGNST = 'Y'S01251
+     C                   END                                                    FI BGFIIN = 'Y'S0125
+     C********** BGDYST    IFEQ 'Y'                        IF  Securities.S01251
+     C     BGSECS        IFEQ      'Y'                                          IF  Securities.S0125
+     C                   EXSR      STRDSR                                       Securities
+     C**********           END                             FI BGDYST = 'Y'S01251
+     C                   END                                                    FI BGSECS = 'Y'S0125
+     C********** BGEDST    IFEQ 'Y'                        IF Futures & OpS01251
+     C     BGFUOP        IFEQ      'Y'                                          IF Futures & OpS0125
+     C                   EXSR      FODASR                                       Futures & Optio
+     C**********           END                             FI BGEDST = 'Y'S01251
+     C                   END                                                    FI BGFUOP = 'Y'S0125
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PCP3                                           S01408
+     C*                                                                   S01408
+     C*********  BGDQST    IFEQ 'Y'                        IF  Cust LendinS01251
+     C     BGCSLN        IFEQ      'Y'                                          IF  Cust LendinS0125
+     C                   EXSR      CLNDSR                                       Customer Lendin
+     C*********            END                             FI BGDQST = 'Y'S01251
+     C                   END                                                    FI BGCSLN = 'Y'S0125
+     C********** BGDKST    IFEQ 'Y'                        IF Syndicated LS01251
+     C********** BGSYLN    IFEQ 'Y'                        IF SyndicS01251S01339
+     C**********           EXSR SYLNSR                     Syndicated LoanS01339
+     C**********           END                             FI BGDKST = 'Y'S01251
+     C**********           END                             FI BGSYLNS01251S01339
+     C********** BGDSST    IFEQ 'Y'                        IF Retail BankiS01251
+     C********** BGJHST    OREQ 'Y'                        Int. on AccountS01251
+     C     BGRTBN        IFEQ      'Y'                                          IF Retail BankiS0125
+     C     BGIOAC        OREQ      'Y'                                          Int. on AccountS0125
+     C                   EXSR      RETLSR                                       Retail Details
+     C**********           END                             FI BGDSST = 'Y'S01251
+     C                   END                                                    FI BGRTBN = 'Y'S0125
+     C     BGNXST        IFEQ      'Y'                                          Retail 3       CRT00
+     C     BGRTBN        ANDEQ     'Y'                                          Retail Banking CRT00
+     C     *IN51         ANDEQ     '1'                                          CRT001 present CRT00
+     C                   EXSR      RTSDSR                                       Print Retail   CRT00
+     C                   ENDIF                                                  System Details CRT00
+     C********** BGDXST    IFEQ 'Y'                        IF M.S.D.L.    S01251
+     C     BGMSDL        IFEQ      'Y'                                          IF M.S.D.L.    S0125
+     C*********************EXSR MSDLSR                     Midas Swift    S01310
+     C                   EXSR      MGMESR                                                      S0131
+     C**********           END                             FI BGDXST = 'Y'S01251
+     C                   END                                                    FI BGMSDL = 'Y'S0125
+     C********** BGC0ST    IFEQ 'Y'                        IF  Midas TelexS01251
+     C********** BGMTMI    IFEQ 'Y'                        IF  MidexS01251S01310
+     C**********           EXSR MTLXSR                     Midas Telex    S01310
+     C**********           END                             FI BGC0ST = 'Y'S01251
+     C**********           END                             FI BGMTM'S01251S01310
+     F************************************************************************
+     C*THESE LINES OF CODE TO BE ADDED WHEN CONFIRMATION MATCHING IS AVAILABLE
+     C********** BGMLST    IFEQ 'Y'                        IF  Conf MatchiS01251
+     C*          BGCNMG    IFEQ 'Y'                        IF  Conf MatchiS01251
+     C*                    EXSR CONFSR                     Conf Matching
+     C**********           END                             FI BGMLST = 'Y'S01251
+     C*                    END                             FI BGCNMG = 'Y'S01251
+     F************************************************************************
+     C*THESE LINES OF CODE ARE ADDED FOR CONFIRMATION MATCHING            S01184
+     C***********BGCNMG    IFEQ 'Y'                 IF  Conf MatchiS01184 S01304
+     C     BGCFMT        IFEQ      'Y'                                          IF  Conf MatchiS0130
+     C                   EXSR      CONFSR                                       Conf Matching
+     C                   END                                                    FI BGCFMT = 'Y'S0118
+     F************************************************************************
+     C********** BGEAST    IFEQ 'Y'                        IF  Funds TransS01251
+     C     BGFDTR        IFEQ      'Y'                                          IF  Funds TransS0125
+     C                   EXSR      FTFRSR                                       Funds Transfer
+     C**********           END                             FI BGEAST = 'Y'S01251
+     C                   END                                                    FI BGFDTR = 'Y'S0125
+     C********** BGDNST    IFEQ 'Y'                        IF Exp Mmt     S01251
+     C     BGEXMG        IFEQ      'Y'                                          IF Exp Mmt     S0125
+     C                   EXSR      EXPMSR                                       Exp Management
+     C**********           END                             FI BGDNST = 'Y'S01251
+     C                   END                                                    FI BGEXMG = 'Y'S0125
+     C     BGMFIC        IFEQ      'Y'                                          IF  Microfiche S0111
+     C                   EXSR      MCFCSR                                       Microfiche     S0111
+     C                   END                                                    FI BGMCFC = 'Y'S0111
+     C     BGOPDK        IFEQ      'Y'                                          IF  Optical DisS0138
+     C                   EXSR      OPTCSR                                       Optical Disk   S0138
+     C                   END                                                    FI BGOPDK = 'Y'S0138
+     C     BGNUST        IFEQ      'Y'                                          IF  HAF is ON  S0137
+     C                   EXSR      HAFDSR                                       HAF            S0137
+     C                   END                                                    FI BGNUST = 'Y'S0137
+     C                   EXSR      CSFDR1                                                      06676
+     C     RFLG          IFEQ      'Y'                                                         06676
+     C                   EXSR      CSFDR2                                                      06676
+     C                   END                                                                   06676
+     C     BGNZST        IFEQ      'Y'                                          Midas-Export ONS0149
+     C                   EXSR      MEXPSR                                       Midas-Export   S0149
+     C                   END                                                    FI BGNZST = 'Y'S0149
+     C     BGPFMG        IFEQ      'Y'                                          Portfolio Manag09302
+     C*                                                                   CPB001
+     C     BGN4ST        IFEQ      'Y'                                          Private BankingCPB00
+     C                   MOVE      '1'           *IN58                                         CPB00
+     C                   ELSE                                                                  CPB00
+     C                   MOVE      '0'           *IN58                                         CPB00
+     C                   ENDIF                                                                 CPB00
+     C*                                                                   CPB001
+     C                   EXSR      PFMGSR                                                      09302
+     C                   END                                                                   09302
+     C     BGLMCR        IFEQ      'Y'                                          Portfolio Lend 09302
+     C                   EXSR      PFLDSR                                                      09302
+     C                   END                                                                   09302
+     C     BGN0ST        IFEQ      'Y'                                          Profit Centre  CAC00
+     C/COPY WNCPYSRC,SDH00650
+     C                   EXSR      PFPCSR                                       Accounting     CAC00
+     C                   END                                                                   CAC00
+     C     CGL004        IFEQ      'Y'                                          Midas-Fontis   CGL00
+     C                   EXSR      FONTSR                                       Interface      CGL00
+     C                   END                                                                   CGL00
+     C     BGN3ST        IFEQ      'Y'                                          Midas/TI IntrfcCTI00
+     C     CTI006        OREQ      'Y'
+     C                   EXSR      PFTISR                                                      CTI00
+     C                   ENDIF                                                                 CTI00
+     C     CAP002        IFEQ      'Y'                                          APIs           CAP00
+     C                   EXSR      PAPISR                                                      CAP00
+     C                   ENDIF                                                                 CAP00
+     C     CSD006        IFEQ      'Y'                                          Market Data    CSD00
+     C                   EXSR      MADFDS                                       Feeds          CSD00
+     C                   ENDIF                                                                 CSD00
+     C     BGN4ST        IFEQ      'Y'                                          Private BankingCPB00
+     C                   EXSR      PFPBSR                                                      CPB00
+     C                   ENDIF                                                                 CPB00
+      *                                                                                       CAS002
+      ** If CAS002 enhancement is installed                                                   CAS002
+      *                                                                                       CAS002
+     C     CAS002        IFEQ      'Y'
+     C                   EXSR      SRHEDG
+     C                   ENDIF
+      *                                                                                       CLE025
+      ** If CLE025 is on, process Collateral & Credit Lines ICD Details                       CLE025
+      *                                                                                       CLE025
+     C     CLE025        IFEQ      'Y'
+     C     CGL014        OREQ      'Y'
+     C     CFX001        OREQ      'Y'
+     C     P@MODE        IFNE      'A'
+     C     P@MODE        OREQ      'A'
+     C     BGLCD         ANDEQ     WURDNB
+     C                   EXSR      SRCOCC
+     C                   ENDIF
+     C                   ENDIF
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PCP7                                           S01408
+     C*                                                                   S01408
+     C**
+     C**
+     C** RE-INITIALISE FILE CONTROLS
+     C**
+     C     P@MODE        IFEQ      'A'                                          IF AUDIT MODE
+     C                   EXSR      FCTLSR                                         SET UP FCTL
+     C                   END
+     C*
+     C**********           EXSR CSFDR1                              S01423066762
+     C********** RFLG      IFEQ 'Y'                                 S01423066762
+     C**********           EXSR CSFDR2                              S01423066762
+     C**********           END                                      S01423066762
+     C**                                                                  S01423
+     C     NROF          IFEQ      0                                            IF No Recs
+     C                   WRITE     ICDHDR                                       Header
+     C                   WRITE     ZZNDRPT                                      No Details
+     C                   WRITE     ZZENDRPT                                     End Report Line
+     C                   ELSE                                                   XFI NROF = 0
+     C                   WRITE     ZZENDRPT                                     End Report Line
+     C                   END                                                    FI NROF = 0
+     C**
+     C     ENDT          TAG                                                    ** ENDT TAG **
+     C                   SETON                                        LR
+     C**
+     C********************************************************************
+     C**                                                   ---------------
+     CSR   MMODSR        BEGSR                                                  Midas Mods  SR
+     C**
+     C**   Read Midas Modules File.
+     C                   READ      SDMMODPD                               02
+     C     *IN02         IFEQ      '1'                                          IF  IN02 On
+     C                   MOVE      2             N                 2 0          ***********
+     C                   EXSR      DBERR                                        *    2    *  Er
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *02 = '1'
+      *                                                                   CAC002
+      **  Check if Analytical Accounting module is installed              CAC002
+      *                                                                   CAC002
+     C     BGN0ST        IFEQ      'Y'                                                         CAC00
+     C                   MOVE      *ON           *IN65                                         CAC00
+     C                   ELSE                                                                  CAC00
+     C                   MOVE      *OFF          *IN65                                         CAC00
+     C                   ENDIF                                                                 CAC00
+      *                                                                   CAC002
+     C     BGPFMG        IFEQ      'Y'                                                         08007
+     C     BGLMCR        OREQ      'Y'                                                         08007
+     C                   MOVE      '1'           *IN50                                         08007
+     C                   END                                                          T        08007
+      *                                                                   S10736
+      **    Check to see if the Management Accounts module is present.    S10736
+      *                                                                   S10736
+     C     BGNVST        IFEQ      'Y'                                                         S1073
+     C                   SETON                                        39                       S1073
+     C                   END                                                                   S1073
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR
+     C     P@MODE        OREQ      'A'                                            AUDIT MODE &
+     C********** BGAAVA    ANDEQWUAKTX                       LCD = RundateS01251
+     C     BGLCD         ANDEQ     WURDNB                                         LCD = RundateS0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * MMOD
+     C**********           Z-ADDBGAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BGLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C                   SETOFF                                       427879
+     C********** BGADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BGTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BGADST = 'AS01251
+     C                   ELSE                                                   XFI BGTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BGADST = 'A'S01251
+     C                   END                                                    FI BGTYLC = 'A'S0125
+     C**
+     C**   Print Midas Modules Page of Status of System..   -----------
+     C**
+     C                   WRITE     ICDHDR                                       Header Page 1
+     C                   WRITE     MMODRCD                                        Record Page 1
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZMMOD         ENDSR                                                  Midas Mods  SR
+     C**
+     C********************************************************************
+      *                                                                   070946
+      **   SARDSR - TO REPORT SWITCHABLE FEATURES                         070946
+      *                                                                   070946
+     C     SARDSR        BEGSR                                                                 07094
+      *                                                                   070946
+     C***********          READ SCSARDPD                 89        070946 CSC010
+     C                   READ      SCSAREL1                               89                   CSC01
+     C     *IN89         IFEQ      '0'                                                         07094
+     C                   WRITE     ICDHDR                                                      07094
+     C                   WRITE     SARHDR                                                      07094
+     C                   ENDIF                                                                 07094
+      *                                                                   070946
+      **   Print detail line for each Switchable Feature                  070946
+      *                                                                   070946
+     C     *IN89         DOWEQ     '0'                                                         07094
+     C**********         Z-ADD     LCD           ZDAYNO                               07094 MD054605
+     C                   Z-ADD     ABLCD         ZDAYNO                                     MD054605
+     C                   EXSR      ZDATE2                                                      07094
+     C                   MOVE      ZADATE        WULCD             7                           07094
+     C     TYLC          IFEQ      'A'                                                         07094
+     C                   MOVE      'Amend '      WUCHTP                                        07094
+     C                   ELSE                                                                  07094
+     C                   MOVE      'Insert'      WUCHTP                                        07094
+     C                   END                                                                   07094
+     C                   CALL      'AOSARDR0'                                                  CSC00
+     C                   PARM      *BLANKS       @RTCD                                         CSC00
+     C                   PARM      '*VERIFY'     @OPTN                                         CSC00
+     C******               PARM           SARN                     CSC007 CSC010
+     C                   PARM                    ABSARN                                        CSC01
+     C                   MOVE      *BLANKS       ACTFLG                                        CSC00
+     C     @RTCD         IFEQ      *BLANKS                                                     CSC00
+     C                   MOVEL     'Active'      ACTFLG                                        CSC00
+     C                   ELSE                                                                  CSC00
+     C                   MOVEL     'Inactive'    ACTFLG                                        CSC00
+     C                   ENDIF                                                                 CSC00
+     C     @RTCD         IFNE      *BLANKS                                                     CSC01
+     C     ABSARN        CHAIN     SCSARED1                           54                       CSC01
+     C     *IN54         IFEQ      *OFF                                                        CSC01
+     C                   MOVEL(P)  'Disabled'    ACTFLG                                        CSC01
+     C                   ENDIF                                                                 CSC01
+     C                   ENDIF                                                                 CSC01
+     C                   MOVE      ABSARN        SARN              6                           CSC01
+     C                   MOVE      ABSARD        SARD             50                           CSC01
+     C                   WRITE     SARRCD                                                      07094
+      *                                                                   070946
+      **   Print header if report goes over a page                        070946
+      *                                                                   070946
+     C     @$CLN         IFGE      59                                                          07094
+     C                   WRITE     ICDHDR                                                      07094
+     C                   WRITE     SARHDR                                                      07094
+     C                   ENDIF                                                                 07094
+     C******               READ SCSARDPD                 89        070946 CSC010
+     C                   READ      SCSAREL1                               89                   CSC01
+     C                   ENDDO                                                                 07094
+      *                                                                   070946
+     C/COPY WNCPYSRC,SD9000PC14
+     C                   ENDSR                                                                 07094
+      *                                                                   070946
+     C********************************************************************070946
+      *                                                                                       CSD013
+      **   SVALSR - TO REPORT AVAILABLE MIDAS SYSTEM VALUES                                   CSD013
+      *                                                                                       CSD013
+     C     SVALSR        BEGSR
+      *                                                                                       CSD013
+     C                   WRITE     ICDHDR
+     C                   WRITE     SVAHDR
+     C                   Z-ADD     7             PRTLN             2 0
+      *                                                                                       CSD013
+     C**********         READ      SDSVALJ1                               76                MD054605
+     C/EXEC SQL                                                                             MD054605
+     C+ declare ACursor insensitive scroll cursor for                                       MD054605
+     C+ select * from SDSVLJW1                                                              MD054605
+     C+ order by GIMMOD, GISVAL                                                             MD054605
+     C/END-EXEC                                                                             MD054605
+                                                                                            MD054605
+     C/EXEC SQL                                                                             MD054605
+     C+ open ACursor                                                                        MD054605
+     C/END-EXEC                                                                             MD054605
+                                                                                            MD054605
+     C/EXEC SQL                                                                             MD054605
+     C+ fetch next from ACursor into :SDSVAL :NullInds                                      MD054605
+     C/END-EXEC                                                                             MD054605
+     C                   SETOFF                                       76                    MD054605
+     C                   If        SQLCODE = 100                                            MD054605
+     C                   SETON                                        76                    MD054605
+     C                   ENDIF                                                              MD054605
+                                                                                            MD054605
+      *                                                                                       CSD013
+      **   Print Module heading and Available System Values lines until                       CSD013
+      **   end of file                                                                        CSD013
+     C     *IN76         DOWEQ     '0'
+      *                                                                                       CSD013
+     C**   Get module description from SDMMIDL1                                               CSD013
+     C*****GIMMSN        CHAIN     SDMMIDL1                           77                    MD054605
+     C     XGIMMSN       CHAIN     SDMMIDL1                           77                    MD054605
+     C     *IN77         IFEQ      '0'
+     C                   MOVEL     FOMODD        @MODD
+     C                   ENDIF
+      *                                                                                       CSD013
+      **   Save the Module as Last Midas Module                                               CSD013
+     C**********         MOVEL     GIMMOD        LMMOD             2                        MD054605
+     C                   MOVEL     XGIMMOD       LMMOD             2                        MD054605
+     C*                                                                                       CSD013
+      **   If line printed exceeds 52, write header                                           CSD013
+     C     PRTLN         IFGT      52
+     C                   WRITE     ICDHDR
+     C                   WRITE     SVAHDR
+     C                   Z-ADD     7             PRTLN
+     C                   ENDIF
+      *                                                                                       CSD013
+      **   Write Module header.                                                               CSD013
+     C                   WRITE     SVAMHD
+     C                   ADD       4             PRTLN
+      *                                                                                       CSD013
+      **   Write the system value lines until new Midas Module OR                             CSD013
+      *    end of file                                                                        CSD013
+     C*****GIMMOD        DOWEQ     LMMOD                                                    MD054605
+     C     XGIMMOD       DOWEQ     LMMOD                                                    MD054605
+     C     *IN76         ANDEQ     '0'
+      *                                                                                       CSD013
+     C**********         MOVEL     GISVAL        @SVAL                                      MD054605
+     C                   MOVEL     XGISVAL       @SVAL                                      MD054605
+     C**********         MOVEL     GIDESC        @DESC                                      MD054605
+     C                   MOVEL     XGIDESC       @DESC                                      MD054605
+      *                                                                                       CSD013
+      **   Convert last change date                                                           CSD013
+     C**********         Z-ADD     GILCD         ZDAYNO                                     MD054605
+     C                   Z-ADD     XGILCD        ZDAYNO                                     MD054605
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        @LCD              7
+      *                                                                                       CSD013
+     C**********         MOVE      GILCT         @LCT              1                        MD054605
+     C                   MOVE      XGILCT        @LCT              1                        MD054605
+     C     @LCT          IFEQ      'I'
+     C                   MOVEL     'INSERT'      @LCHG
+     C                   ENDIF
+     C     @LCT          IFEQ      'A'
+     C                   MOVEL     'AMEND '      @LCHG
+     C                   ENDIF
+     C     @LCT          IFEQ      'D'
+     C                   MOVEL     'DELETE'      @LCHG
+     C                   ENDIF
+      *                                                                                       CSD013
+      **   Print header and module header if SVARCD1 and SVARCD2 will                         CSD013
+      **   go over a page                                                                     CSD013
+      *                                                                                       CSD013
+     C     PRTLN         IFGT      56
+     C                   WRITE     ICDHDR
+     C                   WRITE     SVAHDR
+     C                   WRITE     SVAMHD
+     C                   Z-ADD     11            PRTLN
+     C                   ENDIF
+      *                                                                                       CSD013
+      **   Print the first system value line                                                  CSD013
+     C                   EVAL      GIVAL = XGIVAL                                           MD054605
+     C                   WRITE     SVARCD1
+      *                                                                                       CSD013
+      **   Print the second system value line only if not blank                               CSD013
+     C     @VAL2         IFNE      *BLANK
+     C                   WRITE     SVARCD2
+     C                   ADD       3             PRTLN
+     C                   ELSE
+     C                   ADD       2             PRTLN
+     C                   ENDIF
+      *                                                                                       CSD013
+      *                                                                                       CSD013
+      **   Get next new System Value record                                                   CSD013
+     C*****GIMMOD        DOWEQ     LMMOD                                                    MD054605
+     C     XGIMMOD       DOWEQ     LMMOD                                                    MD054605
+     C*****GISVAL        ANDEQ     @SVAL                                                    MD054605
+     C     XGISVAL       ANDEQ     @SVAL                                                    MD054605
+     C     *IN76         ANDEQ     '0'
+      *                                                                                       CSD013
+     C**********         READ      SDSVALJ1                               76                MD054605
+     C/EXEC SQL                                                                             MD054605
+     C+ fetch next from ACursor into :SDSVAL :NullInds                                      MD054605
+     C/END-EXEC                                                                             MD054605
+     C                   SETOFF                                       76                    MD054605
+     C                   If        SQLCODE = 100                                            MD054605
+     C                   SETON                                        76                    MD054605
+     C                   ENDIF                                                              MD054605
+                                                                                            MD054605
+     C                   ENDDO
+      *                                                                                       CSD013
+     C                   ENDDO
+      *                                                                                       CSD013
+     C                   ENDDO
+      *                                                                                       CSD013
+     C/EXEC SQL                                                                             MD054605
+     C+ close ACursor                                                                       MD054605
+     C/END-EXEC                                                                             MD054605
+                                                                                            MD054605
+     C                   ENDSR
+      *                                                                                       CSD013
+     C**************************************************************************              CSD013
+     C**
+     CSR   SDGLSR        BEGSR                                                  S.D. & G.L. SR
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  RQUEST OR
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BJAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BJLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * BANK
+     C**********           Z-ADDBJAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BJLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C                   SETOFF                                       427879
+     C********** BJADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BJTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BJADST = 'AS01251
+     C                   ELSE                                                   XFI BJTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BJADST = 'A'S01251
+     C                   END                                                    FI BJTYLC = 'A'S0125
+     C**
+     C**   Convert Date Of Next Working Day To DDMMMYY Format.
+     C**********           Z-ADDBJH0NB    ZDAYNO                          S01251
+     C                   Z-ADD     BJDNWD        ZDAYNO                                        S0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        WUNXTD            7
+     C**
+     C**   Convert End Of Year Date To DDMMMYY Format.
+     C**
+     C**********           Z-ADDBJH1NB    ZDAYNO                          S01251
+     C                   Z-ADD     BJEYD         ZDAYNO                                        S0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        WUEOYD            7
+     C**
+     C**   Convert Previous End Of Year Date To DDMMMYY Format.
+     C**
+     C**********           Z-ADDBJH2NB    ZDAYNO                          S01251
+     C                   Z-ADD     BJPEYD        ZDAYNO                                        S0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        WUPEOY            7
+     C/COPY WNCPYSRC,SD9000PC10
+     C**
+     C**   Print Bank Details Page
+     C                   WRITE     ICDHDR
+     C/COPY WNCPYSRC,SD9000PC15
+     C                   WRITE     BANKRCD
+     C**                                                                  E29133
+     C     NROF          ADD       1             NROF                           No Of Recs     E2913
+     C**                                                                  E29133
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     C                   READ      SDGELRPD                               03    General Ledger
+     C     *IN03         IFEQ      '1'                                          IF  IN03 On
+     C                   MOVE      3             N                              ***********
+     C                   EXSR      DBERR                                        *    3    *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *03 = '1'
+     C/COPY WNCPYSRC,SD9000PC01
+     C**
+      *                                                                                       CFT017
+      ** Call subroutine that to retrieve the euro currency decimal places                    CFT017
+      *                                                                                       CFT017
+     C     CFT017        IFEQ      'Y'
+     C                   EXSR      SREUDP
+     C                   ENDIF
+      *                                                                                       CFT017
+      ** If error encountered during the retrieve, go to the end of                           CFT017
+      ** the main subroutine                                                                  CFT017
+      *                                                                                       CFT017
+     C     RTNCDE        IFNE      *BLANKS
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       CFT017
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BKAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BKLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C*                                                                   LN1076
+     C** ONLY VALIDATE THE CUSTOMER NUMBER IF IT HAS BEEN ENTERED - THE   LN1076
+     C** STATUTORY AUTHORITY CUSTOMER NO IS OPTIONAL                      LN1076
+     C*                                                                   LN1076
+     C     BKCUST        IFNE      *BLANKS                                                     LN107
+     C                   CALL      'AOCUSTR0'                           99                     S0111
+     C**********           PARM '*MSG'    RTNCDE  7        Produce MSG on S01117
+     C     RTNCDE        PARM      '*MSG'        RTNCDE            7            Produce MSG on S0111
+     C                   PARM      '*KEY'        OPTION            7            Via Key
+     C**********           PARM BKAENB    P@KEY  10        Customer NumberS01251
+     C                   PARM      BKCUST        P@KEY            10            Customer NumberS0125
+     C                   PARM                    P@KYST            7            Key Status
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**                                                                  S01117
+     C     RTNCDE        IFNE      *BLANKS                                      IF AOCUSTR0 ERRS0111
+     C                   MOVE      5             N                              ***********    S0111
+     C                   EXSR      DBERR                                        *    5    *    S0111
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI AOCUSTR0 ERRS0111
+     C**
+     C** Extract Statutory Returns Authorisation - As Customer Shortname
+     C**********           MOVE BBBKTX    WUC8TX 10                       S01251
+     C                   MOVE      BBCSSN        WUCSST           10                           S0125
+     C                   END                                                                   LN107
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * GELR
+     C**********           Z-ADDBKAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BKLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C                   SETOFF                                       427879
+     C********** BKADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BKTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BKADST = 'AS01251
+     C                   ELSE                                                   XFI BKTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BKADST = 'A'S01251
+     C                   END                                                    FI BKTYLC = 'A'S0125
+     C**
+     C**   Determine Accruals/Profit Frequency Code Meaning.
+     C                   Z-ADD     1             S                 2 0
+     C********** BKH4NB    LOKUPAFQ1,S                   80               S01251
+     C     BKAPFQ        LOOKUP    AFQ1(S)                                80                   S0125
+     C                   MOVEA     AFQ2(S)       WUAPPF           32            Accrue Prof Fre
+     C**
+     C**   Convert Accruals/Profit Date, Day No., To DDMMMYY Format
+     C**********           Z-ADDBKFOST    ZDAYNO                          S01251
+     C                   Z-ADD     BKAPDT        ZDAYNO                                        S0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        WUAPDT            7
+      *                                                                   CGL010
+      **  Display new fields of SDGELRPD if feature CGL010 is installed   CGL010
+      *                                                                   CGL010
+     C     *IN53         IFEQ      '1'                                                         CGL01
+      *                                                                   CGL010
+     C     BKTDAN        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTDRN                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTDAN        BKTDRN                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C     BKTCAN        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTCRN                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTCAN        BKTCRN                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C     BKTDAD        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTDRD                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTDAD        BKTDRD                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C     BKTCAD        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTCRD                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTCAD        BKTCRD                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C     BKTDAC        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTDRC                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTDAC        BKTDRC                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C     BKTCAC        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTCRC                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTCAC        BKTCRC                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C     BKTDAG        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTDRG                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTDAG        BKTDRG                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C     BKTCAG        IFEQ      0                                                           CGL01
+     C                   MOVE      *BLANKS       BKTCRG                                        CGL01
+     C                   ELSE                                                                  CGL01
+     C                   MOVE      BKTCAG        BKTCRG                                        CGL01
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C                   ENDIF                                                                 CGL01
+      *                                                                   CGL010
+     C/COPY WNCPYSRC,SD9000PC02
+     C**
+     C**   Print General Ledger Details Page
+     C                   WRITE     ICDHDR
+     C                   WRITE     GELRRCD
+     C                   WRITE     ICDHDR                                       Header page 2  S0111
+     C                   WRITE     GELRRCD2                                     Records page 2 S0111
+     C/COPY WNCPYSRC,SD9000PC21
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZSDGL         ENDSR                                                   S.D. & G.L. SR
+     C**
+      *****************************************************************                       CFT017
+      *                                                               *                       CFT017
+      * SREUDP - Subroutine that retrieves the number of decimal      *                       CFT017
+      *          place of the euro currency.                          *                       CFT017
+      *                                                               *                       CFT017
+      * Called by: Main                                               *                       CFT017
+      *                                                               *                       CFT017
+      * Calls: None                                                   *                       CFT017
+      *                                                               *                       CFT017
+      *****************************************************************                       CFT017
+      *                                                                                       CFT017
+     CSR   SREUDP        BEGSR
+      *                                                                                       CFT017
+     C                   CALL      'AOCURRR0'
+     C     RTNCDE        PARM      *BLANKS       RTNCDE
+     C                   PARM      '*KEY'        OPTION
+     C                   PARM      BKEURO        KEYF
+     C     SDCURR        PARM      *BLANKS       P@FMT
+      *                                                                                       CFT017
+     C     RTNCDE        IFNE      *BLANKS
+     C                   MOVE      56            N
+     C                   MOVEL     'SDCURRPD'    DBF(N)
+     C                   MOVEL     BKEURO        DBK(N)
+     C                   EXSR      DBERR
+     C                   GOTO      ZEUDP
+     C                   ENDIF
+      *                                                                                       CFT017
+     C                   MOVE      A6NBDP        WKEUND            1 0
+      *                                                                                       CFT017
+     CSR   ZEUDP         ENDSR
+      *                                                                                       CFT017
+     C********************************************************************
+     C**
+     CSR   TRADSR        BEGSR                                                  Trading Data
+     C**
+     C                   READ      SDTRADPD                               04
+     C     *IN04         IFEQ      '1'                                          IF  IN04 On
+     C                   MOVE      4             N                              ***********
+     C                   EXSR      DBERR                                        *    4    *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *04 = '1'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PTRD                                           S01408
+     C*                                                                   S01408
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BLAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BLLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * TRAD
+     C**********           Z-ADDBLAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BLLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BLADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BLTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BLADST = 'AS01251
+     C                   ELSE                                                   XFI BLTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BLADST = 'A'
+     C                   END                                                    FI BLTYLC = 'A'
+     C**
+     C**   Print Trading Data Page
+     C                   WRITE     ICDHDR
+     C                   WRITE     TRADRCD
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZTRAD         ENDSR                                                   Trading Data
+     C**
+     C**
+     C********************************************************************
+     C**
+     C*SR*********PYRCSR    BEGSR                          Pay/Recieve  PrS01117
+     C**
+     C*********************READ TABTB40                  05               S01117
+     C************IN05     IFEQ '1'                        IF  IN05 On    S01117
+     C*********************MOVE 5         N                ***********    S01117
+     C*********************EXSR DBERR                      *    5    *    S01117
+     C*********************GOTO ENDT                       ***********    S01117
+     C*********************END                             FI *05 = '1'   S01117
+     C**
+     C***********P@MODE    IFNE 'A'                        IF  REQUEST OR.S01117
+     C***********P@MODE    OREQ 'A'                        Audit - E.O.D. S01117
+     C***********LCD       ANDEQWURDNB                     LCD = Rundate  S01117
+     C**
+     C*****Convert Last Change Date, Day Number, To DDMMMYY Format. * PYRCS01117
+     C*********************Z-ADDLCD       ZDAYNO           Last Change DatS01117
+     C*********************EXSR ZDATE2                                    S01117
+     C*********************MOVE ZADATE    LCDA    7                       S01117
+     C*********************MOVE ZADATE    WULCD   7        Last Change DatS01117
+     C**
+     C*****Determine Last Change Type.                                    S01117
+     C***********CHTP      IFEQ 'A'                        IF   Change TypS01117
+     C*********************MOVE 'Amend '  WUCHTP             Amend        S01117
+     C*********************ELSE                            XFI CHTP = 'A' S01117
+     C*********************MOVE 'Insert'  WUCHTP             Insert       S01117
+     C*********************END                             FI CHTP = 'A'  S01117
+     C**
+     C*****Print Pay Recieve Priorities                                   S01117
+     C*********************WRITEICDHDR                                    S01117
+     C*********************WRITEPRPRCD                                    S01117
+     C**
+     C***********NROF      ADD  1         NROF             No Of Recs     S01117
+     C**
+     C*********************END                             FI P@MODE ¬='A'S01117
+     C**
+     C**
+     C*SR*********ZPYRC     ENDSR                           Pay/Recieve PrS01117
+     C**                                                    --------------
+     C**
+     C********************************************************************S01117
+     C**                                                                  S01117
+     CSR   RCFSR         BEGSR                                                  RCF Data       S0111
+     C**                                                                  S01117
+     C                   READ      SDRCFPD                                22                   S0111
+     C     *IN22         IFEQ      '1'                                          IF  IN22 On    S0111
+     C***********          MOVE 22        N                *********S01117049956
+     C                   MOVE      21            N                              ***********    04995
+     C***********          EXSR DBERR                      ****22***S01117066762
+     C                   EXSR      DBERR                                        *   21    *    06676
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI *22 = '1'   S0111
+     C**                                                                  S01117
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.S0111
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0111
+     C     D0LCD         ANDEQ     WURDNB                                       LCD = Rundate  S0111
+     C**                                                                  S01117
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * TRADS01117
+     C                   Z-ADD     D0LCD         ZDAYNO                         Last Change DatS0111
+     C                   EXSR      ZDATE2                                                      S0111
+     C                   MOVE      ZADATE        LCDA              7                           S0111
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0111
+     C**                                                                  S01117
+     C**   Determine Last Change Type.                                    S01117
+     C     D0TYLC        IFEQ      'A'                                          IF   Change TypS0111
+     C                   MOVE      'Amend '      WUCHTP                           Amend        S0111
+     C                   ELSE                                                   XFI D0TYLC = 'AS0111
+     C                   MOVE      'Insert'      WUCHTP                           Insert       S0111
+     C                   END                                                    FI D0TYLC = 'A'S0111
+     C**                                                                  S01117
+     C**   Print RCF Data Page                                            S01117
+     C                   WRITE     ICDHDR                                                      S0111
+     C                   WRITE     RCFRCD                                                      S0111
+     C**                                                                  S01117
+     C     NROF          ADD       1             NROF                           No Of Recs     S0111
+     C**                                                                  S01117
+     C                   END                                                    FI P@MODE ¬='A'S0111
+     C**                                                                  S01117
+     CSR   ZRCF          ENDSR                                                   RCF Data      S0111
+     C**                                                                  S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     CSR   COBPSR        BEGSR                                                  COB Processing S0111
+     C**                                                                  S01117
+     C                   READ      SDCOBPPD                               23                   S0111
+     C     *IN23         IFEQ      '1'                                          IF  IN23 On    S0111
+     C***********          MOVE 23        N                *********S01117049956
+     C                   MOVE      22            N                              ***********    04995
+     C***********          EXSR DBERR                      ****23***S01117066762
+     C                   EXSR      DBERR                                        *   22    *    06676
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI *23 = '1'   S0111
+     C**                                                                  S01117
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.S0111
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0111
+     C     DOLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0111
+     C**                                                                  S01117
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * TRADS01117
+     C                   Z-ADD     DOLCD         ZDAYNO                         Last Change DatS0111
+     C                   EXSR      ZDATE2                                                      S0111
+     C                   MOVE      ZADATE        LCDA              7                           S0111
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0111
+     C**                                                                  S01117
+     C**   Determine Last Change Type.                                    S01117
+     C     DOTYLC        IFEQ      'A'                                          IF   Change TypS0111
+     C                   MOVE      'Amend '      WUCHTP                           Amend        S0111
+     C                   ELSE                                                   XFI DOTYLC = 'AS0111
+     C                   MOVE      'Insert'      WUCHTP                           Insert       S0111
+     C                   END                                                    FI DOTYLC = 'A'S0111
+     C**                                                                  S01117
+     C**   Print COB Processing Page                                      S01117
+     C                   WRITE     ICDHDR                                                      S0111
+     C                   WRITE     COBPRCD                                                     S0111
+     C**                                                                  S01117
+     C     NROF          ADD       1             NROF                           No Of Recs     S0111
+     C**                                                                  S01117
+     C                   END                                                    FI P@MODE ¬='A'S0111
+     C**                                                                  S01117
+     CSR   ZCOBP         ENDSR                                                   COB ProcessingS0111
+     C**                                                                  S01117
+     C********************************************************************
+     C**
+     CSR   DEALSR        BEGSR                                                   Dealing Data
+     C**
+      *                                                                   CDL006
+      ** Check if switchable feature CDL006 is switched on                CDL006
+      *                                                                   CDL006
+     C                   CALL      'AOSARDR0'                                                  CDL00
+     C                   PARM      '       '     @RTCD                                         CDL00
+     C                   PARM      '*VERIFY'     @OPTN                                         CDL00
+     C                   PARM      'CDL006'      @SARD                                         CDL00
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CDL00
+      *                                                                   CDL006
+     C     @RTCD         IFNE      *BLANKS                                                     CDL00
+     C     @RTCD         ANDNE     '*NRF   '                                                   CDL00
+     C                   MOVE      52            N                                             CDL00
+     C                   EXSR      DBERR                                                       CDL00
+     C                   GOTO      ENDT                                                        CDL00
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+     C     @RTCD         IFEQ      *BLANKS                                                     CDL00
+     C                   MOVE      *ON           *IN73                                         CDL00
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+      ** Access SAR Details to see if Compliance Watch is installed                           CAS005
+      *                                                                                       CAS005
+     C                   MOVE      'N'           CAS005            1
+     C                   MOVE      *OFF          *IN56
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY '    @OPTN
+     C                   PARM      'CAS005'      @SARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CAS005
+     C     @RTCD         IFNE      *BLANKS
+     C     @RTCD         ANDNE     '*NRF   '
+     C**********           MOVE 58        N                                          CAS005 BUG23100
+     C                   MOVE      61            N
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** If CAS005 is installed, turn on indicator 56 for printer file                        CAS005
+      *                                                                                       CAS005
+     C     @RTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CAS005
+     C                   MOVE      *ON           *IN56
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** Access SAR Details to see if Hedge Accounting Control is installed                   CAS007
+      *                                                                                       CAS007
+     C                   MOVE      'N'           CAS007            1
+     C                   MOVE      *OFF          *IN26
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY '    @OPTN
+     C                   PARM      'CAS007'      @SARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CAS007
+     C     @RTCD         IFNE      *BLANKS
+     C     @RTCD         ANDNE     '*NRF   '
+     C                   MOVE      59            N
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       CAS007
+      ** If CAS007 is installed, turn on indicator 26 for printer file                        CAS007
+      *                                                                                       CAS007
+     C     @RTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CAS007
+     C                   MOVE      *ON           *IN26
+     C                   ENDIF
+      *                                                                                       CAS007
+     C                   READ      SDDEALPD                               06
+     C     *IN06         IFEQ      '1'                                          IF  IN06 On
+     C                   MOVE      6             N                              ***********
+     C                   EXSR      DBERR                                        *    6    *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *06 = '1'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PCP2                                           S01408
+      *                                                                                       CDL048
+     C     CDL048        IFEQ      'Y'
+      *                                                                                       CDL048
+     C     BNDLDA        CHAIN     SDDEALY0                           82
+     C     *IN82         IFEQ      '1'                                          IF  IN82 ON
+     C                   MOVE      60            N                              ***********
+     C                   EXSR      DBERR                                        *   82    *
+     C                   GOTO      ENDT                                         ***********
+     C                   ENDIF                                                  FI *82 = '1'
+      *                                                                                       CDL048
+     C                   ENDIF
+     C*                                                                   S01408
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BNAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BNLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * DEAL
+     C**********           Z-ADDBNAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BNLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BNADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BNTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BNADST = 'AS01251
+     C                   ELSE                                                   XFI BNTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BNADST = 'A'S01251
+     C                   END                                                    FI BTYLCT = 'A'S0125
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PCP9                                           S01408
+     C*                                                                   S01408
+     C*                                                                   CCM002
+     C** Check if Citydealer Interface (Phase V & VI) is switched on.     CCM002
+     C*                                                                   CCM002
+     C                   MOVE      *BLANKS       WUAPRC                                        CCM00
+      *                                                                   CCM002
+     C                   CALL      'AOSARDR0'                             90                   CCM00
+     C                   PARM                    WUAPRC                                        CCM00
+     C                   PARM      '*VERIFY'     OPTION                                        CCM00
+     C                   PARM      'CCM002'      WUSARN                                        CCM00
+     C                   PARM      *BLANK        RCD3                                          CCM00
+     C*                                                                   CCM002
+     C     WUAPRC        IFEQ      *BLANKS                                                     CCM00
+     C                   MOVE      '1'           *IN52                                         CCM00
+     C                   ENDIF                                                                 CCM00
+     C**
+     C**   Print Dealing Data Record
+     C                   WRITE     ICDHDR
+      *                                                                                       CAS005
+      ** If CAS005 is installed, use BNFRL1 and BNACC1 instead of                             CAS005
+      ** BNFRPL and BNACCD when writting the printer file                                     CAS005
+      *                                                                                       CAS005
+     C     CAS005        IFEQ      'Y'
+     C                   MOVEL     BNFRPL        BNFRP1
+     C                   MOVEL     BNACCD        BNACC1
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   WRITE     DEALRCD
+      *                                                                                       CAS005
+      ** Move them back to their original variable after writting                             CAS005
+      *                                                                                       CAS005
+     C     CAS005        IFEQ      'Y'
+     C                   MOVEL     BNFRP1        BNFRPL
+     C                   MOVEL     BNACC1        BNACCD
+     C                   ENDIF
+      *                                                                                       CAS005
+     C/COPY WNCPYSRC,SD9000PC03
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     C**
+     CSR   ZDEAL         ENDSR                                                   Dealing Data
+     C**                                                    --------------
+     C**
+     C********************************************************************
+     C**                                                                  S01319
+     CSR   TRMASR        BEGSR                                                   Tr. Man Data  S0131
+     C**                                                                  S01319
+     C                   READ      SDTRMAPD                               36                   S0131
+     C     *IN36         IFEQ      '1'                                          IF  IN36 On    S0131
+     C***********          MOVE 15        N                *********S01117049956
+     C                   MOVE      14            N                              ***********    04995
+     C***********          EXSR DBERR                      *****15**S01319066762
+     C                   EXSR      DBERR                                        *    14   *    06676
+     C                   GOTO      ENDT                                         ***********    S0131
+     C                   END                                                    FI *06 = '1'   S0131
+     C**                                                                  S01319
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.S0131
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0131
+     C     ERLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0131
+     C**                                                                  S01319
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * DEALS01319
+     C                   Z-ADD     ERLCD         ZDAYNO                         Last Change DatS0131
+     C                   EXSR      ZDATE2                                                      S0131
+     C                   MOVE      ZADATE        LCDA              7                           S0131
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0131
+     C**                                                                  S01319
+     C**   Determine Last Change Type.                                    S01319
+     C     ERTYLC        IFEQ      'A'                                          IF   Change TypS0131
+     C                   MOVE      'Amend '      WUCHTP                           Amend        S0131
+     C                   ELSE                                                   XFI BNTYLC = 'AS0131
+     C                   MOVE      'Insert'      WUCHTP                           Insert       S0131
+     C                   END                                                    FI BTYLCT = 'A'S0131
+     C**                                                                  S01319
+     C**   Print Dealing Data Record                                      S01319
+     C                   WRITE     ICDHDR                                                      S0131
+     C                   WRITE     TRMARCD                                                     S0131
+     C**                                                                  S01319
+     C     NROF          ADD       1             NROF                           No Of Recs     S0131
+     C**                                                                  S01319
+     C                   END                                                    FI P@MODE ¬='A'S0131
+     C**                                                                  S01319
+     C**                                                                  S01319
+     CSR   ZTRMA         ENDSR                                                   Tr.Man  Data  S0131
+     C**                                                    --------------S01319
+     C**                                                                  S01319
+     C********************************************************************
+     C**
+     CSR   FAISSR        BEGSR                                                   FRA/IRS Data
+     C**
+     C                   READ      SDFAISPD                               07
+     C     *IN07         IFEQ      '1'                                          IF  IN07 On
+     C                   MOVE      7             N                              ***********
+     C                   EXSR      DBERR                                        *    7    *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *07 = '1'
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST  OR
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BQAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BQLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * FAIS
+     C**********           Z-ADDBQAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BQLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BQADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BQTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BQADST = 'AS01251
+     C                   ELSE                                                   XFI BQTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BQADST = 'A'S01251
+     C                   END                                                    FI BQTYLC = 'A'S0125
+     C**   Determine Whether To Print 'NONE' For Upper End Period and
+     C**          execute subroutine to zero-supress
+     C**********           MOVE BQIXNB    WUFLEP           FRA Lwr End PrdS01251
+     C                   MOVE      BQFLPD        WUFLEP                         FRA Lwr End PrdS0125
+     C                   MOVE      WUFLEP        PER0
+     C                   EXSR      PERIOD
+     C                   MOVE      PER0          WUFLEP
+     C**********           MOVE BQIWNB    WUFUEP           FRA Upr End PrdS01251
+     C                   MOVE      BQFUPD        WUFUEP                         FRA Upr End PrdS0125
+     C                   MOVE      WUFUEP        PER0
+     C                   EXSR      PERIOD
+     C                   MOVE      PER0          WUFUEP
+     C**********           MOVE BQI0NB    WUIUEP           IRS Upr End PrdS01251
+     C                   MOVE      BQIUEP        WUIUEP                         IRS Upr End PrdS0125
+     C                   MOVE      WUIUEP        PER0
+     C                   EXSR      PERIOD
+     C                   MOVE      PER0          WUIUEP
+     C**********           MOVE BQI1NB    WUILEP           IRS Lwr End PrdS01251
+     C                   MOVE      BQILEP        WUILEP                         IRS Lwr End PrdS0125
+     C                   MOVE      WUILEP        PER0
+     C                   EXSR      PERIOD
+     C                   MOVE      PER0          WUILEP
+     C     CSW005        IFEQ      'Y'                                                         CSW00
+     C                   MOVEL     BQISDA        WISDA                                         CSW00
+     C                   MOVEL     BQAGTY        WAGTY                                         CSW00
+     C                   MOVEL     BQAGDT        WAGDT                                         CSW00
+     C                   MOVEL     BQAGVV        WAGVV                                         CSW00
+     C                   ENDIF                                                                 CSW00
+     C/COPY WNCPYSRC,SD9000PC17
+     C**
+     C**   Print Forward Rate Agreement/Interest Rate Swaps Record
+     C                   WRITE     ICDHDR
+     C                   WRITE     FAISRCD
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZFAIS         ENDSR                                                   FRA/IRS Data
+     C**
+     C*  Zero supress subroutine
+     C**
+     C     PERIOD        BEGSR
+     C     PER1          IFEQ      '0'
+     C     PER2          IFEQ      '0'
+     C     PER3          IFEQ      '0'
+     C     PER4          IFEQ      '0'
+     C                   MOVE      'NONE'        PER0
+     C                   ELSE
+     C                   MOVEL     '   '         PER0
+     C                   END
+     C                   ELSE
+     C                   MOVEL     '  '          PER0
+     C                   END
+     C                   ELSE
+     C                   MOVEL     ' '           PER0
+     C                   END
+     C                   END
+     C                   ENDSR
+     C********************************************************************
+     C**
+     CSR   STRDSR        BEGSR                                                   Securities Tra
+     C**
+     C                   READ      SDSTRDPD                               08
+     C     *IN08         IFEQ      '1'                                          IF  IN08 On
+     C                   MOVE      8             N                              ***********
+     C                   EXSR      DBERR                                        *    8    *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *08 = '1'
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BVAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BVLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Mark To Market Next Date
+     C**
+     C**********           Z-ADDBVI8NB    ZDAYNO                          S01251
+     C                   Z-ADD     BVMMND        ZDAYNO                                        S0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        WUMMND
+     C**
+     C**   Look Up Depot Defaults DC01-DC10 On SDCUSTPD
+     C**
+     C********** BVAENB    IFNE *BLANK                     IF             S01251
+     C********** BVCUST    IFNE *BLANK                     IF      S01251 S01117
+     C     BVDR1         IFNE      *BLANK                                       IF             S0111
+     C**                                                   Euroclear Depot
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVAENB    KEYFLD  6                       S01251
+     C**********           PARM BVCUST    KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR1         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDETX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP01                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDETX                          S01251
+     C                   MOVEL     *BLANK        WUDP01                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 25        N                *********LN1076049956
+     C                   MOVE      24            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   24    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVAENB ¬=*BLS01251
+     C                   END                                                    FI BVCUST ¬=*BLS0125
+     C**
+     C********** BVCLCD    IFNE *BLANK                     IF             S01251
+     C     BVDR2         IFNE      *BLANK                                       IF             S0125
+     C**                                                   Cedel Depot
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCLCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR2     KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR2         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDFTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP02                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDFTX                          S01251
+     C                   MOVEL     *BLANK        WUDP02                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 26        N                *********LN1076049956
+     C                   MOVE      25            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   25    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCLCD ¬=*BLS01251
+     C                   END                                                    FI BVDR2  ¬=*BLS0125
+     C**
+     C********** BVCJCD    IFNE *BLANK                     IF             S01251
+      *                                                                                       CSE022
+      ** Depot No 3                                                                           CSE022
+      *                                                                                       CSE022
+     C     BVDR3         IFNE      *BLANK                                       IF             S0125
+     C****************************************************Kassenverein De                     CSE022
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCJCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR3     KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR3         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDGTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP03                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDGTX                          S01251
+     C                   MOVEL     *BLANK        WUDP03                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C**********           MOVE 27        N                *********LN1076049956
+     C                   MOVE      26            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   26    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCJCD ¬=*BLS01251
+     C                   END                                                    FI BVDR3  ¬=*BLS0125
+     C**
+     C********** BVCMCD    IFNE *BLANK                     IF             S01251
+     C     BVDR4         IFNE      *BLANK                                       IF             S0125
+     C**                                                   Depot No 4
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCMCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR4     KEYFLD  6               S01251  S01117
+     C                   PARM      BVDR4         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDHTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP04                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDHTX                          S01251
+     C                   MOVEL     *BLANK        WUDP04                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 28        N                *********LN1076049956
+     C                   MOVE      27            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   27    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCMCD ¬=*BLS01251
+     C                   END                                                    FI BVDR4  ¬=*BLS0125
+     C**
+     C********** BVCNCD    IFNE *BLANK                     IF             S01251
+     C     BVDR5         IFNE      *BLANK                                       IF             S0125
+     C**                                                   Depot No 5
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCNCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR5     KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR5         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDITX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP05                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDITX                          S01251
+     C                   MOVEL     *BLANK        WUDP05                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 29        N                *********LN1076049956
+     C                   MOVE      28            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   28    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCNCD ¬=*BLS01251
+     C                   END                                                    FI BVDR5  ¬=*BLS0125
+     C**
+     C********** BVCOCD    IFNE *BLANK                     IF             S01251
+     C     BVDR6         IFNE      *BLANK                                       IF             S0125
+     C**                                                   Depot No 6
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCOCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR6     KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR6         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDJTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP06                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDJTX                          S01251
+     C                   MOVEL     *BLANK        WUDP06                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 30        N                *********LN1076049956
+     C                   MOVE      29            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   29    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCOCD ¬=*BLS01251
+     C                   END                                                    FI BVDR6  ¬=*BLS0125
+     C**
+     C********** BVCPCD    IFNE *BLANK                     IF             S01251
+     C     BVDR7         IFNE      *BLANK                                       IF             S0125
+     C**                                                   Depot No 7
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCPCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR7     KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR7         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDKTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP07                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDKTX                          S01251
+     C                   MOVEL     *BLANK        WUDP07                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 31        N                *********LN1076049956
+     C                   MOVE      30            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   30    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCPCD ¬=*BLS01251
+     C                   END                                                    FI BVDR7  ¬=*BLS0125
+     C**
+     C********** BVCQCD    IFNE *BLANK                     IF             S01251
+     C     BVDR8         IFNE      *BLANK                                       IF             S0125
+     C**                                                   Depot No 8
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCQCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR8     KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR8         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C***********          MOVELBBBKTX    WUDLTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP08                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C***********          MOVEL*BLANK    WUDLTX                          S01251
+     C                   MOVEL     *BLANK        WUDP08                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 32        N                *********LN1076049956
+     C                   MOVE      31            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   31    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C***********          END                             FI BVCQCD ¬=*BLS01251
+     C                   END                                                    FI BVDR8  ¬=*BLS0125
+     C**
+     C********** BVCRCD    IFNE *BLANK                     IF             S01251
+     C     BVDR9         IFNE      *BLANK                                       IF             S0125
+     C**                                                   Depot No 9
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCRCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR9     KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR9         KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDMTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP09                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDMTX                          S01251
+     C                   MOVEL     *BLANK        WUDP09                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 33        N                *********LN1076049956
+     C                   MOVE      32            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   32    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCRCD ¬=*BLS01251
+     C                   END                                                    FI BVDR9  ¬=*BLS0125
+     C**
+     C********** BVCKCD    IFNE *BLANK                     IF             S01251
+     C     BVDR10        IFNE      *BLANK                                       IF             S0125
+     C**                                                   Depot No 10
+     C                   CALL      'AOCUSTR0'                             80
+     C**********           PARM '*MSG  '  RTNCDE  7                       S01117
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7
+     C**********           PARM BVCKCD    KEYFLD  6                       S01251
+     C**********           PARM BVDR10    KEYFLD  6                S01251 S01117
+     C                   PARM      BVDR10        KEYFLD           10                           S0111
+     C**********           PARM           KEYST   1                       S01117
+     C                   PARM                    KEYST             7                           S0111
+     C*********************PARM           P@FMT                           S01117
+     C     SDCUST        PARM      *BLANKS       P@FMT                                         S0111
+     C**
+     C     RTNCDE        IFEQ      *BLANK                                       IF
+     C**********           MOVELBBBKTX    WUDNTX           Cust Shortname S01251
+     C                   MOVEL     BBCSSN        WUDP10                         Cust Shortname S0125
+     C                   ELSE                                                   XFI RTNCDE = *B
+     C**********           MOVEL*BLANK    WUDNTX                          S01251
+     C                   MOVEL     *BLANK        WUDP10                                        S0125
+     C*********************MOVE 5         N                ********S01117 LN1076
+     C***********          MOVE 34        N                *********LN1076049956
+     C                   MOVE      33            N                              ***********    04995
+     C*********************EXSR DBERR                      *    5  S01117 LN1076
+     C                   EXSR      DBERR                                        *   33    *    LN107
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI RTNCDE = *BL
+     C**********           END                             FI BVCKCD ¬=*BLS01251
+     C                   END                                                    FI BVDR10 ¬=*BLS0125
+     C*                                                                   S01117
+     C** Find number of Decimal Places for Base Currency from Currency    S01117
+     C** File.                                                            S01117
+     C                   CALL      'AOCURRR0'                                                  S0111
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0111
+     C                   PARM      '*KEY'        OPTION            7                           S0111
+     C                   PARM      BJCYCD        KEYF              3                           S0111
+     C     SDCURR        PARM      *BLANKS       P@FMT                                         S0111
+     C**                                                                  S01117
+     C     RTNCDE        IFNE      *BLANKS                                      IF AOCURRR0 ERRS0111
+     C***********          MOVE 19        N                *********S01117049956
+     C                   MOVE      18            N                              ***********    04995
+     C                   EXSR      DBERR                                        *   18    *    S0111
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI AOCURRR0 ERRS0111
+     C**                                                                  S01117
+     C*                                                                   S01117
+     C*  ZEDIT Settlement Discrepancy Over.                               S01117
+     C                   MOVE      BVSDOV        ZFIELD                                        S0111
+     C                   MOVE      A6NBDP        ZADEC                                         S0111
+     C                   EXSR      ZEDIT                                                       S0111
+     C                   MOVE      ZFIELD        WUSTDO                                        S0111
+     C*                                                                   S01117
+     C*  ZEDIT Settlement Discrepancy Under.                              S01117
+     C                   MOVE      BVSDUN        ZFIELD                                        S0111
+     C                   MOVE      A6NBDP        ZADEC                                         S0111
+     C                   EXSR      ZEDIT                                                       S0111
+     C                   MOVE      ZFIELD        WUSTDU                                        S0111
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * STRD
+     C**********           Z-ADDBVAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BVLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BVADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BVTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BVADST = 'AS01251
+     C                   ELSE                                                   XFI BVTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BVADST = 'A'S01251
+     C                   END                                                    FI BVTYLC = 'A'S0125
+     C*                                                                   S01464
+     C** IF SAFE CUSTODY FEES FLAG IS 'Y'                                 S01464
+     C*                                                                   S01464
+     C     BVCUIN        IFEQ      'Y'                                                         S0146
+     C*                                                                   S01464
+     C                   CALL      'AOSCFER0'                                                  S0146
+     C                   PARM                    @RTCD             7                           S0146
+     C                   PARM      '*FIRST '     @OPTN             7                           S0146
+     C     SDSCFE        PARM      *BLANKS       P@FMT                                         S0146
+     C*                                                                   S01464
+     C     @RTCD         IFNE      *BLANKS                                                     S0146
+     C     FBTYLC        OREQ      'D'                                                         S0146
+     C                   MOVE      44            N                              ***********    S0146
+     C                   EXSR      DBERR                                        *    88   *    S0146
+     C                   GOTO      ENDT                                         ***********    S0146
+     C                   END                                                                   S0146
+     C*                                                                   S01464
+     C** SET UP PRINTER FILE FIELDS                                       S01464
+     C*                                                                   S01464
+     C                   MOVE      FBCFCP        SCCFCP                                        S0146
+     C                   MOVE      FBFGCP        SCFGCP                                        S0146
+     C                   MOVE      FBAUPI        SCAUPI                                        S0146
+     C                   MOVE      FBBCGC        SCBCGC                                        S0146
+     C                   MOVE      FBINCA        SCINCA                                        S0146
+     C                   MOVE      FBAACT        SCAACT                                        S0146
+     C                   MOVE      FBAFRQ        SCAFRQ                                        S0146
+     C                   MOVE      FBADYM        SCADYM                                        S0146
+     C                   MOVE      FBSGDY        SCSGDY                                        S0146
+     C                   MOVE      FBSFRE        SCSFRE                                        S0146
+     C                   MOVE      FBSDYM        SCSDYM                                        S0146
+      *                                                                   CAC003
+      ** If Analytical Accounting is available and CAC003 is on;          CAC003
+      *                                                                   CAC003
+     C     *IN86         IFEQ      '1'                                                         CAC00
+     C                   MOVE      FBPCSF        SCPCSF                                        CAC00
+     C                   ENDIF                                                                 CAC00
+     C*                                                                   S01464
+     C** Convert Next Accrual Date to DDMMMYY                             S01464
+     C*                                                                   S01464
+     C                   Z-ADD     FBANDA        ZDAYNO                                        S0146
+     C                   EXSR      ZDATE2                                                      S0146
+     C                   MOVE      ZADATE        SCANDA                                        S0146
+     C*                                                                   S01464
+     C** Convert Next Generation date to DDMMMYY                          S01464
+     C*                                                                   S01464
+     C                   Z-ADD     FBNSGD        ZDAYNO                                        S0146
+     C                   EXSR      ZDATE2                                                      S0146
+     C                   MOVE      ZADATE        SCNSGD                                        S0146
+     C*                                                                   S01464
+     C** Convert Next Settlement date to DDMMMYY                          S01464
+     C*                                                                   S01464
+     C                   Z-ADD     FBSNDA        ZDAYNO                                        S0146
+     C                   EXSR      ZDATE2                                                      S0146
+     C                   MOVE      ZADATE        SCSNDA                                        S0146
+     C                   END                                                                   S0146
+     C**
+     C**   Print Securities Trading Data
+     C                   WRITE     ICDHDR                                       Page 1 Header
+     C                   WRITE     STRDRCD                                        Page 1 Record
+     C                   WRITE     ICDHDR                                       Page 2 Header
+     C                   WRITE     STRDRCD2                                       Page 2 Record
+     C                   WRITE     ICDHDR                                       Page 3 Header
+     C                   WRITE     STRDRCD3                                       Page 3 Record
+     C     BVCUIN        IFEQ      'Y'                                                         S0146
+     C                   WRITE     ICDHDR                                       Page 4 Header  S0146
+     C                   WRITE     SCFERCD                                        Page 4 RecordS0146
+     C                   END                                                                   S0146
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C*
+     C/COPY WNCPYSRC,SD9000PCP6
+     C*
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZSTRD         ENDSR                                                   Sec Trading
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PCP8                                           S01408
+     C*                                                                   S01408
+     C**
+     C********************************************************************
+     C**
+     CSR   FODASR        BEGSR                                                   Futures & Optn
+     C**
+     C                   READ      SDFODAPD                               09
+     C     *IN09         IFEQ      '1'                                          IF  IN09 On
+     C                   MOVE      9             N                              ***********
+     C                   EXSR      DBERR                                        *    9    *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *09 = '1'
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BXAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BXLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * FODA
+     C**********           Z-ADDBXAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BXLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BXADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BXTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BXADST = 'AS01251
+     C                   ELSE                                                   XFI BXTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BXADST = 'A'S01251
+     C                   END                                                    FI BXTYLC = 'A'S0125
+     C**
+     C/COPY WNCPYSRC,SD9000PC07
+     C**   Print Futures & Options Data
+     C                   WRITE     ICDHDR
+     C                   WRITE     FODARCD
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZFODA         ENDSR                                                   FRA/IRS Data
+     C**
+     C**
+     C********************************************************************
+     C**
+     CSR   CLNDSR        BEGSR                                                   Cust Lending
+     C**
+     C                   READ      SDCLNDPD                               10
+     C     *IN10         IFEQ      '1'                                          IF  IN10 On
+     C                   MOVE      10            N                              ***********
+     C                   EXSR      DBERR                                        *    10   *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *10 = '1'
+     C**
+     C*
+     C/COPY WNCPYSRC,SD9000PCP5
+     C*
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BPAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BPLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * CLND
+     C**********           Z-ADDBPAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BPLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BPADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BPTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BPADST = 'AS01251
+     C                   ELSE                                                   XFI BPTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BPADST = 'A'S01251
+     C                   END                                                    FI BPTYLC = 'A'S0125
+      *                                                                   CLE005
+      **  Move Grace Days For Principal and Grace Days for Interest       CLE005
+      **  to Printer File fields.                                         CLE005
+      *                                                                   CLE005
+     C     *IN70         IFEQ      '1'                                                         CLE00
+      *                                                                   CLE005
+      **  Print Blanks if either Grace Days for Principal or Grace        CLE005
+      **  Days for Interest is zero.                                      CLE005
+      *                                                                   CLE005
+     C     BPGRPR        IFEQ      *ZERO                                                       CLE00
+     C                   MOVE      *BLANKS       BPGRPN                                        CLE00
+     C                   ELSE                                                                  CLE00
+     C                   MOVE      *BLANKS       ZFIELD                                        CLE00
+     C                   MOVE      BPGRPR        ZFIELD                                        CLE00
+     C                   Z-ADD     0             ZADEC                                         CLE00
+     C                   EXSR      ZEDIT                                                       CLE00
+     C                   MOVE      ZFIELD        BPGRPN                                        CLE00
+     C                   ENDIF                                                                 CLE00
+      *                                                                   CLE005
+     C     BPGRIR        IFEQ      *ZERO                                                       CLE00
+     C                   MOVE      *BLANKS       BPGRIN                                        CLE00
+     C                   ELSE                                                                  CLE00
+     C                   MOVE      *BLANKS       ZFIELD                                        CLE00
+     C                   MOVE      BPGRIR        ZFIELD                                        CLE00
+     C                   Z-ADD     0             ZADEC                                         CLE00
+     C                   EXSR      ZEDIT                                                       CLE00
+     C                   MOVE      ZFIELD        BPGRIN                                        CLE00
+     C                   ENDIF                                                                 CLE00
+     C                   ENDIF                                                                 CLE00
+     C**
+     C**   Print Customer Lending Details
+     C                   WRITE     ICDHDR
+     C                   WRITE     CLNDRCD
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZCLND         ENDSR                                                   Cust. Lending
+     C**
+     C**
+     C********************************************************************
+     C**
+     C*R******** SYLNSR    BEGSR                            SYLN          S01339
+     C**********                                                          S01339
+     C**********           READ SDSYLNPD                 11               S01339
+     C********** *IN11     IFEQ '1'                        IF  IN11 On    S01339
+     C**********           MOVE 11        N                ***********    S01339
+     C**********           EXSR DBERR                      *    11   *    S01339
+     C**********           GOTO ENDT                       ***********    S01339
+     C**********           END                             FI *11 = '1'   S01339
+     C**********                                                          S01339
+     C********** P@MODE    IFNE 'A'                        IF  REQUEST OR.S01339
+     C********** P@MODE    OREQ 'A'                        Audit - E.O.D. S01339
+     C********** BOAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C********** BOLCD     ANDEQWURDNB                     LCD = RunS01251S01339
+     C**********                                                          S01339
+     C*****Convert Last Change Date, Day Number, To DDMMMYY Format. * SYLNS01339
+     C***********          Z-ADDBOAAVA    ZDAYNO           Last Change DatS01251
+     C**********           Z-ADDBOLCD     ZDAYNO           Last ChanS01251S01339
+     C**********           EXSR ZDATE2                                    S01339
+     C**********           MOVE ZADATE    LCDA    7                       S01339
+     C**********           MOVE ZADATE    WULCD   7        Last Change DatS01339
+     C**********                                                          S01339
+     C*****Determine Last Change Type.                                    S01339
+     C********** BOADST    IFEQ 'A'                        IF   Change TypS01251
+     C********** BOTYLC    IFEQ 'A'                        IF   ChanS01251S01339
+     C**********           MOVE 'Amend '  WUCHTP             Amend        S01339
+     C**********           ELSE                            XFI BOADST = 'AS01251
+     C**********           ELSE                            XFI BOTYLS01251S01339
+     C**********           MOVE 'Insert'  WUCHTP             Insert       S01339
+     C**********           END                             FI BOADST = 'A'S01251
+     C**********           END                             FI BOTYLCS01251S01339
+     C**********                                                          S01339
+     C*****Print Syndicated Loans                                         S01339
+     C**********           WRITEICDHDR                                    S01339
+     C**********           WRITESYLNRCD                                   S01339
+     C**********                                                          S01339
+     C********** NROF      ADD  1         NROF             No Of Recs     S01339
+     C**********                                                          S01339
+     C**********           END                             FI P@MODE ¬='A'S01339
+     C**********                                                          S01339
+     C*R******** ZSYLN     ENDSR                            Syndicated LnsS01339
+     C**
+     C**
+     C**
+     C********************************************************************
+     C**
+     CSR   RETLSR        BEGSR                                                   Retail Details
+     C**
+     C                   READ      SDRETLPD                               12
+     C     *IN12         IFEQ      '1'                                          IF  IN12 On
+     C***********          MOVE 12        N                ***********    049956
+     C                   MOVE      11            N                              ***********    04995
+     C***********          EXSR DBERR                      *****12****    066762
+     C                   EXSR      DBERR                                        *    11   *    06676
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *12 = '1'
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BMAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BMLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * RETL
+     C**********           Z-ADDBMAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BMLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BMADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BMTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BMADST = 'AS01251
+     C                   ELSE                                                   XFI BMTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BMADST = 'A'S01251
+     C                   END                                                    FI BMTYLC = 'A'S0125
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PRET                                           S01408
+     C*                                                                   S01408
+     C**
+     C**   Print Retail Details
+     C                   WRITE     ICDHDR
+     C                   WRITE     RETLRCD
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PCP1                                           S01408
+     C*                                                                   S01408
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**                                                                  S01413
+     C**   Check if Retail 3 is installed                                 S01413
+     C**                                                                  S01413
+     C     BGNXST        IFEQ      'Y'                                                         S0141
+     C**                                                                  S01413
+     C                   READ      TABTBRE                                42                   S0141
+     C     *IN42         IFEQ      '1'                                                         S0141
+     C                   MOVE      41            N                                             S0141
+     C                   EXSR      DBERR                                                       S0141
+     C                   GOTO      ENDT                                                        S0141
+     C                   END                                                                   S0141
+     C**                                                                  S01413
+     C**  Database error if Statement Charges or Fixed Account Charges    072766
+     C**   installed and TABTBREXC empty.                                 072766
+     C*                                                                   072766
+     C     TSTMC         IFEQ      'Y'                                                         07276
+     C     FACH          OREQ      'Y'                                                         07276
+     C                   READ      TABTREXC                               43                   S0141
+     C     *IN43         IFEQ      '1'                                                         S0141
+     C                   MOVE      42            N                                             S0141
+     C                   EXSR      DBERR                                                       S0141
+     C                   GOTO      ENDT                                                        S0141
+     C                   END                                                                   S0141
+     C**                                                                  S01413
+     C**   Set up indicator 98 based on the date format                   S01413
+     C**                                                                  S01413
+     C     DFF           IFEQ      'M'                                                         S0141
+     C                   MOVE      '1'           *IN98                                         S0141
+     C                   ELSE                                                                  S0141
+     C                   MOVE      '0'           *IN98                                         S0141
+     C                   END                                                                   S0141
+     C**                                                                  S01413
+     C**   Convert A/C Charge Date, Midas Day Number, to MMDDYY Format    S01413
+     C**   or DDMMYY Format                                               S01413
+     C**                                                                  S01413
+     C                   Z-ADD     REACCD        ZDAYNO                                        S0141
+     C                   EXSR      ZDATE2                                                      S0141
+     C                   MOVE      ZDATE         WUACCD            6 0                         S0141
+     C                   END                                                                   07276
+     C**                                                                  S01413
+     C/COPY WNCPYSRC,SD9000PC11
+     C**   Print Retail Optional Features                                 S01413
+     C**                                                                  S01413
+     C                   WRITE     ICDHDR                                                      S0141
+     C                   WRITE     RET3RCD                                                     S0141
+     C**                                                                  S01413
+     C                   END                                                                   S0141
+     C**
+     C/COPY WNCPYSRC,SD9000PC09
+     C                   END                                                    FI P@MODE ¬='A'
+     C******WNCPYSRC,SD9000PC04****************************************
+     C/COPY WNCPYSRC,SD9000PC13
+     C**   Check if Retail 3 and Tiered Withholding Tax is installed                          CDL013
+     C**                                                                                      CDL013
+     C     CDL013        IFEQ      '1'
+     C     BGNXST        ANDEQ     'Y'
+     C     BGNTST        ANDEQ     'Y'
+     C**                                                                                      CDL013
+     C                   READ      SDSTAXPD                               41
+     C     *IN41         IFEQ      '1'
+     C                   MOVE      61            N
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   END
+     C**                                                                                      CDL013
+     C                   READ      SDSTAXPA                               14
+     C     *IN14         IFEQ      '1'
+     C                   MOVE      *ON           *INU7
+     C                   MOVE      *ON           *INU8
+     C     *LOCK         IN        LDA
+     C                   MOVEL     'SDSTAXPA'    DBFILE
+     C                   MOVE      '  '          BLANKS           29
+     C                   MOVE      'A/C CODE'    DBKEY
+     C                   MOVEL     'SD9000P'     DBPGM
+     C                   Z-ADD     N             DBASE
+     C                   OUT       LDA
+     C*                                                                                       CDL013
+     C* Write Error Header Record                                                             CDL013
+     C*                                                                                       CDL013
+     C                   WRITE     ICDHDR
+     C* Write Error Record                                                                    CDL013
+     C*                                                                                       CDL013
+     C                   WRITE     ZZDBERR
+     C* Write End Report Record                                                               CDL013
+     C*                                                                                       CDL013
+     C                   WRITE     ZZENDRPT
+     C*                                                                                       CDL013
+     C                   GOTO      ENDT
+     C                   END
+     C**                                                                                      CDL013
+     C**   Check if Tiered Withholding Tax ICD is to be printed                               CDL013
+     C**                                                                                      CDL013
+     C     TXLCD         IFEQ      WURDNB
+     C**                                                                                      CDL013
+     C**   Print Withholding Tax Details                                                      CDL013
+     C**                                                                                      CDL013
+     C/COPY WNCPYSRC,SDH00075
+     C                   WRITE     ICDHDR
+     C/COPY WNCPYSRC,SDH00493
+     C                   WRITE     WHTRCD
+     C/COPY WNCPYSRC,SDH00076
+      *                                                                                       CDL013
+     C                   END
+      *                                                                                       CDL013
+     C                   ELSE
+     C**                                                                  S01413
+     C**   Check if Retail 3 and Withholding Tax is installed             S01413
+     C**                                                                  S01413
+     C     BGNXST        IFEQ      'Y'                                                         S0141
+     C     BGNTST        ANDEQ     'Y'                                                         S0141
+     C     CGL031        OREQ      'Y'
+     C     CGL032        OREQ      'Y'
+     C**                                                                  S01413
+     C                   READ      SDSTAXPD                               41                   S0141
+     C     *IN41         IFEQ      '1'                                                         S0141
+     C                   MOVE      43            N                                             S0141
+     C                   EXSR      DBERR                                                       S0141
+     C                   GOTO      ENDT                                                        S0141
+     C                   END                                                                   S0141
+     C**                                                                  S01413
+     C**   Check if Withholding Tax ICD is to be printed                  S01413
+     C**                                                                  S01413
+     C     TXLCD         IFEQ      WURDNB                                                      S0141
+      *                                                                                       CGL032
+      ** If CGL032 is turned on print out Customer Income Retention Period                    CGL032
+      ** and EU Withholding Tax Transaction Type fields.                                      CGL032
+      *                                                                                       CGL032
+     C                   MOVE      *OFF          *IN76
+     C                   MOVE      *OFF          *IN77
+      *                                                                                       CGL032
+     C     CGL032        IFEQ      'Y'
+      *                                                                                       CGL032
+      ** Blank out print out if field is zero.                                                CGL032
+      *                                                                                       CGL032
+     C     TXRTNP        IFEQ      0
+     C                   MOVE      *BLANKS       RRTNP
+     C                   ELSE
+     C                   MOVE      TXRTNP        RRTNP
+     C                   ENDIF
+      *                                                                                       CGL032
+     C**********           MOVE TXTXTT    RTXTT                                        CGL032 232543
+      **********                                                                       CGL032 232543
+     C********** TXCEXD    IFEQ 0                                                      CGL032 232543
+     C**********           MOVE *BLANKS   RCEXD                                        CGL032 232543
+     C**********           ELSE                                                        CGL032 232543
+     C**********           MOVE TXCEXD    RCEXD                                        CGL032 232543
+     C**********           ENDIF                                                       CGL032 232543
+      *                                                                                       CGL032
+     C                   MOVE      *ON           *IN76
+      *                                                                                       CGL032
+     C                   ENDIF
+      *                                                                                       232543
+     C     CGL031        IFEQ      'Y'
+      *                                                                                       232543
+     C                   MOVE      *ON           *IN77
+      *                                                                                       232543
+     C                   MOVE      TXTXTT        RTXTT
+      *                                                                                       232543
+     C     TXCEXD        IFEQ      0
+     C                   MOVE      *BLANKS       RCEXD
+     C                   ELSE
+     C                   MOVE      TXCEXD        RCEXD
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CER048
+     C     CER048        IFEQ      'Y'
+     C                   MOVE      TXTHRP        RTHRP
+     C                   MOVE      TXTYRP        RTYRP
+     C                   ENDIF
+     C**                                                                  S01413
+     C**   Print Withholding Tax Details                                  S01413
+     C**                                                                  S01413
+     C                   WRITE     ICDHDR                                                      S0141
+     C                   WRITE     WTAXRCD                                                     S0141
+     C**                                                                  S01413
+     C                   END                                                                   S0141
+     C**                                                                  S01413
+     C                   END                                                                   S0141
+     C**   Check if Retail 3 and Tiered Withholding Tax is installed                          CDL013
+     C**   Endif command.                                                                     CDL013
+      *                                                                                       CDL013
+     C                   ENDIF
+     C/COPY WNCPYSRC,SD9000PC06
+     C**
+     CSR   ZRETL         ENDSR                                                   Retail Details
+     C**                                                                  CRT001
+     C********************************************************************CRT001
+     C**                                                                  CRT001
+     CSR   RTSDSR        BEGSR                                                  RTS Default r  CRT00
+     C**                                                   Tran Charge    CRT001
+     C**                                                                  CRT001
+     C                   READ      SDTCHGPD                               51                   CRT00
+     C     *IN51         IFEQ      '1'                                                         CRT00
+     C                   MOVE      46            N                                             CRT00
+     C                   EXSR      DBERR                                                       CRT00
+     C                   GOTO      ENDT                                                        CRT00
+     C                   ENDIF                                                                 CRT00
+     C*                                                                   CRT001
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.CRT00
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. CRT00
+     C     FSLCD         ANDEQ     WURDNB                                       LCD = Rundate  CRT00
+     C**                                                                  CRT001
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * RETLCRT001
+     C                   Z-ADD     FSLCD         ZDAYNO                         Last Change DatCRT00
+     C                   EXSR      ZDATE2                                                      CRT00
+     C                   MOVE      ZADATE        LCDA              7                           CRT00
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatCRT00
+     C**                                                                  CRT001
+     C**   Determine Last Change Type.                                    CRT001
+     C     FSTYLC        IFEQ      'A'                                          IF   Change TypCRT00
+     C                   MOVE      'Amend '      WUCHTP                           Amend        CRT00
+     C                   ELSE                                                   XFI FSTYLC = 'ACRT00
+     C                   MOVE      'Insert'      WUCHTP                           Insert       CRT00
+     C                   END                                                    FI FSTYLC = 'A'CRT00
+     C*                                                                   CRT001
+     C**                                                                  CRT001
+     C**   Check if Retail Teller System Details are to be printed        CRT001
+     C**                                                                  CRT001
+     C     FSLCD         IFEQ      WURDNB                                                      CRT00
+     C**                                                                  CRT001
+     C**   Print Retail Teller System Details                             CRT001
+     C**                                                                  CRT001
+     C                   WRITE     ICDHDR                                                      CRT00
+     C                   WRITE     RTSDRCD                                                     CRT00
+     C**                                                                  CRT001
+     C                   ENDIF                                                                 CRT00
+     C                   ENDIF                                                                 CRT00
+     C**                                                                  CRT001
+     CSR   ZRTSD         ENDSR                                                  RTS Details    CRT00
+     C**
+     C*****************************************************************   S01310
+     C*SR*********MSDLSR****BEGSR                           Midas Swift   S01310
+     C*****************************************************************   S01310
+     C*********************READ SDMSDLPD                 13               S01310
+     C************IN13*****IFEQ '1'                        IF  IN13 On    S01310
+     C*********************MOVE 13        N                ***********    S01310
+     C*********************EXSR DBERR                      *    13   *    S01310
+     C*********************GOTO ENDT                       ***********    S01310
+     C*********************END                             FI *13 = '1'   S01310
+     C*****************************************************************   S01310
+     C***********P@MODE****IFNE 'A'                        IF  REQUEST OR.S01310
+     C***********P@MODE****OREQ 'A'                        Audit - E.O.D. S01310
+     C********** BSAAVA    ANDEQWUAKTX                     LCD =Rundate   S01251
+     C***********BSLCD*****ANDEQWURDNB                     LCD =RunS01251 S01310
+     C*****************************************************************   S01310
+     C*********************CALL 'SD9181G'              14          E22895 S01310
+     C*********************PARM *BLANKS   VPMS    1                E22895 S01310
+     C**********           READ TABTB11                  14        E22895 S01310
+     C************IN14*****IFEQ '1'                        IF  IN14 On    S01310
+     C*********************MOVE 14        N                ***********    S01310
+     C*********************EXSR DBERR                      *    14   *    S01310
+     C*********************GOTO ENDT                       ***********    S01310
+     C*********************END                             FI *14 = '1'   S01310
+     C*****************************************************************   S01310
+     C************NAMVAR***DEFN           MSSTAT                          S01310
+     C*********************IN   MSSTAT                                    S01310
+     C*****************************************************************   S01310
+     C***Extract*Drop*Swift*Messages*Ind.******************************   S01310
+     C***********          TESTB'1'       MSDR       87    Drop SwiE22895 S01310
+     C************IN87     IFEQ '1'                        IF *IN87E22895 S01310
+     C***********          MOVE 'Y'       MSDR             Drop SwiE22895 S01310
+     C***********          ELSE                            EIF     E22895 S01310
+     C***********          MOVE 'N'       MSDR             Drop SwiE22895 S01310
+     C***********          END                             FI  *IN8E22895 S01310
+     C*****************************************************************   S01310
+     C*****Convert*Last*Change*Date,*Day*Number,*To*DDMMMYY*Format.***MSDLS01310
+     C**********           Z-ADDBSAAVA    ZDAYNO           Last Change DatS01251
+     C*********************Z-ADDBSLCD     ZDAYNO           Last ChaS01251 S01310
+     C*********************EXSR ZDATE2                                    S01310
+     C*********************MOVE ZADATE    LCDA    7                       S01310
+     C*********************MOVE ZADATE    WULCD   7        Last Change DatS01310
+     C*****************************************************************   S01310
+     C*****Determine*Last*Change*Type.*********************************   S01310
+     C********** BSADST    IFEQ 'A'                        IF   Change TypS01251
+     C***********BSTYLC****IFEQ 'A'                        IF   ChaS01251 S01310
+     C*********************MOVE 'Amend '  WUCHTP             Amend        S01310
+     C**********           ELSE                            XFI BSADST = 'AS01251
+     C*********************ELSE                            XFI BSTYS01251 S01310
+     C*********************MOVE 'Insert'  WUCHTP             Insert       S01310
+     C**********           END                             FI BSADST = 'A'S01251
+     C*********************END                             FI BSTYLS01251 S01310
+     C*****************************************************************   S01310
+     C*****Print*Midas*Swift*Direct*Link*Data**************************   S01310
+     C*********************WRITEICDHDR                                    S01310
+     C*********************WRITEMSDLRCD                                   S01310
+     C*****************************************************************   S01310
+     C***********NROF******ADD  1         NROF             No Of Recs     S01310
+     C*****************************************************************   S01310
+     C*********************END                             FI P@MODE ¬='A'S01310
+     C*****************************************************************   S01310
+     C*SR*********ZMSDL*****ENDSR                           MIDAS Swift   S01310
+     C*****************************************************************   S01310
+     C*****************************************************************   S01310
+     C********************************************************************
+     C*****************************************************************   S01310
+     C**                                                                  S01310
+     C** MESSAGE MANAGEMENT DETAILS                                       S01310
+     C**                                                                  S01310
+     C*****************************************************************   S01310
+     CSR   MGMESR        BEGSR                                                                 S0131
+     C                   READ      SDMGMEPD                               13                   S0131
+     C     *IN13         IFEQ      '1'                                          IF  IN13 On    S0131
+     C***********          MOVE 13        N                *********S01310049956
+     C***********          MOVE 38        N                *********049956066762
+     C                   MOVE      40            N                              ***********    06676
+     C***********          EXSR DBERR                      *****13**S01310066762
+     C                   EXSR      DBERR                                        *    40   *    06676
+     C                   GOTO      ENDT                                         ***********    S0131
+     C                   END                                                    FI *13 = '1'   S0131
+     C/COPY WNCPYSRC,SD9000PC20
+     C*                                                                   S01310
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.S0131
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.&S0131
+     C     ENLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0131
+     C*   Convert Last Change Date, Day Number, To DDMMMYY Format. * M TLXS01310
+     C                   Z-ADD     ENLCD         ZDAYNO                                        S0131
+     C                   EXSR      ZDATE2                                                      S0131
+     C                   MOVE      ZADATE        LCDA              7                           S0131
+     C                   MOVE      ZADATE        WULCD             7                           S0131
+     C*   Determine Last Change Type.                                     S01310
+     C     ENTYLC        IFEQ      'A'                                                         S0131
+     C                   MOVE      'Amend '      WUCHTP                                        S0131
+     C                   ELSE                                                                  S0131
+     C                   MOVE      'Insert'      WUCHTP                                        S0131
+     C                   END                                                                   S0131
+     C*   Print Message Management Data                                   S01310
+     C                   WRITE     ICDHDR                                                      S0131
+     C                   WRITE     MGMERCD                                                     S0131
+      *                                                                   S01431
+      **  Print Merva/2 Direct Link Details if Protocol used is APPC.     S01431
+      *                                                                   S01431
+     C     ENPRUS        IFEQ      'APPC'                                                      S0143
+     C                   WRITE     ICDHDR                                                      S0143
+     C                   WRITE     MGMERCD2                                                    S0143
+     C                   END                                                                   S0143
+      *                                                                   CSW009
+      **  Print Midas-SWIFT Alliance AFT details if                       CSW009
+      **  protocol used is 'SEMI'                                         CSW009
+     C     ENPRUS        IFEQ      'SEMI'                                                      CSW00
+     C                   WRITE     ICDHDR                                                      CSW00
+     C                   WRITE     MGMERCD3                                                    CSW00
+     C                   ENDIF                                                                 CSW00
+     C/COPY WNCPYSRC,SD9000PC19
+     C*                                                                   S01431
+     C     NROF          ADD       1             NROF                                          S0131
+     C                   END                                                    FI             S0131
+     CSR                 ENDSR                                                                 S0131
+     C*****************************************************************   S01310
+      *********************                                               S01310
+     C*********************                                               S01310
+     C*R*********MTLXSR****BEGSR                            Midas Telex   S01310
+     C*********************                                               S01310
+     C*********************READ SDMTLXPD                 15               S01310
+     C************IN15*****IFEQ '1'                        IF  IN15 On    S01310
+     C*********************MOVE 15        N                ***********    S01310
+     C*********************EXSR DBERR                      *    15   *    S01310
+     C*********************GOTO ENDT                       ***********    S01310
+     C*********************END                             FI *15 = '1'   S01310
+     C*********************                                               S01310
+     C***********P@MODE****IFNE 'A'                        IF  REQUEST OR.S01310
+     C***********P@MODE****OREQ 'A'                        Audit - E.O.D. S01310
+     C***********BRAAVA****ANDEQWUAKTX                     LCD = e  S01251S01310
+     C***********BRLCD*****ANDEQWURDNB                     LCD = E  S01251S01310
+     C*********************                                               S01310
+     C*********************CALL 'SD9191U'              16           E22895S01310
+     C*********************PARM *BLANKS   MSDR    1                 E22895S01310
+     C***********1*********SETLLTABTB11                             E22895S01310
+     C*********************READ TABTB11                  16         E22895S01310
+     C************IN16*****IFEQ '1'                        IF  IN16 On    S01310
+     C*********************MOVE 16        N                ***********    S01310
+     C*********************EXSR DBERR                      *    16   *    S01310
+     C*********************GOTO ENDT                       ***********    S01310
+     C*********************END                             FI *16 = '1'   S01310
+     C*********************                                               S01310
+     C***Extract*Drop*Swift Messages Ind.                                 S01310
+     C*********************TESTB'1'       MSDR       87    Drop Ssg E22895S01310
+     C************IN87*****IFEQ '1'                        IF *IN1' E22895S01310
+     C*********************MOVE 'Y'       MSDR             Drop Ssg E22895S01310
+     C*********************ELSE                            EIF      E22895S01310
+     C*********************MOVE 'N'       MSDR             Drop Swg E22895S01310
+     C*********************END                             FI  *IN1'E22895S01310
+     C*********************                                               S01310
+     C*****Convert*Last*Change Date, Day Number, To DDMMMYY Format. * MTLXS01310
+     C*********************Z-ADDBRAAVA    ZDAYNO           Last ChatS01251S01310
+     C*********************Z-ADDBRLCD     ZDAYNO           Last ChatS01251S01310
+     C*********************EXSR ZDATE2                                    S01310
+     C*********************MOVE ZADATE    LCDA    7                       S01310
+     C*********************MOVE ZADATE    WULCD   7        Last Change DatS01310
+     C*********************                                               S01310
+     C*****Determine*Last*Change Type.                                    S01310
+     C***********BRADST****IFEQ 'A'                        IF   ChypS01251S01310
+     C***********BRTYLC****IFEQ 'A'                        IF   Ch pS01251S01310
+     C*********************MOVE 'Amend '  WUCHTP             Amend        S01310
+     C*********************ELSE                            XFI BRADAS01251S01310
+     C*********************ELSE                            XFI BRTYLS01251S01310
+     C*********************MOVE 'Insert'  WUCHTP             Insert       S01310
+     C*********************END                             FI BRADSTS01251S01310
+     C*********************END                             FI BRTYLCS01251S01310
+     C*********************                                               S01310
+     C*****Print*Midas*Telex Data                                         S01310
+     C*********************WRITEICDHDR                                    S01310
+     C*********************WRITEMTLXRCD                                   S01310
+     C*********************                                               S01310
+     C***********NROF******ADD  1         NROF             No Of Recs     S01310
+     C*********************                                               S01310
+     C*********************END                             FI P@MODE ¬='A'S01310
+     C*********************                                               S01310
+     C*R*********ZMTLX*****ENDSR                            Midas Telex   S01310
+     C*********************                                               S01310
+     C*************************************************************************
+     C*    THESE LINES OF CODE ARE TO BE INSERTED WHEN CONFIRMATION MATCHING  *
+     C*    IS AVAILABLE                                                       *
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C**
+     C**         CONFSR    BEGSR                            Confirmation
+     C**                                                    Matching
+     C**                   READ SDCONFPD                 19
+     C**         *IN19     IFEQ '1'                        IF  IN19 ON
+     C**                   MOVE 19        N                ***********
+     C**                   EXSR DBERR                      *    19   *
+     C**                   GOTO ENDT                       ***********
+     C**                   END                             FI *19 = '1'
+     C**                                                                     *
+     C**         P@MODE    IFNE 'A'                        IF  REQUEST OR.   *
+     C**         P@MODE    OREQ 'A'                        Audit - E.O.D.    *
+     C********** DSAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C**         DSLCD     ANDEQWURDNB                     LCD = Rundate  S01251
+     C**                                                                     *
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * FTFR   *
+     C**********           Z-ADDDSAAVA    ZDAYNO           Last Change DatS01251
+     C**                   Z-ADDDSLCD     ZDAYNO           Last Change DatS01251
+     C**                   EXSR ZDATE2                                       *
+     C**                   MOVE ZADATE    LCDA    7                          *
+     C**                   MOVE ZADATE    WULCD   7        Last Change Dat   *
+     C**                                                                     *
+     C**   Determine Last Change Type.                                       *
+     C********** DSADST    IFEQ 'A'                        IF   Change TypS01251
+     C**         DSTYLC    IFEQ 'A'                        IF   Change TypS01251
+     C**                   MOVE 'Amend '  WUCHTP             Amend           *
+     C**********           ELSE                            XFI BTADST = 'AS01251
+     C**                   ELSE                            XFI BTTYLC = 'AS01251
+     C**                   MOVE 'Insert'  WUCHTP             Insert          *
+     C**********           END                             FI BTADST = 'A'S01251
+     C**                   END                             FI BTTYLC = 'A'S01251
+     C**
+     C**   Print Confirmation Matching
+     C**                   WRITEICDHDR
+     C**                   WRITECONFRCD
+     C**
+     C**         NROF      ADD  1         NROF             No Of Recs
+     C**
+     C***                  END                             FI P@MODE ¬='A'
+     C**
+     C**         ZCONFR    ENDSR                            Confirmation
+     C**
+     C******************************************************************* S01184
+     C*    THESE LINES OF CODE ARE INSERTED FOR CONFIRMATION MATCHING     S01184
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * S01184
+     C*                                                                   S01184
+     C     CONFSR        BEGSR                                                   Confirmation  S0118
+     C*                                                     Matching      S01184
+     C                   READ      SDCONFPD                               19                   S0118
+     C     *IN19         IFEQ      '1'                                          IF  IN19 ON    S0118
+     C****************     MOVE 19        N         ***********    S01184 S01314
+     C****************     EXSR DBERR               *    19   *    S01184 S01314
+     C***********          MOVE 35        N                ********S01314 049956
+     C                   MOVE      34            N                              ***********    04995
+     C***********          EXSR DBERR                      *****35**S01314066762
+     C                   EXSR      DBERR                                        *    34   *    06676
+     C                   GOTO      ENDT                                         ***********    S0118
+     C                   END                                                    FI *19 = '1'   S0118
+     C*                                                                   S01184
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.S0118
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0118
+     C     DSLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0118
+     C*                                                                   S01184
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * FTFRS01184
+     C                   Z-ADD     DSLCD         ZDAYNO                         Last Change DatS0118
+     C                   EXSR      ZDATE2                                                      S0118
+     C                   MOVE      ZADATE        LCDA              7                           S0118
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0118
+     C*                                                                   S01184
+     C**   Determine Last Change Type.                                    S01184
+     C     DSTYLC        IFEQ      'A'                                          IF   Change TypS0118
+     C                   MOVE      'Amend '      WUCHTP                           Amend        S0118
+     C                   ELSE                                                   XFI BTTYLC = 'AS0118
+     C                   MOVE      'Insert'      WUCHTP                           Insert       S0118
+     C                   END                                                    FI BTTYLC = 'A'S0118
+     C*                                                                   S01184
+     C**   Print Confirmation Matching                                    S01184
+     C                   WRITE     ICDHDR                                                      S0118
+     C                   WRITE     CONFRCD                                                     S0118
+     C*                                                                   S01184
+     C     NROF          ADD       1             NROF                           No Of Recs     S0118
+     C*                                                                   S01184
+     C                   END                                                    FI P@MODE ¬='A'S0118
+     C*                                                                   S01184
+     C     ZCONFR        ENDSR                                                   Confirmation  S0118
+     C*                                                                   S01184
+     C*************************************************************************
+     C**
+     CSR   FTFRSR        BEGSR                                                   Funds Transfer
+     C**
+     C                   READ      SDFTFRPD                               17
+     C/COPY WNCPYSRC,SD9000PC08
+     C     *IN17         IFEQ      '1'                                          IF  IN17 On
+     C***********          MOVE 17        N                ***********    049956
+     C                   MOVE      16            N                              ***********    04995
+     C***********          EXSR DBERR                      *****17****    066762
+     C                   EXSR      DBERR                                        *    16   *    06676
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *17 = '1'
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BTAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BTLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * FTFR
+     C**********           Z-ADDBTAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BTLCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BTADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BTTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BTADST = 'AS01251
+     C                   ELSE                                                   XFI BTTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BTADST = 'A'S01251
+     C                   END                                                    FI BTTYLC = 'A'S0125
+      *                                                                   070946
+      **   ZEDIT Audit Threshold                                          070946
+      *                                                                   070946
+     C                   MOVE      BTAUDT        ZFIELD                                        07094
+     C                   MOVE      A6NBDP        ZADEC                                         07094
+     C                   EXSR      ZEDIT                                                       07094
+     C                   MOVE      ZFIELD        WUAUDT                                        07094
+     C/COPY WNCPYSRC,SDH00111
+      *                                                                                       CFT017
+     C     CFT017        IFEQ      'Y'
+      *                                                                                       CFT017
+      ** If CFT017 is installed, format MIF fields:                                           CFT017
+      ** ZEDIT Multilateral Inter-bank Fee                                                    CFT017
+      *                                                                                       CFT017
+     C                   MOVE      BTMIFE        ZFIELD
+     C                   MOVE      WKEUND        ZADEC
+     C                   EXSR      ZEDIT
+     C                   MOVE      ZFIELD        WUMIFE
+      *                                                                                       CFT017
+      ** ZEDIT MIF Threshold                                                                  CFT017
+      *                                                                                       CFT017
+     C                   MOVE      BTMIFT        ZFIELD
+     C                   MOVE      WKEUND        ZADEC
+     C                   EXSR      ZEDIT
+     C                   MOVE      ZFIELD        WUMIFT
+      *                                                                                       CFT017
+     C                   ENDIF
+     C**
+     C**   Print Funds Transfer
+     C                   WRITE     ICDHDR
+     C                   WRITE     FTFRRCD
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZFTFR         ENDSR                                                   Funds Transfer
+     C**
+     C********************************************************************
+     C**
+     CSR   EXPMSR        BEGSR                                                   Exposure Mgmt
+     C**
+     C                   READ      SDEXPMPD                               18
+     C     *IN18         IFEQ      '1'                                          IF  IN18 On
+     C***********          MOVE 18        N                ***********    049956
+     C                   MOVE      17            N                              ***********    04995
+     C***********          EXSR DBERR                      *****18****    066762
+     C                   EXSR      DBERR                                        *    17   *    06676
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *18 = '1'
+     C**
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
+     C********** BUAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
+     C     BULCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+     C**
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * EXPM
+     C**********           Z-ADDBUAAVA    ZDAYNO           Last Change DatS01251
+     C                   Z-ADD     BULCD         ZDAYNO                         Last Change DatS0125
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat
+     C**
+     C**   Determine Last Change Type.
+     C********** BUADST    IFEQ 'A'                        IF   Change TypS01251
+     C     BUTYLC        IFEQ      'A'                                          IF   Change TypS0125
+     C                   MOVE      'Amend '      WUCHTP                           Amend
+     C**********           ELSE                            XFI BUADST = 'AS01251
+     C                   ELSE                                                   XFI BUTYLC = 'AS0125
+     C                   MOVE      'Insert'      WUCHTP                           Insert
+     C**********           END                             FI BUADST = 'A'S01251
+     C                   END                                                    FI BUTYLC = 'A'S0125
+     C**
+     C**   Print Exposure Management Data
+     C                   WRITE     ICDHDR
+     C                   WRITE     EXPMRCD
+     C**
+     C     NROF          ADD       1             NROF                           No Of Recs
+     C**
+     C                   END                                                    FI P@MODE ¬='A'
+     C**
+     CSR   ZEXPM         ENDSR                                                  Exposure Mgmt
+     C**
+     C********************************************************************
+     C**                                                                  S01117
+     CSR   MCFCSR        BEGSR                                                  Microfiche DataS0111
+     C**                                                                  S01117
+     C                   READ      SDMCFCPD                               24                   S0111
+     C     *IN24         IFEQ      '1'                                          IF  IN24 On    S0111
+     C***********          MOVE 24        N                ********S01117 049956
+     C                   MOVE      23            N                              ***********    04995
+     C***********          EXSR DBERR                      ****24***S01117066762
+     C                   EXSR      DBERR                                        *   23    *    06676
+     C                   GOTO      ENDT                                         ***********    S0111
+     C                   END                                                    FI *24 = '1'   S0111
+     C**                                                                  S01117
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.S0111
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0111
+     C     D1LCD         ANDEQ     WURDNB                                       LCD = Rundate  S0111
+     C**                                                                  S01117
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * TRADS01117
+     C                   Z-ADD     D1LCD         ZDAYNO                         Last Change DatS0111
+     C                   EXSR      ZDATE2                                                      S0111
+     C                   MOVE      ZADATE        LCDA              7                           S0111
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0111
+     C**                                                                  S01117
+     C**   Determine Last Change Type.                                    S01117
+     C     D1TYLC        IFEQ      'A'                                          IF   Change TypS0111
+     C                   MOVE      'Amend '      WUCHTP                           Amend        S0111
+     C                   ELSE                                                   XFI D1TYLC = 'AS0111
+     C                   MOVE      'Insert'      WUCHTP                           Insert       S0111
+     C                   END                                                    FI D1TYLC = 'A'S0111
+     C**                                                                  S01117
+     C**   Print Microfiche Data Page                                     S01117
+     C                   WRITE     ICDHDR                                                      S0111
+     C                   WRITE     MCFCRCD                                                     S0111
+     C**                                                                  S01117
+     C     NROF          ADD       1             NROF                           No Of Recs     S0111
+     C**                                                                  S01117
+     C                   END                                                    FI P@MODE ¬='A'S0111
+     C**                                                                  S01117
+     CSR   ZMCFC         ENDSR                                                   Microfiche DatS0111
+     C**                                                                  S01117
+     C********************************************************************S01382
+     C**                                                                  S01382
+     CSR   OPTCSR        BEGSR                                                  Optical Disk DaS0138
+     C**                                                                  S01382
+     C                   READ      SDOPTCPD                               37                   S0138
+     C     *IN37         IFEQ      '1'                                          IF  IN37 On    S0138
+     C***********          MOVE 36        N                ********S01382 049956
+     C                   MOVE      35            N                              ***********    04995
+     C***********          EXSR DBERR                      ****36***S01382066762
+     C                   EXSR      DBERR                                        *   35    *    06676
+     C                   GOTO      ENDT                                         ***********    S0138
+     C                   END                                                    FI *37 = '1'   S0138
+     C**                                                                  S01382
+     C     P@MODE        IFNE      'A'                                          IF  REQUEST OR.S0138
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0138
+     C     ODLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0138
+     C**                                                                  S01382
+     C**   Convert Last Change Date, Day Number, To DDMMMYY Format.       S01382
+     C                   Z-ADD     ODLCD         ZDAYNO                         Last Change DatS0138
+     C                   EXSR      ZDATE2                                                      S0138
+     C                   MOVE      ZADATE        LCDA              7                           S0138
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0138
+     C**                                                                  S01382
+     C**   Determine Last Change Type.                                    S01382
+     C     ODTYLC        IFEQ      'A'                                          IF   Change TypS0138
+     C                   MOVE      'Amend '      WUCHTP                           Amend        S0138
+     C                   ELSE                                                   XFI ODTYLC = 'AS0138
+     C                   MOVE      'Insert'      WUCHTP                           Insert       S0138
+     C                   END                                                    FI ODTYLC = 'A'S0138
+     C**                                                                  S01382
+     C**   Print Optical Disk Data Page                                   S01382
+     C                   WRITE     ICDHDR                                                      S0138
+     C                   WRITE     OPTCRCD                                                     S0138
+     C**                                                                  S01382
+     C     NROF          ADD       1             NROF                           No Of Recs     S0138
+     C**                                                                  S01382
+     C                   END                                                    FI P@MODE ¬='A'S0138
+     C**                                                                  S01382
+     CSR   ZOPTC         ENDSR                                                  Optical Disk DaS0138
+     C**                                                                  S01382
+     C********************************************************************S01379
+     C**                                                                  S01379
+     CSR   HAFDSR        BEGSR                                                   HAF Data      S0137
+     C**                                                                  S01379
+     C                   READ      SDHAFDPD                               38                   S0137
+     C     *IN38         IFEQ      '1'                                          If IN38 on     S0137
+     C                   MOVE      38            N                              ************** S0137
+     C                   EXSR      DBERR                                        *     38     * S0137
+     C                   GOTO      ENDT                                         ************** S0137
+     C                   END                                                    FI *38 = '1'   S0137
+     C**                                                                  S01379
+     C     P@MODE        IFNE      'A'                                          IF request OR  S0137
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0137
+     C     ETLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0137
+     C**                                                                  S01379
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         S01379
+     C                   Z-ADD     ETLCD         ZDAYNO                         Last Change DatS0137
+     C                   EXSR      ZDATE2                                                      S0137
+     C                   MOVE      ZADATE        LCDA              7                           S0137
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0137
+     C**                                                                  S01379
+     C** Determine Last Change Type.                                      S01379
+     C     ETTYLC        IFEQ      'A'                                          IF Change Type S0137
+     C                   MOVE      'Amend '      WUCHTP                         Amend          S0137
+     C                   ELSE                                                   XFI ETTYLC = 'AS0137
+     C                   MOVE      'Insert'      WUCHTP                         Insert         S0137
+     C                   END                                                    FI ETTYLC = 'A'S0137
+     C**                                                                  S01379
+     C** Print History and Audit Facility Data Page.                      S01379
+     C                   WRITE     ICDHDR                                                      S0137
+     C                   WRITE     HAFDRCD                                                     S0137
+     C**                                                                  S01379
+     C     NROF          ADD       1             NROF                           No of Recs     S0137
+     C**                                                                  S01379
+     C                   END                                                    FI P@MODE = 'A'S0137
+     C**                                                                  S01379
+     CSR   ZHAFD         ENDSR                                                                 S0137
+     C**                                                   History & AuditS01379
+     C********************************************************************S01393
+     C**                                                                  S01393
+     CSR   SRMDSR        BEGSR                                                   Risk Data     S0139
+     C**                                                                  S01393
+     C                   READ      SDRISKPD                               40                   S0139
+     C     *IN40         IFEQ      '1'                                          If IN40 on     S0139
+     C***********          MOVE 40        N                *********S01393049956
+     C***********          MOVE 37        N                *********049956066762
+     C                   MOVE      39            N                              ************** 06676
+     C***********          EXSR DBERR                      ******40*S01393066762
+     C                   EXSR      DBERR                                        *     39     * 06676
+     C                   GOTO      ENDT                                         ************** S0139
+     C                   END                                                    FI *40 = '1'   S0139
+     C**                                                                  S01393
+     C     P@MODE        IFNE      'A'                                          IF request OR  S0139
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0139
+     C     EULCD         ANDEQ     WURDNB                                       LCD = Rundate  S0139
+     C**                                                                  S01393
+     C** Convert Next Required Date to DDMMMYY Format.                    S01393
+     C                   Z-ADD     EUNXDT        ZDAYNO                         Last Change DatS0139
+     C                   EXSR      ZDATE2                                                      S0139
+     C                   MOVE      ZADATE        LCDA              7                           S0139
+     C                   MOVE      ZADATE        WUNXDT            7            Last Change DatS0139
+     C**                                                                  S01393
+     C********** Convert Previous Date to DDMMMYY Format.           S01393CRM001
+     C**********           Z-ADDEUPRDT    ZDAYNO           Last ChanS01393CRM001
+     C**********           EXSR ZDATE2                              S01393CRM001
+     C**********           MOVE ZADATE    LCDA    7                 S01393CRM001
+     C**********           MOVE ZADATE    WUPRDT  7        Last ChanS01393CRM001
+     C**                                                                  S01393
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         S01393
+     C                   Z-ADD     EULCD         ZDAYNO                         Last Change DatS0139
+     C                   EXSR      ZDATE2                                                      S0139
+     C                   MOVE      ZADATE        LCDA              7                           S0139
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0139
+     C**                                                                  S01393
+     C** Determine Last Change Type.                                      S01393
+     C     EUTYLC        IFEQ      'A'                                          IF Change Type S0139
+     C                   MOVE      'Amend '      WUCHTP                         Amend          S0139
+     C                   ELSE                                                   XFI EUTYLC = 'AS0139
+     C                   MOVE      'Insert'      WUCHTP                         Insert         S0139
+     C                   END                                                    FI EUTYLC = 'A'S0139
+     C**                                                                  S01393
+     C** Print Risk Management Data Page.                                 S01393
+     C                   WRITE     ICDHDR                                                      S0139
+     C                   WRITE     RKMGRCD                                                     S0139
+     C**                                                                  S01393
+     C     NROF          ADD       1             NROF                           No of Recs     S0139
+     C**                                                                  S01393
+     C                   END                                                    FI P@MODE = 'A'S0139
+     C**                                                                  S01393
+     CSR   ZSRMD         ENDSR                                                                 S0139
+     C**                                                   Risk ManagementS01393
+     C**************************************************************************
+     C* Sub Routine to establish whether switchable feature is on         S01423
+     C* the switchable features file.                                     S01423
+     C*                                                                   S01423
+     C     CSFDR1        BEGSR                                                                 S0142
+     C                   MOVEL     *BLANK        WUAPRC            7                           S0142
+     C                   MOVEL     *BLANK        WUMSGF           10                           S0142
+     C                   MOVEL     'S01423'      WUSARN            6                           S0142
+     C                   MOVEL     'SDUSRMSG'    WUMSGF                                        S0142
+     C                   CALL      'AOSARDR0'                             90                   S0142
+     C     WUAPRC        PARM      WUAPRC        RCD1              7                           S0142
+     C                   PARM      '*VERIFY'     RCD2              7                           S0142
+     C     WUSARN        PARM      WUSARN        RETRN             6                           S0142
+     C                   PARM      *BLANK        RCD3             76                           S0142
+     C     WUAPRC        IFEQ      *BLANK                                                      S0142
+     C*                                                                   S01423
+     C* If the report is requested,a flag is sent to main program         S01423
+     C* to enable the processing of the Customer Service Fees Details     S01423
+     C* Report.                                                           S01423
+     C*                                                                   S01423
+     C                   MOVE      'Y'           RFLG              1                           S0142
+     C                   ELSE                                                                  S0142
+     C                   MOVE      'N'           RFLG                                          S0142
+     C                   ENDIF                                                                 S0142
+     C                   ENDSR                                                                 S0142
+     C*                                                                   S01423
+     C*****************************************************************   S01423
+     C*                                                                   S01423
+     C*****************************************************************   S01423
+     C* Sub Routine which writes the Customer Service Fees Details        S01423
+     C* if requested.                                                     S01423
+     C*                                                                   S01423
+     C     CSFDR2        BEGSR                                                                 S0142
+     C                   Z-ADD     0             WORK15           15 0                         S0142
+     C                   MOVEL     'CSFD'        KCSFD            10                           S0142
+     C     KCSFD         CHAIN     SDCSFDL1                           55                       S0142
+     C     *IN55         IFEQ      '1'                                                         S0142
+     C                   MOVE      36            N                                             S0142
+     C                   EXSR      DBERR                                                       S0142
+     C                   GOTO      ENDT                                                        S0142
+     C                   ENDIF                                                                 S0142
+     C                   MOVE      E4NPFQ        WUNPFQ                                        S0142
+     C                   MOVE      E4NACD        WUNACD                                        S0142
+     C                   MOVE      E4NCDN        WUNCDN                                        S0142
+     C                   MOVE      E4HPFQ        WUHPFQ                                        S0142
+     C                   MOVE      E4HACD        WUHACD                                        S0142
+     C                   MOVE      E4HCDN        WUHCDN                                        S0142
+     C     P@MODE        IFEQ      'A'                                                         S0142
+     C     E4LCD         ANDEQ     WURDNB                                                      S0142
+     C     P@MODE        ORNE      'A'                                                         S0142
+     C*                                                                   S01423
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         S01423
+     C*                                                                   S01423
+     C                   Z-ADD     E4LCD         ZDAYNO                                        S0142
+     C                   EXSR      ZDATE2                                                      S0142
+     C                   MOVE      ZADATE        WULCD                                         S0142
+     C*                                                                   S01423
+     C** Convert Numbered Account Charge Date to DDMMMYY Format           S01423
+     C*                                                                   S01423
+     C                   Z-ADD     E4NCDT        ZDAYNO                                        S0142
+     C                   EXSR      ZDATE2                                                      S0142
+     C                   MOVE      ZADATE        WUNCDT                                        S0142
+     C*                                                                   S01423
+     C** Convert Hold Mail Charge Date to DDMMMYY Format.                 S01423
+     C*                                                                   S01423
+     C                   MOVE      E4HCDT        ZDAYNO                                        S0142
+     C                   EXSR      ZDATE2                                                      S0142
+     C                   MOVE      ZADATE        WUHCDT                                        S0142
+     C*                                                                   S01423
+     C** Find number of Decimal Places for Base Currency from Currency    S01423
+     C** File.                                                            S01423
+     C                   CALL      'AOCURRR0'                                                  S0142
+     C     RTNCDE        PARM      '*MSG  '      RTNCDE            7                           S0142
+     C                   PARM      '*KEY'        OPTION            7                           S0142
+     C                   PARM      BJCYCD        KEYF              3                           S0142
+     C     SDCURR        PARM      *BLANKS       P@FMT                                         S0142
+     C**                                                                  S01423
+     C     RTNCDE        IFNE      *BLANKS                                      IF AOCURRR0 ERRS0142
+     C                   MOVE      37            N                              ***********    S0142
+     C                   EXSR      DBERR                                        *   37    *    S0142
+     C                   GOTO      ENDT                                         ***********    S0142
+     C                   END                                                    FI AOCURRR0 ERRS0142
+     C**                                                                  S01423
+     C*** Convert all the numeric fields in the file to include           S01423
+     C**  decimal points.                                                 S01423
+     C*                                                                   S01423
+     C                   MOVE      E4NAMT        ZFIELD                                        S0142
+     C                   MOVE      A6NBDP        ZADEC                                         S0142
+     C                   EXSR      ZEDIT                                                       S0142
+     C                   MOVE      ZFIELD        WUNAMT                                        S0142
+     C*                                                                   S01423
+     C*                                                                   S01423
+     C                   MOVE      E4HAMT        ZFIELD                                        S0142
+     C                   MOVE      A6NBDP        ZADEC                                         S0142
+     C                   EXSR      ZEDIT                                                       S0142
+     C                   MOVE      ZFIELD        WUHAMT                                        S0142
+     C**                                                                  S01423
+     C** Insert and Amend constants are set up for output depending       S01423
+     C** on the last change type.                                         S01423
+     C**                                                                  S01423
+     C     E4TYLC        IFEQ      'A'                                                         S0142
+     C                   MOVEL     'Amend'       WUTYLC                                        S0142
+     C                   ELSE                                                                  S0142
+     C                   MOVEL     'Insert'      WUTYLC                                        S0142
+     C                   ENDIF                                                                 S0142
+     C*                                                                   S01423
+     C/COPY WNCPYSRC,SD9000PC12
+     C** Records are written to the file.                                 S01423
+     C*                                                                   S01423
+     C                   WRITE     ICDHDR                                                      S0142
+     C                   WRITE     CSFDRCD                                                     S0142
+     C                   ENDIF                                                                 S0142
+     C*                                                                   S01423
+     C                   ENDSR                                                                 S0142
+     C********************************************************************
+     C**                                                                  S01493
+     CSR   MEXPSR        BEGSR                                                  MIDAS-ED     IFS0149
+     C**                                                                  S01493
+     C                   READ      SDMEXPPD                               46                   S0149
+     C     *IN46         IFEQ      '1'                                          If IN46 on     S0149
+     C                   MOVE      45            N                              ************** S0149
+     C                   EXSR      DBERR                                        *     46     * S0149
+     C                   GOTO      ENDT                                         ************** S0149
+     C                   END                                                    FI *46 = '1'   S0149
+     C**                                                                  S01493
+     C     P@MODE        IFNE      'A'                                          IF request OR  S0149
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. S0149
+     C     E7LCD         ANDEQ     WURDNB                                       LCD = Rundate  S0149
+     C**                                                                  S01493
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         S01493
+     C                   Z-ADD     E7LCD         ZDAYNO                         Last Change DatS0149
+     C                   EXSR      ZDATE2                                                      S0149
+     C                   MOVE      ZADATE        LCDA              7                           S0149
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatS0149
+     C**                                                                  S01493
+     C** Determine Last Change Type.                                      S01493
+     C     E7TYLC        IFEQ      'A'                                          IF Change Type S0149
+     C                   MOVE      'Amend '      WUCHTP                         Amend          S0149
+     C                   ELSE                                                   XFI E7TYLC = 'AS0149
+     C                   MOVE      'Insert'      WUCHTP                         Insert         S0149
+     C                   END                                                    FI E7TYLC = 'A'S0149
+     C**                                                                  S01493
+     C** Print Midas Export Data Mod. Data Page.                          S01493
+     C                   WRITE     ICDHDR                                                      S0149
+     C                   WRITE     MEXPRCD                                                     S0149
+     C**                                                                  S01493
+     C     NROF          ADD       1             NROF                           No of Recs     S0149
+     C**                                                                  S01493
+     C                   END                                                    FI P@MODE = 'A'S0149
+     C**                                                                  S01493
+     CSR   ZMEXP         ENDSR                                                                 S0149
+     C**                                                   Midas-Export InS01493
+     C********************************************************************093024
+     C**                                                                  093024
+     C**  Portfolio Management                                            093024
+     CSR   PFMGSR        BEGSR                                                                 09302
+     C**                                                                  093024
+     C                   READ      SDPORTPD                               46                   09302
+     C     *IN46         IFEQ      '1'                                          If IN46 on     09302
+     C***********          MOVE 52        N                ******* 093024 096624
+     C***********          EXSR DBERR                      *       093024 096624
+     C                   MOVE      47            N                              ************** 09662
+     C                   EXSR      DBERR                                        *     47     * 09662
+     C                   GOTO      ENDT                                         ************** 09302
+     C                   END                                                    FI *46 = '1'   09302
+     C**                                                                  093024
+     C     P@MODE        IFNE      'A'                                          IF request OR  09302
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. 09302
+     C     FCLCD         ANDEQ     WURDNB                                       LCD = Rundate  09302
+     C**                                                                  093024
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         093024
+     C                   Z-ADD     FCLCD         ZDAYNO                         Last Change Dat09302
+     C                   EXSR      ZDATE2                                                      09302
+     C                   MOVE      ZADATE        LCDA              7                           09302
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat09302
+     C**                                                                  093024
+     C** Determine Last Change Type.                                      093024
+     C     FCTYLC        IFEQ      'A'                                          IF Change Type 09302
+     C                   MOVE      'Amend '      WUCHTP                         Amend          09302
+     C                   ELSE                                                   XFI FCTYLC = 'A09302
+     C                   MOVE      'Insert'      WUCHTP                         Insert         09302
+     C                   END                                                    FI FCTYLC = 'A'09302
+     C**                                                                  093024
+     C** Print Portfolio Management Data Page.                            093024
+     C                   WRITE     ICDHDR                                                      09302
+     C                   WRITE     PFMGRCD                                                     09302
+     C**                                                                  093024
+     C     NROF          ADD       1             NROF                           No of Recs     09302
+     C**                                                                  093024
+     C                   END                                                    FI P@MODE = 'A'09302
+     C**                                                                  093024
+     CSR   ZPFMG         ENDSR                                                                 09302
+     C**                                                   Portfolio Manag093024
+     C********************************************************************093024
+     C**                                                                  093024
+     C**  Portfolio Lending                                               093024
+     CSR   PFLDSR        BEGSR                                                                 09302
+     C**                                                                  093024
+     C                   READ      SDLOMBPD                               46                   09302
+     C     *IN46         IFEQ      '1'                                          If IN46 on     09302
+     C***********          MOVE 53        N                ******* 093024 096624
+     C***********          EXSR DBERR                      *       093024 096624
+     C                   MOVE      48            N                              ************** 09662
+     C                   EXSR      DBERR                                        *     48     * 09662
+     C                   GOTO      ENDT                                         ************** 09302
+     C                   END                                                    FI *46 = '1'   09302
+     C**                                                                  093024
+     C     P@MODE        IFNE      'A'                                          IF request OR  09302
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. 09302
+     C     LBLCD         ANDEQ     WURDNB                                       LCD = Rundate  09302
+     C**                                                                  093024
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         093024
+     C                   Z-ADD     LBLCD         ZDAYNO                         Last Change Dat09302
+     C                   EXSR      ZDATE2                                                      09302
+     C                   MOVE      ZADATE        LCDA              7                           09302
+     C                   MOVE      ZADATE        WULCD             7            Last Change Dat09302
+     C**                                                                  093024
+     C** Determine Last Change Type.                                      093024
+     C     LBTYLC        IFEQ      'A'                                          IF Change Type 09302
+     C                   MOVE      'Amend '      WUCHTP                         Amend          09302
+     C                   ELSE                                                   XFI LBTYLC = 'A09302
+     C                   MOVE      'Insert'      WUCHTP                         Insert         09302
+     C                   END                                                    FI LBTYLC = 'A'09302
+     C**                                                                  093024
+     C** Print Portfolio Management Data Page.                            093024
+     C                   WRITE     ICDHDR                                                      09302
+     C                   WRITE     PFLDRCD                                                     09302
+     C**                                                                  093024
+     C     NROF          ADD       1             NROF                           No of Recs     09302
+     C**                                                                  093024
+     C                   END                                                    FI P@MODE = 'A'09302
+     C/COPY WNCPYSRC,SD9000PC04
+     C**                                                                  093024
+     CSR   ZPFLD         ENDSR                                                                 09302
+     C**                                                   Portfolio Lend 093024
+     C********************************************************************S01493
+     C**                                                                  CAC001
+     C**  Profit Centre Accounting                                        CAC001
+     CSR   PFPCSR        BEGSR                                                                 CAC00
+     C**                                                                  CAC001
+     C                   READ      SDPCACPD                               53                   CAC00
+     C     *IN53         IFEQ      '1'                                          If IN53 on     CAC00
+     C                   MOVE      49            N                              ************** CAC00
+     C                   EXSR      DBERR                                        *     49     * CAC00
+     C                   GOTO      ENDT                                         ************** CAC00
+     C                   END                                                    FI *53 = '1'   CAC00
+     C**                                                                  CAC001
+     C     P@MODE        IFNE      'A'                                          IF request OR  CAC00
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. CAC00
+     C     FTLCD         ANDEQ     WURDNB                                       LCD = Rundate  CAC00
+     C**                                                                  CAC001
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         CAC001
+     C                   Z-ADD     FTLCD         ZDAYNO                         Last Change DatCAC00
+     C                   EXSR      ZDATE2                                                      CAC00
+     C                   MOVE      ZADATE        LCDA              7                           CAC00
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatCAC00
+     C**                                                                  CAC001
+     C** Determine Last Change Type.                                      CAC001
+     C     FTTYLC        IFEQ      'A'                                          IF Change Type CAC00
+     C                   MOVE      'Amend '      WUCHTP                         Amend          CAC00
+     C                   ELSE                                                   XFI FTTYLC = 'ACAC00
+     C                   MOVE      'Insert'      WUCHTP                         Insert         CAC00
+     C                   END                                                    FI FTTYLC = 'A'CAC00
+     C**                                                                  CAC001
+     C** Print Profit Centre Accounting Data Page.                        CAC001
+     C                   WRITE     ICDHDR                                                      CAC00
+     C/COPY WNCPYSRC,SDH00651
+     C                   WRITE     PFPCRCD                                                     CAC00
+     C/COPY WNCPYSRC,SDH00652
+     C**                                                                  CAC001
+     C     NROF          ADD       1             NROF                           No of Recs     CAC00
+     C**                                                                  CAC001
+     C                   END                                                    FI P@MODE = 'A'CAC00
+     C**                                                                  CAC001
+     CSR   ZPFPC         ENDSR                                                                 CAC00
+     C**                                                   Profit Cntr AccCAC001
+     C********************************************************************CAC001
+     C**                                                                  CTI001
+     C**  Midas / Trade Innovation Interface                              CTI001
+     CSR   PFTISR        BEGSR                                                                 CTI00
+     C**                                                                  CTI001
+     C                   READ      SDTIINPD                               54                   CTI00
+     C     *IN54         IFEQ      '1'                                          If IN54 on     CTI00
+     C                   MOVE      50            N                              ************** CTI00
+     C                   EXSR      DBERR                                        *     50     * CTI00
+     C                   GOTO      ENDT                                         ************** CTI00
+     C                   ENDIF                                                  FI *54 = '1'   CTI00
+     C**                                                                  CTI001
+     C     P@MODE        IFNE      'A'                                          IF request OR  CTI00
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. CTI00
+     C     TILCD         ANDEQ     WURDNB                                       LCD = Rundate  CTI00
+     C**                                                                  CTI001
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         CTI001
+     C                   Z-ADD     TILCD         ZDAYNO                         Last Change DatCTI00
+     C                   EXSR      ZDATE2                                                      CTI00
+     C                   MOVE      ZADATE        LCDA              7                           CTI00
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatCTI00
+     C**                                                                  CTI001
+     C** Determine Last Change Type.                                      CTI001
+     C     TITYLC        IFEQ      'A'                                          IF Change Type CTI00
+     C                   MOVE      'Amend '      WUCHTP                         Amend          CTI00
+     C                   ELSE                                                   XFI TITYLC = 'ACTI00
+     C                   MOVE      'Insert'      WUCHTP                         Insert         CTI00
+     C                   END                                                    FI TITYLC = 'A'CTI00
+     C**                                                                  CTI001
+     C** Print Midas/Trade Innovation Interface Data Page.                CTI001
+     C                   WRITE     ICDHDR                                                      CTI00
+      *                                                                                       CTI006
+     C     CTI006        IFEQ      'Y'
+     C                   MOVE      TIPRFC        T0PRFC
+     C                   MOVE      TIBOOK        T0BOOK
+     C                   MOVE      TIDLST        T0DLST
+     C                   MOVE      TIBALA        T0BALA
+     C                   MOVE      WULCD         W0LCD
+     C                   MOVE      WUCHTP        W0CHTP
+     C                   WRITE     PFTIRCD2
+     C                   ELSE
+     C                   WRITE     PFTIRCD                                                     CTI00
+     C                   ENDIF
+     C**                                                                  CTI001
+     C     NROF          ADD       1             NROF                           No of Recs     CTI00
+     C**                                                                  CTI001
+     C                   ENDIF                                                  FI P@MODE = 'A'CTI00
+     C**                                                                  CTI001
+     CSR   ZPFTI         ENDSR                                                                 CTI00
+     C**                                                   Midas/TI IntrfcCTI001
+     C********************************************************************CAP006
+     C**                                                                  CAP006
+     C**  Application Program Interface (APIs)                            CAP006
+     CSR   PAPISR        BEGSR                                                                 CAP00
+     C**                                                                  CAP006
+     C                   READ      SDAPIPD                                72                   CAP00
+     C     *IN72         IFEQ      '1'                                          If IN72 on     CAP00
+     C                   MOVE      51            N                              ************** CAP00
+     C                   EXSR      DBERR                                        *     51     * CAP00
+     C                   GOTO      ENDT                                         ************** CAP00
+     C                   ENDIF                                                  FI *72 = '1'   CAP00
+     C**                                                                  CAP006
+     C     P@MODE        IFNE      'A'                                          IF request OR  CAP00
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. CAP00
+     C     GHLCD         ANDEQ     WURDNB                                       LCD = Rundate  CAP00
+     C**                                                                  CAP006
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         CAP006
+     C                   Z-ADD     GHLCD         ZDAYNO                         Last Change DatCAP00
+     C                   EXSR      ZDATE2                                                      CAP00
+     C                   MOVE      ZADATE        LCDA              7                           CAP00
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatCAP00
+     C**                                                                  CAP006
+     C** Determine Last Change Type.                                      CAP006
+     C     GHTYLC        IFEQ      'A'                                          IF Change Type CAP00
+     C                   MOVE      'Amend '      WUCHTP                         Amend          CAP00
+     C                   ELSE                                                   XFI GHTYLC = 'ACAP00
+     C                   MOVE      'Insert'      WUCHTP                         Insert         CAP00
+     C                   END                                                    FI GHTYLC = 'A'CAP00
+     C**                                                                  CAP006
+     C** Print Application Program Interface Data Page.                   CAP006
+     C                   WRITE     ICDHDR                                                      CAP00
+     C                   WRITE     PAPIRCD                                                     CAP00
+     C**                                                                  CAP006
+     C     NROF          ADD       1             NROF                           No of Recs     CAP00
+     C**                                                                  CAP006
+     C                   ENDIF                                                  FI P@MODE = 'A'CAP00
+     C**                                                                  CAP006
+     CSR   ZPAPI         ENDSR                                                                 CAP00
+     C**                                                   APIs           CAP006
+      ********************************************************************CSD006
+      *                                                                   CSD006
+      **  Market Data Feeds                                               CSD006
+      *                                                                   CSD006
+     CSR   MADFDS        BEGSR                                                                 CSD00
+      *                                                                   CSD006
+     C                   READ      SDMDFCPD                               75                   CSD00
+     C     *IN75         IFEQ      '1'                                                         CSD00
+     C                   MOVE      54            N                                             CSD00
+     C                   EXSR      DBERR                                                       CSD00
+     C                   GOTO      ENDT                                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+B2   C     P@MODE        IFNE      'A'                                                         CSD00
+     C     P@MODE        OREQ      'A'                                                         CSD00
+     C     MDLCD         ANDEQ     WURDNB                                                      CSD00
+      *                                                                   CSD006
+      *                                                                   CSD006
+      ** Convert Security Price Tolerance                                 CSD006
+     C     MDSPTL        IFNE      0                                                           CSD00
+     C                   MOVE      MDSPTL        ZFIELD                                        CSD00
+     C                   MOVE      2             ZADEC                                         CSD00
+     C                   EXSR      ZEDIT                                                       CSD00
+     C                   MOVE      ZFIELD        WUSPTL                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+      ** Convert Spot Rate Tolerance                                      CSD006
+     C     MDSRTL        IFNE      0                                                           CSD00
+     C                   MOVE      MDSRTL        ZFIELD                                        CSD00
+     C                   MOVE      2             ZADEC                                         CSD00
+     C                   EXSR      ZEDIT                                                       CSD00
+     C                   MOVE      ZFIELD        WUSRTL                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+      ** Convert Forward Rate Tolerance                                   CSD006
+     C     MDFRTL        IFNE      0                                                           CSD00
+     C                   MOVE      MDFRTL        ZFIELD                                        CSD00
+     C                   MOVE      2             ZADEC                                         CSD00
+     C                   EXSR      ZEDIT                                                       CSD00
+     C                   MOVE      ZFIELD        WUFRTL                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+      ** Convert Interest Rate Tolerance                                  CSD006
+     C     MDIRTL        IFNE      0                                                           CSD00
+     C                   MOVE      MDIRTL        ZFIELD                                        CSD00
+     C                   MOVE      2             ZADEC                                         CSD00
+     C                   EXSR      ZEDIT                                                       CSD00
+     C                   MOVE      ZFIELD        WUIRTL                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+      ** Convert Base Rate Tolerance                                      CSD006
+     C     MDBRTL        IFNE      0                                                           CSD00
+     C                   MOVE      MDBRTL        ZFIELD                                        CSD00
+     C                   MOVE      2             ZADEC                                         CSD00
+     C                   EXSR      ZEDIT                                                       CSD00
+     C                   MOVE      ZFIELD        WUBRTL                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+      ** Convert History Retention Period                                 CSD006
+     C     MDHRTP        IFNE      0                                                           CSD00
+     C                   MOVE      MDHRTP        ZFIELD                                        CSD00
+     C                   MOVE      0             ZADEC                                         CSD00
+     C                   EXSR      ZEDIT                                                       CSD00
+     C                   MOVE      ZFIELD        WUHRTP                                        CSD00
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+      *                                                                   CSD006
+      ** Convert Last Change Date, Day Number, To DDMMMYY Format.         CSD006
+     C                   Z-ADD     MDLCD         ZDAYNO                                        CSD00
+     C                   EXSR      ZDATE2                                                      CSD00
+     C                   MOVE      ZADATE        LCDA              7                           CSD00
+     C                   MOVE      ZADATE        WULCD             7                           CSD00
+      *                                                                   CSD006
+      ** Determine Last Change Type.                                      CSD006
+     C     MDTYLC        IFEQ      'A'                                                         CSD00
+     C                   MOVE      'Amend '      WUCHTP                                        CSD00
+     C                   ELSE                                                                  CSD00
+     C                   MOVE      'Insert'      WUCHTP                                        CSD00
+     C                   END                                                                   CSD00
+      *                                                                   CSD006
+      ** Print Application Program Interface Data Page.                   CSD006
+     C                   WRITE     ICDHDR                                                      CSD00
+     C                   WRITE     MDFDRCD                                                     CSD00
+      *                                                                   CSD006
+     C     NROF          ADD       1             NROF                                          CSD00
+      *                                                                   CSD006
+     C                   ENDIF                                                                 CSD00
+      *                                                                   CSD006
+     CSR   ZMADF         ENDSR                                                                 CSD00
+      *                                                                   CSD006
+     C********************************************************************CTI001
+     C**                                                                  CPB001
+     C**  Midas / Private Banking                                         CPB001
+     CSR   PFPBSR        BEGSR                                                                 CPB00
+     C**                                                                  CPB001
+     C                   READ      SDTOFPD                                54                   CPB00
+     C     *IN54         IFEQ      '1'                                          If IN54 on     CPB00
+     C                   MOVE      53            N                              ************** CPB00
+     C                   EXSR      DBERR                                        *     53     * CPB00
+     C                   GOTO      ENDT                                         ************** CPB00
+     C                   ENDIF                                                  FI *54 = '1'   CPB00
+     C**                                                                  CPB001
+     C** Print Midas/Private Banking Data Page                            CPB001
+     C                   WRITE     ICDHDR                                                      CPB00
+     C                   WRITE     PFPBRCD                                                     CPB00
+     C**                                                                  CPB001
+     C     NROF          ADD       1             NROF                           No of Recs     CPB00
+     C**                                                                  CPB001
+     CSR   ZPFPB         ENDSR                                                                 CPB00
+     C**                                                   Midas/TI IntrfcCPB001
+      *****************************************************************                       CAS002
+      /EJECT                                                                                  CAS002
+      *****************************************************************                       CAS002
+      *                                                               *                       CAS002
+      *  SRHEDG - Hedge ICD Details                                   *                       CAS002
+      *                                                               *                       CAS002
+      *  Called By: Main Processng                                    *                       CAS002
+      *                                                               *                       CAS002
+      *  Calls: DBERR                                                 *                       CAS002
+      *                                                               *                       CAS002
+      *****************************************************************                       CAS002
+      *                                                                                       CAS002
+     C     SRHEDG        BEGSR
+      *                                                                                       CAS002
+     C                   READ      SDHEDGPD                               57
+     C     *IN57         IFEQ      *ON
+     C*********            MOVE 57        N                                          CAS002 BUG23674
+     C                   MOVE      56            N
+     C                   MOVEL     'SDHEDGPD'    DBF(N)
+     C                   EXSR      DBERR
+     C                   GOTO      ENDT
+     C                   ENDIF
+      *                                                                                       CAS002
+     C     *IN57         IFEQ      *OFF
+      *                                                                                       CAS002
+     C     CAS007        IFEQ      'Y'
+     C                   MOVE      *BLANKS       WFLD             16
+     C                   MOVE      FSOPCT        WFLD
+      *                                                                                       CAS002
+     C                   CALL      'ZEDIT'
+     C     WFLD          PARM      WFLD          PFLD             16
+     C                   PARM      4             PDEC              1 0
+      *                                                                                       CAS002
+     C                   MOVE      WFLD          ROPCT
+     C                   ENDIF
+      *                                                                                       CAS002
+     C                   CALL      'ZDATE2'
+     C                   PARM      FSLCD         PIN               5 0
+     C                   PARM      BJDFIN        PDFMT             1
+     C                   PARM      *ZEROS        PNIN              6 0
+     C                   PARM      *BLANKS       PAIN              7
+      *                                                                                       CAS002
+     C                   MOVE      PAIN          RLCD
+      *                                                                                       CAS002
+     C     FSCHTP        IFEQ      'D'
+     C                   MOVEL     'ASM0033'     PMSGID
+     C                   EXSR      SRRTVT
+     C                   MOVEL     PMSG          RCHTP
+     C                   ENDIF
+      *                                                                                       CAS002
+     C     FSCHTP        IFEQ      'I'
+     C                   MOVEL     'ASM0034'     PMSGID
+     C                   EXSR      SRRTVT
+     C                   MOVEL     PMSG          RCHTP
+     C                   ENDIF
+      *                                                                                       CAS002
+     C     FSCHTP        IFEQ      'A'
+     C                   MOVEL     'ASM0035'     PMSGID
+     C                   EXSR      SRRTVT
+     C                   MOVEL     PMSG          RCHTP
+     C                   ENDIF
+      *                                                                                       CAS002
+     C                   MOVEL     FSHEDG        RHEDG
+     C     CAS007        IFEQ      'Y'
+     C                   MOVEL     FSDROP        RDROP
+     C                   MOVEL     FSSETV        RSETV
+     C                   MOVEL     FSSEMK        RSEMK
+     C                   ENDIF
+     C                   MOVEL     FSNMBU        RNMBU
+      *                                                                                       CAS002
+     C     CAS009        IFEQ      'Y'
+     C                   MOVE      FSAMRM        RAMRM
+      *                                                                                       CAS009
+     C                   MOVE      '.'           @CDPNT
+      *                                                                                       CAS009
+      ** Convert packed field to character (with 12 decimal places)                           CAS009
+      *                                                                                       CAS009
+     C                   Z-ADD     FSNRSV        @@ZNUM
+      *                                                                                       CAS009
+     C                   MOVE      @ZWHL1        @CWHL1
+     C                   MOVEL     @ZDEC1        @CDEC1
+      *                                                                                       CAS009
+      ** Move to PRTF field                                                                   CAS009
+      *                                                                                       CAS009
+     C                   MOVEL     @@CNUM        RNRSV
+      *                                                                                       CAS009
+     C                   MOVE      FSNRNI        RNRNI
+      *                                                                                       CAS009
+      ** Convert packed field to character (with 12 decimal places)                           CAS009
+      *                                                                                       CAS009
+     C                   Z-ADD     FSSB1S        @@ZNUM
+      *                                                                                       CAS009
+     C                   MOVE      @ZWHL1        @CWHL1
+     C                   MOVEL     @ZDEC1        @CDEC1
+      *                                                                                       CAS009
+      ** Move to PRTF field                                                                   CAS009
+      *                                                                                       CAS009
+     C                   MOVEL     @@CNUM        RSB1S
+      *                                                                                       CAS009
+      ** Convert packed field to character (with 12 decimal places)                           CAS009
+      *                                                                                       CAS009
+     C                   Z-ADD     FSSB2S        @@ZNUM
+      *                                                                                       CAS009
+     C                   MOVE      @ZWHL1        @CWHL1
+     C                   MOVEL     @ZDEC1        @CDEC1
+      *                                                                                       CAS009
+      ** Move to PRTF field                                                                   CAS009
+      *                                                                                       CAS009
+     C                   MOVEL     @@CNUM        RSB2S
+      *                                                                                       CAS009
+     C                   MOVEL     FSNDYR        RSDYR
+     C                   ENDIF
+      *                                                                                       CAS009
+     C                   ENDIF
+      *                                                                                      BUG9570
+     C                   Z-ADD     1             A6NBDP
+     C                   MOVE      FSCLVL        ZFIELD
+     C                   MOVE      A6NBDP        ZADEC
+     C                   EXSR      ZEDIT
+     C                   MOVE      ZFIELD        RCLVL
+      *                                                                                      BUG9570
+     C                   Z-ADD     0             A6NBDP
+     C                   MOVE      FSNDDP        ZFIELD
+     C                   MOVE      A6NBDP        ZADEC
+     C                   EXSR      ZEDIT
+     C                   MOVE      ZFIELD        RNDDP
+      *                                                                                      BUG9570
+     C                   Z-ADD     0             A6NBDP
+     C                   MOVE      FSHLTO        ZFIELD
+     C                   MOVE      A6NBDP        ZADEC
+     C                   EXSR      ZEDIT
+     C                   MOVE      ZFIELD        RHLTO
+      *                                                                                      BUG9570
+     C                   MOVE      FSEXRL        REXRL
+      *                                                                                      BUG9570
+     C                   Z-ADD     0             A6NBDP
+     C                   MOVE      FSOAMT        ZFIELD
+     C                   MOVE      A6NBDP        ZADEC
+     C                   EXSR      ZEDIT
+     C                   MOVE      ZFIELD        ROAMT
+      *                                                                                       CAS002
+     C     CAS007        IFEQ      'Y'
+     C     BGSECS        IFEQ      'Y'
+     C                   MOVE      *ON           *IN84
+     C                   ELSE
+     C                   MOVE      *OFF          *IN84
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS002
+      ** Print Hedge ICD details                                                              CAS002
+      *                                                                                       CAS002
+     C                   WRITE     ICDHDR
+     C                   WRITE     HEDGRCD
+      *                                                                                       CAS002
+     C     NROF          ADD       1             NROF
+      *                                                                                       CAS002
+     C                   ENDSR
+      *****************************************************************                       CAS002
+      /EJECT                                                                                  CAS002
+      *****************************************************************                       CLE025
+      *                                                               *                       CLE025
+      *  SRCOCC - Collateral & Credit Lines ICD Details               *                       CLE025
+      *                                                               *                       CLE025
+      *  Called By: Main Processng                                    *                       CLE025
+      *                                                               *                       CLE025
+      *  Calls: DBERR                                                 *                       CLE025
+      *                                                               *                       CLE025
+      *****************************************************************                       CLE025
+      *                                                                                       CLE025
+     C     SRCOCC        BEGSR
+      *                                                                                       CLE025
+     C                   READ      SDCOCCPD                               27
+      *                                                                                       CLE025
+      ** No record found, database error                                                      CLE025
+      *                                                                                       CLE025
+     C     *IN27         IFEQ      *ON
+     C                   Z-ADD     58            N
+     C                   EXSR      DBERR
+      *                                                                                       CLE025
+     C                   ELSE
+      *                                                                                       CLE025
+     C                   CALL      'ZDATE2'
+     C                   PARM      CCLCD         PIN
+     C                   PARM      BJDFIN        PDFMT
+     C                   PARM      *ZEROS        PNIN
+     C                   PARM      *BLANKS       PAIN
+      *                                                                                       CLE025
+     C                   MOVE      PAIN          RLCD2
+      *                                                                                       CLE025
+     C                   SELECT
+     C     CCTYLC        WHENEQ    'D'
+     C                   MOVEL     'ASM0033'     PMSGID
+      *                                                                                       CLE025
+     C     CCTYLC        WHENEQ    'I'
+     C                   MOVEL     'ASM0034'     PMSGID
+      *                                                                                       CLE025
+     C     CCTYLC        WHENEQ    'A'
+     C                   MOVEL     'ASM0035'     PMSGID
+     C                   ENDSL
+      *                                                                                       CLE025
+     C                   EXSR      SRRTVT
+     C                   MOVEL     PMSG          RCHTP2
+     C                   MOVE      CCFVFN        RFVFN
+     C                   MOVE      CCMCDO        RMCDO
+      *                                                                                       CGL014
+      ** Format CGL014 fields                                                                 CGL014
+      *                                                                                       CGL014
+     C     CGL014        IFEQ      'Y'
+     C                   MOVE      CCDCPS        RDCPS
+     C                   MOVE      CCICED        RICED
+     C                   MOVE      CCCAKG        RCAKG
+     C                   ENDIF
+      *                                                                                       CLE025
+      ** Print Hedge ICD details                                                              CLE025
+      *                                                                                       CLE025
+     C                   WRITE     ICDHDR
+     C                   WRITE     COCCRCD
+      *                                                                                       CLE025
+     C                   ENDIF
+      *                                                                                       CLE025
+     C     NROF          ADD       1             NROF
+      *                                                                                       CLE025
+     C                   ENDSR
+      *                                                                                       CLE025
+      *****************************************************************                       CLE025
+      /EJECT                                                                                  CLE025
+      *****************************************************************                       CAS002
+      *                                                               *                       CAS002
+      *  SRRTVT - Retrieve a message text from message file           *                       CAS002
+      *                                                               *                       CAS002
+      *  Called By: SRHEDG                                            *                       CAS002
+      *                                                               *                       CAS002
+      *  Calls: None                                                  *                       CAS002
+      *                                                               *                       CAS002
+      *****************************************************************                       CAS002
+      *                                                                                       CAS002
+     C     SRRTVT        BEGSR
+      *                                                                                       CAS002
+     C                   MOVEL     'SDUSRMSG'    PMSGF
+      *                                                                                       CAS002
+     C                   CALL      'SDRTVTXT'
+     C                   PARM                    PMSGID           10
+     C                   PARM                    PMSGF            10
+     C                   PARM                    PMSG             80
+      *                                                                                       CAS002
+     C                   ENDSR
+      *                                                                                       CAS002
+     C********************************************************************CPB001
+     C**
+     CSR   FCTLSR        BEGSR                                                   FILE CONTROLS
+     C**
+0319 C                   MOVEL     'SDMMODPD'    FCTLKY           10
+     C     FCTLKY        CHAIN     SDFCTLL0                           20
+     C     *IN20         IFEQ      '1'                                          IF  IN20 On
+     C***********          MOVE 20        N                ***********    049956
+     C                   MOVE      19            N                              ***********    04995
+     C                   EXSR      DBERR                                        *    19   *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *20 = '1'
+     C**
+     C                   MOVE      *ZERO         NINS                           NO OF INSERTS
+     C                   MOVE      *ZERO         NAMD                           NO OF AMENDS
+     C                   MOVE      *ZERO         NDEL                           NO OF DELETES
+     C**
+     C                   UPDATE    @AHREAU
+     C**
+0319 C                   MOVEL     'SDICDRPD'    FCTLKY
+     C     FCTLKY        CHAIN     SDFCTLL0                           21
+     C     *IN21         IFEQ      '1'                                          IF  IN21 On
+     C                   MOVE      21            N                              ***********
+     C                   EXSR      DBERR                                        *    21   *
+     C                   GOTO      ENDT                                         ***********
+     C                   END                                                    FI *21 = '1'
+     C**
+     C                   WRITE     ICDHDR
+     C                   WRITE     FCAMDRPT
+     C     NROF          IFNE      NAMD
+     C                   WRITE     DIFFRPT
+     C                   END
+     C**
+     C                   MOVE      *ZERO         NINS                           NO OF INSERTS
+     C                   MOVE      *ZERO         NAMD                           NO OF AMENDS
+     C                   MOVE      *ZERO         NDEL                           NO OF DELETES
+     C**
+     C                   UPDATE    @AHREAU
+     C**
+     C**
+     CSR   ZFCTL         ENDSR                                                   FILE CONTROLS
+     C**
+     C**
+     C********************************************************************CGL004
+     C**                                                                  CGL004
+     CSR   FONTSR        BEGSR                                                  MIDAS-FONT   IFCGL00
+     C**                                                                  CGL004
+     C                   READ      SDFONTPD                               68                   CGL00
+     C     *IN68         IFEQ      '1'                                          If IN68 on     CGL00
+     C                   MOVE      68            N                              ************** CGL00
+     C                   EXSR      DBERR                                        *     68     * CGL00
+     C                   GOTO      ENDT                                         ************** CGL00
+     C                   END                                                    FI *68 = '1'   CGL00
+     C**                                                                  CGL004
+     C     P@MODE        IFNE      'A'                                          IF request OR  CGL00
+     C     P@MODE        OREQ      'A'                                          Audit - E.O.D. CGL00
+     C     F8LCD         ANDEQ     WURDNB                                       LCD = Rundate  CGL00
+     C**                                                                  CGL004
+     C** Convert Last Change Date, Day Number, To DDMMMYY Format.         CGL004
+     C                   Z-ADD     F8LCD         ZDAYNO                         Last Change DatCGL00
+     C                   EXSR      ZDATE2                                                      CGL00
+     C                   MOVE      ZADATE        LCDA              7                           CGL00
+     C                   MOVE      ZADATE        WULCD             7            Last Change DatCGL00
+     C**                                                                  CGL004
+     C** Determine Last Change Type.                                      CGL004
+     C     F8TYLC        IFEQ      'A'                                          IF Change Type CGL00
+     C                   MOVE      'Amend '      WUCHTP                         Amend          CGL00
+     C                   ELSE                                                   XFI F8TYLC = 'ACGL00
+     C                   MOVE      'Insert'      WUCHTP                         Insert         CGL00
+     C                   END                                                    FI F8TYLC = 'A'CGL00
+      *                                                                   CGL009
+      ** Display fields of Fontis IAT and TPP Interface                   CGL009
+      ** if switchable feature CGL009 is installed                        CGL009
+      *                                                                   CGL009
+     C     *IN73         IFEQ      '1'                                                         CGL00
+      *                                                                   CGL009
+      ** Move blanks to numeric fields if equal to zero                   CGL009
+      *                                                                   CGL009
+     C     F8IATF        IFEQ      *ZERO                                                       CGL00
+     C                   MOVE      *BLANKS       F8IATR                                        CGL00
+     C                   ELSE                                                                  CGL00
+     C                   MOVE      *BLANKS       ZFIELD                                        CGL00
+     C                   MOVE      F8IATF        ZFIELD                                        CGL00
+     C                   Z-ADD     0             ZADEC                                         CGL00
+     C                   EXSR      ZEDIT                                                       CGL00
+     C                   MOVE      ZFIELD        F8IATR                                        CGL00
+     C                   ENDIF                                                                 CGL00
+      *                                                                   CGL009
+     C     F8TPPF        IFEQ      *ZERO                                                       CGL00
+     C                   MOVE      *BLANKS       F8TPPR                                        CGL00
+     C                   ELSE                                                                  CGL00
+     C                   MOVE      *BLANKS       ZFIELD                                        CGL00
+     C                   MOVE      F8TPPF        ZFIELD                                        CGL00
+     C                   Z-ADD     0             ZADEC                                         CGL00
+     C                   EXSR      ZEDIT                                                       CGL00
+     C                   MOVE      ZFIELD        F8TPPR                                        CGL00
+     C                   ENDIF                                                                 CGL00
+      *                                                                   CGL009
+     C     F8MRDS        IFEQ      *ZERO                                                       CGL00
+     C                   MOVE      *BLANKS       F8MRDR                                        CGL00
+     C                   ELSE                                                                  CGL00
+     C                   MOVE      *BLANKS       ZFIELD                                        CGL00
+     C                   MOVE      F8MRDS        ZFIELD                                        CGL00
+     C                   Z-ADD     0             ZADEC                                         CGL00
+     C                   EXSR      ZEDIT                                                       CGL00
+     C                   MOVE      ZFIELD        F8MRDR                                        CGL00
+     C                   ENDIF                                                                 CGL00
+      *                                                                   CGL009
+     C     F8BRDS        IFEQ      *ZERO                                                       CGL00
+     C                   MOVE      *BLANKS       F8BRDR                                        CGL00
+     C                   ELSE                                                                  CGL00
+     C                   MOVE      *BLANKS       ZFIELD                                        CGL00
+     C                   MOVE      F8BRDS        ZFIELD                                        CGL00
+     C                   Z-ADD     0             ZADEC                                         CGL00
+     C                   EXSR      ZEDIT                                                       CGL00
+     C                   MOVE      ZFIELD        F8BRDR                                        CGL00
+     C                   ENDIF                                                                 CGL00
+      *                                                                   CGL009
+     C                   MOVE      F8STMT        F8STMR                                        CGL00
+      *                                                                   CGL009
+     C                   ENDIF                                                                 CGL00
+      *                                                                   CGL009
+     C**                                                                  CGL004
+     C** Print Midas Fontis Interface Data Page.                          CGL004
+     C                   WRITE     ICDHDR                                                      CGL00
+     C                   WRITE     FONTRCD                                                     CGL00
+     C**                                                                  CGL004
+     C     NROF          ADD       1             NROF                           No of Recs     CGL00
+     C**                                                                  CGL004
+     C                   END                                                    FI P@MODE = 'A'CGL00
+     C**                                                                  CGL004
+     CSR   ZFONT         ENDSR                                                                 CGL00
+     C**                                                   Midas-Fontis InCGL004
+     C********************************************************************
+     C**
+     C*  Database Error Handling subroutine
+     C*
+     CSR   DBERR         BEGSR
+     C**
+     C*           Database Error References
+     C*
+     C                   SETON                                        U7U8
+     C     *DTAARA       DEFINE                  LDA                                           LN107
+     C     *LOCK         IN        LDA                                                         LN107
+     C                   MOVE      DBF(N)        DBFILE
+     C                   MOVE      '  '          BLANKS           29
+     C                   MOVE      DBK(N)        DBKEY
+     C*********************MOVE 'SD0560'  DBPGM                           S01117
+     C*********************MOVE 'SD9000P' DBPGM                     S01117S01382
+     C                   MOVEL     'SD9000P'     DBPGM                                         S0138
+     C*********************MOVE DB,N      DBASE                           LN1076
+     C                   Z-ADD     N             DBASE                                         LN107
+     C                   OUT       LDA                                                         LN107
+     C*
+     C* Write Error Header Record
+     C*
+     C                   WRITE     ICDHDR
+     C* Write Error Record
+     C*
+     C                   WRITE     ZZDBERR
+     C* Write End Report Record
+     C*
+     C                   WRITE     ZZENDRPT
+     C*
+     CSR   ZDBERR        ENDSR
+     C*
+     C********************************************************************
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD9000PCP4                                           S01408
+     C*                                                                   S01408
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C*
+     C*COPY*ZSRSRC,ZDATE2Z2                                                                 MD054605
+     C/COPY ZSRSRC,ZDATE2Z2LE                                                               MD054605
+     C*
+     C********************************************************************
+     C**  ZDATE2Z3 COPIED IN BELOW                                        S01117
+     C***********/COPY ZSRSRC,ZDATE2Z3                                    S01117
+     C********************************************************************
+     C**                                                                 *
+     C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*
+     C**  AND TO BLANK OUT LEADING ZEROES.                               *
+     C**      INPUT FIELDS:   ZFIELD 16/                                 *
+     C*                       ZADEC   2/0                                *
+     C*                       ZADIG   1/0   NOT ACTUALLY USED            *
+     C*                                                                  *
+     C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *
+     C*                                                                  *
+     C*       OUTPUT FIELD   ZFIELD                                      *
+     C*                                                                  *
+     C*COPY*ZSRSRC,ZEDITZ2                                                                  MD054605
+     C/COPY ZSRSRC,ZEDITZ2LE                                                                MD054605
+     C*                                                                  *
+     C********************************************************************
+     C**                                                                  S01117
+     C*COPY*ZSRSRC,ZALIGNZ2                                               S01117            MD054605
+     C/COPY ZSRSRC,ZALIGNZ2LE                                                               MD054605
+     C/COPY WNCPYSRC,SD9000PC05
+**  CPY@
+(c) Finastra International Limited 2001
+**   AFQ1 - ACCRUAL/PROFIT DATE FREQUENCY CODES
+A   MONTHLY ON ACCRUAL/PROFIT DATE
+B   LAST WORKING DAY OF MONTH
+D   DAILY - WORKING DAY
+F   FORTNIGHTLY
+L   LAST CALENDAR DAY OF MONTH
+M   MONTHLY
+Q   QUARTERLY
+R   SIX DAYS BEFORE END OF MONTH
+S   SEMI-MONTHLY
+T   BIMONTHLY
+W   WEEKLY
+X   SIX MONTHLY
+Y   YEARLY
+**   AFQ2 - ACCRUAL/PROFIT DATE FREQUENCY CODES MEANINGS
+* MONTHLY ON ACCRUAL/PROFIT DATE *
+* LAST WORKING DAY OF MONTH *
+* DAILY - WORKING DAY *
+* FORTNIGHTLY *
+* LAST CALENDAR DAY OF MONTH *
+* MONTHLY *
+* QUARTERLY *
+* SIX DAYS BEFORE END OF MONTH *
+* SEMI-MONTHLY *
+* BIMONTHLY *
+* WEEKLY *
+* SIX MONTHLY *
+* YEARLY *
+**   DBF DATA BASE FILE
+SDBANKPD
+SDMMODPD
+SDGELRPD
+SDTRADPD
+SDCUSTPD
+SDDEALPD
+SDFAISPD
+SDSTRDPD
+SDFODAPD
+SDCLNDPD
+SDRETLPD
+SDMSDLPD
+TABTB11
+SDTRMAPD
+TABTB11
+SDFTFRPD
+SDEXPMPD
+SDCURRPD
+SDFCTLPD
+SDFCTLPD
+SDRCFPD
+SDCOBPPD
+SDMCFCPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCUSTPD
+SDCONFPD
+SDOPTCPD
+SDCSFDPD
+SDCURRPD
+SDHAFDPD
+SDRISKPD
+SDMGMEPD
+SDSTAXPD                                                                  S01413
+TABTBRE                                                                   S01413
+TABTREXC                                                                  S01413
+SDSCFEPD
+SDMEXPPD
+SDTCHGPD                                                                  CRT001
+SDPORTPD                                                                  096624
+SDLOMBPD                                                                  096624
+SDPCACPD                                                                  CAC001
+SDTIINPD                                                                  CAP006
+SDAPIPD                                                                   CAP006
+SCSARDPD                                                                  CDL006
+SDTOFPD                                                                   CPB001
+SDMDFCPD                                                                  CSD006
+SCSARDPD                                                                                      CAS001
+SDHEDGPD                                                                                      CAS002
+SDCOCCPD                                                                                      CLE025
+SDDEALY0                                                                                      CDL048
+SDCOCCPD                                                                                    BUG23100
+SCSARDPD                                                                                    BUG23100
+SCSARDPD                                                                                    BUG23100
+**   DBK DATA BASE KEY TO FILE USED
+SDBANKPD BANK DETAILS
+SDMMODPD MIDAS MODULES
+SDGELRPD GENERAL LEDGER
+SDTRADPD TRADING DATA
+SDCUSTPD CLIENT DETAILS
+SDDEALPD DEALING DATA
+SDFAISPD FRA/IRS DATA
+SDSTRDPD SECURITIES TRADING
+SDFODAPD FUTURES & OPTIONS
+SDCLNDPD CUSTOMER LENDING
+SDRETLPD RETAIL DETAILS
+SDMSDLPD MIDAS SWIFT D. L.
+TABTB11  DROP SWIFT MSGS
+SDTRMAPD TREASURY MANAGEMENT
+TABTB11  DROP SWIFT MSGS
+SDFTFRPD FUNDS TRANSFER
+SDEXPMPD EXPOSURE MANAGEMENT
+SDCURRPD CURRENCY CODES
+SDFCTLPD FILE CONTROLS
+SDFCTLPD FILE CONTROLS
+SDRCFPD RCF DATA
+SDCOBPPD COB PROCESSING
+SDMCFCPD MICROFICHE DATA
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCUSTPD CUSTOMERS
+SDCONFPD CONFIRMATION MATCHING
+SDOPTCPD OPTICAL DISK
+SDCSFDPD CUSTOMER SERVICE FEES
+SDCURRPD CURRENCY CODES
+SDHAFDPD HAF
+SDRISKPD INTEREST RISK MANAGEMENT                                         CRM001
+SDMGMEPD MESSAGE MANAGEMENT
+SDSTAXPD WITHHOLDING TAXES                                                S01413
+TABTBRE  RETAIL III DETAILS                                               S01413
+TABTREXC NEW RETAIL EXTENSION                                             S01413
+SDSCFEPD SAFE CUSTODY FEES                                                S01464
+SDMEXPPD MIDAS EXPORT DATA MOD.
+SDTCHGPD RETAIL TELLER SYSTEM                                             CRT001
+SDPORTPD PORTFOLIO MANAGEMENT                                             096624
+SDLOMBPD PORTFOLIO LENDING                                                096624
+SDPCACPD PROFIT CENTRE ACCOUNITNG                                         CAC001
+SDTIINPD MIDAS/TRADE INNOVATION INTERFACE                                 CAP006
+SDAPIPD  APPLICATION PROGRAM INTERFACE                                    CAP006
+SCSARDPD SAR DETAILS                                                      CDL006
+SDTOFPD  PRIVATE BANKING                                                  CPB001
+SDMDFCPD MARKET DATA FEEDS                                                CSD006
+CAS001   NPV ACCOUNTING                                                                       CAS001
+CAS002   HEDGE STRATEGY/LINKAGE                                                               CAS002
+CLE025   CREDIT LINES                                                                         CLE025
+CDL048   IAS FORWARD REVALUATION                                                              CDL048
+CLE025   CREDIT LINES                                                                       BUG23100
+CFT013                                                                                      BUG23100
+CAS005                                                                                      BUG23100
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY WNCPYSRC,SD9000PX01

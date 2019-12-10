@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021155           Date 09May13              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021155           Date 09May13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CUP034             Date 24Jan07              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Remove records for SMDLVCPD as it is no longer   */
@@ -40,11 +42,11 @@
 /*********************************************************************/
 /**********  PGM                                                                       */ /*CUP033*/
              PGM        PARM(&PFXSVAL &OPFXSVAL &BRGSVAL)                                 /*CUP033*/
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
              DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
- 
+
 /**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*             */ /*CUP033*/
 /**********  DCL        VAR(&TOSBSID) TYPE(*CHAR) LEN(2)                               */ /*CSM003*/
 /**********  DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1)                                  */ /*CSM003*/
@@ -65,16 +67,17 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
-             DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                      /*CUP033* *MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area /MIDASMSG in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
@@ -91,20 +94,20 @@
                           file for SMC0010')                                            /*MD021155*/
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)                                                /*MD021155*/
- 
+
 /**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
 /**COPY*UPCPYSRC,UPSVALCAL3*                                         */ /*  */ /*CSM003*/ /*CSM003*/
 /**********  IF         COND(&PTFUPG *EQ ' ' *OR &SBSID *EQ ' ') +                     */ /*CSM003*/
 /**********               THEN(DO)                                                     */ /*CSM003*/
 /**********  IF         COND(&PTFUPG *EQ ' ' *OR &SBSID *EQ ' ' *OR +                  */ /*CUP033*/
 /**********               &OLDSBSID *EQ ' ') THEN(DO)                       */ /*CSM003*/ /*CUP033*/
- 
+
 VALIDATE:                                                                                 /*CUP033*/
              RCVF                                                                         /*CUP033*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -113,7 +116,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)                              /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -122,7 +125,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)                                /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -131,9 +134,9 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
  CHECK:                                                                                   /*CUP033*/
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
 /* Set up messages for Midas Information Screen  */
@@ -144,10 +147,10 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('SMC0010' 'ENTER' ' ')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Set up library list. */                                                                /*CUP034*/
              CALL       PGM(UPC0014) PARM(&SBSID)                                         /*CUP034*/
- 
+
 /* Set up library names */
 /**********  CHGVAR     VAR(&FROMDVLIB) VALUE(&SBSID *TCAT 'DVLIB')                    */ /*CSM003*/
 /**********  CHGVAR     VAR(&FROMDTALIB) VALUE(&SBSID *TCAT 'DTALIB')                  */ /*CSM003*/
@@ -169,7 +172,7 @@ VALIDATE:                                                                       
              CHGVAR     VAR(&TODMLIB) VALUE(&SBSID *TCAT 'DMLIB')                         /*CSM003*/
              CHGVAR     VAR(&TODPLIB) VALUE(&SBSID *TCAT 'DPLIB')                         /*CSM003*/
              CHGVAR     VAR(&TODTALIB) VALUE(&SBSID *TCAT 'DTALIB')                       /*CSM003*/
- 
+
 /**Set*up*library*list**/ /*                                                           */ /*CPK018*/
 /**CHKLIBLE:                                                                           */ /*CPK018*/
 /**********  CHGVAR     VAR(&FAIL) VALUE(' ')                                          */ /*CPK018*/
@@ -178,19 +181,19 @@ VALIDATE:                                                                       
 /**********     EDTLIBL                                                                */ /*CPK018*/
 /**********     GOTO       CMDLBL(CHKLIBLE)                                            */ /*CPK018*/
 /**********  ENDDO                                                                     */ /*CPK018*/
- 
+
              RMVLIBLE   LIB(&TODMLIB)
              MONMSG     MSGID(CPF0000)
              ADDLIBLE   LIB(&TODMLIB)
- 
+
              RMVLIBLE   LIB(&TODPLIB)
              MONMSG     MSGID(CPF0000)
              ADDLIBLE   LIB(&TODPLIB)
- 
+
              RMVLIBLE   LIB(&TODTALIB)
              MONMSG     MSGID(CPF0000)
              ADDLIBLE   LIB(&TODTALIB)
- 
+
 /* Delete outfiles if they already exist */
              DLTF       FILE(QTEMP/FROMDVLIB)
              MONMSG     MSGID(CPF0000)
@@ -198,7 +201,7 @@ VALIDATE:                                                                       
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(&PTFUPG/FILEMULMBR)
              MONMSG     MSGID(CPF0000)
- 
+
 /* Get data about logical file members in "from" DVLIB. */
              DSPFD      FILE(&FROMDVLIB/*ALL) TYPE(*MBR) +
                           OUTPUT(*OUTFILE) FILEATR(*LF) +
@@ -207,7 +210,7 @@ VALIDATE:                                                                       
                 GOTO       CMDLBL(DTALIB)
              ENDDO
              CHGVAR     VAR(&LF) VALUE('*YES')
- 
+
 /* Repeat for DTALIB. */
 DTALIB:
              DSPFD      FILE(&FROMDTALIB/*ALL) TYPE(*MBR) +
@@ -226,21 +229,21 @@ DTALIB:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)                                                 /*MD021155*/
              MONMSG     MSGID(SQL9010)                                                  /*MD021155*/
- 
+
              CPYF       FROMFILE(&PTFUPG/FILEMBR) +
                           TOFILE(&PTFUPG/FILEMULMBR) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           INCREL((*IF MBNOMB *GT 1))
- 
+
 /* Produce outfile of files in "from" DVLIB */
 DSPOBJD:
              DSPOBJD    OBJ(&FROMDVLIB/*ALL) OBJTYPE(*ALL) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/FROMDVLIB)
- 
+
 /* Produce outfile of files in "to" DVLIB */
              DSPFD      FILE(&TODVLIB/*ALL) TYPE(*BASATR) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPDVLBOF)
- 
+
 /* Produce query to identify files not in "to" library that          */
 /*  exist in "from" library                                          */
              OPNQRYF    FILE((QTEMP/FROMDVLIB) (UPDVLBOF)) +
@@ -249,7 +252,7 @@ DSPOBJD:
              CPYFRMQRYF FROMOPNID(FROMDVLIB) TOFILE(QTEMP/SMDVNFQF) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              CLOF       OPNID(FROMDVLIB)
- 
+
 /* Call program to produce report of files not in "to" library       */
 /**********  CLRPFM     FILE(UPNOTFPD) MBR(UPDVNFQF)                                   */ /*CPK025*/
              CLRPFM     FILE(UPNOTFPD) MBR(SMDVNFQF)                                      /*CPK025*/
@@ -263,7 +266,7 @@ DSPOBJD:
 /* Call program to produce display file for file selection */
              CALL       PGM(UP0261) PARM(&TODVLIB)
              DLTOVR     FILE(UPNOTFPD)
- 
+
              GOTO       CMDLBL(END)
  ABNOR:
 /* Set up messages for Midas Information Screen  */
@@ -277,7 +280,7 @@ DSPOBJD:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('SMC0010' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000)
- 
+
  END:
 /* Remove added libraries. */
              RMVLIBLE   LIB(&TODMLIB)
@@ -286,8 +289,8 @@ DSPOBJD:
              MONMSG     MSGID(CPF0000)
              RMVLIBLE   LIB(&TODTALIB)
              MONMSG     MSGID(CPF0000)
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

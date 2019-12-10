@@ -11,16 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG2287            Date 28Apr04               *
+      *                 BUG2287            Date 28Apr04               *
       *                 CGP001  *CREATE    Date 01Mar04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG2287- Show consolidated global view (Recompile)           *
       *  CGP001 - Global processing.                                  *
@@ -276,7 +278,8 @@
       *
      C                   IF        RTNCDE <> *BLANKS
      C     *LOCK         IN        LDA
-     C                   EVAL      DBFile = 'GPSVALPD'
+     C**********         EVAL      DBFILE = 'GPSVALPD'                                      MD054605
+     C                   EVAL      DBFILE = 'GPSVLJW0'                                      MD054605
      C                   EVAL      DBase = 01
      C                   EVAL      DBKey = SVALK1
      C                   OUT       LDA

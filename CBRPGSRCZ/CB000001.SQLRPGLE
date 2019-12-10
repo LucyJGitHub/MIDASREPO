@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCB021   *CREATE   Date 06Aug12               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB021   *CREATE   Date 06Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB021 -  COB Restructure - Non Working Day COB              *
       *                                                               *
@@ -558,7 +560,8 @@
      C                   IF        CSC054 = 'Y'
      C/EXEC SQL
      C+ select GIVAL into :WPEA
-     C+  from SDSVALPD
+     C***from*SDSVALPD                                                                      MD054605
+     C+  from SDSVLJW0                                                                      MD054605
      C+  where GISVAL = :PEAIND
      C/END-EXEC
      C                   ENDIF

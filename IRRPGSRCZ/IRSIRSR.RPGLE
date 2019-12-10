@@ -14,7 +14,10 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD053400           Date 03Jul19               *
-      *  Prev Amend No. MD051249           Date 17Jul18               *      
+      *  Prev Amend No. MD049387           Date 19Jan18               *
+      *                 MD047859           Date 19Sep17               *
+      *                 AR933170           Date 19Jun13               *
+      *                 MD051249           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
@@ -65,7 +68,12 @@
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *
       *             validation if action is Reject.                   *
-      *  MD051249 - Set APIRetc to '0' after PSSR.                    *      
+      *  MD049387 - Principal Change Schedule values not accepted     *
+      *  MD047859 - Correct buffer conflict of AR933171 fix           *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *             DDFOID as parameters. (Child: AR933171)           *
+      *           - Partially applied by MD047859.                    *
+      *  MD051249 - Set APIRetc to '0' after PSSR.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
@@ -124,7 +132,7 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -132,7 +140,7 @@
      FDLDTSCL0  IF   E           K DISK                                         BUG4646
      FDLPCSCL0  IF   E           K DISK                                         BUG4646
      FDLCFSCL0  IF   E           K DISK                                         BUG4646
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -144,37 +152,37 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -249,11 +257,11 @@
      D  SFORMTPC                      7A                                        BUG4646
      D  SFORMAMTTPC                  16A                                        BUG5357
      D  SFORMPIDFTPC                  1A                                        BUG5357
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
       ** Single Currency IRS deal
      D SIRSScnFmt    E DS                  EXTNAME(IRSIRSPD)
       ********************                                                      BUG4646
@@ -266,20 +274,20 @@
      D********************                 PREFIX(TR_)                          BUG4646
      D*ThrIntPayD****E*DS*                 EXTNAME(IRDTSCPD)                    BUG4646
      D********************                 PREFIX(TI_)                          BUG4646
- 
+
       ** Receive Settlement Instructions
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
- 
+
       ** Pay Settlement Instructions
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
- 
+
       ** FRA/IRS Settlement Instructions
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
       ** Single Currency IRS deal
      D SIRSFilFmt    E DS                  EXTNAME(DEALSDG)
      D                                     PREFIX(RS)
@@ -289,15 +297,15 @@
                                                                                 BUG4646
      D DealXFilFmt   E DS                  EXTNAME(DLDLDGQD)                    BUG4646
       ** Deal Extension File Format                                             BUG4646
- 
+
       ** Receive Settlement Instructions
      D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)
      D   FLREC                 1     69
- 
+
       ** Pay Settlement Instructions
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
      D   FLPAY                 1    559
- 
+
       ** FRA/IRS Settlement Instructions
      D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)
                                                                                              BUG6671
@@ -306,11 +314,11 @@
                                                                                              BUG6671
      D ExtData       E DS                  EXTNAME(IRSSEXPD)                                 BUG6671
       * IR Cross Ccy IRS Extra Data - File (D/B) format                                      BUG6671
- 
+
       **-----------------------------------------------------------------------
       ** Others
       **-----------------------------------------------------------------------
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
@@ -337,20 +345,20 @@
                                                                                               245692
       ** External DS for Dealing Details                                                      245692
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  245692
- 
+
      D/COPY QWINDSRC,IRSIRSGDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Entry parameters
      D AuthComp        S              1A
      D FwdBck          S              1A
@@ -366,7 +374,8 @@
      D BufferEx8       S           9999                                         BUG4646
      D BufferEx9       S           9999                                         BUG4646
      D APIRetc         S              1A
- 
+     D DDFOID          S             20                                                     AR933170
+
      D ModeOfOp        S              6A
      D PRtCd           S              7A
      D POptn           S              7A
@@ -377,34 +386,34 @@
      D PDlNoR          S              6A
      D**********PDlSts          S             24A                                            BUG5871
      D DDSTS           S             24A                                                     BUG5871
- 
+
      D RespMode        S              1A
      D FOTRID          S             20A
      D FOASID          S             20A
      D OKACTN          S              1A
      D OKDLNO          S              1A
      D OKBRCA          S              1A
- 
+
      D CAP041          S              1A
      D CIR001          S              1A
      D CIR002          S              1A
      D CIR006          S              1A
      D CIR008          S              1A
- 
+
      D WDlRed          S              6A
      D WUCDP           S              1P 0
      D WTCDP           S              1P 0
      D WUPDP           S              1P 0
      D WBODP           S              1P 0
- 
+
      D I#SDLNO         S                   LIKE(SDLNO) INZ(*BLANKS)
- 
+
      D ZFLD15          S             15P 0
      D ZDECS           S              1P 0
      D ZECODE          S              1
      D ZECHAR          S              1
      D ZOUT21          S             21
- 
+
      D DealNo          S              6  0                                      BUG4646
      D OTInd           S              1                                         BUG4646
      D RatPay          S              1                                         BUG4646
@@ -443,16 +452,16 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** If the action code is blank, enquire unless authorising
- 
+
      C                   CLEAR                   SIRSFilFmt
      C                   CLEAR                   PDlRILkpd                                    CSW213
      C****************** CLEAR                   OurRatChgD                     BUG4646
@@ -466,7 +475,7 @@
      C                   CLEAR                   OCFSA                          BUG4646
      C                   CLEAR                   TCFSA                          BUG4646
      C                   CLEAR                   PCSA                           BUG4646
- 
+
      C                   IF        SACCD = *BLANKS
      C                   IF        AuthComp = 'X'
      C                   EVAL      SACCD = 'X'
@@ -474,7 +483,7 @@
      C                   EVAL      SACCD = 'E'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      PRdFwd = 'N'
      C                   EVAL      PRdBck = 'N'
      C                   IF        FwdBck = 'F'
@@ -484,23 +493,23 @@
      C                   EVAL      PRdBck = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PRdFwd = 'Y' OR PRdBck = 'Y'
      C                   EXSR      SrSIRSRED
      C                   ELSE
      C                   EVAL      WDlRed = DDDLNO_In
      C                   EVAL      PErrMs = *BLANKS
      C                   ENDIF
- 
+
       ** If Single-ccy IRS read and no error message returned,
       ** retrieve deal details and convert to screen format
- 
+
      C                   IF        PErrMs = *BLANKS AND
      C                             WDlRed <> *BLANKS
- 
+
      C                   EVAL      SDLNO = WDlRed
      C                   EXSR      SrSIRSRTV
- 
+
                                                                                              BUG6512
       *                                                                                      BUG6512
       * Retrieve TRAM details                                                                BUG6512
@@ -510,7 +519,7 @@
      C                   IF        CAP041 = 'Y' AND Idx = *ZERO
      C/COPY QWINDSRC,IRSIRSMOV1
      C                   ENDIF
- 
+
      C                   IF        Idx = *ZERO
      C                   EXSR      SrSIRSCVT
      C                   EXSR      SrSETINCVT
@@ -520,9 +529,9 @@
      C**********         EXSR      SrUpFront                                                 BUG6544
      C**********         ENDIF                                                       BUG5861 BUG6544
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        PErrMs <> *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SDLNO'
@@ -535,9 +544,9 @@
      C*****Idx           ANDEQ     0                                            BUG4646      BUG7621
      C                   EXSR      RetrieveIC                                   BUG4646
      C                   ENDIF                                                  BUG4646
- 
+
       ** Build buffer with required output, if no errors occurred
- 
+
      C                   IF        Idx > *ZERO OR RetCodeOut <> *BLANKS
      C                   EVAL      APIRetc = '0'
      C                   ELSE
@@ -581,9 +590,10 @@
      C                                      FORMULAOC + FORMULATC +             BUG4646
      C**********                            FORMULAOPC+ FORMULATPC + ORDATEAST        BUG4646 CSW213
      C                                      FORMULAOPC+ FORMULATPC +                          CSW213
+     C                                      DDFOID +                                        AR933170
      C**********                            InSwift2013 + ORDATEAST                  CSW213 MD053400
      C                                      InSwift2013 + ACTRJ +                           MD053400
-     C                                      ORDATEAST                                       MD053400
+     C                                      ORDATEAST                                       MD053400     
      C*******************EVAL      Buffer2=%SUBST(ORDATEAST:4239)+OPDATEAST     BUG4646BUG5357
      C*******************EVAL      BufferEx2=%SUBST(OPDATEAST:3438)+TRDATEAST   BUG4646BUG5357
      C*******************                      +TPDATEAST                       BUG4646BUG5357
@@ -714,26 +724,42 @@
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12523)+PCSAST            MD031775 CSW216
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9322)                     MD031775 CSW216
                                                                                               CSW216
-     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:888)+OPDATEAST           CSW216 MD053400
-     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:87)+TRDATEAST          CSW216 MD053400
-     C**********                               +TPDATEAST                            CSW216 MD053400
-     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:486)+OCFSAST           CSW216 MD053400
-     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5685)+TCFSAST            CSW216 MD053400
-     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2484)                    CSW216 MD053400
-     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST            CSW216 MD053400
-     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9282)                     CSW216 MD053400
-     C                   EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST                  MD053400
-     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST                 MD053400
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:888)+OPDATEAST           CSW216 MD047859
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:87)+TRDATEAST          CSW216 MD047859
+     C**********                               +TPDATEAST                            CSW216 MD047859
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:486)+OCFSAST           CSW216 MD047859
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5685)+TCFSAST            CSW216 MD047859
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2484)                    CSW216 MD047859
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST            CSW216 MD047859
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9282)                     CSW216 MD047859
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:908)+OPDATEAST         MD047859 MD049387
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:107)+TRDATEAST       MD047859 MD049387
+     C**********                               +TPDATEAST                          MD047859 MD049387
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:506)+OCFSAST         MD047859 MD049387
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5705)+TCFSAST          MD047859 MD049387
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2504)                  MD047859 MD049387
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12503)+PCSAST          MD047859 MD049387
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9302)                   MD047859 MD049387
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:868)+OPDATEAST         MD049387 MD053400
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:67)+TRDATEAST        MD049387 MD053400
+     C**********                               +TPDATEAST                          MD049387 MD053400
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:466)+OCFSAST         MD049387 MD053400
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5665)+TCFSAST          MD049387 MD053400
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2464)                  MD049387 MD053400
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12463)+PCSAST          MD049387 MD053400
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9262)                   MD049387 MD053400
+     C                   EVAL      Buffer2=%SUBST(ORDATEAST:867)+OPDATEAST                  MD053400
+     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:66)+TRDATEAST                 MD053400
      C                                         +TPDATEAST                                   MD053400
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST                  MD053400
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST                   MD053400
-     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2483)                           MD053400
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST                   MD053400
-     C                   EVAL      BufferEx7=%SUBST(PCSAST:9281)                            MD053400
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:465)+OCFSAST                  MD053400
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5664)+TCFSAST                   MD053400
+     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2463)                           MD053400
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12462)+PCSAST                   MD053400
+     C                   EVAL      BufferEx7=%SUBST(PCSAST:9261)                            MD053400
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -741,9 +767,9 @@
       *  SrSIRSRED -  Roll Backwards & Forwards through Deals File    *
       *****************************************************************
      C     SrSIRSRED     BEGSR
- 
+
      C                   CALLB     'IRSIRSRED'
- 
+
       ** Input parameters:
       ** Return code
      C                   PARM      *BLANKS       RetCodeOut
@@ -757,13 +783,13 @@
      C                   PARM                    PRdBck
       ** Switchable feature CIR008
      C                   PARM                    CIR008
- 
+
       ** Output parameters:
       ** Error meassage
      C                   PARM                    PErrMs
       ** Deal number read
      C                   PARM                    PDlNoR
- 
+
      C     ESrSIRSRED    ENDSR
       *****************************************************************
       /EJECT
@@ -771,9 +797,9 @@
       *  SrSIRSRTV -  Retrieve Deal from File                         *
       *****************************************************************
      C     SrSIRSRTV     BEGSR
- 
+
      C                   CALLB     'IRSIRSRTV'
- 
+
       ** Input parameters:
       ** Return code
      C                   PARM      *BLANKS       RetCodeOut
@@ -796,7 +822,7 @@
      C                   PARM                    SBRCA
       ** Switchable feature CIR008
      C                   PARM                    CIR008
- 
+
       ** Output parameters:
       ** (Current) deal in file format
       ** (Current) deal extenstion in file format                               BUG4646
@@ -821,7 +847,7 @@
      C                   PARM                    WMsgDtaArr                                   222373
       ** Array index (3P0) from/to caller                                                     222373
      C                   PARM                    WIdx                                         222373
- 
+
      C     ESrSIRSRTV    ENDSR
       *****************************************************************
       /EJECT
@@ -829,9 +855,9 @@
       *  SrSIRSCVT -  Conversion of File Fields to Screen Format      *
       *****************************************************************
      C     SrSIRSCVT     BEGSR
- 
+
      C                   CALLB     'IRSIRSCVT'
- 
+
       ** Input parameters:
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
@@ -840,14 +866,16 @@
      C                   PARM                    DealXFilFmt                    BUG4646
       ** Switchable feature CIR008
      C                   PARM                    CIR008
- 
+
       ** Output parameters:
       ** Deal in screen format
      C                   PARM                    SIRSScnFmt
       ** Deal Status
      C**********         PARM                    PDlSts                                      BUG5871
      C                   PARM                    DDSTS                                       BUG5871
- 
+
+     C                   EVAL      DDFOID = RSFRNT                                          AR933170
+      *                                                                                     AR933170
      C     ESrSIRSCVT    ENDSR
       *****************************************************************
       /EJECT
@@ -855,7 +883,7 @@
       *  SrSETINCVT - Conversion of SSI File Fields to Screen Format  *
       *****************************************************************
      C     SrSETINCVT    BEGSR
- 
+
      C*******************EVAL      DBRecSttmt = SIRSRecIns + RSROBR             BUG4646
      C                   EVAL      %SUBST(DBRecSttmt:1:2)=%SUBST(SIRSRecIns:1:2)BUG4646
      C                   EVAL      %SUBST(DBRecSttmt:3:18)=RSRONS               BUG4646
@@ -874,29 +902,29 @@
      C                   EVAL      FLIC72     = RSIC72
      C                   EVAL      DBFraSttmt = SIRSFraIns
      C                   MOVE      RSAGVC        FLAGVC
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Input parameters:
       ** File payment settlement instructions
      C                   PARM                    DBPaySttmt
- 
+
       ** File receipt settlement instructions
      C                   PARM                    DBRecSttmt
- 
+
       ** File FRA/IRS settlement instructions
      C                   PARM                    DBFraSttmt
- 
+
       ** Output parameters:
       ** Screen payment settlement instructions
      C                   PARM                    InPaySttmt
- 
+
       ** Screen receipt settlement instructions
      C                   PARM                    InRecSttmt
- 
+
       ** Screen FRA/IRS settlement instructions
      C                   PARM                    InFRASttmt
- 
+
      C                   PARM      SUCUCY        InRCCY                                      CSF011A
      C                   PARM      SUCUCY        InPCCY                                      CSF011A
      C     ESrSETINCVT   ENDSR
@@ -1309,21 +1337,21 @@
      C                   PARM                    PZADEC                         BUG4646
                                                                                 BUG4646
      C                   ENDSR                                                  BUG4646
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
       *  SRDate2 - Convert date using ZDATE2                          *
       *****************************************************************
      C     SRDate2       BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    WQ0001            5 0
      C**********         PARM                    ZDATFM            1                         BUG7784
      C                   PARM                    BJDFIN                                      BUG7784
      C                   PARM                    ZDATE             6 0
      C                   PARM                    WQ0004            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1331,7 +1359,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1351,25 +1379,25 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc
- 
+
       * Set up the names of the message files from which the
       * message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,IRSIRSM01
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Check if IRS Fees/Buy-Outs, etc. is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CAP041'      PSarD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -1377,21 +1405,21 @@
      C                   EVAL      DBKEY = POptn
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CAP041 = 'Y'
      C                   ELSE
      C                   EVAL      CAP041 = 'N'
      C                   ENDIF
- 
+
       ** Check if Interest Rate Calendars is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CIR001'      PSarD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -1399,21 +1427,21 @@
      C                   EVAL      DBKEY = POptn
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CIR001 = 'Y'
      C                   ELSE
      C                   EVAL      CIR001 = 'N'
      C                   ENDIF
- 
+
       ** Check if CIR002 is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CIR002'      PSarD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -1421,21 +1449,21 @@
      C                   EVAL      DBKEY = POptn
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CIR002 = 'Y'
      C                   ELSE
      C                   EVAL      CIR002 = 'N'
      C                   ENDIF
- 
+
       ** Check if FRA/IRS Amortisation of Caps, Collars, Floors...is on
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CIR006'      PSarD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -1443,21 +1471,21 @@
      C                   EVAL      DBKEY = POptn
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CIR006 = 'Y'
      C                   ELSE
      C                   EVAL      CIR006 = 'N'
      C                   ENDIF
- 
+
       ** Check if FRA/IRS Deals Authorisation is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CIR008'      PSarD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -1465,7 +1493,7 @@
      C                   EVAL      DBKEY = POptn
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CIR008 = 'Y'
      C                   ELSE
@@ -1687,7 +1715,7 @@
      C/COPY ZACPYSRC,PSSR_ILENE
      C                   EVAL      APIRetc = '0'                                            MD051249
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI * ALWNULL(*USRCTL)                                              *
+/**** * ALWNULL(*USRCTL)                                              *                     MD054605
+/*EXI *  ALWNULL(*USRCTL)                                             *                     MD054605
 /*EXI *  TEXT('Midas GO Exception Report Housekeeping')
       *****************************************************************
       *                                                               *
@@ -12,16 +13,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BG4444             Date 04Oct04               *
+      *                 BG4444             Date 04Oct04               *
       *                 CGP008  *CREATE    Date 15Sep04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  BG4444 - COB failure - Negative Retention date.              *
       *  CGP008 - Exception Reporting                                 *
@@ -44,12 +47,12 @@
       * SRDETAIL - Delete corresponding Exception Detail record.      *
       *                                                               *
       *****************************************************************
- 
+
      FT_GPEXRPH UF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(T_GPEXRPH:GPEXRPH)
      FT_GPEXRPD UF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(T_GPEXRPD:GPEXRPD)
- 
+
      D @RUN            S              1
      D ZWDTIN          S              8S 0
      D DeleteDate      S               D
@@ -81,7 +84,7 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank details
       *
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
       *
@@ -106,7 +109,7 @@
      D DSAPI                   9     12A
      D DSZONE                 15     24A
      D W#ZONE                 17     24A
- 
+
       ** Main Processing
      C                   EXSR      SRSELECT
       *
@@ -116,11 +119,11 @@
       * SRSELECT
       ********************************************************************
      C     SRSELECT      BEGSR
- 
+
      C                   READ      T_GPEXRPH                              10
      C     *IN10         DOWEQ     '0'                                          DoWhile *IN10 = 0
- 
- 
+
+
      C                   MOVEL     DSGPEXRPH     DSHEADER
       * Only process records in this zone
      C     O#ZONE        IFEQ      ERZONE
@@ -163,14 +166,14 @@
       * and delete all Exception Detail Records:
      C                   EXSR      SRDETAIL
      C                   ENDIF
- 
+
      C                   ENDIF                                                  EndIf Date Null
- 
+
      C                   ENDIF                                                  EndIf Date Null
- 
+
      C                   READ      T_GPEXRPH                              10
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -178,7 +181,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *DTAARA       DEFINE                  LDA
      C                   MOVEL     *BLANK        I#ERMS           50
       *
@@ -187,8 +190,9 @@
      C                   PARM                    NEWTIM           26
      C                   MOVEL     NEWTIM        TimeStamp
       * Get Global System Value - Exception Reporting Retention Period
- 
-     C                   CALLB     'GPAOSVALR0'
+
+     C**********         CALLB     'GPAOSVALR0'                                             MD054605
+     C                   CALL      'GPAOSVALR0'                                             MD054605
      C                   PARM      *BLANKS       PRtCd             7
      C                   PARM                    PSysVal01
      C                   PARM                    PCurSet01
@@ -210,27 +214,28 @@
      C                   PARM                    PCurSet09
      C                   PARM                    PSysVal10
      C                   PARM                    PCurSet10
- 
+
      C**********         EVAL      RetentionDays = 99999                                      BG4444
      C                   EVAL      RetentionDays = 10000                                      BG4444
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     PCurSet01     RetentionDays     5 0
      C                   ELSE
- 
+
      C                   IF        PRtCd <> '*NRF'
      C     *LOCK         IN        LDA
-     C                   EVAL      DBFile = 'GPSVALPD'
+     C**********         EVAL      DBFile = 'GPSVALPD'                                      MD054605
+     C                   EVAL      DBFile = 'GPSVLJW0'                                      MD054605
      C                   EVAL      DBase = 102
      C                   EVAL      DBKey = PSysVal01
      C                   EVAL      DBPgm = 'GOEXRPTIDY'
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
       *
       ** Access Bank Details
@@ -268,7 +273,7 @@
      C                   EXSR      ZDATE9
      C                   MOVEL     DateOut       WDateOut         10
      C                   EVAL      DeleteDate = %DATE(WDateOut:*ISO0)
- 
+
      C                   ENDSR
       ********************************************************************
       * ZDATE10
@@ -303,8 +308,8 @@
      C                   DELETE    GPEXRPD
      C     ERID          CHAIN     GPEXRPD                            11
      C                   ENDDO
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -314,16 +319,16 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL157   *CREATE   Date 19Aug15               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. CGL157   *CREATE   Date 19Aug15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CGL157 - CRS Reporting                                       *
       *                                                               *
       *****************************************************************
@@ -247,7 +249,8 @@
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 2
-     C                   EVAL      DBFILE = 'GPSVALPD'
+     C**********         EVAL      DBFILE = 'GPSVALPD'                                      MD054605
+     C                   EVAL      DBFILE = 'GPSVLJW0'                                      MD054605
      C                   EVAL      DBKEY = PSValK1
      C                   OUT       LDA
      C                   EXSR      *PSSR

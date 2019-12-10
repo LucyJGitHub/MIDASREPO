@@ -10,13 +10,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD019975           Date 10Apr13              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD019975           Date 10Apr13              */
 /*                      CSC048A            Date 06Aug12              */
 /*                      CUP003  *CREATE    Date 23Sep10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD019975 - Ensure file gets created.                        */
 /*       CSC048A - Journal Caching                                   */
@@ -24,10 +26,10 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &OPFXSVAL)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&FPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
@@ -46,30 +48,31 @@
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                 /*CSC048A*/
              DCL        VAR(&SYSVAL) TYPE(*CHAR) LEN(20)                                 /*CSC048A*/
              DCL        VAR(&NEWSYSVAL) TYPE(*CHAR) LEN(200)                             /*CSC048A*/
- 
-             DCLF       FILE(UPSVALJ0)
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                               /*MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area MIDASMSG in QTEMP for screen error handling. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -78,7 +81,7 @@ VALIDATE:
                    CHGVAR     VAR(&TPFX) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -87,9 +90,9 @@ VALIDATE:
                    CHGVAR     VAR(&FPFX) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -99,43 +102,46 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000086' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CALL       PGM(UPC0014) PARM(&TPFX)
- 
+
              CHGVAR     VAR(&FDTALIB) VALUE(&FPFX *TCAT 'DTALIB')
              CHGVAR     VAR(&FDVLIB) VALUE(&FPFX *TCAT 'DVLIB')                        /*MD019975*/
              CHGVAR     VAR(&TDTALIB) VALUE(&TPFX *TCAT 'DTALIB')
              CHGVAR     VAR(&TDVLIB) VALUE(&TPFX *TCAT 'DVLIB')                        /*MD019975*/
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)                         /*MD019975*/
              MONMSG     MSGID(CPF0000)                                                 /*MD019975*/
- 
+
 /* Check if file exists in 'from' system. */
              CHKOBJ     OBJ(&FDTALIB/SDSVALPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Copy 'from' file to template System Value file. */
              DLTF       FILE(QTEMP/UPSVALTPD)                                          /*MD019975*/
              MONMSG     MSGID(CPF0000)                                                 /*MD019975*/
 /**********  CPYF       FROMFILE(&FDTALIB/SDSVALPD) TOFILE(UPSVALTPD) +              */ /*MD019975*/
 /**********               MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                        */ /*MD019975*/
-             CPYF       FROMFILE(&TDVLIB/SDSVALL0) +
+/**********  CPYF       FROMFILE(&TDVLIB/SDSVALL0) +
                           TOFILE(QTEMP/UPSVALTPD) MBROPT(*NONE) +
-                          CRTFILE(*YES) FMTOPT(*MAP *DROP)                              /*MD019975*/
+                          CRTFILE(*YES) FMTOPT(*MAP *DROP) */                /*MD019975* *MD054605*/
+             CPYF       FROMFILE(&TDVLIB/SDSVLJW0) +
+                          TOFILE(QTEMP/UPSVALTPD) MBROPT(*NONE) +
+                          CRTFILE(*YES) FMTOPT(*MAP *DROP)                              /*MD054605*/
              CPYF       FROMFILE(&FDVLIB/SDSVALL0) +
                           TOFILE(QTEMP/UPSVALTPD) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)                                            /*MD019975*/
- 
+
 /* Call program to update 'to' file from 'from' file. */
-             OVRDBF     FILE(SDSVALPD) TOFILE(&TDTALIB/SDSVALPD)
+/**********  OVRDBF     FILE(SDSVALPD) TOFILE(&TDTALIB/SDSVALPD) */                     /*MD054605*/
              CALL       PGM(SM000026)
-             DLTOVR     FILE(SDSVALPD)
+/**********  DLTOVR     FILE(SDSVALPD) */                                               /*MD054605*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Call Subroutine for Additional Processing */                                          /*CSC048A*/
                                                                                          /*CSC048A*/
              CALLSUBR   SUBR(SRADDPROC) RTNVAL(&ERR)                                     /*CSC048A*/
@@ -144,7 +150,7 @@ VALIDATE:
              ENDDO                                                                       /*CSC048A*/
                                                                                          /*CSC048A*/
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('SMC000086') MSG(&MESSAGE)
@@ -180,7 +186,7 @@ ERROR:
                                                                                          /*CSC048A*/
              CHGVAR     VAR(&SYSVAL) VALUE('UseIBMJournalCache?')                        /*CSC048A*/
                                                                                          /*CSC048A*/
-             OVRDBF     FILE(SDSVALL0) TOFILE(&TDVLIB/SDSVALL0)                          /*CSC048A*/
+/**********  OVRDBF     FILE(SDSVALL0) TOFILE(&TDVLIB/SDSVALL0) */              /*CSC048A MD054605*/
              OVRDBF     FILE(SCSARDL1) TOFILE(&FDVLIB/SCSARDL1)                          /*CSC048A*/
                                                                                          /*CSC048A*/
              CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CSC048' +
@@ -198,10 +204,11 @@ ERROR:
                 RTNSUBR    RTNVAL(1)                                                     /*CSC048A*/
              ENDDO                                                                       /*CSC048A*/
                                                                                          /*CSC048A*/
-             DLTOVR     FILE(SDSVALL0 SCSARDL1)                                          /*CSC048A*/
+/**********  DLTOVR     FILE(SDSVALL0 SCSARDL1) */                              /*CSC048A MD054605*/
+             DLTOVR     FILE(SCSARDL1)                                                  /*MD054605*/
                                                                                          /*CSC048A*/
 ENDSR:                                                                                   /*CSC048A*/
              ENDSUBR                                                                     /*CSC048A*/
- 
+
 ENDPGM:
              ENDPGM

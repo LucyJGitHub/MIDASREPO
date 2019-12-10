@@ -15,13 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
@@ -50,7 +52,7 @@
       ** +--------------------------------------+
       * Midas Branch Extension file
      FSDBRCXL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -62,55 +64,55 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Equation Industry Exposure data
      D EQIEXP        E DS                  EXTNAME(ACBPF)
- 
+
       * Midas Plus Industry Exposure data
      D MIIEXP        E DS                  EXTNAME(T_MLEQIE)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
       *
      D @RUN            S              1
- 
+
       * Work field for EQ Branch
      D WEQBRCH         S              3
      D I#ERMS          S             50
- 
+
      D P@RTCD          S              7
      D P@OP01          S             20
      D P@VL01          S            200
@@ -145,7 +147,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    EQIEXP
      C                   PARM                    MIIEXP
@@ -210,15 +212,16 @@
       *
      C     P@RTCD        IFNE      *BLANK
      C                   MOVEL     'AOSVALR0'    DBPGM
-     C                   MOVEL     'GPSVALPD'    DBFILE
+     C**********         MOVEL     'GPSVALPD'    DBFILE                                     MD054605
+     C                   MOVEL     'GPSVLJW0'    DBFILE                                     MD054605
      C                   MOVEL     '006'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
- 
+
+
      C                   MOVEL     P@VL01        ININCODE
- 
+
      C                   ENDIF
       *
       ** From Date
@@ -260,7 +263,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       /COPY GOCPYSRC,GOGETZONE
      C                   ENDSR
       *****************************************************************
@@ -289,6 +292,6 @@
       *
      C                   ENDSR
       ********************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2006

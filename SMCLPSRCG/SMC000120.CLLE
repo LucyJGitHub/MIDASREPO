@@ -9,14 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD030791           Date 26Sep14              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD030791           Date 26Sep14              */
 /*                      MD019885           Date 04Apr14              */
 /*                      AR883210           Date 21Dec11              */
 /*                      CBF005   *CREATE   Date 04Jul11              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD030791 - Bridge optioni SPRF fail during system setup     */
 /*                  Remove MD019885 code changes                     */
@@ -28,28 +30,29 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&GPFXSVAL)
- 
+
              DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&GSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&STMSTR) TYPE(*CHAR) LEN(80)
              DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) +
                           VALUE('SMC000120')
- 
-             DCLF       FILE(UPGSVALJ0)
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                              /*MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
              COPYRIGHT  TEXT('(c) Finastra International +
                           Limited 2011')
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /** Create and rename temporary source file for RUNSQLSTM. */
- 
+
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/RUNSQL)
@@ -59,19 +62,19 @@
                           file for SMC000120')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 /** Create Midas Info Screen data area in QTEMP. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG MSGID(CPF2105)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           TEXT('Midas Info Screen Data Area')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -80,9 +83,9 @@ VALIDATE:
                    CHGVAR     VAR(&GSBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
 CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -92,14 +95,14 @@ CHECK:
                 CALL       PGM(SCC0010) PARM(&GENPGM 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /** Save library list and set up global library list. */
              SAVLIBL    SAVDTL(SMC000120L)
 /**********  CALL       PGM(GPC000016) PARM(&GSBSID) */                                 /*AR883210*/
                                                                                         /*MD019885*/
 /***Make*sure,*all*bank-specific*menu*items*have*been*uploaded********/                 /*MD019885*/
 /************CALL*******PGM(SM000065)*PARM('CUST')********************/                 /*MD019885*/
- 
+
 /** Users populate SMBFUDPD.  Select only users that */
 /** exist on both user and action code files.        */
              CLRPFM     FILE(SMBFUDPD)
@@ -115,7 +118,7 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /** Menu items; populate SMBFMNPD but only with active menu items. */
              CPYF       FROMFILE(SFMENUJ0) TOFILE(SMBFMNPD) +
                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
@@ -133,7 +136,7 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /** Active menu codes and actions (permissions); populate SMBFACPD. */
              CLRPFM     FILE(SMBFACPD)
              CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFACPD +
@@ -157,7 +160,7 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /** Update description from GPMTXTPD. */
              CHGVAR     VAR(&STMSTR) VALUE('update SMBFACPD a set +
                           a.ACINAR = (select b.MIINAR from +
@@ -167,14 +170,14 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /** Call program to sort the Action Codes so that they */
 /** will always be in the same order.                  */
              CALL       PGM(SM000032)
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /** Insert unique user / branch combination records into file. */
              CLRPFM     FILE(SMBFUBPD)
              CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFUBPD +
@@ -185,7 +188,7 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /** Insert unique user / action code combination records into file. */
              CLRPFM     FILE(SMBFUAPD)
              CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFUAPD +
@@ -204,7 +207,7 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /** Insert user / reference user combination records into file. */
              CLRPFM     FILE(SMBFRUPD)
              CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFRUPD +
@@ -215,29 +218,29 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /** Call program to build report on user and branches. */
              CALL       PGM(SM000047)
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /** Call program to build report on user, menu codes and actions. */
              CALL       PGM(SM000048)
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /** Call program to build report for user and reference user. */
              CALL       PGM(SM000033)
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /** Restore library list. */
              RSTLIBL    SAVEDLIBL(SMC000120L)
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&GENPGM) +
                           MSG(&MESSAGE)
@@ -249,6 +252,6 @@ ERROR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM(&GENPGM 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

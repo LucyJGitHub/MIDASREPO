@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UPDLVCQT) TOFILE(UPDLVCPD)                      */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Review/Conflict/Process *ALL DDS Files')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC008004 - Review/Conflict/Process *ALL DDS Files          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD054209 *CREATE   Date 31Aug19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD054209 - Deliverable Data Split for T_WIPCF               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &BRGDTALIB)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERROR)    TYPE(*CHAR) LEN(1)
+/* Parameters passed to UP008010. */
+             DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10)  VALUE('UPC8004')
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2019')
+
+             DCLF       FILE(UPDLVCQT)
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+/* Find out where the current deliverable data file is. */
+             RTVOBJD    OBJ(&AUMBNM) OBJTYPE(*FILE) RTNLIB(&OLDLIB)
+
+/* REVIEW */
+             IF         COND(&MODE *EQ '*REVIEW') THEN(DO)
+             ENDDO
+
+/* CONFLICT */
+             IF         COND(&MODE *EQ '*CONFLICT') THEN(DO)
+             CALL       PGM(UPC000702) PARM(&AUMBNM &BRGDTALIB)                         /*MD054605*/
+             ENDDO
+
+/* PROCESS  */
+             IF         COND(&MODE *EQ '*PROCESS') THEN(DO)
+                CALL       PGM(UPC000700) PARM(&AUMBNM &BRGDTALIB)
+             ENDDO
+
+/* If an error, send error line and read next record. */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGJOB     SWS(XXXXXX00)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                CHGVAR     VAR(&ERRORMSG) VALUE('Error when running +
+                             Action File for' *BCAT &AUMBNM)
+                CALL       PGM(UP008010) PARM('*WRITE' &GENPGM &ERRORMSG)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+
+             GOTO       CMDLBL(READNEXT)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             GOTO       CMDLBL(ABNOREND)
+
+END:
+/* Call program to produce report. */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                CALL       PGM(UP008010) PARM('*REPORT' &GENPGM ' ')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOREND)
+                ENDDO
+                CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&MODE)
+             ENDDO
+
+ABNOREND:
+             ENDPGM

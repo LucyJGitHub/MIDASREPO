@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. AR1085447*CREATE   Date 06Feb13               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 AR1085447*CREATE   Date 06Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1085447 - Migrate current settings to the PDCL system      *
       *              values that were renamed.                        *
@@ -34,7 +36,8 @@
       ** Update SDSVALPD
 
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE SDSVALPD a ' +
+     C**********                   'UPDATE SDSVALPD a ' +                                   MD054605
+     C                             'UPDATE SDSVLXTD a ' +                                   MD054605
      C                             'SET a.GIVAL = (SELECT b.GIVAL FROM ' +
      C                             'SMSVALPD b WHERE b.GISVAL = ' +
      C                             '''AutoAdjSchedRepaymnt'') WHERE ' +

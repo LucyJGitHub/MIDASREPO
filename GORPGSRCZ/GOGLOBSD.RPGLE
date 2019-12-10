@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
       *  Prev Amend No. MD053583           Date 10Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD050231           Date 25Mar18               *
@@ -82,7 +82,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD053583 - Inserted record in CUSD does not appear in the    *
       *             Main List View.                                   *
       *           - Program import not found. Calling pgm GOGLOBSD    *
@@ -173,7 +173,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGPGLCUSLL1UF A E           K DISK    INFSR(*PSSR) COMMIT(D_COM)                         BG6438
 O    F                                     USROPN                                             BG6438
      FGZSDBRCHL0IF   E           K DISK    INFSR(*PSSR)                                       BG6438
@@ -188,14 +188,14 @@ O    F                                     USROPN                               
 O    D Z_SDCUSTPD    E DS                  EXTNAME(SDCUSTPD)                                  BG6438
                                                                                               BG6438
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D CMDLEN          S             15P 5                                                   BUG7825
      D CMDSTR          S            100    DIM(2) CTDATA PERRCD(1)                           BUG7825
 B    D*#_BR*****       S              3    DIM(99)                                   BG6438 BUG15946
 B    D*#_ZN*****       S             10    DIM(99)                                   BG6438 BUG15946
 B    D #_BR            S              3    DIM(999)                                         BUG15946
 B    D #_ZN            S             10    DIM(999)                                         BUG15946
- 
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -212,32 +212,32 @@ B    D #_ZN            S             10    DIM(999)                             
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
- 
+
      D CmdArray        S             80A   DIM(2) CTDATA PERRCD(1)                          AR547326
      D Cmd             S             80A                                                    AR547326
      D Len             S             15P 5                                                  AR547326
- 
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
+
      ISDBRCHD0                                                                                BG6438
      I              QQDFAC                      QQDFAC_X                                      BG6438
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       * Recover before and after image
- 
+
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
- 
+
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
- 
- 
+
+
       * Global Updates - BEFORE/AFTER image
       * TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
      C     TRGEVENT      IFEQ      '1'
@@ -246,17 +246,17 @@ B    D #_ZN            S             10    DIM(999)                             
      C     TRGEVENT      IFEQ      '2'
      C                   MOVEL     *BLANK        I#AIMG
      C                   ENDIF
- 
+
      C                   MOVEL     O#ZONE        I#ZONE                         * ERROR MESSAGE
      C                   MOVEL     'Y'           I#TRAP
- 
+
       * Determine updates
- 
+
      C                   EXSR      DET_UPDATES
- 
+
      C                   MOVEL     'B'           I#BFAF
      C                   DO        2
- 
+
      C     P_Before      IFEQ      'Y'
      C     I#BFAF        ANDEQ     'B'
      C     P_After       OREQ      'Y'
@@ -349,14 +349,17 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDCRSHPD  '  GLOB_SDCRSHPD                              MD050231
      C     PFLNAME       CASEQ     'SDCTTXPD  '  GLOB_SDCTTXPD                              MD050231
      C     PFLNAME       CASEQ     'SDCUSTXC  '  GLOB_SDCUSTXC                              MD050212
+     C     PFLNAME       CASEQ     'SDSVLCTD'    GLOB_SDSVALPD                              MD054605
+     C     PFLNAME       CASEQ     'SDSVLBTD'    GLOB_SDSVALPD                              MD054605
+     C     PFLNAME       CASEQ     'SDSVLXTD'    GLOB_SDSVALPD                              MD054605
      C                   ENDCS
      C                   ENDIF
- 
+
      C                   MOVEL     'A'           I#BFAF
      C                   ENDDO
- 
+
      C                   RETURN
- 
+
       /SPACE 5                                                                               BUG3644
       *****************************************************************                      BUG3644
       * Global Updates - Collateral and Credit Lines ICD                                     BUG3644
@@ -1143,7 +1146,7 @@ O                                                                               
       * Determine Updates
       *****************************************************************
      C     DET_UPDATES   BEGSR
- 
+
      C                   CALL      'GPDETGUPD'
      C                   PARM                    I#ZONE           10
      C                   PARM      PFLNAME       I#FILE           10
@@ -1151,7 +1154,7 @@ O                                                                               
      C                   PARM                    I#AIMG
      C                   PARM      'N'           P_Before          1
      C                   PARM      'N'           P_After           1
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -1261,7 +1264,7 @@ B                                                                               
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
                                                                                              BUG7825
@@ -1274,9 +1277,9 @@ B                                                                               
      C                   IF        *IN99 = *ON                                               BUG7825
      C                   EXSR      *PSSR                                                     BUG7825
      C                   ENDIF                                                               BUG7825
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
                                                                                               BG6438
       * Delete Override SDBRCHL0                                                             BUG7825
@@ -1328,7 +1331,7 @@ O    C                   KFLD                    SBBCUST                        
      C                   KFLD                    BBCUST                                       244057
                                                                                               BG6438
      C                   MOVE      *BLANK        Zone_ID          10                          BG6438
- 
+
      C                   ENDSR
       *****************************************************************                     AR547326
       * OPENFILE - Put override, no share and open input files        *                     AR547326

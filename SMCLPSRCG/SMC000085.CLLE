@@ -10,23 +10,25 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR933964           Date 13Mar12              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR933964           Date 13Mar12              */
 /*                      CUP003  *CREATE    Date 23Sep10              */
 /*                                                                   */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR933964 - UPSVALTPD has been made redundant.               */
 /*       CUP003 - New utility to update System Values                */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &OPFXSVAL)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&FPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&FGTALIB) TYPE(*CHAR) LEN(10)
@@ -34,30 +36,31 @@
              DCL        VAR(&TGVLIB) TYPE(*CHAR) LEN(10)                                /*AR933964*/
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPGSVALJ0)
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                              /*MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area MIDASMSG in QTEMP for screen error handling. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -66,7 +69,7 @@ VALIDATE:
                    CHGVAR     VAR(&TPFX) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -75,9 +78,9 @@ VALIDATE:
                    CHGVAR     VAR(&FPFX) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -87,39 +90,42 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000085' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CALL       PGM(GPC000016) PARM(&TPFX)
- 
+
              CHGVAR     VAR(&FGTALIB) VALUE(&FPFX *TCAT 'GTALIB')
              CHGVAR     VAR(&TGTALIB) VALUE(&TPFX *TCAT 'GTALIB')
              CHGVAR     VAR(&TGVLIB) VALUE(&TPFX *TCAT 'GVLIB')                         /*AR933964*/
- 
+
 /* Check if file exists in 'from' system. */
              CHKOBJ     OBJ(&FGTALIB/GPSVALPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Create copy of GPSVALPD. */                                                          /*AR933964*/
              DLTF       FILE(QTEMP/UPSVALTPD)                                           /*AR933964*/
              MONMSG     MSGID(CPF0000)                                                  /*AR933964*/
-             CPYF       FROMFILE(&TGVLIB/GPSVALL0) +
+/**********  CPYF       FROMFILE(&TGVLIB/GPSVALL0) +
                           TOFILE(QTEMP/UPSVALTPD) MBROPT(*REPLACE) +
-                          CRTFILE(*YES)                                                 /*AR933964*/
+                          CRTFILE(*YES) */                                    /*AR933964**MD054605*/
+             CPYF       FROMFILE(&TGVLIB/GPSVLJW0) +
+                          TOFILE(QTEMP/UPSVALTPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD054605*/
 /* Copy 'from' file to template System Value file. */
              CPYF       FROMFILE(&FGTALIB/GPSVALPD) TOFILE(UPSVALTPD) +
                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
- 
+
 /* Call program to update 'to' file from 'from' file. */
-             OVRDBF     FILE(GPSVALPD) TOFILE(&TGTALIB/GPSVALPD)
+/**********  OVRDBF     FILE(GPSVALPD) TOFILE(&TGTALIB/GPSVALPD) */                     /*MD054605*/
              CALL       PGM(SM000024)
-             DLTOVR     FILE(GPSVALPD)
+/**********  DLTOVR     FILE(GPSVALPD) */                                               /*MD054605*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('SMC000085') MSG(&MESSAGE)
@@ -131,6 +137,6 @@ ERROR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('SMC000085' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. BUG28074           Date 26Aug10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      BUG28074           Date 26Aug10              */
 /*                      BUG28037           Date 17Aug10              */
 /*                      BUG27957  *CREATE  Date 30Jul10              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG28074 - Correct placement of override.                   */
 /*       BUG28037 - Handle IASP.                                     */
@@ -23,7 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&GPSBSID)
- 
+
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SYSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(10)
@@ -35,15 +37,15 @@
              DCL        VAR(&SYSVAL2) TYPE(*CHAR) LEN(20)                               /*BUG28037*/
              DCL        VAR(&SYSVAL3) TYPE(*CHAR) LEN(20)                               /*BUG28037*/
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)                                /*BUG28037*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGVAR     VAR(&GVLIB) VALUE(&GPSBSID *TCAT 'GVLIB')
- 
+
 /* Retrieve IASP System Values. */                                                      /*BUG28074*/
              CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')                         /*BUG28074*/
              CHGVAR     VAR(&SYSVAL2) VALUE('IASPdatabase')                             /*BUG28074*/
@@ -55,27 +57,27 @@
              IF         COND(&RTNCODE *NE '       ') THEN(DO)                           /*BUG28074*/
                 GOTO       CMDLBL(ERROR)                                                /*BUG28074*/
              ENDDO                                                                      /*BUG28074*/
- 
-             OVRDBF     FILE(GPSVALL0) TOFILE(&GVLIB/GPSVALL0)
- 
+
+/**********  OVRDBF     FILE(GPSVALL0) TOFILE(&GVLIB/GPSVALL0) */                       /*MD054605*/
+
 /* Set up System Value GlobalJavaPathStem. */
              CHGVAR     VAR(&SYSVAL) VALUE('GlobalJavaPathStem')
              CHGVAR     VAR(&SYSVALVAL) +
                           VALUE('/QOpenSys/Misys/MidasPlus/' *TCAT +
                           &GPSBSID)
              CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
- 
+
 /* Update global layer prefix. */
              CHGVAR     VAR(&SYSVAL) VALUE(' ')
              CHGVAR     VAR(&SYSVALVAL) VALUE(' ')
              CHGVAR     VAR(&SYSVAL) VALUE('BrgMidasGlobalPrefix')
              CHGVAR     VAR(&SYSVALVAL) VALUE(&GPSBSID)
              CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
- 
+
              CHGVAR     VAR(&SYSVAL) VALUE(' ')
              CHGVAR     VAR(&SYSVAL) VALUE('GlobalSystemPrefix')
              CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
- 
+
 /* Update IASP values. */                                                               /*BUG28037*/
 /**********  CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')         */ /*BUG28037*/ /*BUG28074*/
 /**********  CHGVAR     VAR(&SYSVAL2) VALUE('IASPdatabase')             */ /*BUG28037*/ /*BUG28074*/
@@ -90,11 +92,11 @@
              CALL       PGM(GP009510) PARM(&SYSVAL1 &SYSVALVAL1 ' ')                    /*BUG28037*/
              CALL       PGM(GP009510) PARM(&SYSVAL2 &SYSVALVAL2 ' ')                    /*BUG28037*/
              CALL       PGM(GP009510) PARM(&SYSVAL3 &SYSVALVAL3 ' ')                    /*BUG28037*/
- 
-             DLTOVR     FILE(GPSVALL0)
- 
+
+/**********  DLTOVR     FILE(GPSVALL0) */                                               /*MD054605*/
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              CHGJOB     SWS(XXXXXX11)
 ENDPGM:

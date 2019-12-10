@@ -1,0 +1,111 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Report Difference')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000702 - Report Difference                               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD054605 *CREATE   Date 17Oct19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &BRGDTALIB)
+
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KEYFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROVR) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2019')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Generate field data */
+/*           CMPFMNT TFILE(&FILE) */
+             RTVJOBA    USER(&MBROVR)
+
+/* Add members for the specified member override. */
+             ADDPFM     FILE(UTFLDDPD) MBR(&MBROVR)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(UTFLDDL0) MBR(&MBROVR) +
+                          DTAMBRS((UTFLDDPD (&MBROVR)))
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(UTFLDDL1) MBR(&MBROVR) +
+                          DTAMBRS((UTFLDDPD (&MBROVR)))
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(UTFLDDL2) MBR(&MBROVR) +
+                          DTAMBRS((UTFLDDPD (&MBROVR)))
+             MONMSG     MSGID(CPF0000)
+
+/* Add overrides. */
+             OVRDBF     FILE(UTFLDDPD) MBR(&MBROVR)
+             OVRDBF     FILE(UTFLDDL0) MBR(&MBROVR)
+             OVRDBF     FILE(UTFLDDL1) MBR(&MBROVR)
+             OVRDBF     FILE(UTFLDDL2) MBR(&MBROVR)
+
+             CALL       PGM(UT000022) PARM(&FILE 'X')
+
+             DLTOVR     FILE(UTFLDDPD UTFLDDL0 UTFLDDL1 UTFLDDL2)
+
+/* Remove fields irrelevant to the compare*/
+             CALL       PGM(UP000704) PARM(&FILE &MBROVR &KEYFILE)
+
+
+
+             IF         COND(&FILE *EQ 'GPSVLCTD') THEN(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE('GPSVALPD')
+             CHKOBJ     OBJ(&OLDFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&FILE)
+             ENDDO
+             ENDDO
+
+             IF         COND(&FILE *EQ 'GPSVRCTD') THEN(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE('GPSVRFPD')
+             CHKOBJ     OBJ(&OLDFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&FILE)
+             ENDDO
+             ENDDO
+
+             IF         COND(&FILE *EQ 'SDSVLCTD') THEN(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE('SDSVALPD')
+             CHKOBJ     OBJ(&OLDFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&FILE)
+             ENDDO
+             ENDDO
+
+             IF         COND(&FILE *EQ 'SDSVRCTD') THEN(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE('SDSVRFPD')
+             CHKOBJ     OBJ(&OLDFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&FILE)
+             ENDDO
+             ENDDO
+
+/* Run compare */
+             CMPF FILE1(&OLDFILE) FILE2(&BRGDTALIB/&FILE) TFILE(&FILE) KEYFLD(*FILE) +
+             OUTPUT(*PRINT) KEYF(&KEYFILE)
+
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+END:
+             ENDPGM

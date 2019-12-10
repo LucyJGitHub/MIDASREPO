@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053487           Date 28May19               *
-      *  Prev Amend No. MD053450           Date 11May19               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD053487           Date 28May19               *
+      *                 MD053450           Date 11May19               *
       *                 MD053394           Date 08May19               *
       *                 MD053109           Date 03Apr19               *
       *                 MD053146           Date 02Apr19               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD053487 - Audit Report should be available for Interface    *
       *             Password Maintenance                              *
       *  MD053450 - No profile and password defined but reflected on  *
@@ -981,7 +983,8 @@
      C                   EVAL      WField = 'GISVAL'
      C                   EVAL      WSval = 'GIVAL'
      C                   EVAL      WFSval = 'GlobalSystemPrefix'
-     C                   EVAL      WFFILE = 'SDSVALPD'
+     C**********         EVAL      WFFILE = 'SDSVALPD'                                      MD054605
+     C                   EVAL      WFFILE = 'SDSVLJW0'                                      MD054605
      C                   EXSR      SrSVAL1
      C                   EVAL      WPrefix = Result
                                                                                             MD053109

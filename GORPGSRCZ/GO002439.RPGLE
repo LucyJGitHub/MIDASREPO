@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CAS014 - IAS21 The Effects of Changes in Foreign Exchange    *
@@ -76,7 +78,7 @@
       ** Print File for Midas Global Historic Spot Rates Report - Audit
       *
      FGO002439AUO    E             PRINTER INFDS(SPOOLA)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -88,7 +90,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -108,7 +110,7 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -128,7 +130,7 @@
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** INFDS for AS002410AU
      D SPOOLA          DS
      D  SFILEA                83     92
@@ -215,7 +217,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -254,14 +256,14 @@
       ** Ensure Report Spool File recorded by RCF.
       *
      C                   Z-ADD     SFNUMA        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILEA
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       *
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
@@ -270,7 +272,7 @@
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
       *
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
@@ -300,7 +302,7 @@
      C                   EVAL      pRtCd         = *BLANKS
      C                   EVAL      pSysVal01     = 'GPHstSpotRetention'
      C                   EVAL      pSysValCurS01 = *BLANKS
- 
+
      C                   CALL      'GPAOSVALR0'
      C                   PARM                    pRtCd
      C                   PARM                    pSysVal01
@@ -332,7 +334,8 @@
       ** Data base error in file GPAOSVALPD
       *
      C     *LOCK         IN        LDA
-     C                   EVAL      DBFILE     =  'GPSVALPD'
+     C**********         EVAL      DBFile     =  'GPSVALPD'                                 MD054605
+     C                   EVAL      DBFile = 'GPSVLJW0'                                      MD054605
      C                   EVAL      DBPGM      =  'GO002439'
      C                   EVAL      DBKEY      =  pSysVal01
      C                   EVAL      DBASE      =  002
@@ -349,7 +352,7 @@
      C                   EVAL      wRetDate = BJRDNB - wRetDate
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -435,14 +438,14 @@
       ** Ensure Report Spool File recorded by RCF.
       *
      C                   Z-ADD     SFNUM1        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILE1
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       *
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
@@ -451,7 +454,7 @@
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Set report fields

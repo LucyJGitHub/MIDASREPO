@@ -9,62 +9,65 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1076132 *CREATE  Date 18Feb13              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1076132 *CREATE  Date 18Feb13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1076132 - Automate SQL delivery deployment                */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODE &PFXSVAL &BRGSVAL &LAYER)
- 
+
              /* Valid Modes: */
              /*  *VAL        */
              /*  *RUN        */
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(9)
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
- 
+
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&PTFDTA) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPSVALJ0)
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                               /*MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           Systems Ltd. 2013')
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /* Create temporary file to hold error messages. */
              DLTF       FILE(QTEMP/UPERRMQT)
              MONMSG     MSGID(CPF2105)
              CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
                           TEXT('Temporary file for holding error +
                           messages')
- 
- 
+
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -73,7 +76,7 @@ VALIDATE:
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -82,9 +85,9 @@ VALIDATE:
                    CHGVAR     VAR(&PTFDTA) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -94,20 +97,20 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC001002' 'ENTER' ' ')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Save library list. */
              SAVLIBL    SAVDTL(SMC001002)
- 
+
 /* Set up library list. */
              CALL       PGM(UPC0014) PARM(&SBSID)
- 
+
 /* Copy SMSQLPTD file to temporary version. */
              DLTF       FILE(QTEMP/SMSQLPQT)
              MONMSG     MSGID(CPF0000)
              CPYF       FROMFILE(&PTFDTA/SMSQLPTD) +
                           TOFILE(QTEMP/SMSQLPQT) MBROPT(*REPLACE) +
                           CRTFILE(*YES)
- 
+
 /* Commence SMSQLRUN process */
              OVRDBF     FILE(SMSQLPTD) TOFILE(QTEMP/SMSQLPQT)
              CALL       PGM(SM000101) PARM(&MODE)
@@ -119,9 +122,9 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SM000101' 'JOBLOG' 'Y')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('SMC001002') MSG(&MESSAGE)
@@ -133,10 +136,10 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('SMC001002' 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
 /* Restore original library list. */
              RSTLIBL    SAVEDLIBL(SMC001002)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDPGM

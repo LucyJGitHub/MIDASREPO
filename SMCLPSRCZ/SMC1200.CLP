@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27240           Date 12Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG27240- Applied CPK029 file locking fix                   */
@@ -34,7 +36,7 @@
 /**********  PGM                                                                       */ /*CUP033*/
 /**********  PGM        PARM(&BRGSVAL)  */                                         /*CUP033 CSC043*/
              PGM        PARM(&BRGSVAL &IASPYNSVAL &IASPSVAL)                              /*CSC043*/
- 
+
              DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
              DCL        VAR(&IASPYNSVAL) TYPE(*CHAR) LEN(20)                              /*CSC043*/
              DCL        VAR(&IASPSVAL) TYPE(*CHAR) LEN(20)                                /*CSC043*/
@@ -55,34 +57,36 @@
              DCL        VAR(&TRIM) TYPE(*CHAR) LEN(1)
              DCL        VAR(&WILD) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RESULT) TYPE(*DEC) LEN(3)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
 /**********  DCLF       FILE(UPSVALJ0)  */                                         /*CUP033 CSC043*/
-             DCLF       FILE(UPSVALJ0) OPNID(Z)                                           /*CSC043*/
-             DCLF       FILE(UPGSVALJ0) OPNID(G)                                          /*CSC043*/
- 
+/**********  DCLF       FILE(UPSVALJ0) OPNID(Z) */                             /*CSC043* *MD054605*/
+             DCLF       FILE(UPSVALJ0) OPNID(Z) ALWNULL(*YES)                           /*MD054605*/
+/**********  DCLF       FILE(UPGSVALJ0) OPNID(G) */                            /*CSC043* *MD054605*/
+             DCLF       FILE(UPGSVALJ0) OPNID(G) ALWNULL(*YES)                          /*MD054605*/
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
- 
+
 /* Create Midas Info Screen data area in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG MSGID(CPF2105)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           TEXT('Midas Info Screen Data Area')
- 
+
 /**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
 /**********  IF         COND(&PTFUPG *EQ ' ') THEN(DO)                                 */ /*CUP033*/
- 
+
 VALIDATE:                                                                                 /*CUP033*/
 /**********  RCVF  */                                                              /*CUP033 CSC043*/
              RCVF       OPNID(Z)                                                          /*CSC043*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
 /**********  IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)  */                    /*CUP033 CSC043*/
 /**********     IF         COND(&GIVAL *EQ ' ') THEN(DO)     */                    /*CUP033 CSC043*/
              IF         COND(&Z_GISVAL *EQ &BRGSVAL) THEN(DO)                             /*CSC043*/
@@ -95,9 +99,9 @@ VALIDATE:                                                                       
                 ENDDO                                                                     /*CUP033*/
 /**********     GOTO       CMDLBL(CHECK)                                    */ /*CUP033*/ /*CPK029*/
              ENDDO                                                                        /*CUP033*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
  CHECK:                                                                                   /*CUP033*/
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
 /* Set up messages for Midas Information Screen  */
@@ -108,7 +112,7 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('SMC1200' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 VALIDATE2:                                                                                /*CSC043*/
              RCVF       OPNID(G)                                                          /*CSC043*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CSC043*/
@@ -155,7 +159,7 @@ DEVICENAME:
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
              RTVDTAARA  DTAARA(QTEMP/DEVD) RTNVAR(&DEVD)
- 
+
 /* Check device is valid. */
              CHKOBJ     OBJ(&DEVD) OBJTYPE(*DEVD)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -164,7 +168,7 @@ DEVICENAME:
                 CALL       PGM(SCC0010) PARM('SMC1200' 'ENTER' ' ')
                 GOTO       CMDLBL(DEVICENAME)
              ENDDO
- 
+
 /* Attempt to build source name based on the implementation library. */
              CALL       PGM(QCLSCAN) PARM(&PTFUPG &STRLEN &STRPOS +
                           &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
@@ -181,7 +185,7 @@ DEVICENAME:
              ELSE       CMD(DO)
                 CHGVAR     VAR(&PTFUPG) VALUE('SRCLIB')
              ENDDO
- 
+
 /* Prompt for restore of source library. */
 /*                                                                                        /*CSC043*/
 /** If IASP environment */                                                                /*CSC043*/
@@ -201,9 +205,9 @@ DEVICENAME:
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
              ENDDO                                                                        /*CSC043*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 /* Abnormal program end. */
 ABNOR:
              CHGVAR     VAR(&MEM) VALUE('SMC1200 - Job has Ended +

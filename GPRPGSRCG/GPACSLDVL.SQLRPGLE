@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033895           Date 16Apr15               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD033895           Date 16Apr15               *
       *                 MD024244*CREATE    Date 09Jan14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - Correct parameters for UT000033.                  *
       *  MD024244 - Document Store Cannot Access Root Directory       *
@@ -158,7 +160,8 @@
       ** Get Global System Prefix
       *
      C/EXEC SQL
-     C+ select GIVAL into :GlobPref from SDSVALPD
+     C**select*GIVAL into :GlobPref from SDSVALPD                                           MD054605
+     C+ select GIVAL into :GlobPref from SDSVLJW0                                           MD054605
      C+ where GISVAL = 'GlobalSystemPrefix'
      C/END-EXEC
       *

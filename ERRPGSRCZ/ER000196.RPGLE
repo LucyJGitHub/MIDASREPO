@@ -15,7 +15,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CER070             Date 19Aug14               *
@@ -26,7 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
@@ -118,7 +118,7 @@
 
       ** Externally described DS for System Values
 
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                                MD054605
 
       ** First DS for access objects - short data structure
 

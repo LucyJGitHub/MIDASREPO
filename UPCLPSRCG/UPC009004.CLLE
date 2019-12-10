@@ -10,44 +10,46 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2011                     */
 /*                                                                   */
-/*       Last Amend No. CUP021  *CREATE    Date 23Feb11              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. CUP021  *CREATE    Date 23Feb11              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       CUP021 - Rewrite of Action File processing.                 */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&GPFXSVAL)
- 
+
              DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPGSVALJ0)
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                              /*MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054065*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2011')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -56,9 +58,9 @@ VALIDATE:
                    CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -68,13 +70,13 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('UPC009004' 'ENTER' ' ')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Save library list. */
              SAVLIBL    SAVDTL(UPC009004)
- 
+
 /* Set up library list. */
              CALL       PGM(GPC000016) PARM(&GPSBSID)
- 
+
 /* Copy delivered Action File to system copy. */
              CPYF       FROMFILE(UPAFCPPD) TOFILE(UPAFDVPD) +
                           MBROPT(*REPLACE)
@@ -84,7 +86,7 @@ VALIDATE:
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
                 CLRPFM     FILE(UPAFDVPD)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
  ABNOR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
@@ -97,10 +99,10 @@ VALIDATE:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('UPC009004' 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
 /* Restore original library list. */
              RSTLIBL    SAVEDLIBL(UPC009004)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDPGM

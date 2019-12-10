@@ -15,13 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
@@ -57,17 +59,17 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -76,7 +78,7 @@
      D EQCEXP        E DS                  EXTNAME(ACAPF)
       * Midas Plus Country Exposure data
      D MICEXP        E DS                  EXTNAME(T_MLEQCE)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -86,7 +88,7 @@
       * Work field for EQ Branch
      D WEQBRCH         S              3
      D I#ERMS          S             50
- 
+
      D P@RTCD          S              7
      D P@OP01          S             20
      D P@VL01          S            200
@@ -114,7 +116,7 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    EQCEXP
      C                   PARM                    MICEXP
@@ -180,7 +182,8 @@
       *
      C     P@RTCD        IFNE      *BLANK
      C                   MOVEL     'AOSVALR0'    DBPGM
-     C                   MOVEL     'GPSVALPD'    DBFILE
+     C**********         MOVEL     'GPSVALPD'    DBFILE                                     MD054605
+     C                   MOVEL     'GPSVLJW0'    DBFILE                                     MD054605
      C                   MOVEL     '006'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
@@ -227,7 +230,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C/COPY GOCPYSRC,GOGETZONE
      C                   ENDSR
       *****************************************************************

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 23Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -49,7 +51,7 @@
       *
       ** Midas SD Midas system values
       *
-     FSDSVALL0  UF A E           K DISK    INFSR(*PSSR) USROPN
+     F*SDSVALL0* UF A E           K DISK    INFSR(*PSSR) USROPN                             MD054605
       *
       *****************************************************************
       /EJECT
@@ -79,11 +81,11 @@
      D/EJECT
       *
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Array containing Copyright statement
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -92,27 +94,27 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
      D PSDS           SDS
- 
+
       ** Program Status Data Structure
- 
+
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
- 
+
       ** Rundate data area
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structures for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for Access Objects - short data structure
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -132,41 +134,41 @@
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
      D WRunD           S              5  0
      D PGISVAL         S             20
- 
+
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
       ** Update OTPAYDD file
- 
+
      C                   EXSR      SROTPAY
- 
+
       ** Update MEOUFMPD file
- 
+
      C                   EXSR      SRMEOUFM
- 
+
       ** Update SDSVALPD file
- 
+
      C                   EXSR      SRSDSVAL
- 
+
       ** Call ME1752
- 
+
      C                   EXSR      SRME1752
- 
+
       ** Call ME1743
- 
+
      C                   EXSR      SRME1743
- 
- 
+
+
      C                   RETURN
       *================================================================
       *  P R O G R A M   E N D                                        *
       *================================================================
      C/EJECT
- 
+
       *****************************************************************
       /TITLE SR/SROTPAY
       *****************************************************************
@@ -174,11 +176,11 @@
       *  SROTPAY - Update OTPAYDD file.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SROTPAY       BEGSR
- 
+
      C                   OPEN      OTPAY
- 
+
      C     *LOVAL        SETLL     OTPAY
      C                   READ      OTPAY
      C                   DOW       NOT %EOF(OTPAY)
@@ -189,9 +191,9 @@
      C                   UPDATE    OTPAYDDF
      C                   READ      OTPAY
      C                   ENDDO
- 
+
      C                   CLOSE     OTPAY
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -202,11 +204,11 @@
       *  SRMEOUFM - Subroutine to do the Detail Processing            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMEOUFM      BEGSR
- 
+
      C                   OPEN      MEOUFML0
- 
+
      C                   EVAL      POMNWRK   = 'SWIFT'
      C                   EVAL      POMMTPY   = '103'
      C                   EVAL      POMMTAG   = ':50K:'
@@ -215,7 +217,7 @@
      C                   EVAL      POMCURR   = *BLANKS
      C                   EVAL      POMNOST   = *BLANKS
      C                   EVAL      POMACTI   = 'ACOUNTLINE'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -229,9 +231,9 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   EVAL      POMMTAG   = ':50A:'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -245,9 +247,9 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   EVAL      POMMTAG   = ':59:'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -261,9 +263,9 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   EVAL      POMMTAG   = ':59A:'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -277,10 +279,10 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   EVAL      POMMTAG   = ':50K:'
      C                   EVAL      POMACTI   = 'ACOUNTIBAN'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -294,9 +296,9 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   EVAL      POMMTAG   = ':50A:'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -310,9 +312,9 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   EVAL      POMMTAG   = ':59:'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -326,9 +328,9 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   EVAL      POMMTAG   = ':59A:'
- 
+
      C     @PMEOUFM      CHAIN     MEOUFML0
      C                   IF        NOT %FOUND(MEOUFML0)
      C                   EVAL      OMNWRK   = POMNWRK
@@ -342,9 +344,9 @@
      C                   EVAL      OMFLAG   = 'O'
      C                   WRITE     @OUFMPD
      C                   ENDIF
- 
+
      C                   CLOSE     MEOUFML0
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -355,34 +357,34 @@
       *  SRSDSVAL - Subroutine to do the Detail Processing            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSDSVAL      BEGSR
- 
-     C                   OPEN      SDSVALL0
- 
+
+     C**********         OPEN      SDSVALL0                                                 MD054605
+
      C                   EVAL      PGISVAL   = 'AllowMT103AccFATF'
- 
-     C     PGISVAL       CHAIN     SDSVALL0
-     C                   IF        NOT %FOUND(SDSVALL0)
-     C                   EVAL      GISVAL   = PGISVAL
-     C                   EVAL      GIMMOD   = 'FT'
-     C                   EVAL      GIMMSN   = 'FUNDSTRAN'
-     C                   EVAL      GIDESC   = 'Allow MT103 Account input for FA-
-     C                             TF Transaction'
-     C                   EVAL      GIVAL    = 'N'
-     C                   EVAL      GIDFT    = 'N'
-     C                   EVAL      GIHELP   = 'Y,N'
-     C                   EVAL      GIDLEN   = '1'
-     C                   EVAL      GISWCH   = 'CFT032'
-     C                   EVAL      GIALWB   = *BLANKS
-     C                   EVAL      GIEMSG   = 'USRxxxx'
-     C                   EVAL      GILCD    = WRunD
-     C                   EVAL      GILCT    = 'I'
-     C                   WRITE     @SVALL0
-     C                   ENDIF
- 
-     C                   CLOSE     SDSVALL0
- 
+
+     C*****PGISVAL       CHAIN     SDSVALL0                                                 MD054605
+     C**********         IF        NOT %FOUND(SDSVALL0)                                     MD054605
+     C**********         EVAL      GISVAL   = PGISVAL                                       MD054605
+     C**********         EVAL      GIMMOD   = 'FT'                                          MD054605
+     C**********         EVAL      GIMMSN   = 'FUNDSTRAN'                                   MD054605
+     C**********         EVAL      GIDESC   = 'Allow MT103 Account input for FA-            MD054605
+     C**********                   TF Transaction'                                          MD054605
+     C**********         EVAL      GIVAL    = 'N'                                           MD054605
+     C**********         EVAL      GIDFT    = 'N'                                           MD054605
+     C**********         EVAL      GIHELP   = 'Y,N'                                         MD054605
+     C**********         EVAL      GIDLEN   = '1'                                           MD054605
+     C**********         EVAL      GISWCH   = 'CFT032'                                      MD054605
+     C**********         EVAL      GIALWB   = *BLANKS                                       MD054605
+     C**********         EVAL      GIEMSG   = 'USRxxxx'                                     MD054605
+     C**********         EVAL      GILCD    = WRunD                                         MD054605
+     C**********         EVAL      GILCT    = 'I'                                           MD054605
+     C**********         WRITE     @SVALL0                                                  MD054605
+     C**********         ENDIF                                                              MD054605
+
+     C**********         CLOSE     SDSVALL0                                                 MD054605
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -393,9 +395,9 @@
       *  SRME1752 - Subroutine to do the Detail Processing            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRME1752      BEGSR
- 
+
      C                   CALL      'FC0040X'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      'ME1742'      PREPNAME         10
@@ -405,7 +407,7 @@
      C                   PARM      'Y'           PMULTBIN          1
      C                   PARM      'S'           PLEVEL            1
      C                   PARM      *BLANKS       PENTITY           3
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -416,12 +418,12 @@
       *  SRME1743 - Subroutine to do the Detail Processing            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRME1743      BEGSR
- 
+
      C**********         CALL      'ME1743'                                                 BUG14939
      C                   CALL      'ME001743'                                               BUG14939
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -434,11 +436,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Parameter list
- 
+
      C     @PMEOUFM      KLIST
      C                   KFLD                    POMNWRK           6
      C                   KFLD                    POMMTPY           3
@@ -450,9 +452,9 @@
      C                   KFLD                    POMCURR           3
      C                   KFLD                    POMNOST           2
      C                   KFLD                    POMACTI          10
- 
+
       ** Initialise LDA field
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = *ZEROS
@@ -462,17 +464,17 @@
      C                   EVAL      DBPGM = 'FT0000032'
      C                   EVAL      DBPROC    =   *BLANKS
      C                   OUT       LDA
- 
+
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 1
@@ -481,30 +483,30 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WRunD = BJRDNB
- 
+
       ** Initialise report work fields
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  *PSSR  - Error control subroutine                            *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 ** CPY@
 (c) Misy  s International Banking Systems Ltd. 2006

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. BUG28037           Date 17Aug10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      BUG28037           Date 17Aug10              */
 /*                      BUG27957           Date 30Jul10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG28037 - Handle IASP.                                     */
 /*       BUG27957 -  Standardise update of System Values.            */
@@ -34,7 +36,7 @@
 /*********************************************************************/
 /**********  PGM                                                                       */ /*CUP033*/
              PGM        PARM(&GPFXSVAL)                                                   /*CUP033*/
- 
+
              DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
 /**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
@@ -45,29 +47,30 @@
 /**********  DCL        VAR(&SYSVALVAL) TYPE(*CHAR) LEN(200)              */ /*CUP038*/ /*BUG28037*/
 /**********  DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(10)                  */ /*BG23039*/ /*BUG28037*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                      /*CUP033 *MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2005')
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Create Midas Info Screen data area in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG MSGID(CPF2105)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           TEXT('Midas Info Screen Data Area')
- 
+
 VALIDATE:                                                                                 /*CUP033*/
              RCVF                                                                         /*CUP033*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)                              /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -76,9 +79,9 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)                                 /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
 /**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
 /**********  IF         COND(&GPSBSID *EQ '  ') THEN(DO)                               */ /*CUP033*/
  CHECK:                                                                                   /*CUP033*/
@@ -91,18 +94,18 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('SMC001125' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Set up library list. */
              CALL       PGM(GPC000016) PARM(&GPSBSID)
- 
+
 /**********  CHGVAR     VAR(&GVLIB) VALUE(&GPSBSID *TCAT 'GVLIB')        */ /*BG23039*/ /*BUG28037*/
- 
+
 /* Call program to initialise files for Global Layer */
              CALL       PGM(SM1125)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /**Set*up*System*Value*GlobalJavaPathStem.**/ /*                          */ /*CUP038*/ /*BUG27957*/
 /**********  CHGVAR     VAR(&SYSVALVAL) +                                            */ /*BUG27957*/
 /**********               VALUE('/QOpenSys/Misys/MidasPlus/' *TCAT +                 */ /*BUG27957*/
@@ -111,15 +114,15 @@ VALIDATE:                                                                       
 /**********               OVRSCOPE(*JOB)                                 */ /*BG23039*/ /*BUG27957*/
 /**********  CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')        */ /*CUP038*/ /*BUG27957*/
 /**********  DLTOVR     FILE(GPSVALL0) LVL(*JOB)                         */ /*BG23039*/ /*BUG27957*/
- 
+
 /* Call program to update global System Values. */                                      /*BUG27957*/
              CALL       PGM(SMC000076) PARM(&GPSBSID)                                   /*BUG27957*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*BUG27957*/
                 GOTO       CMDLBL(ABNOR)                                                /*BUG27957*/
              ENDDO                                                                      /*BUG27957*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ABNOR:
 /* Set up messages for Midas Information Screen  */
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
@@ -132,8 +135,8 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('SMC001125' 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
 /**********  MONMSG     MSGID(CPF0000)                                               */ /*BUG27957*/
- 
+
              ENDPGM

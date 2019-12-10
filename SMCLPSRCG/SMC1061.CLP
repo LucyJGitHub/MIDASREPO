@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR886414           Date 05Jan12              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR886414           Date 05Jan12              */
 /*                      CBF012             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR886414 - Creation of CBS, CBA and BF libraries in SMSETUPD*/
 /*                  not catered                                      */
@@ -40,10 +42,10 @@
 /**********  PGM        PARM(&DEV &PTFUPG &PROCESS)                         */ /*CPK017*/ /*CSM003*/
 /**********  PGM        PARM(&DEV &PTFUPG)                                  */ /*CSM003*/ /*CUP033*/
              PGM        PARM(&DEV &BRGSVAL &GPFXSVAL)                                     /*CUP033*/
- 
+
              DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
              DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
- 
+
              DCL        VAR(&DEV) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                               */ /*CPK017*/
 /**********  DCL        VAR(&PROCESS) TYPE(*CHAR) LEN(7)                    */ /*CPK017*/ /*CSM003*/
@@ -51,7 +53,7 @@
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
              DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                                  /*CUP033*/
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
- 
+
              DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&UPSTATPOS) TYPE(*CHAR) LEN(3)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(100)
@@ -86,16 +88,17 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
-             DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                     /*CUP033* *MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Check what type of device is being used. */
              RTVOBJD    OBJ(&DEV) OBJTYPE(*DEVD) OBJATR(&DEVTYPE)
- 
+
 /* Retrieve library prefix and create library names. */
              RTVDTAARA  DTAARA(UPSTAT) RTNVAR(&UPSTAT)
              CHGVAR     VAR(&DBLIBID) VALUE(%SST(&UPSTAT 60 2))
@@ -105,7 +108,7 @@
                 CALL  PGM(SCC0010) PARM('SMC1061' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /**********  IF         COND(&PROCESS = '*ZONE  ') THEN(DO)                 */ /*CPK017*/ /*CSM003*/
 /**********                                                                            */ /*CSM003*/
 /**If*the*'new'*library*ID*is*blank*then*this*means*that*this*is*an*'XX'*to*'XX'**/ /* */ /*CSM003*/
@@ -150,7 +153,7 @@
 /**********     ENDDO                                                                  */ /*CSM003*/
 /**********                                                                            */ /*CSM003*/
 /**********  ENDDO                                                          */ /*CPK017*/ /*CSM003*/
- 
+
 /**********  IF         COND(&PROCESS = '*GLOBAL') THEN(DO)                 */ /*CPK017*/ /*CSM003*/
 /* Get Global layer system ID. */                                                         /*CPK017*/
 /**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*  */ /*CPK017*/ /*CUP033*/
@@ -159,7 +162,7 @@ VALIDATE:                                                                       
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)                              /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -168,7 +171,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)                                 /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -177,9 +180,9 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
 /* Ensure that it is not blank. */                                                        /*CPK017*/
 /**********  IF         COND(&GPSBSID *EQ '  ') THEN(DO)                               */ /*CUP033*/
  CHECK:                                                                                   /*CUP033*/
@@ -194,7 +197,7 @@ VALIDATE:                                                                       
              ENDDO                                                                        /*CPK017*/
              ELSE       CMD(DO)                                                           /*CPK017*/
                 CHGVAR     VAR(&LIBGRP) VALUE(&GPSBSID)                                   /*CPK017*/
- 
+
                 CHGVAR     VAR(&FMDMLIB) VALUE(&DBLIBID *CAT 'GMLIB')                     /*CPK017*/
                 CHGVAR     VAR(&FMDPLIB) VALUE(&DBLIBID *CAT 'GPLIB')                     /*CPK017*/
                 CHGVAR     VAR(&FMDTALIB) VALUE(&DBLIBID *CAT 'GTALIB')                   /*CPK017*/
@@ -202,7 +205,7 @@ VALIDATE:                                                                       
                 CHGVAR     VAR(&FMCBSLIB) VALUE(&DBLIBID *CAT 'CBSLIB')                   /*CBF012*/
                 CHGVAR     VAR(&FMCBALIB) VALUE(&DBLIBID *CAT 'CBALIB')                   /*CBF012*/
                 CHGVAR     VAR(&FMBFLIB) VALUE(&DBLIBID *CAT 'BFLIB')                     /*CBF012*/
- 
+
                 CHGVAR     VAR(&TODMLIB) VALUE(&LIBGRP *CAT 'GMLIB')                      /*CPK017*/
                 CHGVAR     VAR(&TODPLIB) VALUE(&LIBGRP *CAT 'GPLIB')                      /*CPK017*/
                 CHGVAR     VAR(&TODTALIB) VALUE(&LIBGRP *CAT 'GTALIB')                    /*CPK017*/
@@ -211,11 +214,11 @@ VALIDATE:                                                                       
                 CHGVAR     VAR(&TOCBALIB) VALUE(&LIBGRP *CAT 'CBALIB')                    /*CBF012*/
                 CHGVAR     VAR(&TOBFLIB) VALUE(&LIBGRP *CAT 'BFLIB')                      /*CBF012*/
              ENDDO                                                                        /*CPK017*/
- 
+
 /**********  ENDDO                                                          */ /*CPK017*/ /*CSM003*/
- 
+
 RUN:
- 
+
 SUBMIT:
                                                                                         /*AR886414*/
 /** Rename BFLIB on machine (as created) to match restore name  */                      /*AR886414*/
@@ -335,7 +338,7 @@ SUBMIT:
                    GOTO       CMDLBL(ABNOR)
                 ENDDO
              ENDDO
- 
+
              RNMOBJ     OBJ(&TODMLIB) OBJTYPE(*LIB) NEWOBJ(&FMDMLIB)
              MONMSG     MSGID(CPF2111) EXEC(DO)
                 CHGVAR     VAR(&MEM) VALUE(&FMDMLIB *BCAT 'already +
@@ -345,7 +348,7 @@ SUBMIT:
              ENDDO
 /**********  ENDDO                                                                     */ /*CSM003*/
              CHGVAR     VAR(&RSTLIB) VALUE(&FMDMLIB)
- 
+
 /* Submit restore of DMLIB. */
 /**********  CHGVAR     VAR(&UPSTATPOS) VALUE(070)                                     */ /*CPK017*/
 /**********  IF         COND(&PROCESS = '*ZONE  ') THEN(CHGVAR +                       */ /*CSM003*/
@@ -353,16 +356,16 @@ SUBMIT:
 /**********  IF         COND(&PROCESS = '*GLOBAL') THEN(CHGVAR +
 /**********               VAR(&UPSTATPOS) VALUE(170))                                     /*CPK017*/
              CHGVAR     VAR(&UPSTATPOS) VALUE(170)                                        /*CSM003*/
- 
+
              SBMJOB     CMD(CALL PGM(SMC1062) PARM(&FMDMLIB &TODMLIB +
                           &RSTLIB &DEV &UPSTATPOS &ENDOPT)) +
                           JOB(&TODMLIB) JOBD(SETUP) JOBQ(SMJOBQ) +
                           OUTQ(*JOBD) RTGDTA(*JOBD) CURLIB(&PTFUPG)
- 
+
              CHGVAR     VAR(&MEM) VALUE('Job submitted to restore +
                           library ' *CAT &FMDMLIB)
              SNDPGMMSG  MSG(&MEM) TOMSGQ(SETUP)
- 
+
 /* Rename DPLIB on machine to match restore name. */
 /**Only*do*this*if*not*performing*an*'XX'*to*'XX'*type*upgrade.**/ /*                  */ /*CSM003*/
 /**********  IF         COND(&DBLIBID *NE &LIBGRP) THEN(DO)                            */ /*CSM003*/
@@ -387,7 +390,7 @@ SUBMIT:
              ENDDO
 /**********  ENDDO                                                                     */ /*CSM003*/
              CHGVAR     VAR(&RSTLIB) VALUE(&FMDPLIB)
- 
+
 /* Submit restore of DPLIB. */
 /**********  CHGVAR     VAR(&UPSTATPOS) VALUE(071)                                     */ /*CPK017*/
 /**********  IF         COND(&PROCESS = '*ZONE  ') THEN(CHGVAR +                       */ /*CSM003*/
@@ -395,16 +398,16 @@ SUBMIT:
 /**********  IF         COND(&PROCESS = '*GLOBAL') THEN(CHGVAR +                       */ /*CSM003*/
 /**********               VAR(&UPSTATPOS) VALUE(171))                       */ /*CPK017*/ /*CSM003*/
              CHGVAR     VAR(&UPSTATPOS) VALUE(171)                                        /*CSM003*/
- 
+
              SBMJOB     CMD(CALL PGM(SMC1062) PARM(&FMDPLIB &TODPLIB +
                           &RSTLIB &DEV &UPSTATPOS &ENDOPT)) +
                           JOB(&TODPLIB) JOBD(SETUP) JOBQ(SMJOBQ) +
                           OUTQ(*JOBD) RTGDTA(*JOBD) CURLIB(&PTFUPG)
- 
+
              CHGVAR     VAR(&MEM) VALUE('Job submitted to restore +
                           library ' *CAT &FMDPLIB)
              SNDPGMMSG  MSG(&MEM) TOMSGQ(SETUP)
- 
+
 /* Rename DTALIB on machine to match restore name. */
 /**Only*do*this*if*not*performing*an*'XX'*to*'XX'*type*upgrade.**/ /*                  */ /*CSM003*/
 /**********  IF         COND(&DBLIBID *NE &LIBGRP) THEN(DO)                            */ /*CSM003*/
@@ -429,7 +432,7 @@ SUBMIT:
              ENDDO
 /**********  ENDDO                                                                     */ /*CSM003*/
              CHGVAR     VAR(&RSTLIB) VALUE(&FMDTALIB)
- 
+
 /* Submit restore of DTALIB. */
 /**********  CHGVAR     VAR(&UPSTATPOS) VALUE(072)                                     */ /*CPK017*/
 /**********  IF         COND(&PROCESS = '*ZONE  ') THEN(CHGVAR +                       */ /*CSM003*/
@@ -437,17 +440,17 @@ SUBMIT:
 /**********  IF         COND(&PROCESS = '*GLOBAL') THEN(CHGVAR +                       */ /*CSM003*/
 /**********               VAR(&UPSTATPOS) VALUE(172))                       */ /*CPK017*/ /*CSM003*/
              CHGVAR     VAR(&UPSTATPOS) VALUE(172)                                        /*CSM003*/
- 
+
              SBMJOB     CMD(CALL PGM(SMC1062) PARM(&FMDTALIB +
                           &TODTALIB &RSTLIB &DEV &UPSTATPOS +
                           &ENDOPT)) JOB(&TODTALIB) JOBD(SETUP) +
                           JOBQ(SMJOBQ) OUTQ(*JOBD) RTGDTA(*JOBD) +
                           CURLIB(&PTFUPG)
- 
+
              CHGVAR     VAR(&MEM) VALUE('Job submitted to restore +
                           library ' *CAT &FMDTALIB)
              SNDPGMMSG  MSG(&MEM) TOMSGQ(SETUP)
- 
+
 /* Submit restore of DVLIB. */
 /**********  CHGVAR     VAR(&UPSTATPOS) VALUE(073)                                     */ /*CPK017*/
 /**********  IF         COND(&PROCESS = '*ZONE  ') THEN(CHGVAR +                       */ /*CSM003*/
@@ -455,13 +458,13 @@ SUBMIT:
 /**********  IF         COND(&PROCESS = '*GLOBAL') THEN(CHGVAR +                       */ /*CSM003*/
 /**********               VAR(&UPSTATPOS) VALUE(173))                       */ /*CPK017*/ /*CSM003*/
              CHGVAR     VAR(&UPSTATPOS) VALUE(173)                                        /*CSM003*/
- 
+
              CHGVAR     VAR(&RSTLIB) VALUE(&TODVLIB)
              SBMJOB     CMD(CALL PGM(SMC1062) PARM(&FMDVLIB &TODVLIB +
                           &RSTLIB &DEV &UPSTATPOS &ENDOPT)) +
                           JOB(&TODVLIB) JOBD(SETUP) JOBQ(SMJOBQ) +
                           OUTQ(*JOBD) RTGDTA(*JOBD) CURLIB(&PTFUPG)
- 
+
              CHGVAR     VAR(&MEM) VALUE('Job submitted to restore +
                           library ' *CAT &FMDVLIB)
              SNDPGMMSG  MSG(&MEM) TOMSGQ(SETUP)
@@ -608,7 +611,7 @@ SUBMIT:
 /**********     SNDPGMMSG  MSG(&MEM) TOMSGQ(SETUP)                                     */ /*CSM003*/
 /**********                                                                            */ /*CSM003*/
 /**********  ENDDO                                                          */ /*CPK017*/ /*CSM003*/
- 
+
 /**Submit*job*to*rename*libraries*after*removing*them*from*library*list;*only**/ /*    */ /*CSM003*/
 /**do*this*if*not*performing*an*'XX'*to*'XX'*type*upgrade.*********************/ /*    */ /*CSM003*/
 /* Submit job to rename libraries after removing them from library list. */               /*CSM003*/
@@ -629,14 +632,14 @@ SUBMIT:
 /**********     RMVLIBLE   LIB(&FMDZLIB)                                               */ /*CSM003*/
 /**********     MONMSG     MSGID(CPF2104)                                              */ /*CSM003*/
 /**********  ENDDO                                                          */ /*CPK017*/ /*CSM003*/
- 
+
 /**********     CHGVAR     VAR(&UPSTATPOS) VALUE(075)                                  */ /*CPK017*/
 /**********     SBMJOB     CMD(CALL PGM(SMC1063) PARM(&FMDMLIB &TODMLIB +              */ /*CPK017*/
 /**********                  &FMDPLIB &TODPLIB &FMDTALIB &TODTALIB +                   */ /*CPK017*/
 /**********                  &FMDZLIB &TODZLIB &UPSTATPOS)) +                          */ /*CPK017*/
 /**********                  JOB(RENAME) JOBD(SETUP) JOBQ(SMJOBQ) +                    */ /*CPK017*/
 /**********                  OUTQ(*JOBD) RTGDTA(*JOBD) CURLIB(&PTFUPG)                 */ /*CPK017*/
- 
+
 /**********     IF         COND(&PROCESS = '*ZONE  ') THEN(CHGVAR +                    */ /*CSM003*/
 /**********                  VAR(&UPSTATPOS) VALUE(075))                    */ /*CPK017*/ /*CSM003*/
 /**********     IF         COND(&PROCESS = '*GLOBAL') THEN(CHGVAR +                    */ /*CSM003*/
@@ -658,11 +661,11 @@ SUBMIT:
                           &FMBFLIB &TOBFLIB &UPSTATPOS)) +
                           JOB(RENAME) JOBD(SETUP) JOBQ(SMJOBQ) +
                           OUTQ(*JOBD) RTGDTA(*JOBD) CURLIB(&PTFUPG)                       /*CBF012*/
- 
+
 /**********  ENDDO                                                                     */ /*CSM003*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 /* Abnormal end. */
 ABNOR:
              CHGJOB     SWS(XXXXXX11)

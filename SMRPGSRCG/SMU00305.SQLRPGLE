@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CUP041  *CREATE    Date 10Mar15               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. CUP041  *CREATE    Date 10Mar15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *                                                               *
       *****************************************************************
@@ -38,7 +40,8 @@
      C+   GIVAL
      C+ into
      C+   :BrgDlvLib
-     C+ from GPSVALPD
+     C**from GPSVALPD                                                                       MD054605
+     C+ from GPSVLJW0                                                                       MD054605
      C+ where
      C+     GISVAL = 'BrgDeliveredDtaLib'
      C/end-exec

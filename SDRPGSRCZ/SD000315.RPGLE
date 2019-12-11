@@ -18,7 +18,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD054604 - Deliverable Data Split for SDSVALPD               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD050772 - Duplicate entries appears when running the normal *
       *             accounts tool in Information Mode                 *
       *  MD050775 - When pressing F11, the screen refreshed and       *

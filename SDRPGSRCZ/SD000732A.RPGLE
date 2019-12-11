@@ -41,7 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054604 - Deliverable Data Split for SDSVALPD               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051218 - US Indicia Tool not running properly              *
       *  MD046248 - Finastra Rebranding                               *

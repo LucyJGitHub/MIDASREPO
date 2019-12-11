@@ -32,7 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054605 - Deliverable Data Split for SDSVALPD               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD.              *
       *  MD034724 - Addition for UDF tables.                          *
       *  CUP042 - Simplify update of driving file.                    *
       *  CUP040 - Handle new convention for files to be deleted.  As  *
@@ -900,6 +900,11 @@
      C                   PARM                    ReturnCode
      C                   PARM                    ReturnData
      C                   IF        ReturnCode = *blank
+     C                             or ChkFile = 'GPWIPXTD'                                  MD054605
+     C                             or ChkFile = 'GPSVLXTD'                                  MD054605
+     C                             or ChkFile = 'GPSVRXTD'                                  MD054605
+     C                             or ChkFile = 'SDSVLXTD'                                  MD054605
+     C                             or ChkFile = 'SDSVRXTD'                                  MD054605
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'

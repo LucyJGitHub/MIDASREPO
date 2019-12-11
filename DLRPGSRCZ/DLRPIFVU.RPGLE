@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD054604           Date 19Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD030858A          Date 25Nov14               *
       *                 MD030858           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054604 - A Serious Midas Error Occurred whilst inputting   *
+      *             FX Swap                                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD030858A - Execution timestamp (Date) is not generated when *
@@ -59,7 +62,7 @@
      F***DLRPIFL0  UF   E           K DISK    RENAME(DLRPIFD0:DLRPIF00)            MD023922 MD024185
      FDLRPIFL0  IF   E           K DISK    RENAME(DLRPIFD0:DLRPIF00)                        MD024185
      F                                     PREFIX(SW_)                                      MD023169
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -78,82 +81,82 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D****/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D @FldNameArr     S             10A   DIM(ArrayMax)
- 
+
       ** Array of error message IDs
      D @MsgIDArr       S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       ** Array of error message data.
      D @MsgDtaArr      S                   DIM(ArrayMax)
      D                                     LIKE(#MsgData)
- 
+
       ** Array of message files to check
      D @MsgFArray      S             10A   DIM(MsgFArrMax)
- 
+
       * Transaction Reporting File Format
      D DLRPIFFileFmt E DS                  EXTNAME(DLRPIFPD)
- 
+
       * Transaction Reporting Screen (1) - Input
      D DLRIS1PDIn    E DS                  EXTNAME(DLRIS1PD)
      D DLRIS1Flds             52    449                                                     MD023037
- 
+
       * Transaction Reporting Screen (2) - Input
      D DLRIS2PDIn    E DS                  EXTNAME(DLRIS2PD)
- 
+
       * Transaction Reporting Screen (3) - Input
      D DLRIS3PDIn    E DS                  EXTNAME(DLRIS3PD)
      D DLRIS3Flds              1     38                                                     MD030858
@@ -163,15 +166,15 @@
                                                                                               CSW214
      D***DLRIS3Flds              1    721                                            MD022981 CSW214
      D***DLRIS3Flds              1     38                                            CSW214 MD030858
- 
+
       * Transaction Reporting Screen (1) - Output
      D DLRIS1PDOut   E DS                  EXTNAME(DLRIS1PD)
      D                                     PREFIX(OUT)
- 
+
       * Transaction Reporting Screen (2) - Output
      D DLRIS2PDOut   E DS                  EXTNAME(DLRIS2PD)
      D                                     PREFIX(OUT)
- 
+
       * Transaction Reporting Screen (3) - Output
      D DLRIS3PDOut   E DS                  EXTNAME(DLRIS3PD)
      D                                     PREFIX(OUT)
@@ -179,42 +182,42 @@
       ** Transaction Reporting Screen (4) - Output                                            CSW214
      D DLRIS4PDOut   E DS                  EXTNAME(DLRIS4PD)                                  CSW214
      D                                     PREFIX(OUT)                                        CSW214
- 
+
       * Valid RPIF File Format
      D DLVRPIFileFmt E DS                  EXTNAME(DLVRPIPD)
- 
+
       * RPIF Link File
      D DLRILKPDIn    E DS                  EXTNAME(DLRILKPD)
- 
+
       * RPIF Error File - Screen 1
      D DLERI1OKFlag  E DS                  EXTNAME(DLERI1PD)
- 
+
       * RPIF Error File - Screen 2
      D DLERI2OKFlag  E DS                  EXTNAME(DLERI2PD)
- 
+
       * RPIF Error File - Screen 3
      D DLERI3OKFlag  E DS                  EXTNAME(DLERI3PD)
                                                                                               CSW214
       ** RPIF Error File - Screen 4                                                           CSW214
      D DLERI4OKFlag  E DS                  EXTNAME(DLERI4PD)                                  CSW214
- 
+
       * First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D WErrFlag        S              1
@@ -235,28 +238,28 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       * Reset error fields
- 
+
      C                   EXSR      ResetCycle
- 
+
      C                   IF        UpdateYN = 'Y'
       *
       ** Validate fields only when in insert or amend mode (For SOAP)
       *
      C                   IF        RLACTN = 'I' OR RLACTN = 'A' OR
      C                             RLACTN = 'X'
- 
+
      C                   EXSR      SRDftRecords
      C                   ENDIF
       *
@@ -271,22 +274,22 @@
      C                   EVAL      ErrFlag3 = WErrFlag
      C                   EXSR      SRValScrn4                                                 CSW214
      C                   EVAL      ErrFlag4 = WErrFlag                                        CSW214
- 
+
      C                   IF        ErrFlag1 = 'N' AND ErrFlag2 = 'N'
      C                             AND ErrFlag3 = 'N'
      C                             AND ErrFlag4 = 'N'                                         CSW214
      C                   EXSR      SRUpdate
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Validate fields only when in insert or amend mode
       *
      C                   IF        RLACTN = 'I' OR RLACTN = 'A' OR
      C                             RLACTN = 'X'
- 
+
      C                   EXSR      SRDftRecords
- 
+
      C                   SELECT
      C                   WHEN      ValScrnNo = 0
      C                   EXSR      SRValScrn1
@@ -302,9 +305,9 @@
      C                   WHEN      ValScrnNo = 4                                              CSW214
      C                   EXSR      SRValScrn4                                                 CSW214
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   IF        RLACTN = 'D'
      C                   EVAL      DLRIS1PDOut = DLRIS1PDIn
      C                   EVAL      DLRIS2PDOut = DLRIS2PDIn
@@ -313,7 +316,8 @@
      C                   ENDIF
      C
      C                   ENDIF
- 
+
+     C                   SETON                                        LR                    MD054604
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -323,7 +327,7 @@
       *    SDRPIFPD is available when called from CTL program         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDftRecords  BEGSR
       *
       ** If any of the 3 screens have values, bypass this routine
@@ -334,11 +338,11 @@
      C                             DLRIS3PDIn = *BLANKS AND
      C                             DLRIS4PDIn = *BLANKS AND                                   CSW214
      C                             ValScrnNo = 0
- 
+
      C                   CALLB     'DLRPIFDFT'
- 
+
      C                   PARM      *BLANKS       PRetCode
- 
+
      C                   PARM                    DLRILKPDIn
       ** Transaction Reporting screen 1
      C                   PARM      *BLANKS       DLRIS1PDIn
@@ -350,7 +354,7 @@
      C                   PARM      *BLANKS       DLRIS4PDIn                                   CSW214
       ** Pay Amount                                                                         MD023734
      C                   PARM                    PayAmount                                  MD023734
- 
+
      C                   IF        PRetCode = '*NRF'                                        MD022981
      C                   EVAL      DftFound = 'N'                                           MD022981
      C                   ELSE                                                               MD022981
@@ -379,9 +383,9 @@
                                                                                             MD023169
      C                   ELSEIF    RLFOID <> *BLANKS                                       MD030858A
      C                   EVAL      DftFound = 'N'                                          MD030858A
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -390,9 +394,9 @@
       * SRValScrn1 - Validate inputs from screen 1                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValScrn1    BEGSR
- 
+
      C                   CALLB     'DLRIS1VAL'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM                    DLRILKPDIn
@@ -407,14 +411,14 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    DLVRPIFileFmt
- 
+
      C                   EVAL      WErrFlag = 'N'
      C                   EVAL      DLRIS1PDOut = DLRIS1PDIn
- 
+
      C     Idx           IFNE      0
      C                   EVAL      WErrFlag = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -423,9 +427,9 @@
       * SRValScrn2 - Validate inputs from screen 2                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValScrn2    BEGSR
- 
+
      C                   CALLB     'DLRIS2VAL'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM                    DLRILKPDIn
@@ -441,14 +445,14 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    DLVRPIFileFmt
- 
+
      C                   EVAL      WErrFlag = 'N'
      C                   EVAL      DLRIS2PDOut = DLRIS2PDIn
- 
+
      C     Idx           IFNE      0
      C                   EVAL      WErrFlag = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -457,9 +461,9 @@
       * SRValScrn3 - Validate inputs from screen 3                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValScrn3    BEGSR
- 
+
      C                   IF        R3TSDT = *BLANKS AND                                     MD022370
      C**********                    (DLRIS1PDIn <> *BLANKS OR                      MD022370 MD023037
      C                              (DLRIS1Flds <> *BLANKS OR                               MD023037
@@ -503,14 +507,14 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    DLVRPIFileFmt
- 
+
      C                   EVAL      WErrFlag = 'N'
      C                   EVAL      DLRIS3PDOut = DLRIS3PDIn
- 
+
      C     Idx           IFNE      0
      C                   EVAL      WErrFlag = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CSW214
@@ -556,19 +560,19 @@
       *    updated during each run of this program                    *
       *                                                               *
       *****************************************************************
- 
+
      C     ResetCycle    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -578,7 +582,7 @@
       *                                                               *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
      C                   EVAL      RVAPID = RLAPID
      C                   EVAL      RVTRRF = RLTRRF
      C                   EVAL      RVBRCA = RLBRCA
@@ -599,7 +603,7 @@
      C                   PARM      '*KEY'        POptn
      C                   PARM      RVBCCY        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      RVBPMI = A6PMRT
      C                   ENDIF
@@ -611,15 +615,15 @@
      C                   PARM      '*KEY'        POptn
      C                   PARM      RVSCCY        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      RVSPMI = A6PMRT
      C                   ENDIF
- 
+
      C                   CALLB     'DLRPIFUPD'
      C                   PARM      *BLANKS       PrtCd
      C                   PARM                    DLVRPIFileFmt
- 
+
      C                   IF        PRtCd = '*ERROR'
      C                   EVAL      APIRetc = '0'
      C                   ELSE
@@ -636,7 +640,7 @@
      C**********         ENDIF                                                     MD023922 MD024185
      C**********         ENDIF                                                     MD023922 MD024185
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -645,9 +649,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    DLRILKPDIn
      C                   PARM                    DLRIS1PDIn
@@ -676,12 +680,12 @@
      C                   PARM                    DLERI3OKFlag
      C                   PARM                    DLERI4OKFlag                                 CSW214
      C                   PARM                    PayAmount        14                        MD023734
- 
+
       *
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
      C     RPIFKey       KLIST                                                              MD023169
      C                   KFLD                    RLAPID                                     MD023169
      C                   KFLD                    RLLTRF                                     MD023169

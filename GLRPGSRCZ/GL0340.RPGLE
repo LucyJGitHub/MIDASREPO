@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052414A          Date 26Mar19               *
-      *  Prev Amend No. MD034242           Date 13Mar19               *
+      *  Last Amend No. MD053725           Date 31Jul19               *
+      *  Prev Amend No. MD052414A          Date 26Mar19               *
+      *                 MD034242           Date 13Mar19               *
       *                 MD052414           Date 06Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042411           Date 18Nov16               *
@@ -80,6 +81,9 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  MD053725 - CGL050 feature still has differences against      *
+      *             DUG422 feature.                                   *
+      *           - Ensure Net amount is printed for Retail Accounts. *
       *  MD052414A - GL0340P1 reports from UGB has trucated profit    *
       *             centre in FBM 2.1. Lessen the asterisks by 3      *
       *  MD034242 - Account shows opening balance but no closing      *
@@ -1920,11 +1924,17 @@
 0619 C***L1 76                Z-ADD0         PSTADR                S01290 120830
      C*                                                                   120830
      C***L2***RINDJ         COMP      0                                  777776        120830 CGL120
-     CL2   RINDB         COMP      0                                  777776                  CGL120
+     C***L2***RINDB         COMP      0                                  777776      CGL120 MD053725
+     CL2   RINDB         COMP      0                                  727276                MD053725
      CL2                 IF        CGL050 = 'Y'                                             MD034242
-     CL2                 IF        *IN77 = *ON                                              MD034242
-     CL2                 EVAL      *IN77 = *OFF                                             MD034242
+     C***L2*****            IF        *IN77 = *ON                                  MD034242 MD053725
+     CL2                 IF        *IN72 = *ON                                              MD053725
+     C***L2*****            EVAL      *IN77 = *OFF                                 MD034242 MD053725
+     CL2                 EVAL      *IN77 = *ON                                              MD053725
+     CL2                 EVAL      *IN72 = *OFF                                             MD053725
      CL2                 EVAL      *IN76 = *ON                                              MD034242
+     CL2                 ELSE                                                               MD053725
+     CL2                 EVAL      *IN77 = *OFF                                             MD053725
      CL2                 ENDIF                                                              MD034242
      CL2N66              GOTO      MISS                                                     MD034242
      CL2                 ENDIF                                                              MD034242
@@ -3283,7 +3293,8 @@
 1279 O*
 1280 O********E**1     86                                                 S01117
      O********E**1     86 25                                        S01117S01290
-     O          EF   86 25                  1                                   S01290
+     O**********EF   86 25                  1                                        S01290 MD053725
+     O          EF   86 25 27               1                                               MD053725
 1281 O***********                       106 'RETAIL ACCOUNT O/B'          S01290
      O                                           16 'RETAIL ACCOUNTS'           S01290
      O******************************************106*'O/B'*****************      S01290      MD042411
@@ -3335,7 +3346,8 @@
      O               32      TPSTCR             128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
      O               33      TPSTCR             128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   120830
-     O          E    86 25                  1                                   120830
+     O**********E    86 25                  1                                        120830 MD053725
+     O          E    86 25 27               1                                               MD053725
      O                                            6 '(NET)'                     120830
      O***************30******TPRFC***************28*'***,***,***,***,*0*CR'     120830      MD042411
      O***************31******TPRFC***************28*'**,***,***,***,*0*.*CR'    120830      MD042411
@@ -3374,7 +3386,8 @@
 1296 O*
 1297 O********E**1     86                                                 S01117
 1297 O**********E    86 25                  1                                          S01117 CGL120
-     O          EF   86 25                  1                                                 CGL120
+     O**********EF   86 25                  1                                        CGL120 MD053725
+     O          EF   86 25 27               1                                               MD053725
 1298 O******************************************106*'C/B'*****************                  MD042411
 1299 O***************30******TACOD**************128*'***,***,***,***,*0*CR'                 MD042411
 1300 O***************31******TACOD**************128*'**,***,***,***,*0*.*CR'                MD042411
@@ -3389,7 +3402,8 @@
      O/COPY WNCPYSRC,GL0340OOP7                                           S01408
      O*                                                                   S01408
 1303 O*
-     O          E    86 25                  1                                   S01290
+     O          E    86 25                  1                                        S01290 MD053725
+     O          E    86 25 27               1                                               MD053725
      O                                           24 '------------------------'  S01290
      O                                           48 '------------------------'  S01290
      O                                           72 '------------------------'  S01290

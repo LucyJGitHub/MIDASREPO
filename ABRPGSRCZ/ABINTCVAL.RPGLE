@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2001)
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AB Internal contract validation')
@@ -58,10 +58,10 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,ABINTCV024
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -73,88 +73,88 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming Transaction
      D TranIn        E DS                  EXTNAME(ABINTCPD)
- 
+
      D ExtData       E DS                  EXTNAME(ABICEXPD)
       * FX Extra Data - File (D/B) format
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(ABEINTCPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D  QQAccd1      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       *                                                                                       CSC011
@@ -163,31 +163,31 @@
       *                                                                                       CSC011
       ** External DS for SAR Details                                                          CSC011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
- 
+
      D ValidDeal     E DS                  EXTNAME(ABVINTCPD)
      D W@VDT1                171    178  0
      D W@VDT2                179    186  0
       * Valid Deals layout
- 
+
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   First scaling exponent
      D     @@SXP1      S              1S 0
       **   Second scaling exponent
      D     @@SXP2      S                   LIKE(@@SXP1)
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D CSC011          S              1A                                                      CSC011
      D WRunDay         S                   LIKE(BJRDNB)                                       CSC011
      D PSARD           S              6A                                                      CSC011
@@ -199,14 +199,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,ABINTCV025
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -215,7 +215,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **  GET ZMUSER to access default branch.                                               BUG8550
                                                                                              BUG8550
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG8550
@@ -223,9 +223,9 @@
      C                   UNLOCK    ZMUSER                                                    BUG8550
                                                                                              BUG8550
       /COPY WNCPYSRC,ABINTCV001
- 
+
       * Call Validation Modules in Sequence
- 
+
                                                                                 CDL038
       ** Default Sub Type and Class                                             CDL038
       *                                                                         CDL038
@@ -236,120 +236,120 @@
       *  Validate Deal Type and Sub Type
       *
       /COPY WNCPYSRC,ABINTCV002
- 
+
      C                   EXSR      VDEALTPS
- 
+
       /COPY WNCPYSRC,ABINTCV003
- 
+
       *
       *  Validate Booking and Originating Branch
       *
       /COPY WNCPYSRC,ABINTCV004
- 
+
      C                   EXSR      VBRANCHS
- 
+
       /COPY WNCPYSRC,ABINTCV005
- 
+
       *
       * Validate Deal Date, 1st Leg Date, 2nd Leg Date
       *
       /COPY WNCPYSRC,ABINTCV006
- 
+
      C                   EXSR      VDATES
- 
+
       /COPY WNCPYSRC,ABINTCV007
- 
+
       *
       *  Validate Books and Profit Centres
       *
       /COPY WNCPYSRC,ABINTCV008
- 
+
      C                   EXSR      VBKPRFC
- 
+
       /COPY WNCPYSRC,ABINTCV009
- 
+
       *
       *  Validate Link Reference
       *
       /COPY WNCPYSRC,ABINTCV010
- 
+
      C                   EXSR      VLNKN
- 
+
       /COPY WNCPYSRC,ABINTCV011
- 
+
       *
       *  Validate Leg 1 Buy and Sell Ccys & Amounts
       *
       /COPY WNCPYSRC,ABINTCV012
- 
+
      C                   EXSR      VL1BSAMT
- 
+
       /COPY WNCPYSRC,ABINTCV013
- 
+
       *
       *  Validate Loan Details
       *
       /COPY WNCPYSRC,ABINTCV014
- 
+
      C                   EXSR      VLOANDTS
- 
+
       /COPY WNCPYSRC,ABINTCV015
- 
+
       *
       *  Validate Deposit Details
       *
       /COPY WNCPYSRC,ABINTCV016
- 
+
      C                   EXSR      VDEPODTS
- 
+
       /COPY WNCPYSRC,ABINTCV017
- 
+
       *
       *  Validate Leg 2 Base Currency Equivalent
       *
       /COPY WNCPYSRC,ABINTCV018
- 
+
      C                   EXSR      VL2BSCYE
- 
+
       /COPY WNCPYSRC,ABINTCV019
- 
+
       *
       *  Validate Forward Points
       *
       /COPY WNCPYSRC,ABINTCV020
- 
+
      C                   EXSR      VFWDPTS
- 
+
       /COPY WNCPYSRC,ABINTCV021
- 
+
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
       /COPY WNCPYSRC,ABINTCV022
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
       *
       /COPY WNCPYSRC,ABINTCV023
- 
+
       * RETURN
       *
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,ABINTCV026
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * VDEALTPS - Validate Deal Type and Sub Type
       *****************************************************************
      C     VDEALTPS      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Deal Type and Sub Type
@@ -386,9 +386,9 @@
      C                   PARM                    JUMDTY            2
      C                   PARM                    JUSTYP            2
      C                   PARM                    JUCLAS            4                          CDL038
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -398,9 +398,9 @@
       * VBRANCHS - Validate Booking and Originating Branch
       *****************************************************************
      C     VBRANCHS      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Booking and Originating Branch
@@ -458,9 +458,9 @@
      C                   PARM                    BkgBrLCCD         3
      C                   PARM                    BkgBrCUST         6
      C                   PARM                    BkgBrACOC         2
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -470,9 +470,9 @@
       * VDATES - Validate Deal Date, 1st Leg Date, 2nd Leg Date
       *****************************************************************
      C     VDATES        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       * Validate Deal Date, 1st Leg Date, 2nd Leg Date
@@ -536,19 +536,19 @@
      C                   PARM                    JUDDYY
      C                   PARM                    JUDDMM
      C                   PARM                    JUDDDD
- 
+
      C                   PARM                    JUNDAT            5 0
      C                   PARM                    JUNDYY
      C                   PARM                    JUNDMM
      C                   PARM                    JUNDDD
- 
+
      C                   PARM                    JUFDAT            5 0
      C                   PARM                    JUFDYY
      C                   PARM                    JUFDMM
      C                   PARM                    JUFDDD
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -558,9 +558,9 @@
       * VBKPRFC - Validate Books and Profit Centres
       *****************************************************************
      C     VBKPRFC       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Books and Profit Centres
@@ -633,9 +633,9 @@
      C                   PARM                    JUMMBC            2
      C                   PARM                    JUPRFC            4
      C                   PARM                    JUMMPC            4
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -645,9 +645,9 @@
       * VLNKN - Validate Link Reference
       *****************************************************************
      C     VLNKN         BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Link Reference
@@ -676,9 +676,9 @@
       *
       ** Deal Linked Reference No.
      C                   PARM                    JULNKN
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -688,9 +688,9 @@
       * VL1BSAMT - Validate Leg 1 Buy and Sell Ccys & Amounts
       *****************************************************************
      C     VL1BSAMT      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Leg 1 Buy and Sell Ccys & Amounts
@@ -800,9 +800,9 @@
      C                   PARM                    JUNDSA           15 0            Sell amount
      C                   PARM                    JUDMD1            1              Mult/Div ind.
      C                   PARM                    JUNBCA           15 0            Amount
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -812,9 +812,9 @@
       * VLOANDTS - Validate Loan Details
       *****************************************************************
      C     VLOANDTS      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Loan Details
@@ -893,9 +893,9 @@
      C                   PARM                    JUINA1           15 0
      C                   PARM                    JUFDSA           15 0
      C                   PARM                    JUFDA1           15 0
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -905,9 +905,9 @@
       * VDEPODTS - Validate Deposit Details
       *****************************************************************
      C     VDEPODTS      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Deposit Details
@@ -986,9 +986,9 @@
      C                   PARM                    JUINA2           15 0
      C                   PARM                    JUFDBA           15 0
      C                   PARM                    JUFDA2           15 0
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -998,9 +998,9 @@
       * VL2BSCYE - Validate Leg 2 Base Currency Equivalent
       *****************************************************************
      C     VL2BSCYE      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Leg 2 Base Currency Equivalent
@@ -1084,9 +1084,9 @@
       *
       ** Far Date Base Ccy for Accounting Amount
      C                   PARM                    JUFBCA           15 0            Amount
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1096,9 +1096,9 @@
       * VFWDPTS - Validate Forward Points
       *****************************************************************
      C     VFWDPTS       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Forward Points
@@ -1182,9 +1182,9 @@
       *
      C                   PARM                    JUFDXR           13 8           New rate
      C                   PARM                    JUFWPP            7 2           Fwd. points
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1220,7 +1220,7 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
       *
       * Make sell amounts negative
@@ -1229,13 +1229,13 @@
      C                   Z-SUB     JUFDA1        JUFDA1
      C                   Z-SUB     JUNDSA        JUNDSA
      C                   Z-SUB     JUFDSA        JUFDSA
- 
+
       * Zeroize Treasury Management amounts:
       * Near Dealt BCE
       * Far Dealt  BCE
       * Near Spot  BCE
       * Far Spot   BCE
- 
+
      C                   Z-ADD     0             JUNBCD                         O:Near DBCE
      C                   Z-ADD     0             JUFBCD                         O:Far DBCE
      C                   Z-ADD     0             JUNSBC                         O:Near SBCE
@@ -1272,7 +1272,7 @@
      C                   Z-ADD     JUNDA2        @@DAM2                         I:2nd.Amount
      C                   MOVE      JUDSCY        @@CCY2                         I: "  Currency
      C                   Z-ADD     W@VDT1        @@VLDT                         I:Value date
- 
+
      C                   EXSR      CALBED                                       <Get Near DBCE>
       *
       ** Update file fields
@@ -1289,7 +1289,7 @@
      C                   Z-SUB     JUFDA2        @@DAM2                         I:2nd.Amount
      C                   MOVE      JUDSCY        @@CCY2                         I: "  Currency
      C                   Z-ADD     W@VDT2        @@VLDT                         I:Value date
- 
+
      C                   EXSR      CALBED                                       <Get Far DBCE>
       *
       ** Update file fields
@@ -1370,22 +1370,22 @@
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode          1
       * Transaction information (DS) from source system
      C                   PARM                    TranIn
       * Extra Data
      C                   PARM                    ExtData
- 
+
       * OUTPUTS
- 
+
       *
       * 2nd Leg Exchange Rate
       * 2nd Leg Buy Currency
@@ -1403,10 +1403,10 @@
      C                   PARM                    DDDPIA           17
       * Status                                                                  CAP084
      C                   PARM                    DDSTS            24            CAP084
- 
+
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -1485,7 +1485,7 @@
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Check if CSC011 is installed                                                         CSC011
                                                                                               CSC011
      C                   EVAL      WRunDay = BJRDNB                                           CSC011
@@ -1545,10 +1545,10 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,ABINTCV027
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1556,9 +1556,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1568,7 +1568,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1576,7 +1576,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)

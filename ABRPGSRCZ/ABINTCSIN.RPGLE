@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2001)
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AB Internal contract input')                     *
@@ -54,7 +54,7 @@
       *  CAP004 - API's Phase 3.                                      *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -66,62 +66,62 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CrDlFilFmt    E DS                  EXTNAME(ABDEALPP)
       * Current Deal in File Format
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(ABINTCPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(ABVINTCPD)
       * New Deal in File Format
- 
+
      D NwDlScnFmt    E DS                  EXTNAME(ABINTCPD)
       * New Deal in Screen Format
- 
+
      D ABEINTC       E DS                  EXTNAME(ABEINTCPD)
       * Error indicators
- 
- 
- 
+
+
+
      D @CCI@M          DS
       ** CURRENT CONTROL INDICATORS FOR MAIN DETAIL SCREEN
      D  @EKYFD                 1      1
@@ -130,17 +130,17 @@
      D  @EINKH                 4      4
      D  @EINKJ                 5      5
      D  @EINKP                 6      6
- 
+
      D @PCI@M          DS             6
       ** PREVIOUS CONTROL INDICATORS FOR MAIN DETAIL SCREEN
- 
- 
+
+
      D ExtData       E DS                  EXTNAME(ABICEXPD)
       * Internal Contract Extra Data - File (D/B) format
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
                                                                                               CSC022
@@ -153,17 +153,17 @@
                                                                                               CSC022
       ** Array of Commitment Job Names                                                        CSC022
      D COMITJOB        S             10A   DIM(10)                                            CSC022
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D/COPY QWINDSRC,INTCSINDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
@@ -175,19 +175,19 @@
      D PSard           S              6A                                                      CSC022
      D DDFOID          S             20A                                                      261962
      D DDAFID          S             20A                                                      261962
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,ABINTCS007
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -200,7 +200,7 @@
       ** +----------------------------------------------------------------+
       *
       /COPY WNCPYSRC,ABINTCS001
- 
+
       * READ NEXT BROWSE SUBFILE RECORD
       *
      C     @SCRN         IFEQ      'R'
@@ -208,7 +208,7 @@
      C                   END
       *
       /COPY WNCPYSRC,ABINTCS002
- 
+
       * DO WHILE SCREEN: MAIN DETAILS
       *
      C     @SCRN         DOWEQ     'M'
@@ -216,7 +216,7 @@
      C                   END
       *
       /COPY WNCPYSRC,ABINTCS003
- 
+
       * SCREEN: WINDOW
       *
      C     @SCRN         IFEQ      'W'
@@ -224,7 +224,7 @@
      C                   END
       *
       /COPY WNCPYSRC,ABINTCS004
- 
+
       * SCREEN: CONFIRMATION OF INPUT
       *
      C     @SCRN         IFEQ      'C'
@@ -232,7 +232,7 @@
      C                   END
       *
       /COPY WNCPYSRC,ABINTCS005
- 
+
       * DO FILE UPDATES
       *
      C     @SCRN         IFEQ      'U'
@@ -240,17 +240,17 @@
      C                   END
       *
       /COPY WNCPYSRC,ABINTCS006
- 
+
       * TERMINATE PROGRAM
       *
      C     @SCRN         IFEQ      'T'
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,ABINTCS008
- 
+
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS SCREEN: MAIN DETAILS
@@ -1626,10 +1626,10 @@
      C                   EXSR      IFDS@M
      C                   EXSR      IFKS@M
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,ABINTCS009
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

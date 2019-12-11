@@ -16,13 +16,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029846           Date 24Sep14               *
+      *  Last Amend No. MD053088           Date 23Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD029846           Date 24Sep14               *
       *                 MD027298           Date 06Aug14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053088 - FATCA Allocation/Search Tool's object exclusive   *
+      *             lock cause crash                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029846 - Clarifications on FATCA menu action codes         *
       *             Apply Fix MD030170A                               *
@@ -171,6 +174,7 @@
      D WarnTool        S              1A   INZ('N')
      D IsFileLocked    S              1A   INZ('N')
      D LckRlsFlag      S              5A
+     D WMsgLen         S             15P 5 INZ(70)                                          MD053088
       *
       ** Parameters For ZVACTBU/ZVACTU
      D PZbr            S              3A
@@ -228,6 +232,9 @@
       *
       ** Mode - Information/Update
      D PMode           S              1A
+                                                                                            MD053088
+     D ##OV1           S             70    DIM(1) CTDATA PERRCD(1)                          MD053088
+     D ##OV2           S             70    DIM(1) CTDATA PERRCD(1)                          MD053088
       *
       ** +--------------------------------------+
       ** ¦ End Of D-specs                       ¦
@@ -526,7 +533,16 @@
      C                   EXSR      SRErrDta
      C                   ELSE
       *
-     C                   CALL      'SDC000104'
+     C                   CALL      'QCMDEXC'                                                MD053088
+     C                   PARM                    ##OV1                                      MD053088
+     C                   PARM                    WMsgLen                                    MD053088
+                                                                                            MD053088
+     C                   CALL      'QCMDEXC'                                                MD053088
+     C                   PARM                    ##OV2                                      MD053088
+     C                   PARM                    WMsgLen                                    MD053088
+                                                                                            MD053088
+     C**********         CALL      'SDC000104'                                              MD053088
+     C                   CALL      'SD000104'                                               MD053088
      C                   PARM      *BLANKS       PRtcd
      C                   PARM                    PMode
       *
@@ -625,7 +641,7 @@
      C                   PARM      *BLANKS       PRtcd             7
      C                   PARM      'SD000102'    PCallerPGM       10
      C                   PARM      LckRlsFlag    PModeLck          7
- 
+
      C                   IF        PRtcd <> *BLANKS
      C                   EVAL      IsFileLocked = 'Y'
      C                   EVAL      LckRlsFlag = *BLANKS
@@ -1216,3 +1232,7 @@
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2013
+** ##OV1
+OVRDBF FILE(SDFTCLL0) TOFILE(QTEMP/SDFTCLL0) SHARE(*NO)
+** ##OV2
+CLRPFM FILE(QTEMP/SDFTCLPD)

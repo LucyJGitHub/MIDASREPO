@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD045515           Date 02Jul17               *
-      *  Prev Amend No. MD037555           Date 24Feb15               *
+      *  Last Amend No. 255478A            Date 03Oct19               *
+      *  Prev Amend No. MD045515           Date 02Jul17               *
+      *                 MD037555           Date 24Feb15               *
       *                 MD048056           Date 16Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -184,8 +185,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD045515 - Real-time postings resulted in duplicate movements* 
-      *             in Midas. Remove fix MD037555.                    * 
+      *  255478A - Correct the BGNOST to BGN0ST to validate Analytical*
+      *            Accounting instead of Leo Letters of Credit.       *
+      *            Applied fix for MD054339.                          *
+      *  MD045515 - Real-time postings resulted in duplicate movements*
+      *             in Midas. Remove fix MD037555.                    *
       *  MD037555 - Correction of MD028392.  This fix cause the loss  *
       *             of posting in Clearpd  with future value of more  *
       *             than 1 day after next working date.  The change is*
@@ -198,7 +202,7 @@
       *             are preserved also.                               *
       *  MD048056 - GPAMT of REOUTLPD should also be updated when     *
       *             holiday is before next working day                *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD046248 - Finastra Rebranding.                              *
       *  CGL184 - New Frequencies for Account Statements              *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  256758 - Bit 0 of PRIN should not be checked when updating   *
@@ -1982,7 +1986,7 @@
      CAN 05
      CANN27LDBL          ADD       PSTA          LDBL
      C   61
-     CAN 05     
+     CAN 05
      C***ANN27CLBL          ADD       PSTA          CLBL                                    MD045515
      CANN27                                                                                 MD045515
      COR 61                                                                                 MD045515
@@ -2636,7 +2640,8 @@
 
       ** If analytical accounting installed, seton indicator 28.
 
-     C     BGNOST        IFEQ      'Y'
+     C*****BGNOST        IFEQ      'Y'                                                       255478A
+     C     BGN0ST        IFEQ      'Y'                                                       255478A
      C                   MOVE      *ON           *IN28
      C                   ELSE
      C                   MOVE      *OFF          *IN28

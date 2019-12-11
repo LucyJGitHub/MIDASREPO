@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030847           Date 25Nov14               *
+      *  Last Amend No. MD054095           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030847           Date 25Nov14               *
       *                 CIR017             Date 10Apr14               *
       *                 245692             Date 11Dec13               *
       *                 AR1097219          Date 05Apr13               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
+      *             rate                                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030847 - STEINR set to blank due to incorrect base rate    *
       *             reference.                                        *
@@ -139,7 +142,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -158,47 +161,47 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Deal Status
      D*@STSA****       S             24    DIM(2) CTDATA PERRCD(1)                            CIR008
      D @STSA           S             24    DIM(5) CTDATA PERRCD(1)                            CIR008
- 
+
       * Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(DEALSDG)
      D DGLCD         E                     EXTFLD(LCD)
@@ -209,7 +212,7 @@
                                                                                               CLE025
       * Deal Extension in File Format                                                         CLE025
      D DealXFilFmt   E DS                  EXTNAME(DLDLDGQD)                                  CLE025
- 
+
       * Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(IRSIRSPD)
      D*BsDayScn**************208    271                                                CIR005 218641
@@ -217,47 +220,47 @@
      D*BsDayScn*             228    291                                                CAS005 CLE025
      D BsDayScn              243    306                                                       CLE025
      D BsDayScn2             457    520                                                       CIR017
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDBROK        E DS                  EXTNAME(SDBROKPD)                                  208053
       ** EXTERNAL DS FOR CURRENCY DETAILS                                                     208053
                                                                                               208053
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -288,7 +291,7 @@
       ** Variables defined for CAS005                                                         CAS005
                                                                                               CAS005
      D CAS005          S              1A                                                      CAS005
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -639,7 +642,7 @@
      C*
      C**  Format the rate, using 7 decimal places
      C*
-     C     @@SCRT        IFNE      0
+     C*****@@SCRT*****   IFNE      0                                                        MD054095
      C     @@SCRT        MULT      10000000      @@AMTW
      C                   Z-ADD     7             @@QECN
      C     @@AMTW        IFLT      0                                                         BUG6472
@@ -647,15 +650,15 @@
      C                   ENDIF                                                               BUG6472
      C                   EXSR      FMTAMT
      C                   MOVE      @@AMTD        SUEINR
-     C                   END
+     C**********         END                                                                MD054095
      C                   END
       *                                                                                     BUG24015
       ** If short term rate is zero, display 0 on screen                                    BUG24015
       *                                                                                     BUG24015
-     C     UEINR         IFEQ      0                                                        BUG24015
-     C     UBRTT         ANDNE     0                                                       AR1097219
-     C                   EVAL      SUEINR = '0'                                             BUG24015
-     C                   ENDIF                                                              BUG24015
+     C*****UEINR*****    IFEQ      0                                               BUG24015 MD054095
+     C*****UBRTT*****    ANDNE     0                                              AR1097219 MD054095
+     C**********         EVAL      SUEINR = '0'                                    BUG24015 MD054095
+     C**********         ENDIF                                                     BUG24015 MD054095
       *                                                                                      BUG6472
       ** Output sign of our short term interest rate                                         BUG6472
       *                                                                                      BUG6472
@@ -800,7 +803,7 @@
      C*
      C**  Format the rate, using 7 decimal places
      C*
-     C     @@SCRT        IFNE      0
+     C*****@@SCRT*****   IFNE      0                                                        MD054095
      C     @@SCRT        MULT      10000000      @@AMTW
      C                   Z-ADD     7             @@QECN
      C     @@AMTW        IFLT      0                                                         BUG6472
@@ -808,16 +811,16 @@
      C                   ENDIF                                                               BUG6472
      C                   EXSR      FMTAMT
      C                   MOVE      @@AMTD        STEINR
-     C                   END
+     C**********         END                                                                MD054095
      C                   END
       *                                                                                     BUG24015
       ** If short term rate is zero, display 0 on screen                                    BUG24015
       *                                                                                     BUG24015
-     C     TEINR         IFEQ      0                                                        BUG24015
-     C*****TBRTE         ANDNE     0                                              AR1097219 MD030847
-     C     TBRTT         ANDNE     0                                                        MD030847
-     C                   EVAL      STEINR = '0'                                             BUG24015
-     C                   ENDIF                                                              BUG24015
+     C*****TEINR*****    IFEQ      0                                               BUG24015 MD054095
+     C*****TBRTE*****    ANDNE     0                                     AR1097219 MD030847 MD054095
+     C*****TBRTT         ANDNE     0                                               MD030847 MD054095
+     C**********         EVAL      STEINR = '0'                                    BUG24015 MD054095
+     C**********         ENDIF                                                     BUG24015 MD054095
       *                                                                                      BUG6472
       ** Output sign of their short term interest rate                                       BUG6472
       *                                                                                      BUG6472

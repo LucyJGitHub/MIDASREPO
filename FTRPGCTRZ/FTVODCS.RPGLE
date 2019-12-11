@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051978           Date 14Oct19               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
       *                 MD045920           Date 31May17               *
       *                 MD044074           Date 19Apr17               *
@@ -115,6 +116,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051978 - ':' should not be present in first character of   *
+      *             address lines (except the first address line)     *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
@@ -1864,10 +1867,14 @@ E2   C                   EndIf                                                  
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0938'     MsgIdXAr(Idx)                                CSD089
-     C                   Move      'W'           OKOrc1                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORC1'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'MMA0938'     WMsgIdXAr(WIx)                               CSD089
+     C**********         Move      'W'           OKOrc1                              CSD089 MD051978
+     C**********         Add       1             WIx                                 CSD089 MD051978
+     C**********         Movel     'SORC1'       WFldNmXAr(WIx)                      CSD089 MD051978
+     C**********         Movel     'MMA0938'     WMsgIdXAr(WIx)                      CSD089 MD051978
+     C                   MOVE      'N'           OKOrc1                                     MD051978
+     C                   ADD       1             Idx                                        MD051978
+     C                   MOVEL     'SORC1'       FldNamXAr(Idx)                             MD051978
+     C                   MOVEL     'MMA0938'     MsgIdXAr(Idx)                              MD051978
      C                   End
      C                   End
  
@@ -1876,16 +1883,22 @@ E2   C                   EndIf                                                  
      C                   Exsr      SWSET
  
      C                   If        *IN94 = *Off
+     C                             OR %SUBST(WFLD: 1: 1) = '-'                              MD051978
+     C                             OR %SUBST(WFLD: 1: 1) = ':'                              MD051978
       * Send error to screen
      C**********         Move      'N'           OKOrc1                                       210863
      C**********         Move      'N'           OKOrc2                                210863 CSD089
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC2'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0939'     MsgIdXAr(Idx)                                CSD089
-     C                   Move      'W'           OKOrc2                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORC2'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'MMA0939'     WMsgIdXAr(WIx)                               CSD089
+     C**********         Move      'W'           OKOrc2                              CSD089 MD051978
+     C**********         Add       1             WIx                                 CSD089 MD051978
+     C**********         Movel     'SORC2'       WFldNmXAr(WIx)                      CSD089 MD051978
+     C**********         Movel     'MMA0939'     WMsgIdXAr(WIx)                      CSD089 MD051978
+     C                   MOVE      'N'           OKOrc2                                     MD051978
+     C                   ADD       1             Idx                                        MD051978
+     C                   MOVEL     'SORC2'       FldNamXAr(Idx)                             MD051978
+     C                   Movel     'MMA0939'     MsgIdXAr(Idx)                              MD051978
      C                   End
      C                   End
  
@@ -1894,16 +1907,22 @@ E2   C                   EndIf                                                  
      C                   Exsr      SWSET
  
      C                   If        *IN94 = *Off
+     C                             OR %SUBST(WFLD: 1: 1) = '-'                              MD051978
+     C                             OR %SUBST(WFLD: 1: 1) = ':'                              MD051978
       * Send error to screen
      C**********         Move      'N'           OKOrc1                                       210863
      C**********         Move      'N'           OKOrc3                                210863 CSD089
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC3'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0940'     MsgIdXAr(Idx)                                CSD089
-     C                   Move      'W'           OKOrc3                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORC3'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'MMA0940'     WMsgIdXAr(WIx)                               CSD089
+     C**********         Move      'W'           OKOrc3                              CSD089 MD051978
+     C**********         Add       1             WIx                                 CSD089 MD051978
+     C**********         Movel     'SORC3'       WFldNmXAr(WIx)                      CSD089 MD051978
+     C**********         Movel     'MMA0940'     WMsgIdXAr(WIx)                      CSD089 MD051978
+     C                   MOVE      'N'           OKOrc3                                     MD051978
+     C                   ADD       1             Idx                                        MD051978
+     C                   MOVEL     'SORC3'       FldNamXAr(Idx)                             MD051978
+     C                   MOVEL     'MMA0940'     MsgIdXAr(Idx)                              MD051978
      C                   End
      C                   End
  
@@ -1912,16 +1931,22 @@ E2   C                   EndIf                                                  
      C                   Exsr      SWSET
  
      C                   If        *IN94 = *Off
+     C                             OR %SUBST(WFLD: 1: 1) = '-'                              MD051978
+     C                             OR %SUBST(WFLD: 1: 1) = ':'                              MD051978
       * Send error to screen
      C**********         Move      'N'           OKOrc1                                       210863
      C**********         Move      'N'           OKOrc4                                210863 CSD089
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SORC4'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0941'     MsgIdXAr(Idx)                                CSD089
-     C                   Move      'W'           OKOrc4                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORC4'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'MMA0941'     WMsgIdXAr(WIx)                               CSD089
+     C**********         Move      'W'           OKOrc4                              CSD089 MD051978
+     C**********         Add       1             WIx                                 CSD089 MD051978
+     C**********         Movel     'SORC4'       WFldNmXAr(WIx)                      CSD089 MD051978
+     C**********         Movel     'MMA0941'     WMsgIdXAr(WIx)                      CSD089 MD051978
+     C                   MOVE      'N'           OKOrc4                                     MD051978
+     C                   ADD       1             Idx                                        MD051978
+     C                   MOVEL     'SORC4'       FldNamXAr(Idx)                             MD051978
+     C                   MOVEL     'MMA0941'     MsgIdXAr(Idx)                              MD051978
      C                   End
      C                   End
  
@@ -1930,6 +1955,8 @@ E2   C                   EndIf                                                  
      C                   Exsr      SWSET
  
      C                   If        *IN94 = *Off
+     C                             OR %SUBST(WFLD: 1: 1) = '-'                              MD051978
+     C                             OR %SUBST(WFLD: 1: 1) = ':'                              MD051978
       * Send error to screen
      C**********         Move      'N'           OKOrc1                                     BUG14771
      C**********         Move      'N'           OKOrc5                              BUG14771 CSD089
@@ -1937,10 +1964,14 @@ E2   C                   EndIf                                                  
      C**********         Movel     'SORC1'       FldNamXAr(Idx)                               CFT032
      C**********         Eval      FldNamXAr(Idx) = 'SORC5'                            CFT032 CSD089
      C**********         Movel     'MMA0942'     MsgIdXAr(Idx)                                CSD089
-     C                   Move      'W'           OKOrc5                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Eval      WFldNmXAr(WIx) = 'SORC5'                                   CSD089
-     C                   Movel     'MMA0942'     WMsgIdXAr(WIx)                               CSD089
+     C**********         Move      'W'           OKOrc5                              CSD089 MD051978
+     C**********         Add       1             WIx                                 CSD089 MD051978
+     C**********         Eval      WFldNmXAr(WIx) = 'SORC5'                          CSD089 MD051978
+     C**********         Movel     'MMA0942'     WMsgIdXAr(WIx)                      CSD089 MD051978
+     C                   MOVE      'N'           OKOrc5                                     MD051978
+     C                   ADD       1             Idx                                        MD051978
+     C                   MOVEL     'SORC5'       FldNamXAr(Idx)                             MD051978
+     C                   MOVEL     'MMA0942'     MsgIdXAr(Idx)                              MD051978
      C                   End
      C                   End
  

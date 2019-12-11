@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MDA00267           Date 25May16               *
+      *  Last Amend No. MD054696           Date 29Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MDA00267           Date 25May16               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24567           Date 14Jul09               *
       *                 260029             Date 29Apr09               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD046248 - Finastra Rebranding                               *
       *  MDA00267 - Incorrect value is shown in the Total Amount in   *
       *             Batch Entry. Padded Zeros to the left of the      *
@@ -128,6 +131,9 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+                                                                                            MD054696
+      ** JE Headers Shadow Post Indicator                                                   MD054696
+     D DDSHPI          S              1A                                                    MD054696
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -239,6 +245,10 @@
      C                   MOVE      ZFIELD        DDHINC                                       249471
      C                   ENDIF                                                                249471
       *                                                                                       249471
+      ** Batch Header - Shadow Post Indicator                                               MD054696
+      *                                                                                     MD054696
+     C                   EVAL      DDSHPI = BRSHPI                                          MD054696
+      *                                                                                     MD054696
      C                   ENDSR
  
       *****************************************************************
@@ -309,6 +319,9 @@
  
       * Batch Header Details Screen Format
      C                   PARM                    BITHDets
+                                                                                            MD054696
+      * Batch Header - Shadow Post Indicator                                                MD054696
+     C                   PARM                    DDSHPI                                     MD054696
  
  
       ** Initialise program name

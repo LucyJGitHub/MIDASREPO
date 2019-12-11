@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR926404           Date 16Jan13               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. AR926404           Date 16Jan13               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL098             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  AR926404 - Unable to update Front Office ID. Allow changes   *
       *             on FHFRNT. (Child: AR926405)                      *
       *  MD046248 - Finastra Rebranding                               *

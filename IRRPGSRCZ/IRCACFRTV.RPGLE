@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR933170           Date 19Jun13               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054957           Date 11Dec19               *v
+      *  Prev Amend No. AR933170           Date 19Jun13               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
       *             DDFOID as parameters. (Child: AR933171)           *
       *  MD046248 - Finastra Rebranding                               *

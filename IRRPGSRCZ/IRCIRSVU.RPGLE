@@ -35,6 +35,10 @@
       *                                                               *
       *  Last Amend No. MD054095           Date 17Oct19               *
       *  Prev Amend No. MD053400           Date 03Jul19               *
+      *                 MD053572           Date 29May19               *
+      *                 MD049387           Date 19Jan18               *
+      *                 MD047859           Date 19Sep17               *
+      *                 AR933170           Date 19Jun13               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052876           Date 27Feb19               *
       *                 MD052154           Date 28Jan19               *
@@ -108,6 +112,15 @@
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *
       *             validation if action is Reject.                   *
+      *  MD053572 - SP19: FRA/IRS - CIRS. Multiple error messages on  *
+      *             Insert, Amend and Authorise.                      *
+      *           - Redelivered the fixes MD049387, MD047859 and      *
+      *             AR933170                                          *
+      *  MD049387 - Principal Change Schedule values not accepted     *
+      *  MD047859 - Correct buffer conflict of AR933171 fix           *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *             DDFOID as parameters. (Child: AR933171)           *
+      *           - Partially applied by MD047859.                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052876 - Confirmed Holiday indicator must be 'Y' error     *
       *             encountered in CIRS when using Holidays that      *
@@ -1314,6 +1327,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D BufferEx8       S           9999                                                      BUG5449
      D BufferEx9       S           9999                                                      BUG5449
      D UpdateYN        S              1
+     D DDFOID          S             20A                                                    AR933170
 
       ** Fields defined
      D OKCshFlw        S              1A   INZ('Y')
@@ -1727,6 +1741,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      FORMULATC=%SUBST(Buffer2:133)                            MD035359
      C                   EVAL      FORMULAOPC=%SUBST(Buffer2:155)                           MD030454
      C                   EVAL      FORMULATPC=%SUBST(Buffer2:180)                           MD030454
+     C                   EVAL      DDFOID=%SUBST(Buffer2:205)                               MD047859
      C**********         EVAL      ORDATEAST=%SUBST(Buffer2:2137)                    MD030454 CSW214
      C**********                   + BufferEx2                                       MD030454 CSW214
      C**********         EVAL      OPDATEAST=%SUBST(BufferEx2:2938)                  MD030454 CSW214
@@ -1768,33 +1783,52 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         EVAL      TPCSAST=%SUBST(BufferEx7:8905)+BufferEx8+         MD035359 CSW216
      C**********                                       BufferEx9                     MD035359 CSW216
       *                                                                                       CSW216
-     C**********         EVAL      ORDATEAST=%SUBST(Buffer2:2339)                    CSW216 MD053400
-     C**********                   + BufferEx2                                       CSW216 MD053400
-     C**********         EVAL      OPDATEAST=%SUBST(BufferEx2:3140)                  CSW216 MD053400
-     C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:7940)                  CSW216 MD053400
-     C**********                   + BufferEx3                                       CSW216 MD053400
-     C**********         EVAL      TPDATEAST=%SUBST(BufferEx3:2741)                  CSW216 MD053400
-     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:7541)                    CSW216 MD053400
-     C**********                   + BufferEx4 + BufferEx5                           CSW216 MD053400
-     C**********         EVAL      TCFSAST=%SUBST(BufferEx5:743)                     CSW216 MD053400
-     C**********                   + BufferEx6                                       CSW216 MD053400
-     C**********         EVAL      OPCSAST=%SUBST(BufferEx6:3944)+BufferEx7          CSW216 MD053400
-     C**********         EVAL      TPCSAST=%SUBST(BufferEx7:8945)+BufferEx8+         CSW216 MD053400
-     C**********                                       BufferEx9                     CSW216 MD053400
-     C                   EVAL      ACTRJ=%SUBST(Buffer2:2339)                               MD053400
-     C                   EVAL      ORDATEAST=%SUBST(Buffer2:2340)                           MD053400
+     C**********         EVAL      ORDATEAST=%SUBST(Buffer2:2339)                    CSW216 MD047859
+     C**********                   + BufferEx2                                       CSW216 MD047859
+     C**********         EVAL      OPDATEAST=%SUBST(BufferEx2:3140)                  CSW216 MD047859
+     C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:7940)                  CSW216 MD047859
+     C**********                   + BufferEx3                                       CSW216 MD047859
+     C**********         EVAL      TPDATEAST=%SUBST(BufferEx3:2741)                  CSW216 MD047859
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:7541)                    CSW216 MD047859
+     C**********                   + BufferEx4 + BufferEx5                           CSW216 MD047859
+     C**********         EVAL      TCFSAST=%SUBST(BufferEx5:743)                     CSW216 MD047859
+     C**********                   + BufferEx6                                       CSW216 MD047859
+     C**********         EVAL      OPCSAST=%SUBST(BufferEx6:3944)+BufferEx7          CSW216 MD047859
+     C**********         EVAL      TPCSAST=%SUBST(BufferEx7:8945)+BufferEx8+         CSW216 MD047859
+     C**********                                       BufferEx9                     CSW216 MD047859
+     C**********         EVAL      ORDATEAST=%SUBST(Buffer2:2359)                  MD047859 MD053400
+     C**********                   + BufferEx2                                     MD047859 MD053400
+     C**********         EVAL      OPDATEAST=%SUBST(BufferEx2:3120)                MD047859 MD049387
+     C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:7920)                MD047859 MD049387
+     C**********         EVAL      OPDATEAST=%SUBST(BufferEx2:3160)                MD049387 MD053400
+     C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:7960)                MD049387 MD053400
+     C**********                   + BufferEx3                                     MD047859 MD053400
+     C**********         EVAL      TPDATEAST=%SUBST(BufferEx3:2761)                MD047859 MD053400
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:7521)                  MD047859 MD049387
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:7561)                  MD049387 MD053400
+     C**********                   + BufferEx4 + BufferEx5                         MD047859 MD053400
+     C**********         EVAL      TCFSAST=%SUBST(BufferEx5:763)                   MD047859 MD053400
+     C**********                   + BufferEx6                                     MD047859 MD053400
+     C**********         EVAL      OPCSAST=%SUBST(BufferEx6:3924)+BufferEx7        MD047859 MD049387
+     C**********         EVAL      OPCSAST=%SUBST(BufferEx6:3964)+BufferEx7        MD049387 MD053400
+     C**********         EVAL      TPCSAST=%SUBST(BufferEx7:8925)+BufferEx8+       MD047859 MD049387
+     C**********         EVAL      TPCSAST=%SUBST(BufferEx7:8965)+BufferEx8+       MD049387 MD053400
+     C**********                                       BufferEx9                   MD047859 MD053400
+     C                   EVAL      ACTRJ=%SUBST(Buffer2:2359)                               MD053400
+     C                   EVAL      ORDATEAST=%SUBST(Buffer2:2360)                           MD053400
      C                             + BufferEx2                                              MD053400
-     C                   EVAL      OPDATEAST=%SUBST(BufferEx2:3141)                         MD053400
-     C                   EVAL      TRDATEAST=%SUBST(BufferEx2:7941)                         MD053400
+     C                   EVAL      OPDATEAST=%SUBST(BufferEx2:3161)                         MD053400
+     C                   EVAL      TRDATEAST=%SUBST(BufferEx2:7961)                         MD053400
      C                             + BufferEx3                                              MD053400
-     C                   EVAL      TPDATEAST=%SUBST(BufferEx3:2742)                         MD053400
-     C                   EVAL      OCFSAST=%SUBST(BufferEx3:7542)                           MD053400
+     C                   EVAL      TPDATEAST=%SUBST(BufferEx3:2762)                         MD053400
+     C                   EVAL      OCFSAST=%SUBST(BufferEx3:7562)                           MD053400
      C                             + BufferEx4 + BufferEx5                                  MD053400
-     C                   EVAL      TCFSAST=%SUBST(BufferEx5:744)                            MD053400
+     C                   EVAL      TCFSAST=%SUBST(BufferEx5:764)                            MD053400
      C                             + BufferEx6                                              MD053400
-     C                   EVAL      OPCSAST=%SUBST(BufferEx6:3945)+BufferEx7                 MD053400
-     C                   EVAL      TPCSAST=%SUBST(BufferEx7:8946)+BufferEx8+                MD053400
+     C                   EVAL      OPCSAST=%SUBST(BufferEx6:3965)+BufferEx7                 MD053400
+     C                   EVAL      TPCSAST=%SUBST(BufferEx7:8966)+BufferEx8+                MD053400
      C                                                 BufferEx9                            MD053400
+     C                   EVAL      APFOTranID = DDFOID                                      AR933170
       *                                                                                      BUG5449
      C                   MOVEA     ORDATEAST     ORDATEA                                     BUG5449
      C                   MOVEA     OPDATEAST     OPDATEA                                     BUG5449
@@ -2190,6 +2224,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                                      + FORMULATR + FORMULATP                         MD030454
      C                                      + FORMULAOC + FORMULATC                         MD030454
      C                                      + FORMULAOPC+ FORMULATPC                        MD030454
+     C                                      + DDFOID                                        MD047859
      C                                      + OutSwift2013                                  MD030454
      C                                      + ACTRJ                                         MD053400
      C                                      + ORDATEAST                                     MD030454
@@ -2232,30 +2267,50 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1096)                    MD035359 CSW216
      C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11095)                   MD035359 CSW216
       *                                                                                       CSW216
-     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1662)+OPDATEAST        CSW216 MD053400
-     C**********                            + TRDATEAST                              CSW216 MD053400
-     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2061)+TPDATEAST        CSW216 MD053400
-     C**********                               +OCFSAST                              CSW216 MD053400
-     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2460)                    CSW216 MD053400
-     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12459)                   CSW216 MD053400
-     C**********                            + TCFSAST                                CSW216 MD053400
-     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9258)                    CSW216 MD053400
-     C**********                            + OPCSAST                                CSW216 MD053400
-     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6057)+TPCSAST            CSW216 MD053400
-     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1056)                    CSW216 MD053400
-     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11055)                   CSW216 MD053400
-     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST               MD053400
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1662)+OPDATEAST        CSW216 MD047859
+     C**********                            + TRDATEAST                              CSW216 MD047859
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2061)+TPDATEAST        CSW216 MD047859
+     C**********                               +OCFSAST                              CSW216 MD047859
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2460)                    CSW216 MD047859
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12459)                   CSW216 MD047859
+     C**********                            + TCFSAST                                CSW216 MD047859
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9258)                    CSW216 MD047859
+     C**********                            + OPCSAST                                CSW216 MD047859
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6057)+TPCSAST            CSW216 MD047859
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1056)                    CSW216 MD047859
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11055)                   CSW216 MD047859
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1682)+OPDATEAST      MD047859 MD049387
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1642)+OPDATEAST      MD049387 MD053400
+     C**********                            + TRDATEAST                            MD047859 MD053400
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2081)+TPDATEAST      MD047859 MD049387
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2041)+TPDATEAST      MD049387 MD053400
+     C**********                               +OCFSAST                            MD047859 MD053400
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2480)                  MD047859 MD049387
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2440)                  MD049387 MD053400
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12479)                 MD047859 MD049387
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12439)                 MD049387 MD053400
+     C**********                            + TCFSAST                              MD047859 MD053400
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9278)                  MD047859 MD049387
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9238)                  MD049387 MD053400
+     C**********                            + OPCSAST                              MD047859 MD053400
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6077)+TPCSAST          MD047859 MD049387
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1076)                  MD047859 MD049387
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11075)                 MD047859 MD049387
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6037)+TPCSAST          MD049387 MD053400
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1036)                  MD049387 MD053400
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11035)                 MD049387 MD053400
+     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1641)+OPDATEAST               MD053400
      C                                      + TRDATEAST                                     MD053400
-     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST               MD053400
+     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2040)+TPDATEAST               MD053400
      C                                         +OCFSAST                                     MD053400
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2459)                           MD053400
-     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12458)                          MD053400
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2439)                           MD053400
+     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12438)                          MD053400
      C                                      + TCFSAST                                       MD053400
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9257)                           MD053400
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9237)                           MD053400
      C                                      + OPCSAST                                       MD053400
-     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST                   MD053400
-     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1055)                           MD053400
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11054)                          MD053400
+     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6036)+TPCSAST                   MD053400
+     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1035)                           MD053400
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11034)                          MD053400     
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -2444,6 +2499,16 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *****************************************************************
 
      C     ValidateAc    BEGSR
+      *                                                                                     AR933170
+      ** Set retrieve mode to '*FRONT' (Access using Front Office ID)                       AR933170
+      ** Otherwise                                                                          AR933170
+      ** Set retrieve mode to blank (Access using Midas transaction ID)                     AR933170
+      *                                                                                     AR933170
+     C     DDFOID        IFNE      *BLANKS                                                  AR933170
+     C                   MOVEL     '*FRONT'      ModeofOp                                   AR933170
+     C                   ELSE                                                               AR933170
+     C                   MOVEL     '      '      ModeofOp                                   AR933170
+     C                   ENDIF                                                              AR933170
 
       ** Validate action code versus transaction IDs supplied
       ** This function will set the Midas deal number
@@ -7595,6 +7660,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDIF                                                              MD029596
                                                                                             MD029596
      C                   EVAL      RXTMESTMP = TimeStamp
+     C                   EVAL      RXFRNT = APFOTranID                                      AR933170
 
       ** Setup the Valid file with 'Authomatic Authorisation' from
       ** Interface file IRRXIFPD
@@ -8850,4 +8916,4 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Finastra International Limited 2003
+(c) Finastra International Limited 2003 

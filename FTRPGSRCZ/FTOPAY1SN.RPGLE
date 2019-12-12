@@ -1297,6 +1297,7 @@
      D svOPORB3        S                   LIKE(OTOPORB3)                                     CFT039
      D svOPORB4        S                   LIKE(OTOPORB4)                                     CFT039
      D svOPORB5        S                   LIKE(OTOPORB5)                                     CFT039
+     D PMode           S              6A   INZ('*SIN  ')                                    MD021318
      D InputUser       S             10A                                                    MD050574
 
       *****************************************************************
@@ -1311,8 +1312,7 @@
       ** +----------------------------------------------------------------+
       *                                                                                      BUG7029
       ** Retrieve ZMUSER details.                                                            BUG7029
-      *         D PMode           S              6A   INZ('*SIN  ')                                    MD021318
-                                                                                  BUG7029
+      *                                                                                      BUG7029
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
      C                   UNLOCK    ZMUSER                                                    BUG7029
@@ -2449,6 +2449,8 @@
       *  Funds Transfer Details                                                               257361
      C                   PARM                    SDFTFR                                       257361
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
                                                                                               257361
      C/COPY WNCPYSRC,FTOPA1SC13
 
@@ -2468,9 +2470,7 @@
      C     WIdx_PVAL     ANDNE     0                                                          206893
      C     NewPmtSc1b    ORNE      PrvPmtSc1b                                                 206893
      C     WIdx_PVAL     ANDEQ     PrvN_Warn                                                  206893
-     C     WIdx_PVAL     ANDNE     0           ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-                                                     206893
+     C     WIdx_PVAL     ANDNE     0                                                          206893
      C                   GOTO      EndVAL@P
      C                   END
       *
@@ -2708,6 +2708,8 @@
       ***Saved*default*charges*******************************************              CFT009 222373
      C*****              PARM                    DEFVALID                              CFT009 222373
      C*****              PARM                    DEFVALIDX                             CFT009 222373
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
 
       *
       * If errors returned
@@ -2735,9 +2737,7 @@
      C                   MOVE      *ALL'Y'       FTEOPY2
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
-     C                   MOVEL     *BLANK      ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-        WMsgDtaArr
+     C                   MOVEL     *BLANK        WMsgDtaArr
       *
       * Level 2 details now set up so  so disable F16 key
      C                   MOVE      'Y'           Level2Dtl
@@ -3080,6 +3080,8 @@
      C                   PARM                    NwPtFilFmX                     CFT014
      C                   PARM                    Val@Fields                     CFT014
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** If errors returned                                                     CFT014
                                                                                 CFT014
@@ -3096,9 +3098,7 @@
      C     WIdx_BVAL     AndNe     0                                            CFT014
      C     NewPmtSc3b    OrNe      PrvPmtSc3b                                   CFT014
      C     WIdx_BVAL     AndEq     PrvN_Warn                                    CFT014
-     C     WIdx_BVAL     AndNe     0                     ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-                             CFT014
+     C     WIdx_BVAL     AndNe     0                                            CFT014
      C                   Goto      EndVAL@B                                     CFT014
      C                   EndIf                                                  CFT014
                                                                                 CFT014
@@ -3500,6 +3500,8 @@
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
 
       *
       * If errors returned
@@ -3529,9 +3531,7 @@
       * 'N' as those are errors not warnings in FTEOPY4                         CFT009
       *                                                                         CFT009
      C*******************MOVE      *ALL'Y'       FTEOPY4                  CFT014CFT009
-     C           ** Screen Input Function (*SIN)                                                       MD021318
-     C                   PARM                    PMode                                      MD021318
-              EVAL      *IN81 = *ON                                  CFT009
+     C                   EVAL      *IN81 = *ON                                  CFT009
                                                                                 CFT009
      C                   DOW       *IN81 = *ON                                  CFT009
      C     'W'           SCAN      FTEOPY4:1     @p                3 0    81    CFT009

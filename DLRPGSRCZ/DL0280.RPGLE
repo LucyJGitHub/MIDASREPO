@@ -11877,6 +11877,8 @@
      C                   ENDSR                                                                CDL099
       *                                                                                       CDL099
      C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0280C142                                           S01408
+     C*                                                                   S01408
 2585 C********************************************************************
 2586 C*
 2587 C*****    ASSPDV IS A SHARED ROUTINE THAT CHECKS IF DEAL AND

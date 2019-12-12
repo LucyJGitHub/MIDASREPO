@@ -16,6 +16,9 @@
       *                                                               *
       *  Last Amend No. MD054131           Date 13Sep19               *
       *  Prev Amend No. MD054130           Date 28Aug19               *
+      *                 MD021318           Date 26Jul13               *
+      *                 262474             Date 29Jan13               *
+      *                 ERZ123             Date 29Jan13               *
       *                 MD052529           Date 12Feb19               *
       *                 MD050619           Date 24Apr18               *
       *                 MD050574           Date 20Apr18               *
@@ -180,6 +183,16 @@
       *  MD052529 - If incoming pay MT202 message has no 50 field,    *
       *             Ordering Customer lines 2-5 should not be         *
       *             populated with values of field 52A details 1-4.   *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
+      *  262474 - ERZ123 : Set new fields to blanks for CAR and F12   *
+      *           Replication                                         *
+      *           Added hook: FTH00656                                *
+      *           Amended hook: FTH00661                              *
+      *  ERZ123 - FT Select Payment on Beneficiary Line 1             *
+      *           Added hooks: FTH00657, FTH00659, FTH00660, FTH00661 *
+      *           Amended hooks: FTH00207                             *
       *           - Initialization of work field ORCFLD should be     *
       *             performed before the OPAY screen mapping.         *
       *  MD050619 - No payment reference generated when routing via   *
@@ -1284,6 +1297,7 @@
      D svOPORB3        S                   LIKE(OTOPORB3)                                     CFT039
      D svOPORB4        S                   LIKE(OTOPORB4)                                     CFT039
      D svOPORB5        S                   LIKE(OTOPORB5)                                     CFT039
+     D PMode           S              6A   INZ('*SIN  ')                                    MD021318
      D InputUser       S             10A                                                    MD050574
 
       *****************************************************************
@@ -2435,6 +2449,8 @@
       *  Funds Transfer Details                                                               257361
      C                   PARM                    SDFTFR                                       257361
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
                                                                                               257361
      C/COPY WNCPYSRC,FTOPA1SC13
 
@@ -2692,6 +2708,8 @@
       ***Saved*default*charges*******************************************              CFT009 222373
      C*****              PARM                    DEFVALID                              CFT009 222373
      C*****              PARM                    DEFVALIDX                             CFT009 222373
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
 
       *
       * If errors returned
@@ -3062,6 +3080,8 @@
      C                   PARM                    NwPtFilFmX                     CFT014
      C                   PARM                    Val@Fields                     CFT014
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** If errors returned                                                     CFT014
                                                                                 CFT014
@@ -3480,6 +3500,8 @@
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
      C                   PARM      *BLANKS       InputUser                                  MD050574
+      ** Screen Input Function (*SIN)                                                       MD021318
+     C                   PARM                    PMode                                      MD021318
 
       *
       * If errors returned

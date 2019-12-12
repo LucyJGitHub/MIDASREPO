@@ -10,9 +10,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
-      *                 MD050139           Date 23Mar18               *      
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD053295           Date 13Apr19               *
+      *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -261,15 +263,23 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
-      *            ZFREQ/ZFRQ*.                                       *      
+      *            ZFREQ/ZFRQ*.                                       *
       *  MD046248 - Finastra Rebranding                               *
-      *  CDL099 - Split Value Date (Recompile)                        *      
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *
@@ -3615,6 +3625,7 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
+     C                     MOVE WCALC6    SCALC6  1                                         MD051554
      C/COPY WNCPYSRC,DL0195C028
      C           *LIKE     DEFN PCPL      DIFF                            S01434
      C           *LIKE     DEFN PCPL      DFPCPL                          079771
@@ -3843,6 +3854,22 @@
 0349 C                     MOVELDLNO      DBKEY  29                       S01194
 0349 C                     EXSR *PSSR                                     S01194
 0349 C                     END                                            S01194
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C           DTYP      IFEQ 'FR'                                                        MD051554
+     C           DTYP      OREQ 'RS'                                                        MD051554
+     C           DTYP      OREQ 'RX'                                                        MD051554
+     C           DTYP      OREQ 'RR'                                                        MD051554
+     C           DTYP      OREQ 'RP'                                                        MD051554
+     C           DTYP      OREQ 'RF'                                                        MD051554
+     C                     MOVE 'N'       WCALC6                                            MD051554
+     C                     ELSE                                                             MD051554
+     C                     MOVE SCALC6    WCALC6                                            MD051554
+     C                     ENDIF                                                            MD051554
      C/COPY WNCPYSRC,DL0195C114
      C           DTYP      IFEQ 'CF'                                                          CDL033
      C           CNRQ      ANDEQ'D'                                                           CDL033

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 AR868380           Date 11Jun13               *
       *                 CLE148             Date 23Jul12               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030856 - Introduced reject processing to FEEM              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -1076,6 +1078,7 @@
      C                   PARM      'Y'           ResetErrs         1
       *                                                                                       245099
      C                   PARM                    CLE006                                       245099
+     C                   PARM                    DRejFlg           1                        MD030856
  
       ** If any errors overwrite previous error information
  

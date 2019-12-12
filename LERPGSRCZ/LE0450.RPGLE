@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. AR1097303          Date 16May19               *
+      *  Last Amend No. 252101             Date 06Nov19               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 AR1097303          Date 16May19               *
       *                 MD047693           Date 30Jan18               *
       *                 MD050018           Date 05Nov18               *
       *                 MD050007           Date 05Nov18               *
@@ -404,6 +405,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252101 - The spread rate value was incorrect. the previous   *
+      *           value from LEHISTL2 was retrieved.                  *
+      *         - Applied for MD025526.                               *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -9647,6 +9651,9 @@ L118 I                             P   72   77 7RTSPL
      C     LNRF          SETGT     LEHISTL2                                                    11633
      C     LNRF          READPE    LEHISTL2                               69                   11633
      C     *IN69         IFEQ      *OFF                                                        11633
+     C     BGN0ST        IFEQ      'N'                                                        252101
+     C     BGN0ST        OREQ      'Y'                                                        252101
+     C     IRCF#H        ANDEQ     'Y'                                                        252101
      C                   Z-ADD     RTSP#H        RTSPL                                         11633
      C     SPINL         IFNE      SPIN#H                                                   MD019942
      C                   MOVEL     SPIN#H        SPINL                                      MD019942
@@ -9654,6 +9661,7 @@ L118 I                             P   72   77 7RTSPL
      C     VDAT#H        IFGT      VDAT                                                        11633
      C                   Z-ADD     VDAT#H        VDAT                                          11633
      C                   ENDIF                                                                 11633
+     C                   ENDIF                                                                252101
      C                   ENDIF                                                                 11633
      C                   ENDIF                                                                 11633
       *                                                                                       CLE036

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054354           Date 23Oct19               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Last Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
@@ -219,6 +220,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
       *  MD052075 - [CGL150] Warning message should be displayed when *
@@ -799,6 +801,7 @@
      D @DEPI           S              1                                                     MD030621
      D AuthUsers       S             20                                                       CFT163
      D P_SIGN          S              1                                                     MD054354
+     D DRejFlg         S              1                                                     MD030856
 
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
@@ -1915,7 +1918,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C/COPY OFCPYSRCZ,CGL135_043                                                             CGL135A
      C     1             SUBST     BUFFER:Bfp    VDFLTF            1                        MD052075
      C                   ADD       1             Bfp                                        MD052075
-     C
      C     BPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       BPRXLn        Bfp                                          CER001
      C     BPEXLn        SUBST     BUFFER:Bfp    ExtData
@@ -2854,6 +2856,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
      C     FEEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG1100
+     C                   ADD       FEEXLn        Bfp                                        MD030856
+      ** Add FEEM Reject Flag                                                               MD030856
+     C     1             SUBST     BUFFER:Bfp    DRejFlg                                    MD030856
+     C                   ADD       1             Bfp                                        MD030856
                                                                                              BUG1100
      C                   CALL      'LEFEEMVU'                                                BUG1100
                                                                                              BUG1100
@@ -2868,6 +2874,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    RecSttmt                                    BUG1100
      C                   PARM                    InfData                                      CAP086
      C                   PARM                    Extdata                                     BUG1100
+     C                   PARM                    DRejFlg                                    MD030856
      C                   PARM                    FldNameArr                                  BUG1100
      C                   PARM                    MsgIDArr                                    BUG1100
      C                   PARM                    MsgDtaArr                                   BUG1100

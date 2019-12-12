@@ -14,8 +14,10 @@
       *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
       *        AND PCDS3.                                             *
       *                                                               *
-      *  Last Amend No. MD052425           Date 18Sep19               *
-      *  Prev Amend No. MD050457           Date 06Mar19               *
+      *  Last Amend No. MD025056           Date 06Nov19               *
+      *  Prev Amend No. MD027372           Date 06Nov19               *
+      *                 MD052425           Date 18Sep19               *
+      *                 MD050457           Date 06Mar19               *
       *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 AR906833           Date 22Aug17               *
@@ -68,6 +70,11 @@
       *                                                               *   S01117
       *****************************************************************   S01117
       *                                                               *   S01117
+      *  MD025056 - Prevent blank error message when closing a        *
+      *             Customer. Added specific error messages when      *
+      *             closing Customers. Patterned after AR856728.      *
+      *  MD027372 - Allow customer to be closed if the only remaining *
+      *             GTEES records are expired ones.                   *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - customer closure do not include checking of       *
       *             expired or closed facilities. Patterned fix from  *
@@ -168,6 +175,8 @@
      F***CUSDE***IF  E           K        DISK                            043717
      FCUSDL   IF  E           K        DISK                               043717
      FSDCUSTL4IF  E           K        DISK                                                   246639
+     FSDBRCHL5IF  E           K        DISK                                                 MD025056
+     FSDBRCHL9IF  E           K        DISK                                                 MD025056
      FDEALDCL1IF  E           K        DISK                               099934
      F            DEALSDCF                          KRENAMEISSUERF        099934
      FGTEES   IF  E           K        DISK
@@ -201,6 +210,8 @@
      ISTRNG1      DS                            200                                           246639
      I                                        1 200 WUCDS1                                    246639
      I                                        6   6 WUD006                                    246639
+     I                                       44  44 WUD044                                  MD025056
+     I                                       45  45 WUD045                                  MD025056
      ISTRNG2      DS                            200                       063444
      I                                        1 200 WUCDS2                063444
      I                                        1   1 WUD201                063444
@@ -343,6 +354,20 @@
      C                     RETRN                                          077335
      C                     END                                            077335
      C                     END                                            077335
+      *                                                                                     MD025056
+      ** Access SCSARDPD to check if CLE004 is installed                                    MD025056
+      *                                                                                     MD025056
+     C                     CALL 'AOSARDR0'                                                  MD025056
+     C                     PARM *BLANKS   @RTCD                                             MD025056
+     C                     PARM '*VERIFY '@OPTN                                             MD025056
+     C                     PARM 'CLE004'  @SARD                                             MD025056
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD025056
+      *                                                                                     MD025056
+     C           @RTCD     IFEQ *BLANKS                                                     MD025056
+     C                     MOVE 'Y'       CLE004  1                                         MD025056
+     C                     ELSE                                                             MD025056
+     C                     MOVE 'N'       CLE004                                            MD025056
+     C                     ENDIF                                                            MD025056
       *                                                                   077335
       ** Access the Modules File.                                         077335
       ** Access the Modules File only once.                               077335
@@ -1001,6 +1026,37 @@
      C           NCNUM     READEACCNT                    99               077335
       *                                                                   077335
      C                     END                                            077335
+      *                                                                                     MD025056
+      ** Check if there is a retail account closed today.                                   MD025056
+      *                                                                                     MD025056
+     C                     READ SDBANKPD                 98                                 MD025056
+     C                     MOVE '0'       *IN98                                             MD025056
+     C           NCNUM     SETLLACCNT                9898                                   MD025056
+     C           *IN98     IFEQ '0'                                                         MD025056
+     C           NCNUM     READEACCNT                    98                                 MD025056
+     C                     ENDIF                                                            MD025056
+      *                                                                                     MD025056
+     C           *IN98     DOWEQ'0'                                                         MD025056
+      *                                                                                     MD025056
+      ** Do not close if Account Type is Retail ('R') and Date Account                      MD025056
+      ** Closed is today.                                                                   MD025056
+      *                                                                                     MD025056
+     C           PACTN     IFEQ 'C'                                                         MD025056
+     C           ATYP      ANDEQ'R'                                                         MD025056
+     C           DACC      ANDEQBJRDNB                                                      MD025056
+     C                     MOVEL'REJECT'  W0RTN                                             MD025056
+     C                     MOVE 'F'       WUD211                                            MD025056
+     C           QUIT      IFEQ 'Y'                                                         MD025056
+     C                     RETRN                                                            MD025056
+     C                     ENDIF                                                            MD025056
+     C                     ENDIF                                                            MD025056
+      *                                                                                     MD025056
+     C           WUD211    IFEQ 'F'                                                         MD025056
+     C                     GOTO ESC99                                                       MD025056
+     C                     ENDIF                                                            MD025056
+     C           NCNUM     READEACCNT                    98                                 MD025056
+     C                     ENDDO                                                            MD025056
+      *                                                                                     MD025056
      C           ESC99     TAG                                            077335
       *                                                                   CSD023
       ** Check for live EXSIs                                             CSD023
@@ -1032,6 +1088,8 @@
       ** SD0340U is called.                                               143481
       *                                                                   077335
      C                     MOVE WUD201    SAVFLD  1                       077335
+     C                     MOVE WUD211    SVFLD2  1                                         MD025056
+     C                     MOVE WUD231    SVFLD3  1                                         MD025056
      C                     MOVELW0RTN     SAVRTN  7                       143481
       *                                                                   077335
       ** Check references in the securities files by calling SD0340U.     077335
@@ -1066,9 +1124,13 @@
      C                     END                                            077335
       *                                                                   077335
       ***Move*the*'saved*value'*of*WUD201*back*into*WUD201.******* 077335 143481
-      ** Move back the 'saved values' of WUD201 and W0RTN.                143481
+      ***Move*back*the*'saved*values'*of*WUD201*and*W0RTN.*************              143481 MD025056
+      ** Move back the 'saved values' of WUD201, WUD211, WUD231                             MD025056
+      ** and W0RTN.                                                                         MD025056
       *                                                                   077335
      C                     MOVE SAVFLD    WUD201                          077335
+     C                     MOVE SVFLD2    WUD211                                            MD025056
+     C                     MOVE SVFLD3    WUD231                                            MD025056
       *                                                                   143481
      C           SAVRTN    IFNE *BLANKS                                   143481
      C                     MOVELSAVRTN    W0RTN                           143481
@@ -1119,6 +1181,7 @@
      C                     END                                            077335
       *                                                                   077335
      C           RECI      IFEQ 'R'                                       077335
+     C           FSTS      ANDNE'A'                                                         MD025056
      C                     MOVEL'REJECT'  W0RTN                           077335
      C                     MOVE 'F'       WUD207                          077335
      C           QUIT      IFEQ 'Y'                                       077335
@@ -1303,6 +1366,7 @@
       *                                                                   077335
      C           RECI      IFEQ 'D'                                       077335
      C           RECI      OREQ 'E'                                       077335
+     C           PACTN     ANDNE'C'                                                         MD027372
      C                     MOVEL'REJECT'  W0RTN                           077335
      C                     MOVE 'F'       WUD205                          077335
      C           QUIT      IFEQ 'Y'                                       077335
@@ -1331,6 +1395,7 @@
       *                                                                   181864
      C           RECI      IFEQ 'D'                                       181864
      C           RECI      OREQ 'E'                                       181864
+     C           PACTN     ANDNE'C'                                                         MD027372
      C                     MOVEL'REJECT'  W0RTN                           181864
      C                     MOVE 'F'       WUD205                          181864
      C           QUIT      IFEQ 'Y'                                       181864
@@ -1379,6 +1444,8 @@
       *                                                                   099934
       * Also check issuer customer number on DEALSDC                      099934
       *                                                                   099934
+     C           PACTN     IFNE 'C'                                                         MD025056
+      *                                                                                     MD025056
      C           NCNUM     SETLLDEALDCL1             9393                 099934
      C  N93      NCNUM     READEDEALDCL1                 93               099934
       *                                                                   099934
@@ -1394,6 +1461,8 @@
       *                                                                   099934
      C                     ENDIF                                          099934
       *                                                                   099934
+     C                     ENDIF                                                            MD025056
+      *                                                                                     MD025056
      C           ESC93     TAG                                            077335
       *                                                                   077335
      C/COPY WNCPYSRC,SD0010UD02                                           077335
@@ -1460,6 +1529,39 @@
      C                     ENDIF                                                              246639
      C                     ENDIF                                                              246639
      C                     ENDIF                                                              246639
+      *                                                                                     MD025056
+      ** Check if customer is a Branch Internal Customer                                    MD025056
+      *                                                                                     MD025056
+     C           W0RTN     IFNE 'REJECT'                                                    MD025056
+     C           PCNUM     CHAINSDBRCHL5             25                                     MD025056
+      *                                                                                     MD025056
+      ** Error if a branch Internal Customer                                                MD025056
+      *                                                                                     MD025056
+     C           *IN25     IFEQ *OFF                                                        MD025056
+     C                     MOVEL'REJECT'  W0RTN                                             MD025056
+     C                     MOVEL'F'       WUD045                                            MD025056
+     C           QUIT      IFEQ 'Y'                                                         MD025056
+     C                     RETRN                                                            MD025056
+     C                     ENDIF                                                            MD025056
+     C                     ELSE                                                             MD025056
+      *                                                                                     MD025056
+      ** Else, check if customer a a Synd Agent Customer                                    MD025056
+      ** if CLE004 is installed                                                             MD025056
+      *                                                                                     MD025056
+     C           CLE004    IFEQ 'Y'                                                         MD025056
+      *                                                                                     MD025056
+     C           NCNUM     CHAINSDBRCHL9             25                                     MD025056
+     C           *IN25     IFEQ *OFF                                                        MD025056
+     C                     MOVEL'REJECT'  W0RTN                                             MD025056
+     C                     MOVEL'F'       WUD044                                            MD025056
+     C           QUIT      IFEQ 'Y'                                                         MD025056
+     C                     RETRN                                                            MD025056
+     C                     ENDIF                                                            MD025056
+     C                     ENDIF                                                            MD025056
+      *                                                                                     MD025056
+     C                     ENDIF                                                            MD025056
+     C                     ENDIF                                                            MD025056
+     C                     ENDIF                                                            MD025056
       *                                                                   077335
       ** If all checks have successfully completed,                       077335
       ** change the return code to 'DELETE'.                              077335

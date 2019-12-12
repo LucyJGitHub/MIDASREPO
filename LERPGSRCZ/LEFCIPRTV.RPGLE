@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD036924           Date 06Nov19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD026120           Date 13May14               *
       *                 MD024398           Date 11May14               *
       *                 MD000091           Date 09May13               *
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036924 - Cannot enquire on certain screen when customer is *
+      *             closed. Added checking if customer is closed      *
+      *             during validation of customer.                    *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026120 - Additional deps for GLC0720/740                   *
@@ -677,6 +681,10 @@
      C     SDCUST        PARM      SDCUST        DSSDY
       *
      C     @RTCD         IFNE      *BLANK
+     C     @RTCD         ANDNE     '*CUSCLS'                                                MD036924
+     C     @RTCD         ORNE      *BLANK                                                   MD036924
+     C     @RTCD         ANDEQ     '*CUSCLS'                                                MD036924
+     C     DDACTN        ANDNE     'E'                                                      MD036924
      C                   MOVE      'N'           DDCSSNOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDCSSN    '  FldNameArr(Ix)

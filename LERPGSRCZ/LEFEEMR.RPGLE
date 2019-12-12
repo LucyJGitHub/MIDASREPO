@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR904186           Date 01Feb12               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030856 - Introduced reject processing to FEEM              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -190,6 +192,7 @@
      D #TPCCY          S              3A                                                     CSF011A
      D WTRCcy          S              3A                                                     CSF011A
      D WTPCcy          S              3A                                                     CSF011A
+     D DRejFlg         S              1                                                     MD030856
                                                                                               CSF011
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSF011
       ** External DS for Customer details                                                     CSF011
@@ -405,9 +408,11 @@
      C                   EXSR      SrCustName                                                 CSF011
                                                                                               CSF011
       ** Remerge buffer with all relevant data structures
+     C                   MOVE      *BLANKS       DRejFlg                                    MD030856
      C                   EVAL      Buffer = NwFeScnFmt + NwFe2ScnFmt +
      C                                      NwStampTax  +                                     CER049
      C                                      ##RECS + ##PAYS
+     C                                      + DRejFlg                                       MD030856
  
      C                   MOVE      '1'           *INLR
      C                   RETURN

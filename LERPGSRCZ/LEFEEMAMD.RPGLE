@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022378           Date 12Sep13               *
+      *  Last Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. MD025529           Date 06Nov19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD022378           Date 12Sep13               *
       *                 253753             Date 16Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +51,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030856 - Introduce reject processing to FEEM               *
+      *  MD025529 - Allow change of fee period end date if            *
+      *             Advice/Confirmed = 'N'.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022378 - Impossible to amend Amount/Precent Indicator      *
       *  253753 - CAS019 - additional condition on LER1217            *
@@ -212,7 +217,9 @@
       *
       **  Compare fields with amended values.
       *
+     C     DRejFlg       IFNE      'Y'                                                      MD030856
      C                   EXSR      COMPFLDS
+     C                   ENDIF                                                              MD030856
       *
       *  If any errors were found:
       *    Set Amendments OK Indicator to 'N'
@@ -279,6 +286,7 @@
      C                   MOVE      '0'           *IN77                                       BUG8086
      C                   ENDIF
      C     V_VFPEND      IFLT      BJRDNB
+     C     V_VFAUTO      ANDNE     'N'                                                      MD025529
      C                   MOVE      '1'           *IN86
      C                   ELSE                                                                BUG8086
      C                   MOVE      '0'           *IN86                                       BUG8086
@@ -995,6 +1003,7 @@
      C                   PARM                    ResetErrs         1
                                                                                               245099
      C                   PARM                    CLE006            1                          245099
+     C                   PARM                    DRejFlg           1                        MD030856
       *
       ** Initialize program name
       *

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020B            Date 06Aug12              */
+/*       Last Amend No. MD025053           Date 06Nov19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020B            Date 06Aug12              */
 /*                      CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -78,6 +79,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD025053 - Reopen ended in error. Terminate RCFMONITOR job  */
+/*                  to avoid file locking when reopen is running.    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020B - COB Restructure - Secondary COB Infrastructure    */
 /*       CSD083 - Watch List Compliance Upgrade                      */
@@ -231,6 +234,8 @@
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CRE020*/
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)                              /*BG7613*/
              DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)                                    /*243665*/
+             DCL        VAR(&DTQDLEN) TYPE(*DEC) LEN(5) VALUE(1)                        /*MD025053*/
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(1) VALUE('T')                         /*MD025053*/
                                                                                          /*CCB020B*/
 /* Declare system values variables. */                                                   /*CCB020B*/
                                                                                          /*CCB020B*/
@@ -350,6 +355,19 @@ LOOP2:            CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK)                /*061601*/
                           SCMINIT') TOMSGQ(MRUNQ)
              ENDDO                                                                        /*BG7613*/
              IF         COND(&RETURNCODE = '*Complete') THEN(DO)                          /*BG7613*/
+/**/                                                                                    /*MD025053*/
+/** SEND MESSAGE TO DTAQ TO TERMINATE REPORT DISTRIBUTION          */                   /*MD025053*/
+/**/                                                                                    /*MD025053*/
+             ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(5)                             /*MD025053*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                         /*MD025053*/
+             CALL       PGM(QSNDDTAQ) PARM('FCDTAQ' '*LIBL' &DTQDLEN +
+                          &MSG)                                                         /*MD025053*/
+/**/                                                                                    /*MD025053*/
+  LOOP3:     ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(30)                            /*MD025053*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(LOOP3))                         /*MD025053*/
+             ENDDO                                                                      /*MD025053*/
+             DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))                                     /*MD025053*/
+/**/                                                                                    /*MD025053*/
                                                                                          /*BUG3587*/
 /** Call the following programs to activate the triggers. */                             /*BUG3587*/
                                                                                          /*BUG3587*/

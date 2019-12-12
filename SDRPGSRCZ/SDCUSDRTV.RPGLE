@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052425           Date 19Sep19               *
-      *  Prev Amend No. MD050457           Date 06Mar19               *
+      *  Last Amend No. MD025056           Date 06Nov19               *
+      *  Prev Amend No. MD052425           Date 19Sep19               *
+      *                 MD050457           Date 06Mar19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD041527           Date 22Sep16               *
       *                 MD041337           Date 16Sep16               *
@@ -146,6 +147,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025056 - Prevent blank error message when closing a        *
+      *             Customer. Added specific error messages when      *
+      *             closing Customers. Patterned after AR856728.      *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *
       *             Patterned fix from 261272.                        *
@@ -809,6 +813,7 @@
      D   WDS2048              48     48
      D   WDS2049              49     49
      D   WDS2050              50     50
+     D   WDS2051              51     51                                                     MD025056
 
      D @WCDS3          DS           200
      D   WDS3000               1    200
@@ -3232,16 +3237,137 @@
      C                   ADD       1             Ix                                           CSD007
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                               CSD007
      C*****              MOVEL     'USR0152'     MsgIdArr(Ix)                          CSD007 CSD023
-     C     WDS1001       IFEQ      'F'                                                       BUG7233
-     C     WDS2001       OREQ      'F'                                                        253344
+     C*****WDS1001       IFEQ      'F'                                              BUG7233 MD025056
+     C*****WDS2001       OREQ      'F'                                               253344 MD025056
      C*****CSD023        ANDEQ     'Y'                                                BUG7233 253344
-     C     CSD023        IFEQ      'Y'                                                        253344
-     C                   MOVEL     'USR9836'     MsgIdArr(Ix)                                BUG7233
-     C                   ELSE                                                                BUG7233
-     C                   MOVEL     'USR9834'     MsgIdArr(Ix)                                 CSD023
-     C                   ENDIF                                                               BUG7233
-     C                   GOTO      EVALAC                                                   MD019261
-     C                   ENDIF                                                                253344
+     C*****CSD023        IFEQ      'Y'                                               253344 MD025056
+     C**********         MOVEL     'USR9836'     MsgIdArr(Ix)                       BUG7233 MD025056
+     C**********         ELSE                                                       BUG7233 MD025056
+     C**********         MOVEL     'USR9834'     MsgIdArr(Ix)                        CSD023 MD025056
+     C**********         ENDIF                                                      BUG7233 MD025056
+     C**********         GOTO      EVALAC                                          MD019261 MD025056
+     C**********         ENDIF                                                       253344 MD025056
+      *                                                                                     MD025056
+      ** GENERAL LEDGER CHECKS:                                                             MD025056
+      ** Customer defined on ACCNT.                                                         MD025056
+      ** CASE: WRK.Customer Deln Flag 201 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2001       IFEQ      'F'                                                      MD025056
+     C     CSD023        IFEQ      'Y'                                                      MD025056
+     C                   MOVEL     'USR9836'     MsgIdArr(Ix)                               MD025056
+     C                   ELSE                                                               MD025056
+     C                   MOVEL     '5049318'     MsgIdArr(Ix)                               MD025056
+     C                   ENDIF                                                              MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer has a retail account closed today.                                        MD025056
+      ** CASE: WRK.Customer Deln Flag 211 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2011       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049332'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** SECURITIES TRADING CHECKS:                                                         MD025056
+      ** Customer defined on CDEPPD.                                                        MD025056
+      ** CASE: WRK.Customer Deln Flag 213 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2013       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049319'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Depot customer has a live depot movement defined on DPTMVD.                        MD025056
+      ** CASE: WRK.Customer Deln Flag 214 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2014       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049320'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer has a live depot movement defined on DPTMVD.                              MD025056
+      ** CASE: WRK.Customer Deln Flag 215 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2015       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049321'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Depot customer has a reversed depot movement defined on                            MD025056
+      ** DPTMVD.                                                                            MD025056
+      ** CASE: WRK.Customer Deln Flag 216 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2016       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049322'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer has a reversed depot movement defined on DPTMVD.                          MD025056
+      ** CASE: WRK.Customer Deln Flag 217 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2017       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049323'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer defined on TRADSD.                                                        MD025056
+      ** CASE: WRK.Customer Deln Flag 221 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2021       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049325'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Depot customer defined on TRADSD.                                                  MD025056
+      ** CASE: WRK.Customer Deln Flag 222 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2022       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049326'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer has a position settlement on POSETD.                                      MD025056
+      ** CASE: WRK.Customer Deln Flag 224 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2024       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049327'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer defined on SECTYD.                                                        MD025056
+      ** CASE: WRK.Customer Deln Flag 225 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2025       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049324'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer has user positions defined on UDEPPD.                                     MD025056
+      ** CASE: WRK.Customer Deln Flag 229 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2029       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049328'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** DEALING CHECKS:                                                                    MD025056
+      ** Customer defined on CUSDL.                                                         MD025056
+      ** CASE: WRK.Customer Deln Flag 202 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2002       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049329'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** EXPOSURE MANAGEMENT CHECKS:                                                        MD025056
+      ** Customer defined on EMLIML2.                                                       MD025056
+      ** CASE: WRK.Customer Deln Flag 212 is Do not close                                   MD025056
+      *                                                                                     MD025056
+     C     WDS2012       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049331'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
       *                                                                                     MD019261
       ** Customer has at least one live facility defined.                                   MD019261
       *                                                                                     MD019261
@@ -3326,6 +3452,20 @@
      C                   MOVEL     'USR9472'     MsgIdArr(Ix)                                 246639
      C                   GOTO      EVALAC                                                     246639
      C                   ENDIF                                                                246639
+      *                                                                                     MD025056
+      * FUND TRANSFER CHECKS:                                                               MD025056
+      * Customer defined on OTPAYDD & INPAYDD.                                              MD025056
+      * CASE: WRK.Customer Deln Flag 051 is Do not close                                    MD025056
+      *                                                                                     MD025056
+     C     WDS2051       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     'USR3968'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Any other error...                                                                 MD025056
+      *                                                                                     MD025056
+     C                   MOVEL     '5049335'     MsgIdArr(Ix)                               MD025056
+      *                                                                                     MD025056
      C                   ENDIF                                                                CSD007
      C                   ENDIF                                                                215524
       *                                                                                       CSD007

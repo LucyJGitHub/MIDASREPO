@@ -14,8 +14,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031820           Date 06Aug15               *
+      *  Last Amend No. MD027449           Date 06Nov19               *
+      *  Prev Amend No. AR848182           Date 06Nov19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD031820           Date 06Aug15               *
       *                 MD030943           Date 25Nov14               *
       *                 MD030342           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -209,6 +211,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD027449 - Payment Ordering Customer defaulted to customer   *
+      *             of extended settlement. Default payment ordering  *
+      *             customer if field is left blank.                  *
+      *  AR848182 - Always perform defaulting of fields when left     *
+      *             blank on insert or amend (Child: AR848183)        *
+      *           - Applied for MD-27449                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031820 - No validation for valid values for Agreement Type *
       *             for transaction type 'AT' for MT600               *
@@ -1416,6 +1424,8 @@
      C           *LIKE     DEFN A6MDIN    AMPEXI                                              CLE031
      C           *LIKE     DEFN A6MDIN    ZMDI1                                               CLE031
      C           *LIKE     DEFN A6MDIN    ZMDI2                                               CLE031
+      *                                                                                     AR848182
+     C                     MOVE 'Y'       PMDEFT                                            AR848182
       *                                                                                       CLE031
       ** Check if SWIFT Changes 2012 (CSW212) is installed                                    CSW212
       *                                                                                       CSW212
@@ -9185,10 +9195,14 @@
      C** IF THE BENEFICIARY IS A NON BANK OR THE DEAL C/PARTY IS          LN0782
      C** A NON BANK THEN DEFAULT FIELD 50 TO THE DEAL C/PARTY             LN0782
      C*                                                                   LN0782
-     C           BFBNBI    IFEQ 'N'                                       LN0782
-     C           CPBNBI    OREQ 'N'                                       LN0782
-     C           PMPOBN    ANDEQ*BLANKS                                   142408
-     C           BFBNBI    ANDEQ'N'                                       134496
+     C********** BFBNBI    IFEQ 'N'                                                  LN0782 MD027449
+     C********** CPBNBI    OREQ 'N'                                                  LN0782 MD027449
+     C********** PMPOBN    ANDEQ*BLANKS                                              142408 MD027449
+     C********** BFBNBI    ANDEQ'N'                                                  134496 MD027449
+     C           PMPOBN    IFEQ *BLANKS                                                     MD027449
+     C           PMPOCN    ANDEQ*BLANKS                                                     MD027449
+     C           BFBNBI    IFEQ 'N'                                                         MD027449
+     C           CPBNBI    OREQ 'N'                                                         MD027449
       *                                                                   157861
      C                     MOVELPMCSNM    CSTKEY                          157861
      C                     EXSR CUSGET                                    157861
@@ -9198,6 +9212,7 @@
      C           BBBNBI    IFEQ 'N'                                       157861
      C                     MOVELPMCSNM    PMPOCN                          LN0782
      C                     ENDIF                                          157861
+     C                     ENDIF                                                            MD027449
      C                     END                                            LN0782
      C*                                                                   S01297
      C* FIELD 52 - ORDERING BANK, PAY SIDE.                               S01297

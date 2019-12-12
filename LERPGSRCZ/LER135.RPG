@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054354           Date 23Oct19               *
-      *  Prev Amend No. MD033473           Date 23Oct19               *
+      *  Last Amend No. MD025983           Date 06Nov19               *
+      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *                 MD033473           Date 23Oct19               *
       *                 MD026969A          Date 23Oct19               *
       *                 MD026969           Date 23Oct19               *
       *                 MD053295           Date 13Apr19               *
@@ -278,6 +279,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD025983 - Reversal of accrual posting due to changed FEPEND *
+      *             backvalued to previous year caused the system to  *
+      *             generate Transfer B/CCY P/L entries.              *
+      *           - Patterned the concept of fix 238081.              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
       *  MD033473 - DBASE 012 IS ISSUED WHEN FEE SETTLEMENT DATE      *
@@ -2234,6 +2239,8 @@
      ISDBANK    E DSSDBANKPD
       ** Bank details
       *
+     I              BJEYD                           LEYD                                    MD025983
+      *                                                                                     MD025983
      ISDCURR    E DSSDCURRPD
       ** Currency Type
      I              A6MDIN                          MDIN
@@ -7558,6 +7565,18 @@
      C           FELPDT    ANDLECODT                                      155912
      C           FEESET    ANDEQ' '                                                         AR640738
      C                     Z-ADDFELPDT    LKEDAT                          093212
+      *                                                                                     MD025983
+      ** Check if backvalued to previous year when Analytical                               MD025983
+      ** Accounting is on, to prevent reversal of accrued fee                               MD025983
+      ** amount to be posted to retained earnings account.                                  MD025983
+      *                                                                                     MD025983
+     C           BGN0ST    IFEQ 'Y'                                                         MD025983
+     C           AKY,4     ANDEQ'A'                                                         MD025983
+     C           LKEDAT    IFLE JAN1                                                        MD025983
+     C                     Z-ADDBJRDNB    LKEDAT                                            MD025983
+     C                     ENDIF                                                            MD025983
+     C                     ENDIF                                                            MD025983
+      *                                                                                     MD025983
      C                     END                                            093212
       **********                                                                     CLE025 BUG13031
       ***If*CLE025*is*on,*adjust*event*date*of*fees*posted*today                     CLE025 BUG13031
@@ -9715,6 +9734,8 @@
      C                     OUT  LDA                        ************
      C                     EXSR *PSSR
      C                     END
+      *                                                                                     MD025983
+     C           LEYD      ADD  1         JAN1    50                                        MD025983
       *                                                                   127966
       ** Access Module details                                            127966
       *                                                                   127966

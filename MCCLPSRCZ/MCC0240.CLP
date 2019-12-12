@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD052217           Date 31Oct18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD025525           Date 06Nov19              */
+/*       Prev Amend No. MD052217           Date 31Oct18              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD025525 - Errors with future valued postings.              */
 /*       MD052217 - COB Components MCC001000 00001 failed during COB */
 /*                  run                                              */
 /*       MD046248 - Finastra Rebranding                              */
@@ -331,9 +333,12 @@
 /**  If Management Accounts Enhancement is installed, copy query   */ /*CMC001*/
 /**  records to PF/MCPOSTPD.                                       */ /*CMC001*/
 /**/                                                                  /*CMC001*/
+/*           IF         COND(&CMC001 *EQ 'Y') THEN(+               */                   /*MD025525*/
+/*              CPYFRMQRYF FROMOPNID(UPDBALPD) TOFILE(MCPOSTPD) +  */                   /*MD025525*/
+/*                           MBROPT(*REPLACE) FMTOPT(*MAP))        */           /*BUG5976 MD025525*/
              IF         COND(&CMC001 *EQ 'Y') THEN(+
                 CPYFRMQRYF FROMOPNID(UPDBALPD) TOFILE(MCPOSTPD) +
-                             MBROPT(*REPLACE) FMTOPT(*MAP))          /*BUG5976*/
+                             MBROPT(*ADD) FMTOPT(*MAP))                                 /*MD025525*/
 /***************CPYFRMQRYF*FROMOPNID(UPDBALPD)*TOFILE(MCPOSTPD) + */ /*BUG5976*/
 /****************************MBROPT(*REPLACE)*FMTOPT(*NOCHK))   CMC001 BUG5976*/
              ELSE       CMD(DO)                                       /*CMC001*/

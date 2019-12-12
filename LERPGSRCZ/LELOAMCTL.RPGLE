@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD029046           Date 27Nov19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CLE148             Date 23Jul12               *
@@ -65,6 +66,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029046 - Default Principal Increase settlement from        *
+      *             SSI (standard settlement instructions) before     *
+      *             trying to default from loan.                      *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -991,11 +995,69 @@
      C                   PARM                    ErrorFlag         1
      C                   Z-ADD     ZDAYNO        ##DATR            5 0
      C                   Z-ADD     ZDAYNO        ##DATP            5 0
+      *                                                                                     MD029046
+      ** Default settlement from standard settlement instructions of customer first         MD029046
+      ** before trying to default from loan. Placed another call for ZASETINDFT             MD029046
+      ** for Principal increase insert.                                                     MD029046
+      *                                                                                     MD029046
+     C                   IF        DDACTN = 'I'                                             MD029046
+     C                             AND DDATYP = 'PI'                                        MD029046
+     C                   MOVEL     LO_CNUM       ##CSNM                                     MD029046
+     C                   CALLB     'ZASETINDFT'                                             MD029046
+      *                                                                                     MD029046
+      ** Inputs                                                                             MD029046
+      ** Calling program                                                                    MD029046
+     C                   PARM      'LEND'        ##CALP                                     MD029046
+      *                                                                                     MD029046
+      ** Payment currency                                                                   MD029046
+     C                   PARM      LO_CCY        ##PCCY                                     MD029046
+      *                                                                                     MD029046
+      ** Receive currency                                                                   MD029046
+     C                   PARM      LO_CCY        ##RCCY                                     MD029046
+      *                                                                                     MD029046
+      ** Customer shortname                                                                 MD029046
+     C                   PARM                    ##CSNM                                     MD029046
+      *                                                                                     MD029046
+      ** Loan type                                                                          MD029046
+     C                   PARM      *BLANKS       ##TTYP                                     MD029046
+      *                                                                                     MD029046
+      ** Parameters not used in LOAM :                                                      MD029046
+      ** Federal funds indicator                                                            MD029046
+      ** Version of ISDA rules                                                              MD029046
+      ** Type of ISDA agreement                                                             MD029046
+      ** Date of ISDA agreement                                                             MD029046
+      ** Version of ISDA agreement                                                          MD029046
+      ** Version of ISDA agreement century                                                  MD029046
+     C                   PARM      *BLANK        ##FFND                                     MD029046
+     C                   PARM      *BLANK        BQISDA                                     MD029046
+     C                   PARM      *BLANK        BQAGTY                                     MD029046
+     C                   PARM      *BLANK        BQAGDT                                     MD029046
+     C                   PARM      *BLANK        BQAGVV                                     MD029046
+     C                   PARM      *BLANK        Blank2                                     MD029046
+                                                                                            MD029046
+      ** Deal Subtype                                                                       MD029046
+     C                   PARM      *BLANK        BlankSTYP                                  MD029046
+                                                                                            MD029046
+      ** Branch                                                                             MD029046
+     C                   PARM      *BLANK        BlankBRCA                                  MD029046
+      *                                                                                     MD029046
+      ***  OUTPUTS                                                                          MD029046
+      ***  Payment instructions                                                             MD029046
+     C                   PARM                    F_PAY                                      MD029046
+      *                                                                                     MD029046
+      ***  Receive instructions                                                             MD029046
+     C                   PARM                    F_REC                                      MD029046
+      *                                                                                     MD029046
+      ***  FRA/IRS instructions                                                             MD029046
+     C                   PARM                    F_FRI                                      MD029046
+     C                   ENDIF                                                              MD029046
       *
       ** Set up payment instructions from loan
       ***(on*insertions,*these*fields*will*be*zero/blank)**************                       TDA066
      C                   IF        (DDACTN = 'I')                                             TDA066
      C     PType         IFNE      'PTSO'                                                     TDA066
+     C     FLPSTM        ANDEQ     *ZERO                                                    MD029046
+     C     ##PPAY        ANDNE     'Y'                                                      MD029046
      C                   MOVEL     CLPAY         FLPAY
      C                   MOVEL     CLPAYEx       FLPONS                                       CGL029
      C                   MOVEL     LO_PSTM       FLPSTM                                       CGL029
@@ -1014,6 +1076,8 @@
       *
       ** If part sold, receive branch is our start date branch
      C     PType         IFEQ      'PTSO'
+     C     FLRSTM        ANDEQ     *ZERO                                                    MD029046
+     C     ##PREC        ANDNE     'Y'                                                      MD029046
      C                   MOVE      LO_OSDB       FLROBR
       *
       ** Set up receive instructions from loan

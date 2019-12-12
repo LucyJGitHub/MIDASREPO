@@ -58,7 +58,7 @@
 
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
 /**********  DCLF       FILE(UPGSVALJ0) */                                     /*CUP033* *MD054605*/
-             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054065*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
 
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +

@@ -15,8 +15,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054025           Date 31Jul19               *
+      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1020207          Date 14Dec12               *
       *                 AR996783           Date 14Dec12               *
       *                 AR994293           Date 14Dec12               *
@@ -56,6 +58,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD054025 - Changed PDDI and PTDI display into whole words    *
+      *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1020207 - Extract fee details. (Child: AR1020209)          *
@@ -111,6 +115,7 @@
      FCLONCLL1IF  E           K        DISK                                                   CER049
       *                                                                                       CER049
      FLEFEED  IF  E           K        DISK                                                 AR994293
+     FLEFEEQL0IF  E           K        DISK                                                 MD052216
       /TITLE FUNCTION OF INDICATORS
      F*****************************************************************
      F*                                                               *
@@ -119,6 +124,7 @@
      F*  86   -    Chain Fails - FCLTYFM                              *
      F*  87   -    Chain Fails - FCLTYFN                              *
      F*  88   -    Chain Fails - CLOAN                                *
+      *  89   -    Chain Fails - LEFEEQL0                             *                     MD052216
      F*                                                               *
      F*****************************************************************
       /TITLE SUBROUTINE INDEX
@@ -624,6 +630,17 @@
      C                     END
      C*
      C                     ENDSL
+      *                                                                                     MD052216
+     C           FEEXKY    KLIST                                                            MD052216
+     C                     KFLD           CNUM                                              MD052216
+     C                     KFLD           FEFACL                                            MD052216
+     C                     KFLD           LNRF                                              MD052216
+     C                     KFLD           FEFSEQ                                            MD052216
+      *                                                                                     MD052216
+     C           FEEXKY    CHAINLEFEEQL0             89                                     MD052216
+     C           *IN89     IFEQ '1'                                                         MD052216
+     C                     EXSR SRERR                                                       MD052216
+     C                     ENDIF                                                            MD052216
      C*
      C           EXDETL    TAG
      C*
@@ -899,6 +916,51 @@
      C                     MOVELA6NBDP    ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+      *                                                                                     MD052216
+      ** Payment Due Day Indicator                                                          MD052216
+      *                                                                                     MD052216
+     C                     ADD  1         R1                                                MD052216
+     C                     CLEARR#DATA                                                      MD052216
+     C                     CLEARR#DEFN                                                      MD052216
+     C                     CLEAR#@RDE                                                       MD052216
+     C                     MOVEL'PAY DUE '#@RDE                                             MD052216
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD052216
+     C**********           MOVELFQPDDI    R#DATA                                   MD052216 MD054025
+     C                     CLEARR#DATA                                                      MD054025
+     C                     SELEC                                                            MD054025
+     C           FQPDDI    WHEQ 'A'                                                         MD054025
+     C                     MOVEL'ACTUAL  'R#DATA                                            MD054025
+     C           FQPDDI    WHEQ 'P'                                                         MD054025
+     C                     MOVEL'PREVIOUS'R#DATA                                            MD054025
+     C           FQPDDI    WHEQ 'N'                                                         MD054025
+     C                     MOVEL'NEXT    'R#DATA                                            MD054025
+     C           FQPDDI    WHEQ 'M'                                                         MD054025
+     C                     MOVEL'MODIFIED'R#DATA                                            MD054025
+     C                     ENDSL                                                            MD054025
+     C                     MOVELR#DATA    ##D,R1                                            MD052216
+     C                     MOVELR#DEFN    ##R,R1                                            MD052216
+      *                                                                                     MD052216
+      ** Payment Taken Day Indicator                                                        MD052216
+      *                                                                                     MD052216
+     C                     ADD  1         R1                                                MD052216
+     C                     CLEARR#DATA                                                      MD052216
+     C                     CLEARR#DEFN                                                      MD052216
+     C                     CLEAR#@RDE                                                       MD052216
+     C                     MOVE 'N '      #@RDE                                             MD052216
+     C                     MOVEL'PAY TAKE'#@RDE                                             MD052216
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD052216
+     C**********           MOVELFQPTDI    R#DATA                                   MD052216 MD054025
+     C                     CLEARR#DATA                                                      MD054025
+     C                     SELEC                                                            MD054025
+     C           FQPTDI    WHEQ 'P'                                                         MD054025
+     C                     MOVEL'PREVIOUS'R#DATA                                            MD054025
+     C           FQPTDI    WHEQ 'N'                                                         MD054025
+     C                     MOVEL'NEXT    'R#DATA                                            MD054025
+     C           FQPTDI    WHEQ 'M'                                                         MD054025
+     C                     MOVEL'MODIFIED'R#DATA                                            MD054025
+     C                     ENDSL                                                            MD054025
+     C                     MOVELR#DATA    ##D,R1                                            MD052216
+     C                     MOVELR#DEFN    ##R,R1                                            MD052216
      C*
      C** Run date; production time
      C*

@@ -11,18 +11,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD052216           Date 04Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052216 - Lending Fee's Payment Due and Taken Day           *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CER049 - Stamp Tax                                           *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZLEFEEQL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZLEFEEDQDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -31,9 +34,9 @@ O    F                                     USROPN
 O
 O    D Z_LEFEEDQD    E DS                  EXTNAME(GZLEFEEDQD)
 O    D G_LEFEEDQD    E DS                  EXTNAME(GZLEFEEDQD) PREFIX(G_)
- 
+
       ** ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -76,9 +79,9 @@ O    C                   ELSE
 O    C                   WRITE     W_LEFEEQD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -100,7 +103,7 @@ O    C                   KFLD                    FQFACL
 O    C                   KFLD                    FQLOAN
 O    C                   KFLD                    FQFSEQ
 O    C                   KFLD                    FQBRCA
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -108,33 +111,33 @@ O    C                   KFLD                    FQBRCA
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
- 
+
       ** If no identified cause of error
- 
+
      C     I#ERMS        IFEQ      *BLANK
      C                   EVAL      I#ERMS = 'UNEXPECTED ERROR'
      C                   ENDIF
- 
+
       ** Log an error on the error log
- 
+
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

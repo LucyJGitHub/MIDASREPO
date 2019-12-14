@@ -154,11 +154,11 @@
       * Matured?
 
      C*****T_EDAT********IFLT      O#RDNB                                                    BUG3562
-     C     T_EDAT        IFLT      BJRDNB                                                    BUG3562
+     C*****T_EDAT        IFLT      BJRDNB                                           BUG3562 MD054879
+     C     T_EDAT        IFLT      WTranRetPrd                                              MD054879
      C     T_EDAT        ANDNE     *ZERO                                                     BUG3562
-     C     Source        ANDNE     'TI'                                                      BUG3839
+     C*****Source        ANDNE     'TI'                                             BUG3839 MD054879
      C     MTDELETED     OREQ      'Y'
-     C     T_EDAT        ORLT      WTranRetPrd                                              MD054879
      C                   DELETE    MLMTRAN
      C                   ELSE
 

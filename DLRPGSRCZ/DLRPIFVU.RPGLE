@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD054604           Date 19Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD030858A          Date 25Nov14               *
       *                 MD030858           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054604 - A Serious Midas Error Occurred whilst inputting   *
+      *             FX Swap                                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD030858A - Execution timestamp (Date) is not generated when *
@@ -314,6 +317,7 @@
      C
      C                   ENDIF
  
+     C                   SETON                                        LR                    MD054604
      C                   RETURN
       *****************************************************************
       /EJECT

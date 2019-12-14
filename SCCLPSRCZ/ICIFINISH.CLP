@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC058             Date 06Aug12              */
+/*       Last Amend No. MD054423           Date 11Nov19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC058             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27089           Date 08Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054423 - GOC011501 failed due to GPGDRPPD overflow.       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC058 - Change to CCB016 - Bypass of DBBOB Save            */
 /*       BUG27089 - SCKOBJLCB failed                                 */
@@ -275,6 +277,20 @@ SKIP:                                                                           
                           TRGEVENT(*UPDATE) PGM(PB6602) +
                           TRGUPDCND(*CHANGE)                          /*CPB002*/
              ENDDO                                                    /*CPB002*/
+                                                                                        /*MD054423*/
+/** Clear physical file GPGDRPPD                                   **/                  /*MD054423*/
+                                                                                        /*MD054423*/
+             ALCOBJ     OBJ((GPGDRPPD *FILE *EXCL)) WAIT(0)                             /*MD054423*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                         /*MD054423*/
+             GOTO       CMDLBL(TAGC)                                                    /*MD054423*/
+             ENDDO                                                                      /*MD054423*/
+                                                                                        /*MD054423*/
+             CLRPFM     FILE(GPGDRPPD)                                                  /*MD054423*/
+             DLCOBJ     OBJ((GPGDRPPD *FILE *EXCL))                                     /*MD054423*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054423*/
+                                                                                        /*MD054423*/
+ TAGC:                                                                                  /*MD054423*/
+                                                                                        /*MD054423*/
                                                                                         /*BUG27089*/
 /* If background RCF distribution program is not running yet,      */                   /*BUG27089*/
 /* start it up                                                     */                   /*BUG27089*/

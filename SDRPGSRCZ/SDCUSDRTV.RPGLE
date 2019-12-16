@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052297           Date 14Nov19               *
-      *  Prev Amend No. MD053634           Date 21Oct19               *
+      *  Last Amend No. MD048748           Date 16Dec19               *
+      *  Prev Amend No. MD052297           Date 14Nov19               *
+      *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052425           Date 22Aug19               *
       *                 MD050457           Date 06Mar19               *
@@ -149,6 +150,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048748 - Error Authorising Release of a Closed Customer    *
+      *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
@@ -1091,6 +1094,7 @@
      D WCTAX           S              2A                                                      CGL132
      D WWCLAC          S              5A                                                      CGL132
      D CTI006          S              1A                                                    MD030956
+     D CSD007          S              1A                                                    MD048748
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -3511,6 +3515,10 @@
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                               246639
      C                   MOVEL     'USR9474'     MsgIdArr(Ix)                                 246639
      C                   ENDIF                                                                246639
+     C                   IF        CSD023 = 'Y'                                             MD048748
+     C                             AND CSD007 = 'Y'                                         MD048748
+     C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
+     C                   ENDIF                                                              MD048748
      C                   ENDIF                                                                246639
       *                                                                                       CSD007
      C                   ENDSR                                                                CSD007
@@ -5698,6 +5706,28 @@
      C                   EVAL      CTI006 = 'N'                                             MD030956
      C                   ENDIF                                                              MD030956
       *                                                                                     MD030956
+      ** Check if feature CSD007 is switched on.                                            MD048748
+      *                                                                                     MD048748
+     C                   CALLB     'AOSARDR0'                                               MD048748
+     C                   PARM      *BLANKS       @RTCD                                      MD048748
+     C                   PARM      '*VERIFY'     @OPTN                                      MD048748
+     C                   PARM      'CSD007'      @SARD                                      MD048748
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD048748
+                                                                                            MD048748
+     C                   IF        @RTCD  <> *BLANKS AND                                    MD048748
+     C                             @RTCD  <> '*NRF   '                                      MD048748
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD048748
+     C                   EVAL      DBKEY  = 'CSD007'                                        MD048748
+     C                   EVAL      DBASE  = 929                                             MD048748
+     C                   EXSR      *PSSR                                                    MD048748
+     C                   ENDIF                                                              MD048748
+      *                                                                                     MD048748
+     C                   IF        @RTCD  = *BLANKS                                         MD048748
+     C                   EVAL      CSD007 = 'Y'                                             MD048748
+     C                   ELSE                                                               MD048748
+     C                   EVAL      CSD007 = 'N'                                             MD048748
+     C                   ENDIF                                                              MD048748
+      *                                                                                     MD048748
      C/COPY WNCPYSRC,SDCUSDIC05
       *
       * Retrieve System Value 'CustAlphaAllow' & 'CustAlphaSupNumeric' &                      CSD027

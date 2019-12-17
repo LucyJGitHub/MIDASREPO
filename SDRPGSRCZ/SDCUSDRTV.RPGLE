@@ -3406,11 +3406,13 @@
      C                   ENDIF                                                              MD050457
       *                                                                                     MD050457
       ** Customer defined on GTEES.                                                         MD050457
-      ** CASE: WRK.Customer Deln Flag 205 is Do not delete                                  MD050457
+      ***CASE:*WRK.Customer*Deln*Flag*205*is*Do*not*delete*************            MD050457 MD025056
+      ** CASE: WRK.Customer Deln Flag 205 is Do not close                                   MD025056
       ** Customer defined on LEREF.                                                         MD050457
       *                                                                                     MD050457
      C     WDS2005       IFEQ      'F'                                                      MD050457
-     C                   MOVEL     'USR1124'     MsgIdArr(Ix)                               MD050457
+     C**********         MOVEL     'USR1124'     MsgIdArr(Ix)                      MD050457 MD025056
+     C                   MOVEL     '5049330'     MsgIdArr(Ix)                               MD025056
      C                   GOTO      EVALAC                                                   MD050457
      C                   ENDIF                                                              MD050457
       *                                                                                     MD050457
@@ -3453,12 +3455,19 @@
      C                   GOTO      EVALAC                                                     246639
      C                   ENDIF                                                                246639
       *                                                                                     MD025056
-      * FUND TRANSFER CHECKS:                                                               MD025056
-      * Customer defined on OTPAYDD & INPAYDD.                                              MD025056
-      * CASE: WRK.Customer Deln Flag 051 is Do not close                                    MD025056
+      ** Customer defined as an internal customer in SDBRCHPD                               MD025056
+      ** CASE: If Customer Flag 045 is flagged, do not close.                               MD025056
       *                                                                                     MD025056
-     C     WDS2051       IFEQ      'F'                                                      MD025056
-     C                   MOVEL     'USR3968'     MsgIdArr(Ix)                               MD025056
+     C     WDS1045       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049333'     MsgIdArr(Ix)                               MD025056
+     C                   GOTO      EVALAC                                                   MD025056
+     C                   ENDIF                                                              MD025056
+      *                                                                                     MD025056
+      ** Customer defined as a Syndicated Agent in SDBRCHPD                                 MD025056
+      ** CASE: If Customer Flag 044 is flagged, do not close.                               MD025056
+      *                                                                                     MD025056
+     C     WDS1044       IFEQ      'F'                                                      MD025056
+     C                   MOVEL     '5049334'     MsgIdArr(Ix)                               MD025056
      C                   GOTO      EVALAC                                                   MD025056
      C                   ENDIF                                                              MD025056
       *                                                                                     MD025056

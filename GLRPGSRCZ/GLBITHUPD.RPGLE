@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD052732           Date 12Mar19               *
+      *  Last Amend No. MD053119           Date 02Dec19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD052732           Date 12Mar19               *
       *                 249405             Date 09Mar18               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052732 - 4-eyes principle for journal uploads not working  *
       *             Validate by Insert User if Amend User = blank     *
@@ -722,7 +724,9 @@
      C                   IF        CRE023 = 'Y' AND CAP207='N'                              MD036967
      C                             OR CRE023='Y' AND CAP207='Y'                             MD036967
      C                             AND BTDCIN = 'D'                                         MD036967
+     C                   IF        CGL016 = 'Y'                                             MD053119
      C                   EXSR      UPDPOST                                                 AR792734A
+     C                   ENDIF                                                              MD053119
      C                   ENDIF                                                             AR792734A
                                                                                            AR792734A
      C                   DELETE    @BTREAK                                                   BUG3500

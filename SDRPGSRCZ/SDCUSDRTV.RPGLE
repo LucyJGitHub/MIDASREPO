@@ -1101,7 +1101,6 @@
      D WCTAX           S              2A                                                      CGL132
      D WWCLAC          S              5A                                                      CGL132
      D CTI006          S              1A                                                    MD030956
-     D CSD007          S              1A                                                    MD048748
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -3522,10 +3521,6 @@
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                               246639
      C                   MOVEL     'USR9474'     MsgIdArr(Ix)                                 246639
      C                   ENDIF                                                                246639
-     C                   IF        CSD023 = 'Y'                                             MD048748
-     C                             AND CSD007 = 'Y'                                         MD048748
-     C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
-     C                   ENDIF                                                              MD048748
      C                   ENDIF                                                                246639
       ** If parent customer defined and found, re access SDCUSTLR using the                 MD048748
       ** customer number to ensure it is these customer details returned to                 MD048748
@@ -3533,6 +3528,16 @@
      C     *IN44         IFEQ      '0'                                                      MD048748
      C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
      C                   ENDIF                                                              MD048748
+<<<<<<< Upstream, based on branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
+     C                   ENDIF                                                                246639
+      ** If parent customer defined and found, re access SDCUSTLR using the                 MD048748
+      ** customer number to ensure it is these customer details returned to                 MD048748
+      ** SDCUSDUPD                                                                          MD048748
+     C     *IN44         IFEQ      '0'                                                      MD048748
+     C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
+     C                   ENDIF                                                              MD048748
+=======
+>>>>>>> 85995fd [MDSC-30637] Fix Merge of MD-48748
       *                                                                                       CSD007
      C                   ENDSR                                                                CSD007
       *****************************************************************                       CSD031
@@ -5719,28 +5724,6 @@
      C                   EVAL      CTI006 = 'N'                                             MD030956
      C                   ENDIF                                                              MD030956
       *                                                                                     MD030956
-      ** Check if feature CSD007 is switched on.                                            MD048748
-      *                                                                                     MD048748
-     C                   CALLB     'AOSARDR0'                                               MD048748
-     C                   PARM      *BLANKS       @RTCD                                      MD048748
-     C                   PARM      '*VERIFY'     @OPTN                                      MD048748
-     C                   PARM      'CSD007'      @SARD                                      MD048748
-     C     SCSARD        PARM      SCSARD        DSFDY                                      MD048748
-                                                                                            MD048748
-     C                   IF        @RTCD  <> *BLANKS AND                                    MD048748
-     C                             @RTCD  <> '*NRF   '                                      MD048748
-     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD048748
-     C                   EVAL      DBKEY  = 'CSD007'                                        MD048748
-     C                   EVAL      DBASE  = 929                                             MD048748
-     C                   EXSR      *PSSR                                                    MD048748
-     C                   ENDIF                                                              MD048748
-      *                                                                                     MD048748
-     C                   IF        @RTCD  = *BLANKS                                         MD048748
-     C                   EVAL      CSD007 = 'Y'                                             MD048748
-     C                   ELSE                                                               MD048748
-     C                   EVAL      CSD007 = 'N'                                             MD048748
-     C                   ENDIF                                                              MD048748
-      *                                                                                     MD048748
      C/COPY WNCPYSRC,SDCUSDIC05
       *
       * Retrieve System Value 'CustAlphaAllow' & 'CustAlphaSupNumeric' &                      CSD027

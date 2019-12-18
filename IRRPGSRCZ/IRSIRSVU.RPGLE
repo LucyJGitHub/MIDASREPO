@@ -4067,6 +4067,7 @@ RGC                                                                             
      C                   ENDIF                                                  BUG4646
      C                   ENDIF                                                  BUG4646
      C                   ENDIF                                                  BUG4646
+     C                   ENDIF                                                  BUG4646
      C                   ENDSR                                                  BUG4646
       /EJECT                                                                    BUG4646
       *****************************************************************         BUG4646

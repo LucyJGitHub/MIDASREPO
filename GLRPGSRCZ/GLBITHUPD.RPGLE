@@ -86,7 +86,7 @@
       *                                                               *
       *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
-      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052732 - 4-eyes principle for journal uploads not working  *
       *             Validate by Insert User if Amend User = blank     *

@@ -9,53 +9,56 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK025  *CREATE    Date 18Jul06              */
+/*                      CPK025  *CREATE    Date 18Jul06              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK025 - MidasPlus 1.3 packaging.  New migration to handle  */
 /*                customer number changes.                           */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&DBLIB &OPFXSVAL)
- 
+
              DCL        VAR(&DBLIB) TYPE(*CHAR) LEN(3)
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SMC43RTN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPGSVALJ0)
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                              /*MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2006')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Create data area MIDASMSG in QTEMP for screen error handling. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -64,9 +67,9 @@ VALIDATE:
                    CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
 /* Set up messages for Midas Information Screen  */
@@ -77,7 +80,7 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000047' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Create and rename temporary source file for RUNSQLSTM. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -88,18 +91,18 @@ VALIDATE:
                           file for SMC000259')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 /* Set up library name. */
              CHGVAR     VAR(&FROMLIB) VALUE(&OLDSBSID *TCAT &DBLIB +
                           *TCAT 'LIB')
- 
+
              CALL       PGM(SMC000043) PARM(&FROMLIB &SMC43RTN)
              IF         COND(&SMC43RTN *NE ' ') THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('SMC000045') MSG(&MESSAGE)

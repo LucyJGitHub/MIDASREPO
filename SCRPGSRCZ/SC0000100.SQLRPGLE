@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CCB020             Date 06Aug12               *
-      *  Prev Amend No. AR989143           Date 13Jun12               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 AR989143           Date 13Jun12               *
       *                 CBF005             Date 04Jul11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *         - Add additional checking if action is allowed in     *
       *           Phase G                                             *
@@ -227,10 +229,24 @@
       ** Retrieve zone name from System Value file                                          AR989143
       *                                                                                     AR989143
      C/EXEC SQL                                                                             AR989143
-     C+ select GIVAL into :SysValue from SDSVALPD                                           AR989143
+     C**select*GIVAL into :SysValue from SDSVALPD                                  AR989143 MD054605
+     C+ Declare Cursor1 Insensitive scroll cursor for                                       MD054605
+     C+ select GIVAL from SDSVLJW0                                                          MD054605
      C+ where GISVAL = 'ZoneSystemName'                                                     AR989143
      C/END-EXEC                                                                             AR989143
+                                                                                            MD054605
+     C/EXEC SQL                                                                             MD054605
+     C+ Open Cursor1                                                                        MD054605
+     C/END-EXEC                                                                             MD054605
+                                                                                            MD054605
+     C/EXEC SQL                                                                             MD054605
+     C+ FETCH NEXT FROM Cursor1 INTO :SysValue                                              MD054605
+     C/END-EXEC                                                                             MD054605
       *                                                                                     AR989143
+     C/EXEC SQL                                                                             MD054605
+     C+ Close Cursor1                                                                       MD054605
+     C/END-EXEC                                                                             MD054605
+                                                                                            MD054605
      C                   IF        SysValue = *BLANKS                                       AR989143
      C     *LOCK         IN        LDA                                                      AR989143
      C                   EVAL      *INU7 = *ON                                              AR989143

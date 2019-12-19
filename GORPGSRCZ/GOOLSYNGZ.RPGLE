@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD050212           Date 02Apr18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD050231           Date 25Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -106,6 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *

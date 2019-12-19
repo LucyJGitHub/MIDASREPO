@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD020167           Date 23Apr13               *
       *                 CCB023A            Date 06Aug12               *
       *                 AR1092060          Date 27Feb13               *
       *                 AR1089839          Date 19Feb13               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  CCB023A - COB Restructure - Input Cycle Termination          *
@@ -106,7 +108,8 @@
       *
      C/EXEC SQL
      C+ Declare SCursor Insensitive scroll cursor for
-     C+ SELECT GIVAL FROM SDSVALPD WHERE
+     C**SELECT*GIVAL FROM SDSVALPD WHERE                                                    MD054605
+     C+ SELECT GIVAL FROM SDSVLJW0 WHERE                                                    MD054605
      C+ GISVAL = :SVALK1
      C/END-EXEC
       *

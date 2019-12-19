@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR911540           Date 13Jan12              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR911540           Date 13Jan12              */
 /*                      CSC043             Date 18Jun10              */
 /*                      BUG27793           Date 04Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR911540 - Make subsystem description name unique for       */
 /*                  implementation.                                  */
@@ -40,7 +42,7 @@
 /**********  PGM                                                                       */ /*CUP033*/
 /**********  PGM        PARM(&BRGSVAL)  */                                         /*CUP033 CSC043*/
              PGM        PARM(&BRGSVAL &IASPYNSVAL &IASPSVAL)                              /*CSC043*/
- 
+
              DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
              DCL        VAR(&IASPYNSVAL) TYPE(*CHAR) LEN(20)                              /*CSC043*/
              DCL        VAR(&IASPSVAL) TYPE(*CHAR) LEN(20)                                /*CCS043*/
@@ -53,27 +55,28 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
-             DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                      /*CUP033* MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area /MIDASMSG in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:                                                                                 /*CUP033*/
              RCVF                                                                         /*CUP033*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -101,9 +104,9 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&IASP) VALUE(&GIVAL)                                    /*CSC043*/
                 ENDDO                                                                     /*CSC043*/
              ENDDO                                                                        /*CSC043*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
 /**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
 /**Check*if*all*relevant*fields*have*been*entered*in*ICD**/ /*                         */ /*CUP033*/
 /**********  IF         COND(&PTFUPG *EQ ' ') THEN(DO)                                 */ /*CUP033*/
@@ -117,14 +120,14 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('SMC1002' 'ENTER' ' ')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Create message queue. */
              CHKOBJ     OBJ(&PTFUPG/SETUP) OBJTYPE(*MSGQ)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 CRTMSGQ    MSGQ(&PTFUPG/SETUP) TEXT('Midas MSGQ for +
                              implementation') SIZE(10 2)
              ENDDO
- 
+
 /* Create job queue. */
              CHKOBJ     OBJ(&PTFUPG/SMJOBQ) OBJTYPE(*JOBQ)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -132,7 +135,7 @@ VALIDATE:                                                                       
                              JOBQ for implementation') OPRCTL(*NO) +
                              AUTCHK(*DTAAUT) AUT(*CHANGE)
              ENDDO
- 
+
 /* Create second job queue to allow jobs to run simultaneously. */                       /*BG18582*/
              CHKOBJ     OBJ(&PTFUPG/SMJOBQNM) OBJTYPE(*JOBQ)                             /*BG18582*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                          /*BG18582*/
@@ -141,7 +144,7 @@ VALIDATE:                                                                       
                              *NOMAX') OPRCTL(*NO) AUTCHK(*DTAAUT) +
                              AUT(*CHANGE)                                                /*BG18582*/
              ENDDO                                                                       /*BG18582*/
- 
+
 /* Create subsystem description. */
 /**********  CHKOBJ     OBJ(&PTFUPG/SETUP) OBJTYPE(*SBSD)                            */ /*AR911540*/
              CHKOBJ     OBJ(&PTFUPG/&PTFUPG) OBJTYPE(*SBSD)                             /*AR911540*/
@@ -156,7 +159,7 @@ VALIDATE:                                                                       
                              MAXJOBS(20) TEXT('Midas Subsystem for +
                              implementation')                                           /*AR911540*/
              ENDDO
- 
+
 /* Create output queue. */
              CHKOBJ     OBJ(&PTFUPG/SETUP) OBJTYPE(*OUTQ)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -164,7 +167,7 @@ VALIDATE:                                                                       
                              implementation') DSPDTA(*YES) OPRCTL(*NO) +
                              AUTCHK(*DTAAUT) AUT(*CHANGE)
              ENDDO
- 
+
 /* Create class. */
              CHKOBJ     OBJ(&PTFUPG/SMCLSI) OBJTYPE(*CLS)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -175,7 +178,7 @@ VALIDATE:                                                                       
              CHGCLS     CLS(&PTFUPG/SMCLSI) ??RUNPTY(20) +
                           ??TIMESLICE(2000)
              MONMSG     MSGID(CPF6801)
- 
+
 /* Add job queue entry. */
 /**********  RMVJOBQE   SBSD(&PTFUPG/SETUP) JOBQ(SMJOBQ)                             */ /*AR911540*/
              RMVJOBQE   SBSD(&PTFUPG/&PTFUPG) JOBQ(SMJOBQ)                              /*AR911540*/
@@ -201,7 +204,7 @@ VALIDATE:                                                                       
              ADDRTGE    SBSD(&PTFUPG/&PTFUPG) SEQNBR(99) +
                           CMPVAL(*ANY) PGM(QSYS/QCMD) +
                           CLS(&PTFUPG/SMCLSI)                                           /*AR911540*/
- 
+
 /* Create job description. */
              CHKOBJ     OBJ(&PTFUPG/SETUP) OBJTYPE(*JOBD)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -222,7 +225,7 @@ VALIDATE:                                                                       
                              *SECLVL) LOGCLPGM(*YES)
              ENDDO                                                                        /*CSC043*/
              ENDDO
- 
+
 /* Add workstation entry. */
 /**********  RMVWSE     SBSD(&PTFUPG/SETUP) WRKSTNTYPE(*ALL)                         */ /*AR911540*/
              RMVWSE     SBSD(&PTFUPG/&PTFUPG) WRKSTNTYPE(*ALL)                          /*AR911540*/
@@ -240,9 +243,9 @@ VALIDATE:                                                                       
              STRSBS     SBSD(&PTFUPG/&PTFUPG)                                           /*AR911540*/
              MONMSG     MSGID(CPF1010)                                                    /*CPK018*/
              DLYJOB     DLY(10)
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
 /* Set up messages for Midas Information Screen  */
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
@@ -255,7 +258,7 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('SMC1002' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000)
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

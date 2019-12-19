@@ -9,21 +9,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP004  *CREATE    Date 06Oct10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP004  *CREATE    Date 06Oct10              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP004 - New utility to replace SCBEGIN.                    */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &PGM)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AGSUC) TYPE(*CHAR) LEN(1)
@@ -31,30 +33,31 @@
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPSVALJ0)
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                               /*MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area LDA in QTEMP for error handling. */
              DLTDTAARA  DTAARA(QTEMP/LDA)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ')
- 
+
 /* Create data area MIDASMSG in QTEMP for screen error handling. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /* Create and rename temporary source file for RUNSQLSTM. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -65,13 +68,13 @@
                           file for SMC000091 (SCBEGIN)')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -80,9 +83,9 @@ VALIDATE:
                    CHGVAR     VAR(&PFX) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -92,31 +95,31 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000088' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CALL       PGM(UPC0014) PARM(&PFX)
- 
+
              CHGVAR     VAR(&DMLIB) VALUE(&PFX *TCAT 'DMLIB')
- 
+
 /* Check if system set up flag is on; if yes then end program. */
              RTVDTAARA  DTAARA(&DMLIB/RUNDAT (11 1)) RTNVAR(&AGSUC)
              IF         COND(&AGSUC *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&ERRPGM) VALUE('*SETUP')
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Start commitment control. */
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCCMTCTL) PARM('S')
- 
+
 /* Call modular specific program. */
              CALL       PGM(&PGM) PARM(&PFX &ERRPGM)
              IF         COND(&ERRPGM *NE ' ') THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -152,11 +155,11 @@ DSPERR:
                 CALL       PGM(SCC0010) PARM('SMC000091' 'ENTER' ' ')
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
 ENDPGM:
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)
              RCLRSC
              MONMSG     MSGID(CPF0000)
- 
+
              ENDPGM

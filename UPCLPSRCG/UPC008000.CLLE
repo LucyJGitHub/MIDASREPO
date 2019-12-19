@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. CUP021             Date 07Feb11              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. CUP021             Date 07Feb11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK025             Date 02Sep06              */
-/*       Prev Amend No. CSM005             Date 21Sep05              */
+/*                      CPK025             Date 02Sep06              */
+/*                      CSM005             Date 21Sep05              */
 /*                      CUP022  *CREATE    Date 21Apr04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       CUP021 - Rewrite of Action File processing.                 */
 /*       CPK025 - Call GPC000016 to setup global library list        */
 /*       CSM005 - Changes to /COPYs.  Recompile.                     */
@@ -30,50 +32,51 @@
 /**********  PGM        PARM(&MODE)                                                    */ /*CPK025*/
 /**********  PGM        PARM(&MODE &PFXSVAL &OPFXSVAL)                      */ /*CPK025*/ /*CUP021*/
              PGM        PARM(&MODE &PFXSVAL &OPFXSVAL &LAYER)                             /*CUP021*/
- 
+
 /**Mode*can*be*of*three*types:                                    */ /*                */ /*CUP021*/
 /*  *BUILD  - Build only (only valid during implementation)       */
 /****BLDRVW*-*Build*and*review*(only valid during implementation)**/ /*                */ /*CUP021*/
 /*  *REVIEW - Review only (only valid during implementation)      */
- 
+
 /**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CPK025*/
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CPK025*/
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CPK025*/
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)                                    /*CUP021*/
- 
+
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CPK025*/
              DCL        VAR(&OGPSBSID) TYPE(*CHAR) LEN(2)                                 /*CPK025*/
              DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)                                  /*CUP021*/
              DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)                                  /*CUP021*/
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(2)                                /*CPK025*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPGSVALJ0)                                                   /*CPK025*/
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                     /*CPK025* *MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /* Create temporary file to hold error messages. */                                       /*CUP021*/
              DLTF       FILE(QTEMP/UPERRMQT)                                              /*CUP021*/
              MONMSG     MSGID(CPF2105)                                                    /*CUP021*/
              CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
                           TEXT('Temporary file for holding error +
                           messages')                                                      /*CUP021*/
- 
+
 /**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CPK025*/
- 
+
 /**Check*if*old*GP*system*prefix*and*GP*system*prefix*have*been*entered.**/ /*         */ /*CPK025*/
 /**********  IF         COND(&OGPSBSID *EQ ' ' *OR &GPSBSID *EQ ' ') +                 */ /*CPK025*/
 /**********               THEN(DO)                                                     */ /*CPK025*/
@@ -82,7 +85,7 @@ VALIDATE:                                                                       
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CPK025*/
                 GOTO       CMDLBL(CHECK)                                                  /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CPK025*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CPK025*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CPK025*/
@@ -91,7 +94,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)                                 /*CPK025*/
                 ENDDO                                                                     /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)                              /*CPK025*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CPK025*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CPK025*/
@@ -100,9 +103,9 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&OGPSBSID) VALUE(&GIVAL)                                /*CPK025*/
                 ENDDO                                                                     /*CPK025*/
              ENDDO                                                                        /*CPK025*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CPK025*/
- 
+
  CHECK:                                                                                   /*CPK025*/
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CPK025*/
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -112,15 +115,15 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('UPC008000' 'ENTER' ' ')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Save library list. */                                                                  /*CUP021*/
              SAVLIBL    SAVDTL(UPC008000)                                                 /*CUP021*/
- 
+
 /* Set up library list. */                                                                /*CPK025*/
              CALL       PGM(GPC000016) PARM(&GPSBSID)                                     /*CPK025*/
- 
+
              CLRPFM     FILE(UPAFCPPD)                                                    /*CUP021*/
- 
+
 /**Copy*UPGPACTFPD*file*to*temporary*version.**/ /*                                    */ /*CUP021*/
 /**********  DLTF       FILE(QTEMP/UPGPACTFQT)                                         */ /*CUP021*/
 /* Copy UPACTFPD file to temporary version. */                                            /*CUP021*/
@@ -131,10 +134,10 @@ VALIDATE:                                                                       
              CPYF       FROMFILE(UPACTFPD) TOFILE(QTEMP/UPACTFQT) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           INCCHAR(AALAYR 1 *EQ &LAYER)                                    /*CUP021*/
- 
+
              CHGVAR     VAR(&OLDLIB) VALUE(&OGPSBSID *TCAT 'GTALIB')                      /*CUP021*/
              CHGVAR     VAR(&NEWLIB) VALUE(&GPSBSID *TCAT 'GTALIB')                       /*CUP021*/
- 
+
 /**Call*program*to*check*Action*Files.**/ /*                                           */ /*CUP021*/
 /**********  CALL       PGM(UPC008001) PARM(&MODE &OGPSBSID &GPSBSID)                  */ /*CUP021*/
              CALL       PGM(UPC008001) PARM(&MODE &OLDLIB &NEWLIB)                        /*CUP021*/
@@ -145,9 +148,9 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('UPC008001' 'JOBLOG' 'Y')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('UPC008000') MSG(&MESSAGE)
@@ -159,10 +162,10 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('UPC008000' 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
 /* Restore original library list. */                                                      /*CUP021*/
              RSTLIBL    SAVEDLIBL(UPC008000)                                              /*CUP021*/
              MONMSG     MSGID(CPF0000)                                                    /*CUP021*/
- 
+
              ENDPGM

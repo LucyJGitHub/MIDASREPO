@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *
       *****************************************************************
@@ -78,7 +80,7 @@
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                                MD054605
      D SDCRSH        E DS                  EXTNAME(SDCRSHPD)
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       *

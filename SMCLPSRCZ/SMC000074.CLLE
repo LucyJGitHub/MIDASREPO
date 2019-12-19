@@ -9,22 +9,24 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP003             Date 04Aug10              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP003             Date 04Aug10              */
 /*                      BUG27793 *CREATE   Date 07Jun10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP003 - Handle unique key problems better.                 */
 /*       BUG27793 - Make migration multi-streamed.                   */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &MODE)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
- 
+
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&TOTAL) TYPE(*CHAR) LEN(6)
@@ -36,30 +38,31 @@
              DCL        VAR(&SKIP) TYPE(*CHAR) LEN(6)
              DCL        VAR(&NFOUND) TYPE(*CHAR) LEN(6)
              DCL        VAR(&WAIT) TYPE(*CHAR) LEN(6)
- 
+
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
- 
-             DCLF       FILE(UPSVALJ0)
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                               /*MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2007')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Create data area MIDASMSG in QTEMP. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -68,9 +71,9 @@ VALIDATE:
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
 /* Set up messages for Midas Information Screen  */
@@ -81,15 +84,15 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000074' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Set up library list. */
              CALL       PGM(UPC0014) PARM(&SBSID)
- 
+
 /* If display requested then show screen for 'not found' objects. */
              IF         COND(&MODE *EQ '*DSP') THEN(DO)
                 CALL       PGM(SM000022)
              ENDDO
- 
+
 /* If report requested then check statuses and report. */
              IF         COND(&MODE *EQ '*RPT') THEN(DO)
 /* Call program to check statuses. */
@@ -97,7 +100,7 @@ VALIDATE:
 /**********                  &PASSED &FAILED &SKIP &NFOUND &WAIT)                      */ /*CUP003*/
                 CALL       PGM(SM000009) PARM(&TOTAL &SUBMIT &ACTIVE +
                              &PASSED &FAILED &UNIQUE &SKIP &NFOUND &WAIT)                 /*CUP003*/
- 
+
 /* Display status on screen. */
                 CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('Total +
                              objects to be migrated         :      ' +
@@ -134,9 +137,9 @@ VALIDATE:
                              *CAT &SKIP)                                                  /*CUP003*/
                 CALL       PGM(SCC0010) PARM('SMC000074' 'ENTER' ' ')
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
  ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('SMC000074') MSG(&MESSAGE)

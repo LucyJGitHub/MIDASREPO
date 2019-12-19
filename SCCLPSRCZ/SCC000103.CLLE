@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CBF005             Date 04Jul11              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CBF005             Date 04Jul11              */
 /*                      CSC043             Date 18Jun10              */
 /*                      BUG27134           Date 01Oct08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD.             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CBF005 - BF Infrastructure: Single Security User Maintenance*/
 /*                Profile                                            */
@@ -37,11 +39,11 @@
 /*       CSC024 - Open Month End                                     */
 /*                                                                   */
 /*********************************************************************/
- 
+
 /**********  PGM        PARM(&PRTCD &PRFL &PRFO &DEV &ZONE)          */                  /*BUG8328*/
              PGM        PARM(&PRTCD &PRFL &PRFO &DEV &DBICSQ +
                           &DBICDTSQ &ZONE)                                               /*BUG8328*/
- 
+
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)
              DCL        VAR(&PRFO) TYPE(*CHAR) LEN(2)
@@ -50,7 +52,7 @@
              DCL        VAR(&DBICDTSQ) TYPE(*CHAR) LEN(10)                               /*BUG8328*/
              DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&COBIND) TYPE(*CHAR) LEN(10) VALUE(' ')
- 
+
              DCL        VAR(&DMLIBL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DMLIBO) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTALIBL) TYPE(*CHAR) LEN(10)
@@ -62,7 +64,7 @@
              DCL        VAR(&DUMDT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DUMDI) TYPE(*CHAR) LEN(10)                                  /*BUG8328*/
              DCL        VAR(&DOWNER) TYPE(*CHAR) LEN(10)                                 /*BUG8404*/
- 
+
              DCL        VAR(&SBS) TYPE(*CHAR) LEN(6)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)
              DCL        VAR(&JBNM) TYPE(*CHAR) LEN(10)
@@ -73,9 +75,9 @@
              DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
              DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
 /*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
- 
+
 /** Global Monitor Message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(NOCOPY))
 /*                                                                                        /*CSC043*/
@@ -102,11 +104,11 @@
                                                                                           /*CSC043*/
              ENDDO                                                                        /*CSC043*/
                                                                                           /*CSC043*/
- 
+
 /** Retrieve Job attribute */
- 
+
              RTVJOBA    JOB(&JBNM)
- 
+
              CHGVAR     VAR(&SBS) VALUE('M' *CAT &PRFO *CAT +
                           'SBS')
              CHGVAR     VAR(&DMLIBL) VALUE(&PRFL *CAT 'DMLIB')
@@ -120,20 +122,20 @@
              CHGVAR     VAR(&DUMDT) VALUE(&PRFO *CAT 'DUMDT')
              CHGVAR     VAR(&DUMDI) VALUE(&PRFO *CAT 'DUMDI')                            /*BUG8328*/
              CHGVAR     VAR(&DOWNER) VALUE(&PRFO *CAT 'OWNER')                           /*BUG8404*/
- 
+
 /** Remove all triggers */
- 
+
              TRIGZONE   FILE(*ALL) ACTION(*RMVTRIG)
- 
+
 /** Create the OME status data area */
- 
+
              CRTDTAARA  DTAARA(&DPLIBO/OMESTAT) TYPE(*CHAR) LEN(1) +
                           VALUE(' ') TEXT('OME System Set-up Status')
              MONMSG     MSGID(CPF1023) EXEC(CHGDTAARA +
                           DTAARA(OMESTAT) VALUE(' '))
- 
+
 /** Create file back-up */
- 
+
              DLTF       FILE(&DPLIBO/XMUSERDD)
              MONMSG     MSGID(CPF0000)
 /**********  DLTF       FILE(&DPLIBO/XMACBRDD)   */                                       /*CBF005*/
@@ -146,11 +148,17 @@
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(&DPLIBO/XMUSERZZ)
              MONMSG     MSGID(CPF0000)
-             DLTF       FILE(&DPLIBO/XSDSVALPD)
-             MONMSG     MSGID(CPF0000)
+/**********  DLTF       FILE(&DPLIBO/XSDSVALPD) */                                      /*MD054605*/
+/**********  MONMSG     MSGID(CPF0000) */                                               /*MD054605*/
+             DLTF       FILE(&DPLIBO/XSDSVLCTD)                                         /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
+             DLTF       FILE(&DPLIBO/XSDSVLBTD)                                         /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
+             DLTF       FILE(&DPLIBO/XSDSVLXTD)                                         /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
              DLTF       FILE(&DPLIBO/XSFACAUPD)                                          /*BUG8501*/
              MONMSG     MSGID(CPF0000)                                                   /*BUG8501*/
- 
+
              CPYF       FROMFILE(&DTALIBO/MUSERDD) +
                           TOFILE(&DPLIBO/XMUSERDD) CRTFILE(*YES)
 /**********  CPYF       FROMFILE(&DTALIBO/MACBRDD) +
@@ -163,8 +171,14 @@
                           TOFILE(&DPLIBO/XMCMPSDD) CRTFILE(*YES)
              CPYF       FROMFILE(&DTALIBO/MUSERZZ) +
                           TOFILE(&DPLIBO/XMUSERZZ) CRTFILE(*YES)
-             CPYF       FROMFILE(&DTALIBO/SDSVALPD) +
-                          TOFILE(&DPLIBO/XSDSVALPD) CRTFILE(*YES)
+/**********  CPYF       FROMFILE(&DTALIBO/SDSVALPD) +
+                          TOFILE(&DPLIBO/XSDSVALPD) CRTFILE(*YES) */                    /*MD054605*/
+             CPYF       FROMFILE(&DTALIBO/SDSVLCTD) +
+                          TOFILE(&DPLIBO/XSDSVLCTD) CRTFILE(*YES)                       /*MD054605*/
+             CPYF       FROMFILE(&DMLIBO/SDSVLBTD) +
+                          TOFILE(&DPLIBO/XSDSVLBTD) CRTFILE(*YES)                       /*MD054605*/
+             CPYF       FROMFILE(&DMLIBO/SDSVLXTD) +
+                          TOFILE(&DPLIBO/XSDSVLXTD) CRTFILE(*YES)                       /*MD054605*/
                                                                                          /*BUG8501*/
              CPYF       FROMFILE(&DMLIBO/SFACAUPD) +
                           TOFILE(&DPLIBO/XSFACAUPD) CRTFILE(*YES)                        /*BUG8501*/
@@ -195,16 +209,16 @@
                           AUT(*ALL) ASPDEV(&IASP)                                         /*CSC043*/
              ENDDO                                                                        /*CSC043*/
              ELSE       CMD(DO)                                                           /*CSC043*/
- 
+
 /** Create dummy library to hold data of xxDMLIB */
- 
+
              DLTLIB     LIB(&DUMDM)
              MONMSG     MSGID(CPF2110)
              CRTLIB     LIB(&DUMDM) TEXT('Dummy library for OME') +
                           AUT(*ALL)
- 
+
 /** Create dummy library to hold data of xxDTALIB */
- 
+
              DLTLIB     LIB(&DUMDT)
              MONMSG     MSGID(CPF2110)
              CRTLIB     LIB(&DUMDT) TEXT('Dummy library for OME') +
@@ -217,14 +231,14 @@
              CRTLIB     LIB(&DUMDI) TEXT('Dummy library for OME') +
                           AUT(*ALL)                                                      /*BUG8328*/
              ENDDO                                                                        /*CSC043*/
- 
+
 /** Ensure that OME subsytem is active */
- 
+
              STRSBS     SBSD(&SBS)
              MONMSG     MSGID(CPF1010)
- 
+
 /** Restore databse */
- 
+
 /**********  SBMJOB     CMD(CALL PGM(SCC000104) PARM(&DMLIBL +
                           &DTALIBL &DILIBL &DUMDM &DUMDT &DEV +
                           &JBNM)) JOB(SCC000104)                     */                  /*BUG8328*/
@@ -236,46 +250,46 @@
                           &DTALIBL &DILIBL &DUMDM &DUMDT &DUMDI +
                           &DEV &DBICSQ &DBICDTSQ &JBNM &IASP_YN +
                           &IASP)) JOB(SCC000104)                                          /*CSC043*/
- 
+
 OMESTAT:     RTVDTAARA  DTAARA(OMESTAT) RTNVAR(&OMESTAT)
              IF         COND(&OMESTAT *EQ ' ') THEN(DO)
              DLYJOB     DLY(30)
              GOTO       OMESTAT
              ENDDO
- 
+
              IF         COND(&OMESTAT *EQ 'F') THEN(GOTO +
                           CMDLBL(NOCOPY))
- 
+
 /** End subsystem to make sure no jobs are running */
- 
+
  ENDSBS:     ENDSBS     SBS(&SBS) OPTION(*IMMED)
              MONMSG     MSGID(CPF1054) EXEC(GOTO CMDLBL(ENDJRN))
              MONMSG     MSGID(CPF1034 CPF1035 CPF1055 CPF1056)
- 
+
              DLYJOB     DLY(30)
              GOTO       CMDLBL(ENDSBS)
- 
+
 /** End physical file journaling. */
- 
+
  ENDJRN:     ENDJRNAP   FILE(*ALL) JRN(&JLIBO/ICJRN)
              MONMSG     MSGID(CPF0000)
              ENDJRNPF   FILE(*ALL) JRN(&JLIBO/ICJRN)
              MONMSG     MSGID(CPF0000)
              ENDJRNOBJ  OBJ(*ALL) OBJTYPE(*ALL) JRN(&JLIBO/ICJRN)
              MONMSG     MSGID(CPF0000)
- 
+
 /** Delete ICJRN and journal receivers */
- 
+
              DLTJRN     JRN(&JLIBO/ICJRN)
              MONMSG     MSGID(CPF2105)
              CHGJOB     INQMSGRPY(*DFT)
- 
+
              DLTJRNRCV  JRNRCV(&JLIBO/IR*)
              MONMSG     MSGID(CPF2105 CPF2125)
              CHGJOB     INQMSGRPY(*RQD)
- 
+
 /** Create ICJRN and journal receivers */
- 
+
              CRTJRNRCV  JRNRCV(&JLIBO/IR00000001) TEXT('IC +
                           Journal Receiver')
              MONMSG     MSGID(CPF0000)
@@ -287,45 +301,45 @@ OMESTAT:     RTVDTAARA  DTAARA(OMESTAT) RTNVAR(&OMESTAT)
              MONMSG        MSGID(CPF0000)
              CHGOBJOWN  OBJ(&JLIBO/ICJRN) OBJTYPE(*JRN) +
                           NEWOWN(&DOWNER)                                                /*BUG8404*/
- 
+
 /** Copy data from dummy library to OME library. */
- 
+
              CALL       PGM(SCC000105) PARM(&DUMDM &DUMDT &DMLIBO +
                           &DTALIBO &JBNM)
              RTVDTAARA  DTAARA(OMESTAT) RTNVAR(&OMESTAT)
              IF         COND(&OMESTAT *EQ 'F') THEN(GOTO +
                           CMDLBL(NOCOPY))
- 
+
 /** Clear each table that contains the generated 'next available  +
     transaction numbers'. */
- 
+
              CLRPFM     FILE(CADLFAPP)
              CLRPFM     FILE(ZAAVFFPD)
              CLRPFM     FILE(ZAAVSDPD)
              CLRPFM     FILE(ZAAVSTPD)
- 
+
 /** Update Data areas */
- 
- 
+
+
 SDSTAT:      CHGDTAARA  DTAARA(&DMLIBO/SDSTAT (6 2)) VALUE(&PRFO)
- 
+
              CALL       PGM(AOMMODR0) PARM('*DBERR' '*FIRST' &MMOD)
- 
+
 TIDTA:       IF         COND(%SST(&MMOD 103 1) *EQ 'Y') THEN(+
                 CHGDTAARA  DTAARA(&DMLIBO/TIDTA (11 2)) VALUE(&PRFO))
- 
- 
+
+
 CGDTA:       IF         COND(%SST(&MMOD 101 1) *EQ 'Y') THEN(+
                 CHGDTAARA  DTAARA(&DMLIBO/CGDTA (7 2)) VALUE(&PRFO))
- 
+
 CFSTAT:      IF         COND(%SST(&MMOD 70 1) *EQ 'Y') THEN(DO)
                 CHGDTAARA  DTAARA(&DMLIBO/CFSTAT (1 2)) VALUE(&PRFO)
                 CHGDTAARA  DTAARA(&DMLIBO/CFSTAT (4 2)) VALUE(&PRFO)
              ENDDO
- 
+
 MSSTAT:      CHGDTAARA  DTAARA(&DMLIBO/MSSTAT (255 2)) VALUE(&PRFO)
              MONMSG     MSGID(CPF1015)
- 
+
 RPTRG:       CHGDTAARA  DTAARA(&DMLIBO/RPTRG (1 2)) VALUE(&PRFO)
              MONMSG     MSGID(CPF1015)
              CHGDTAARA  DTAARA(&DMLIBO/RPTRG (21 2)) VALUE(&PRFO)
@@ -334,77 +348,77 @@ RPTRG:       CHGDTAARA  DTAARA(&DMLIBO/RPTRG (1 2)) VALUE(&PRFO)
              MONMSG     MSGID(CPF1015)
              CHGDTAARA  DTAARA(&DMLIBO/RPTRG (49 2)) VALUE(&PRFO)
              MONMSG     MSGID(CPF1015)
- 
+
 CFBRCHPD:    OVRDBF     FILE(CFBRCHPD) TOFILE(&DMLIBO/CFBRCHPD)
              CALL       PGM(UP8005) PARM(&PRFO)
              DLTOVR     FILE(CFBRCHPD)
- 
+
 MSSENDPD:    OVRDBF     FILE(MSSENDPD) TOFILE(&DMLIBO/MSSENDPD)
              CALL       PGM(UP8006) PARM(&PRFL &PRFO)
              DLTOVR     FILE(MSSENDPD)
- 
+
 MSRCVFPD:    OVRDBF     FILE(MSRCVFPD) TOFILE(&DMLIBO/MSRCVFPD)
              CALL       PGM(UP8016) PARM(&PRFL &PRFO)
              DLTOVR     FILE(MSRCVFPD)
- 
+
 MPHAS:       CHGDTAARA  DTAARA(&DMLIBO/MPHAS (1 1)) VALUE('A')
- 
+
 /** Delete dummy libraries */
- 
+
              DLTLIB     LIB(&DUMDM)
              DLTLIB     LIB(&DUMDT)
              DLTLIB     LIB(&DUMDI)                                                      /*BUG8328*/
- 
+
 /** Set-up OME Subscriber Status */
- 
+
 RPLYST:      RMVM       FILE(SCOMETXT) MBR(OME)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ADDPFM     FILE(SCOMETXT) MBR(OME) SRCTYPE(TXT)
              CALL       PGM(SC000106) PARM(&ZONE &COBIND &PRTCD)
              IF         COND(&PRTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
- 
+
 /** Update T_TRPLYST */
- 
+
              RUNSQLSTM  SRCFILE(SCOMETXT) SRCMBR(OME) +
                COMMIT(*NONE)
              RMVM       FILE(SCOMETXT) MBR(OME)
- 
+
 /** Setup the zonal system */
- 
+
 /**********  CALL      PGM(UPC0014CM) PARM(&PRFO)                                    */ /*BUG27134*/
              CALL      PGM(UPC0014) PARM(&PRFO)                                         /*BUG27134*/
- 
+
 /** Ensure that OME subsytem is active */
- 
+
              STRSBS     SBSD(&SBS)
              MONMSG     MSGID(CPF1010)
- 
+
 /** Start journaling of the physical files */
- 
+
 /**********  CALL       PGM(SCBEGINJRN) PARM(&PRFO)                                  */ /*BUG27134*/
              JRNZONE    PFX(&PRFO) ACTION(*START)                                       /*BUG27134*/
              MONMSG     MSGID(CPF0000)
- 
+
 /** Add all triggers */
- 
+
              TRIGZONE   FILE(*ALL) ACTION(*ADDTRIG)
- 
+
              GOTO       CMDLBL(ENDP)
- 
+
 NOCOPY:      SNDPGMMSG  MSG('No data was restored to OME System') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000)
- 
+
 ABNOR:       SNDPGMMSG  MSG('Program SCC000103 ended Abnormally') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&PRTCD) VALUE('*ERROR ')
- 
+
 ENDP:
- 
+
 /** Restore System values of OME system */
- 
+
              CPYF       FROMFILE(&DPLIBO/XMUSERDD) +
                           TOFILE(&DTALIBO/MUSERDD) MBROPT(*REPLACE) +
                           CRTFILE(*NO)
@@ -429,16 +443,28 @@ ENDP:
                           TOFILE(&DTALIBO/MUSERZZ) +
                           MBROPT(*REPLACE) CRTFILE(*NO)
              MONMSG     MSGID(CPF0000)
-             CPYF       FROMFILE(&DPLIBO/XSDSVALPD) +
+/**********  CPYF       FROMFILE(&DPLIBO/XSDSVALPD) +
                           TOFILE(&DTALIBO/SDSVALPD) +
-                          MBROPT(*REPLACE) CRTFILE(*NO)
-             MONMSG     MSGID(CPF0000)
+                          MBROPT(*REPLACE) CRTFILE(*NO) */                              /*MD054605*/
+/**********  MONMSG     MSGID(CPF0000) */                                               /*MD054605*/
+             CPYF       FROMFILE(&DPLIBO/XSDSVLCTD) +
+                          TOFILE(&DTALIBO/SDSVLCTD) +
+                          MBROPT(*REPLACE) CRTFILE(*NO)                                 /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
+             CPYF       FROMFILE(&DPLIBO/XSDSVLBTD) +
+                          TOFILE(&DMLIBO/SDSVLBTD) +
+                          MBROPT(*REPLACE) CRTFILE(*NO)                                 /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
+             CPYF       FROMFILE(&DPLIBO/XSDSVLXTD) +
+                          TOFILE(&DMLIBO/SDSVLXTD) +
+                          MBROPT(*REPLACE) CRTFILE(*NO)                                 /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
                                                                                          /*BUG8501*/
              CPYF       FROMFILE(&DPLIBO/XSFACAUPD) +
                           TOFILE(&DMLIBO/SFACAUPD) +
                           MBROPT(*REPLACE) CRTFILE(*NO)                                  /*BUG8501*/
              MONMSG     MSGID(CPF0000)                                                   /*BUG8501*/
- 
+
              DLTF       FILE(&DPLIBO/XMUSERDD)
              MONMSG     MSGID(CPF0000)
 /**********  DLTF       FILE(&DPLIBO/XMACBRDD)   */                                       /*CBF005*/
@@ -451,15 +477,21 @@ ENDP:
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(&DPLIBO/XMUSERZZ)
              MONMSG     MSGID(CPF0000)
-             DLTF       FILE(&DPLIBO/XSDSVALPD)
-             MONMSG     MSGID(CPF0000)
+/**********  DLTF       FILE(&DPLIBO/XSDSVALPD) */                                      /*MD054605*/
+/**********  MONMSG     MSGID(CPF0000) */                                               /*MD054605*/
+             DLTF       FILE(&DPLIBO/XSDSVLCTD)                                         /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
+             DLTF       FILE(&DPLIBO/XSDSVLBTD)                                         /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
+             DLTF       FILE(&DPLIBO/XSDSVLXTD)                                         /*MD054605*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054605*/
              DLTF       FILE(&DPLIBO/XSFACAUPD)                                          /*BUG8501*/
              MONMSG     MSGID(CPF0000)                                                   /*BUG8501*/
- 
+
              DLTDTAARA  DTAARA(OMESTAT)
              MONMSG     MSGID(CPF0000)
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

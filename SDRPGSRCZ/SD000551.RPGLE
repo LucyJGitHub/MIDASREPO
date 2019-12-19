@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
       *  Prev Amend No. MD050212           Date 02Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039670           Date 26Jul16               *
@@ -27,7 +27,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039670 - FATCA Housekeeping program                        *
@@ -43,59 +43,59 @@
       *                                                               *
       *****************************************************************
      FSD000551DFCF   E             WORKSTN INFSR(*PSSR)
- 
+
       ** FATCA Customers for Classfn Update - List
      FSDFTCSL5  UF   E           K DISK
- 
+
       ** FATCA Non-Account Holders for Classfn Update - List
      FSDFTNHL5  UF   E           K DISK
- 
+
       ** Normal FATCA Customers Classfn Update File - Driver
      FSDNACUPD  UF A E             DISK
- 
+
       ** Main Customer Details File - Keyed
      FSDCUSTL0  IF   E           K DISK
- 
+
       ** Main Non-Account Holders File - Keyed
      FSDNAHOL0  IF   E           K DISK
- 
+
       ** Customer Extension
      FSDCUSXL0  IF   E           K DISK
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** External DS for Bank Details ICD retrieval
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                                MD054605
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
      D SDNACU        E DS                  EXTNAME(SDNACUPD)
      D SCRN_WVAL     E DS                  EXTNAME(SD000551DF:SD000551D0)
      D                                     PREFIX(W)
- 
+
      D CMDXC           S             50    DIM(1) CTDATA PERRCD(1)
      D ##OV1           S             50    DIM(1) CTDATA PERRCD(1)
      D ##OV2           S             50    DIM(1) CTDATA PERRCD(1)
      DPSDS            SDS
- 
+
       ** Procedure name
      D PSProcName        *PROC
- 
+
       ** Job name
      D PSJobName             244    253
- 
+
       ** User name
      D PSUser                254    263
       *
@@ -109,7 +109,7 @@
      D DetMode         S              1A
      D DetRetCode      S              7A
      D DetClsCode      S              5A
- 
+
       ** Data structure for AOSVALR0 string
      D P@VL01          DS           200
      D  WUsTinBrRqd            1      1
@@ -124,12 +124,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WSFlRRN         S              4  0
      D WValErr         S              1
      D RtvInvoked      S              1
@@ -154,7 +154,7 @@
      D WClsCdValKey    S              5A   INZ(*Blanks)
      D WClsCdValCod    S              5A   INZ(*Blanks)
      D WClsCdValDsc    S             50A   INZ(*Blanks)
- 
+
      D UsrActn         S              1A   INZ(*Blanks)
      D IsUsrAuth       S              1A   INZ('N')
      D InpRevwOK       S              1  0 INZ(0)
@@ -165,7 +165,7 @@
      D PRTCD           S              7                                                     MD039670
      D POPTN           S              7                                                     MD039670
      D PKEY1           S             10                                                     MD039670
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -261,15 +261,15 @@
       *
       ** Do While - validation fails and main menu / previous not invoked
       *
- 
+
      C**********         WRITE     SD000551F0                                               MD027334
      C**********         EXFMT     SD000551D0                                               MD027334
- 
+
      C                   DOW       (WValErr = '1'
      C                             or InpRevwOK = 0)
      C                             and *INKC = *OFF
      C                             and *INKJ = *OFF
- 
+
      C                   EXSR      RstScrnInd
      C                   EXSR      ClrMsgQue
      C                   WRITE     #MSGCTL
@@ -285,7 +285,7 @@
      C                   EXSR      ZASNMS
      C                   WRITE     #MSGCTL
      C                   ENDIF
- 
+
      C                   WRITE     SD000551F0
      C                   EXFMT     SD000551D0
       **
@@ -316,7 +316,7 @@
      C                   IF        *INKC = *ON or *INKJ = *ON
      C                   EVAL      Step = 'T'
      C                   ENDIF
- 
+
      C     GetInputsE    ENDSR
       *******************************************************************
       /EJECT
@@ -335,10 +335,10 @@
      C                   EVAL      UsrActn = 'U'
      C                   EVAL      *INKM = *OFF
      C                   ENDIF
- 
+
       ** Check Action Againsts User Authority
      C                   EVAL      IsUsrAuth = 'Y'
- 
+
      C                   ENDSR
       *
       /EJECT
@@ -354,7 +354,7 @@
      C                   CALL      'SD000553'
      C                   PARM      UsrActn       PMode
      C                   ENDIF                                                              MD027209
- 
+
      C                   EVAL      PrcComplete = 1
      C                   EVAL      Step = 'L'
      C                   IF        UsrActn = 'U'
@@ -393,7 +393,7 @@
      C                   EVAL      WNACCD2 = NACCD2
      C                   EVAL      WNAINF1 = NAINF1
      C                   EVAL      WNAINF2 = NAINF2
- 
+
       ** Both Low and Medium Value Classification Codes are blank
      C**********         IF        %trim(WNACCO1) = *BLANKS                                 MD027334
      C**********                   and %trim(WNACCO2) = *BLANKS                             MD027334
@@ -408,7 +408,7 @@
      C**********         EVAL      NACCD2 = *BLANKS                                         MD027334
      C**********         GOTO      ValInputE                                                MD027334
      C**********         ENDIF                                                              MD027334
- 
+
       ** Classification Code for Low Value Account Customers
      C                   IF        WNACCO1 <> *BLANKS
      C                   EVAL      WClsCdValCod = WNACCO1
@@ -428,7 +428,7 @@
      C                   ENDIF
      C                   EVAL      NACCO1 = WNACCO1
      C                   EVAL      NACCD1 = WNACCD1
- 
+
       ** FATCA Information Complete for Low Value Customers
      C                   IF        NAINF1 <> *BLANKS
      C                             and  NAINF1 <> 'A'
@@ -441,7 +441,7 @@
      C                   EVAL      WValErr = '1'
      C                   GOTO      ValInputE
      C                   ENDIF
- 
+
       ** Classification Code for Medium Value Account Customers
      C                   IF        WNACCO2 <> *BLANKS
      C                   EVAL      WClsCdValCod = NACCO2
@@ -461,7 +461,7 @@
      C                   ENDIF
      C                   EVAL      NACCO2 = WNACCO2
      C                   EVAL      NACCD2 = WNACCD2
- 
+
       ** FATCA Information Complete for Medium Value Customers
      C                   IF        NAINF2 <> *BLANKS
      C                             and  NAINF2 <> 'A'
@@ -474,7 +474,7 @@
      C                   EVAL      WValErr = '1'
      C                   GOTO      ValInputE
      C                   ENDIF
- 
+
       ** If Update Mode, Check Files Allocations
      C                   IF        *INKM = *ON
      C                   EVAL      LckRlsFlag = '*LOCK'
@@ -487,7 +487,7 @@
      C                   EVAL      WValErr = '1'
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ValInputE     ENDSR
       *******************************************************************
       /EJECT
@@ -503,7 +503,7 @@
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      'SDC000551'   PCallerPGM       10
      C                   PARM      LckRlsFlag    PModeLck          7
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   EVAL      IsFileLocked = 'Y'
      C                   ENDIF
@@ -529,7 +529,7 @@
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM      WClsCdValCod  @CLAC             5
      C     SDFATC        PARM      SDFATC        DSFDY
- 
+
      C                   IF        WClsCdValCod = '?'
      C                   EVAL      WClsCdValCod = *BLANKS
      C                   ENDIF
@@ -537,20 +537,20 @@
      C                   EVAL      WClsCdValCod = FCCODE
      C                   EVAL      WClsCdValDsc = FCDESC
      C                   ENDIF
- 
+
      C                   ENDIF
       ** Error Processing
       ** Error on input validation
      C                   IF        @RTCD <> *BLANKS
      C                             and WValErr = '0'
      C                   EVAL      WValErr = '1'
- 
+
       ** Error on initialisation
      C                   ELSEIF    @RTCD <> *BLANKS
      C                             and WValErr <> '0'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     RtvClassfnE   ENDSR
       *******************************************************************
       /EJECT
@@ -564,7 +564,7 @@
      C                   CALL      'SD000552'
      C                   PARM      *BLANKS       PRetCode          7
      C                   PARM      UsrActn       PMode
- 
+
      C                   IF        PRetCode = '*PREV'
      C                   EVAL      Step = 'I'
      C                   EVAL      InpRevwOK = 0
@@ -588,7 +588,7 @@
      C**********         PARM      BBCUST        PCustNo                                    MD027334
      C                   PARM      FACUST        PCustNo                                    MD027334
      C     SDACUS        PARM      SDACUS        DSLDY
- 
+
       ** Classification Code neither blank nor defaulted.
      C                   IF        FACLAC <> *BLANKS
      C                             and FACLAC <> WDftClsTkOn
@@ -667,7 +667,7 @@
       *******************************************************************
       *
      C     SetInfoCNAHO  BEGSR
- 
+
       ** Classification Code neither blank nor defaulted.
      C                   IF        FNCLAC <> *BLANKS
      C                             and FNCLAC <> WDftClsTkOn
@@ -769,10 +769,10 @@
      C                             NACCO2 <> *BLANKS and                                    MD026826
      C**********                   NACCO2 <> FACLAC                                MD026826 MD027334
      C                             NACCO2 <> FACLAC)                                        MD027334
- 
+
      C                   EVAL      NCCUST = FACUST
      C                   EVAL      NCNAHO = *Blanks
- 
+
      C     NCCUST        CHAIN     @BBREBG                            90
      C                   IF        %FOUND = '1'
      C     BBCUST        CHAIN     SDCUSXL0
@@ -793,14 +793,14 @@
      C                   ELSE                                                               MD027334
      C                   EVAL      NCCCLS = FAPCLA                                          MD027334
      C                   ENDIF                                                              MD027334
- 
+
      C                   EVAL      WClsCdValCod = NCCCLS
      C                   EXSR      RtvClassfn
      C                   EVAL      NCCCLD = WClsCdValDsc
- 
+
      C                   EXSR      GetNewClass
      C                   EXSR      SetInfoCCUST
- 
+
       ** Load to Driving File
       ** Only if details were changed                                                       MD027334
      C                   IF        NCCCLS <> FAPCLA                                         MD027334
@@ -823,7 +823,7 @@
      C                             AND FAHVAC = 'M'                                         MD027334
      C                   EXSR      WrtToDriver
      C                   ENDIF                                                              MD027334
- 
+
      C                   ENDIF                                                              MD026826
                                                                                             MD026826
      C                   READ      SDFTCSD0
@@ -862,10 +862,10 @@
      C                             NACCO2 <> *BLANKS and                                    MD026826
      C**********                   NACCO2 <> FNCLAC                                MD026826 MD027334
      C                             NACCO2 <> FNCLAC)                                        MD027334
- 
+
      C                   EVAL      NCCUST = *Blanks
      C                   EVAL      NCNAHO = FNNAHO
- 
+
      C     NCNAHO        CHAIN     SDNAHOD0                           90
      C                   IF        %FOUND = '1'
      C                   EVAL      NCRPNM = NHNARN
@@ -885,14 +885,14 @@
      C                   ELSE                                                               MD027334
      C                   EVAL      NCCCLS = FNPCLA                                          MD027334
      C                   ENDIF                                                              MD027334
- 
+
      C                   EVAL      WClsCdValCod = NCCCLS
      C                   EXSR      RtvClassfn
      C                   EVAL      NCCCLD = WClsCdValDsc
- 
+
      C                   EXSR      GetNewClass
      C                   EXSR      SetInfoCNAHO
- 
+
       ** Load to Driving File
       ** Only if details were changed                                                       MD027334
      C                   IF        NCCCLS <> FNPCLA                                         MD027334
@@ -915,7 +915,7 @@
      C                             AND FNHVAC = 'M'                                         MD027334
      C                   EXSR      WrtToDriver
      C                   ENDIF                                                              MD027334
- 
+
      C                   ENDIF                                                              MD026826
                                                                                             MD026826
      C                   READ      SDFTNHD0
@@ -923,9 +923,9 @@
      C                   FEOD      SDNACUPD
      C*                  COMMIT
      C                   EVAL      DrvLoaded = 1
- 
+
      C                   EVAL      Step = 'P'
- 
+
      C     LoadDriverE   ENDSR
       *****************************************************************
       /EJECT
@@ -936,7 +936,7 @@
       *******************************************************************
       *
      C     WrtToDriver   BEGSR
- 
+
      C                   WRITE     SDNACUD0
      C                   EVAL      NCCUST = *Blanks
      C                   EVAL      NCNAHO = *Blanks
@@ -948,7 +948,7 @@
      C                   EVAL      NCNCLD = *Blanks
      C                   EVAL      NCCCLS = *Blanks
      C                   EVAL      NCCCLD = *Blanks
- 
+
      C                   ENDSR
       /EJECT
       *******************************************************************
@@ -959,7 +959,7 @@
       *******************************************************************
       *
      C     GetNewClass   BEGSR
- 
+
      C                   SELECT
      C                   WHEN      NCHVAC = 'L' and NACCO1 <> *BLANKS
      C                   EVAL      NCNCLS = NACCO1
@@ -1001,7 +1001,7 @@
      C                   EVAL      NCNCLS = NCCCLS
      C                   EVAL      NCNCLD = NCCCLD
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *******************************************************************
@@ -1016,14 +1016,14 @@
      C*                  CALL      'QCMDEXC'
      C*                  PARM                    CMDXC
      C*                  PARM                    CMDLEN
- 
+
      C     1             SETLL     SDNACUD0
      C                   READ      SDNACUD0
      C                   DOW       %EOF = '0'
      C                   DELETE    SDNACUD0
      C                   READ      SDNACUD0
      C                   ENDDO
- 
+
      C                   ENDSR
       *******************************************************************
       /EJECT
@@ -1034,12 +1034,12 @@
       *******************************************************************
       *
      C     ClrMsgQue     BEGSR
- 
+
       * Clear messages from program message queue
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGM
      C                   PARM      '*SAME'       ZAPGRL
- 
+
      C                   ENDSR
       *******************************************************************
       /EJECT
@@ -1049,11 +1049,11 @@
       *                                                                 *
       *******************************************************************
      C     ZASNMS        BEGSR
- 
+
      C                   IF        ZAMSGF = *BLANKS
      C                   EVAL      ZAMSGF = 'SDUSRMSG'
      C                   END
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGM                          Program queue
      C                   PARM                    ZAPGRL                         Rel queue
@@ -1061,12 +1061,12 @@
      C                   PARM                    ZAMSGF                         Message file
      C                   PARM                    ZAMSDA                         Message data
      C                   PARM                    ZAMSTP                         Message type
- 
+
      C                   MOVEL     *BLANKS       ZAMSGF
      C                   MOVEL     *BLANKS       ZAMSDA
      C                   MOVEL     *BLANK        ZAMSID
      C                   MOVEL     *BLANK        ZAPGRL
- 
+
      C                   ENDSR
       *******************************************************************
       *                                                                 *
@@ -1076,17 +1076,17 @@
      C     *INZSR        BEGSR
      C     *ENTRY        PLIST
      C                   PARM                    PMode             1
- 
+
      C                   Z-ADD     50            CMDLEN           15 5
      C                   CALL      'QCMDEXC'
      C                   PARM                    ##OV1
      C                   PARM                    CMDLEN
- 
+
      C                   Z-ADD     50            CMDLEN           15 5
      C                   CALL      'QCMDEXC'
      C                   PARM                    ##OV2
      C                   PARM                    CMDLEN
- 
+
      C                   EVAL      Step = 'I'
      C                   EVAL      WValErr = '1'
       ** Access installation control data
@@ -1104,12 +1104,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SPGM = PSProcName
      C                   EVAL      NAUSER = PSUser
      C                   EVAL      NAJOBN = PSJobName
      C                   EVAL      NAMRDT = BJMRDT
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRetCode          7
      C                   PARM      WSysVal1      P@OP01           20
@@ -1132,24 +1132,24 @@
      C                   PARM      *BLANKS       P@VL09          200
      C                   PARM      *BLANKS       P@OP10           20
      C                   PARM      *BLANKS       P@VL10          200
- 
+
      C                   IF        PRetCode  <> *BLANKS
      C                   EVAL      DBFile = 'SDSVALPD'
      C                   EVAL      DBKEy = '*KEY   '
      C                   EVAL      DBase = 2
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WClsCdValCod = WDftClsTkOn
- 
+
      C                   EXSR      RtvClassfn
- 
+
      C                   IF        @RTCD = *Blanks
      C                   EVAL      WDftClsDesc = FCDESC
      C                   ELSE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Convert FATCA effective date to Midas Day Number
      C                   MOVE      WEffStrDate   PDate
       *
@@ -1158,7 +1158,7 @@
      C                   PARM                    PDate
      C                   PARM      BJDFIN        PDateFormat
      C                   PARM                    PDayNo
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CUP034             Date 24Jan07              */
+/*                      CUP034             Date 24Jan07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CUP033             Date 30Jun06              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP034 - Reduce size of implementation library.             */
 /*       CUP033 - Removal of System Value /COPYs.                    */
@@ -32,10 +34,10 @@
 /*********************************************************************/
 /**********  PGM                                                                       */ /*CUP033*/
              PGM        PARM(&PFXSVAL &OPFXSVAL)                                          /*CUP033*/
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
- 
+
 /**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*             */ /*CUP033*/
 /**********  DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)                              */ /*CSM003*/
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CUP033*/
@@ -50,38 +52,39 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
-             DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                      /*CUP033* *MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area /MIDASMSG in QTEMP */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
 /**COPY*UPCPYSRC,UPSVALCAL3*                                         */ /*  */ /*CSM003*/ /*CUP033*/
- 
+
 /**Check*if*all*relevant*fields*have*been*entered*in*ICD**/ /*                         */ /*CUP033*/
 /**********  IF         COND(&SBSID *EQ ' ' *OR &PTFUPG *EQ ' ') +                     */ /*CSM003*/
 /**********               THEN(DO)                                                     */ /*CSM003*/
 /**********  IF         COND(&SBSID *EQ ' ' *OR &PTFUPG *EQ ' ' *OR +                  */ /*CUP033*/
 /**********               &OLDSBSID *EQ ' ') THEN(DO)                       */ /*CSM003*/ /*CUP033*/
 /**Set*up*messages*for*Midas*Information*Screen***/ /*                                 */ /*CUP033*/
- 
+
 VALIDATE:                                                                                 /*CUP033*/
              RCVF                                                                         /*CUP033*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -90,7 +93,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)                              /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -99,9 +102,9 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)                                /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
  CHECK:                                                                                   /*CUP033*/
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -111,28 +114,28 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('SMC0865' 'ENTER' ' ')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Set up library list. */                                                                /*CUP034*/
              CALL       PGM(UPC0014) PARM(&SBSID)                                         /*CUP034*/
- 
+
 /**Retrieve*'new'*prefix*from*data*area*UPSTAT.**/ /*                                  */ /*CSM003*/
 /**********  RTVDTAARA  DTAARA(&PTFUPG/UPSTAT) RTNVAR(&UPSTAT)                         */ /*CSM003*/
 /**********  CHGVAR     VAR(&NEWPFX) VALUE(%SST(&UPSTAT 62 2))                         */ /*CSM003*/
 /**********  IF         COND(&NEWPFX *EQ ' ') THEN(DO)                                 */ /*CSM003*/
 /**********     CHGVAR     VAR(&NEWPFX) VALUE(%SST(&UPSTAT 60 2))                      */ /*CSM003*/
 /**********  ENDDO                                                                     */ /*CSM003*/
- 
+
 /* Check where logical files exist. */
 /**********  CHGVAR     VAR(&FDTALIB) VALUE(&SBSID *TCAT 'DTALIB')                     */ /*CSM003*/
 /**********  CHGVAR     VAR(&SCMPLIB) VALUE(&NEWPFX *TCAT 'DVLIB')                     */ /*CSM003*/
              CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')                     /*CSM003*/
              CHGVAR     VAR(&SCMPLIB) VALUE(&SBSID *TCAT 'DVLIB')                         /*CSM003*/
- 
+
              CHKOBJ     OBJ(&FDTALIB/SCSARPL1) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 CHGVAR     VAR(&FWHICHLIB) VALUE('DV ')
              ENDDO
- 
+
              IF         COND(&FWHICHLIB *EQ 'DV ') THEN(DO)
 /**********     CHGVAR     VAR(&FCMPLIB) VALUE(&SBSID *TCAT 'DVLIB')                   */ /*CSM003*/
                 CHGVAR     VAR(&FCMPLIB) VALUE(&OLDSBSID *TCAT 'DVLIB')                   /*CSM003*/
@@ -141,20 +144,20 @@ VALIDATE:                                                                       
 /**********     CHGVAR     VAR(&FCMPLIB) VALUE(&SBSID *TCAT 'DTALIB')                  */ /*CSM003*/
                 CHGVAR     VAR(&FCMPLIB) VALUE(&OLDSBSID *TCAT 'DTALIB')                  /*CSM003*/
              ENDDO
- 
+
 /* Override files before call to update 'new' SCSARPPD. */
              OVRDBF     FILE(SARP1) TOFILE(&FCMPLIB/SCSARPL1)
              OVRDBF     FILE(SARP2) TOFILE(&SCMPLIB/SCSARPL1)
- 
+
              CALL       PGM(SM0865)
- 
+
              DLTOVR     FILE(*ALL)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
 /* Set up messages for Midas Information Screen  */
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
@@ -167,7 +170,7 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('SMC0865' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000)
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

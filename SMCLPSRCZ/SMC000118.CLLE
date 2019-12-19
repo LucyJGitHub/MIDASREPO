@@ -9,55 +9,58 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP042             Date 02Jan15              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP042             Date 02Jan15              */
 /*                      AR758718 *CREATE   Date 01Oct10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP042 - Changes for Bridge deliverable data split.         */
 /*       AR758718 - Bridge Enhancement                               */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &OPFXSVAL &ORLVLSVAL)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&ORLVLSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ORLVL) TYPE(*CHAR) LEN(22)
- 
+
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPSVALJ0)
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                               /*MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data area MIDASMSG in QTEMP. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -66,7 +69,7 @@ VALIDATE:
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -75,7 +78,7 @@ VALIDATE:
                    CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &ORLVLSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -84,9 +87,9 @@ VALIDATE:
                    CHGVAR     VAR(&ORLVL) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
 /* Set up messages for Midas Information Screen  */
@@ -97,14 +100,14 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000049' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Set up library list. */
              CALL       PGM(UPC0014) PARM(&SBSID)
- 
+
 /* Set up library names. */
              CHGVAR     VAR(&FMLIB) VALUE(&OLDSBSID *TCAT 'DMLIB')
              CHGVAR     VAR(&TOLIB) VALUE(&SBSID *TCAT 'DMLIB')
- 
+
 /* Store release information in temporary data area .*/
              DLTDTAARA  DTAARA(&FMLIB/SMBRGMIGDA)
              MONMSG     MSGID(CPF0000)
@@ -117,26 +120,26 @@ VALIDATE:
                           VALUE(%SST(&ORLVL 11 10))
              CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (21 2)) +
                           VALUE(%SST(&ORLVL 21 2))
- 
+
 /**SMC000032*Midas*SM*Re-initialise files*******/ /*                                   */ /*CUP042*/
 /**********  CALL       PGM(SMC000032)                                                 */ /*CUP042*/
 /* SMC000126 Midas SM Re-initialise files      */                                         /*CUP042*/
              CALL       PGM(SMC000126)                                                    /*CUP042*/
- 
+
              CPYF       FROMFILE(SMCPYMPD) TOFILE(SMCPYDPD) +
                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
- 
+
              MIGRATEZ   FROMLIB(&FMLIB) TOLIB(&TOLIB) RERUN(*YES)
- 
+
              MONMSG     MSGID(CPF6801) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* SM000051 to initialize basic Midas modules  */
              CALL       PGM(SM000118)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
  ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('SMC000049') MSG(&MESSAGE)

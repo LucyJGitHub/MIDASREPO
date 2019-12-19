@@ -12,14 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027209B          Date 25Sep14               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027209B          Date 25Sep14               *
       *                 MD027335           Date 20Aug14               *
       *                 MD027209           Date 07Aug14               *
       *                 CGL132   *CREATE   Date 01Jun13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027209B - F4-Print Report is not available in USIT and NCUP*
       *  MD027335 - Incorrect Label for NAHO enquired after           *
@@ -33,7 +35,7 @@
      F                                     INFSR(*PSSR)
       ** FATCA Customers for Classfn Update - List
      FSDNACUL0  IF   E             DISK
- 
+
       ** FATCA Customers for Classfn Update - Keyed
      FSDNACUL1  IF   E           K DISK    RENAME(SDNACUD0:SDNACUD1)
      F                                     PREFIX(W)
@@ -41,27 +43,27 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                                MD054605
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
      D SDNACU        E DS                  EXTNAME(SDNACUPD)
- 
+
      DPSDS            SDS
- 
+
       ** Procedure name
      D PSProcName        *PROC
- 
+
       ** Job name
      D PSJobName             244    253
- 
+
       ** User name
      D PSUser                254    263
       *
@@ -74,7 +76,7 @@
      D DetMode         S              1A
      D DetRetCode      S              7A
      D DetClsCode      S              5A
- 
+
      D PRetCode        S              7
      D POption         S              7
      D PClsCode1       S              5A
@@ -86,12 +88,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WSFlRRN         S              4  0
      D WClsCdValPrm    S              5    INZ(*Blanks)
      D WValErr         S              1
@@ -105,7 +107,7 @@
      D ZAMSDA          S            132    INZ(*Blanks)
      D ZAMSTP          S              7    INZ(*Blanks)
       *
- 
+
       *****************************************************************
       *                                                               *
       * M A I N   P R O C E D U R E                                   *
@@ -146,23 +148,23 @@
      C                             and *INKS = *OFF
      C                   EXSR      InitSfl
      C                   EXSR      BuildSfl
- 
+
      C                   READC     SD000552S0
      C                   DOW       NOT(%EOF)
- 
+
      C                   EXSR      ClrMsgQue
      C                   WRITE     #MSGCTL
      C                   IF        %trim(LAACTN) <> *BLANKS
      C                   EXSR      ValOption
      C                   EXSR      DspDetails
      C                   ENDIF
- 
+
       * Reset validated/processed option taken
      C                   EVAL      LAACTN = ''
      C                   READC     SD000552S0
      C                   ENDDO
      C                   ENDDO
- 
+
      C                   IF        *INKL = *ON
      C                   EVAL      PretCode = '*PREV'
      C                   ELSEIF    *INKC = *ON
@@ -173,7 +175,7 @@
      C*                  ELSEIF    *INKS = *ON
      C*                  EVAL      PretCode = '*UPDT'
      C                   ENDIF
- 
+
      C     ListScreenE   ENDSR
       *******************************************************************
       /EJECT
@@ -195,7 +197,7 @@
      C                   EVAL      *IN80 = *OFF
      C*                  EXSR      ClrMsgQue
      C*                  WRITE     #MSGCTL
- 
+
      C     InitSflE      ENDSR
       *****************************************************************
       /EJECT
@@ -219,9 +221,9 @@
       **  Else, Fill SubFile
       *
      C                   DOW       %EOF <> '1'
- 
+
      C                   EVAL      WSflRRN = WSflRRN + 1
- 
+
      C                   EVAL      LACUST = NCCUST
      C                   EVAL      LANAHO = NCNAHO
      C                   EVAL      LARPNM = NCRPNM
@@ -229,11 +231,11 @@
      C                   EVAL      LAHVAC = NCHVAC
      C                   EVAL      LANCLS = NCNCLS
      C                   EVAL      LACCLS = NCCCLS
- 
+
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000552S0
      C                   EVAL      *IN80 = *OFF
- 
+
      C     ReadNext      TAG
      C                   READ(N)   SDNACUD0
      C                   ENDDO
@@ -278,13 +280,13 @@
       *******************************************************************
       *
      C     ValOption     BEGSR
- 
+
      C                   EVAL      WValErr = '0'
      C                   IF        LAACTN <> 'E'
      C*               // Error message here
      C                   EVAL      WValErr = '1'
      C                   ENDIF
- 
+
      C     ValOptionE    ENDSR
       *******************************************************************
       /EJECT
@@ -297,7 +299,7 @@
      C     *ENTRY        PLIST
      C                   PARM                    PRetCode          7
      C                   PARM                    PMode             1
- 
+
      C                   EVAL      WValErr = '1'
       ** Access installation control data
      C                   CALL      'AOBANKR0'
@@ -314,19 +316,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SPGM = PSProcName
      C                   EVAL      NAUSER = PSUser
      C                   EVAL      NAJOBN = PSJobName
      C                   EVAL      NAMRDT = BJMRDT
- 
+
      C     CUSNAHREF     KLIST
      C                   KFLD                    CUSTNO            6
      C                   KFLD                    NAHORF           10
- 
+
      C                   EXSR      ClrMsgQue
      C                   WRITE     #MSGCTL
- 
+
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   IF        PMode = 'U'
      C                   MOVEL     'USS0269'     ZAMSID
@@ -337,7 +339,7 @@
      C                   ENDIF
      C                   EXSR      ZASNMS
      C                   WRITE     #MSGCTL
- 
+
      C                   ENDSR
       /EJECT
       *******************************************************************
@@ -354,12 +356,12 @@
      C                   PARM      WClsCdValPrm  @CLAC             5
      C     SDFATC        PARM      SDFATC        DSFDY
      C
- 
+
       ** Error on initialisation
      C                   IF        @RTCD <> *BLANKS
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     RtvClassfnE   ENDSR
       *******************************************************************
       /EJECT
@@ -404,7 +406,7 @@
      C                   ELSEIF    WNCNAHO = *BLANKS
      C                   EVAL      EAREFR = WNCCUST
      C                   ENDIF
- 
+
      C                   EVAL      EARPNM = WNCRPNM
      C                   EVAL      EARPTN = WNCRPTN
      C                   EVAL      EAHVAC = WNCHVAC
@@ -451,12 +453,12 @@
       *******************************************************************
       *
      C     ClrMsgQue     BEGSR
- 
+
       * Clear messages from program message queue
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGM
      C                   PARM      '*SAME'       ZAPGRL
- 
+
      C                   ENDSR
       *******************************************************************
       /EJECT
@@ -466,11 +468,11 @@
       *                                                                 *
       *******************************************************************
      C     ZASNMS        BEGSR
- 
+
      C                   IF        ZAMSGF = *BLANKS
      C                   EVAL      ZAMSGF = 'SDUSRMSG'
      C                   END
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGM                          Program queue
      C                   PARM                    ZAPGRL                         Rel queue
@@ -478,12 +480,12 @@
      C                   PARM                    ZAMSGF                         Message file
      C                   PARM                    ZAMSDA                         Message data
      C                   PARM                    ZAMSTP                         Message type
- 
+
      C                   MOVEL     *BLANKS       ZAMSGF
      C                   MOVEL     *BLANKS       ZAMSDA
      C                   MOVEL     *BLANK        ZAMSID
      C                   MOVEL     *BLANK        ZAPGRL
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD020013A          Date 02May13              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD020013A          Date 02May13              */
 /*                      MD020013           Date 11Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD020013A - Change the way that the job is submitted.       */
 /*       MD020013 - Change the way that the job is submitted.        */
@@ -29,11 +31,11 @@
 /*********************************************************************/
 /**********  PGM        PARM(&PFXSVAL &JOBDSVAL)                                     */ /*MD020013*/
              PGM        PARM(&PFXSVAL &JOBDSVAL &BRGBRGSVAL)                            /*MD020013*/
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&JOBDSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&BRGBRGSVAL) TYPE(*CHAR) LEN(20)                            /*MD020013*/
- 
+
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JOBD) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)                             /*MD020013*/
@@ -49,35 +51,36 @@
 /**********  DCL        VAR(&CCSID) TYPE(*DEC) LEN(5 0)                                */ /*256038*/
 /**********  DCL        VAR(&STARTPOS) TYPE(*DEC) LEN(3 0)                             */ /*256038*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPSVALJ0)
- 
+
+/**********  DCLF       FILE(UPSVALJ0) */                                               /*MD054605*/
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)                                    /*MD054605*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2008')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Create data area MIDASMSG in QTEMP for screen error handling. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 /* Prompt for whether job should be submitted. */
              SUBMITJOB  ??SUBMITJOB(*NO)
              MONMSG     MSGID(CPF6801) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
              RTVDTAARA  DTAARA(QTEMP/SUBMITJOB) RTNVAR(&SUBMITJOB)
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -86,7 +89,7 @@ VALIDATE:
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&SUBMITJOB *EQ '*YES') THEN(DO)
                 IF         COND(&GISVAL *EQ &JOBDSVAL) THEN(DO)
                    IF         COND(&GIVAL *EQ ' ') THEN(DO)
@@ -105,9 +108,9 @@ VALIDATE:
                    ENDDO                                                                /*MD020013*/
                 ENDDO                                                                   /*MD020013*/
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
 /* Set up messages for Midas Information Screen  */
@@ -118,10 +121,10 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000055' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Set up library list. */                                                                /*256038*/
              CALL       PGM(UPC0014) PARM(&SBSID)                                         /*256038*/
- 
+
 /**Check*if*libraries*have*been*renamed*yet.**/ /*                                     */ /*256038*/
 /**********  RTVDTAARA  DTAARA(UPSTAT (60 2)) RTNVAR(&LIBID)                           */ /*256038*/
 /**********  CHGVAR     VAR(&DMLIB) VALUE(&LIBID *TCAT 'DMLIB')                        */ /*256038*/
@@ -137,7 +140,7 @@ VALIDATE:
 /**********  CHGVAR     VAR(&DPLIB) VALUE(&LIBID *TCAT 'DPLIB'))                       */ /*256038*/
 /**********  CHGVAR     VAR(&DTLIB) VALUE(&LIBID *TCAT 'DTALIB')                       */ /*256038*/
 /**********  CHGVAR     VAR(&DZLIB) VALUE(&LIBID *TCAT 'DZLIB')                        */ /*256038*/
- 
+
 /**Get*list*of*libraries*and*CCSID*value.**/ /*                                        */ /*256038*/
 /*CHGCCSIDSM:                                                                          */ /*256038*/
 /**********  ?          CHGCCSIDSM ??LIBS(&DMLIB &DPLIB &DTLIB +                       */ /*256038*/
@@ -171,11 +174,11 @@ VALIDATE:
                    GOTO       CMDLBL(ENDPGM)                                            /*MD020013*/
                 ENDDO                                                                   /*MD020013*/
              ENDDO                                                                      /*MD020013*/
- 
+
 /**********  CHGVAR     VAR(&STARTPOS) VALUE(1)                                        */ /*256038*/
 /**********  RTVDTAARA  DTAARA(QTEMP/LIBS (101 5)) RTNVAR(&CCSIDA)                     */ /*256038*/
 /**********  CHGVAR     VAR(&CCSID) VALUE(&CCSIDA)                                     */ /*256038*/
- 
+
 /**Loop*through*list*of*libraries*in*data*area.**/ /*                                  */ /*256038*/
 /*LOOP:****                                                                            */ /*256038*/
 /**********  RTVDTAARA  DTAARA(QTEMP/LIBS (&STARTPOS 10)) RTNVAR(&LIB)                 */ /*256038*/
@@ -193,9 +196,9 @@ VALIDATE:
 /**********     ENDDO                                                                  */ /*256038*/
 /**********     GOTO       CMDLBL(LOOP)                                                */ /*256038*/
 /**********  ENDDO                                                                     */ /*256038*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('SMC000055') MSG(&MESSAGE)

@@ -12,14 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031737           Date 27Jul17               *
+      *  Last Amend No. MD054605           Date 17Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD031737           Date 27Jul17               *
       *                 MD039105           Date 06Jun16               *
       *                 MD028229           Date 29Oct14               *
       *                 CCB024A  *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031737 - Housekeeping of ZATRNLOGPD is missing. Added      *
       *             missing codes of MD039105                         *
@@ -34,7 +36,7 @@
       *   99    - Read until EOF of T_APIMSG                          *
       *                                                               *
       *****************************************************************
-     FSDSVALL0  IF   E           K DISK    INFSR(*PSSR)
+     F*SDSVALL0* IF   E           K DISK    INFSR(*PSSR)                                    MD054605
       ** System Value
       *
      F***APIMSGL0  UF   E           K DISK    INFSR(*PSSR)                                  MD039105
@@ -43,80 +45,126 @@
       *****************************************************************
       ** Data Structures and Variables                               **
       *****************************************************************
- 
+
      DMidasRefDate     S              5P 0
      DMidasDate        S              5P 0
      DPRtCd            S              7A
      DPOptn            S              7A
      DMidasConvDate    S             10A                                                    MD039105
      D ULimit          S              5P 0 INZ(0)                                           MD039105
- 
+
      D APMSGICD        C                   CONST('PurgeDaysOfAP_MQ_MSG')
- 
+
      D                 DS
      D YYYYMMDD                1      8
      D Year                    1      4
      D Month                   5      6
      D Day                     7      8
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
+     D PSysVal01       S             20A                                                    MD054605
+     D PCurSet01       S            200A                                                    MD054605
+     D PSysVal02       S             20A                                                    MD054605
+     D PCurSet02       S            200A                                                    MD054605
+     D PSysVal03       S             20A                                                    MD054605
+     D PCurSet03       S            200A                                                    MD054605
+     D PSysVal04       S             20A                                                    MD054605
+     D PCurSet04       S            200A                                                    MD054605
+     D PSysVal05       S             20A                                                    MD054605
+     D PCurSet05       S            200A                                                    MD054605
+     D PSysVal06       S             20A                                                    MD054605
+     D PCurSet06       S            200A                                                    MD054605
+     D PSysVal07       S             20A                                                    MD054605
+     D PCurSet07       S            200A                                                    MD054605
+     D PSysVal08       S             20A                                                    MD054605
+     D PCurSet08       S            200A                                                    MD054605
+     D PSysVal09       S             20A                                                    MD054605
+     D PCurSet09       S            200A                                                    MD054605
+     D PSysVal10       S             20A                                                    MD054605
+     D PCurSet10       S            200A                                                    MD054605
+                                                                                            MD054605
       *****************************************************************
       * MAIN PROCESSING
       *****************************************************************
- 
+
      C                   EXSR      INIT
- 
+
      C                   EXSR      MAIN
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       * INIT
       *****************************************************************
      C     INIT          BEGSR
- 
+
       ** Retrieve RUNDATE from SDBANKPD
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C     PRtCd         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   Z-ADD     1             DBASE
      C                   MOVEL     POptn         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       * INIT
       *****************************************************************
      C     MAIN          BEGSR
- 
+
       ** Retrieve the ICD Settings
- 
-     C     APMSGICD      CHAIN     SDSVALL0                           98
-     C     *IN98         IFEQ      '1'
+
+     C*****APMSGICD      CHAIN     SDSVALL0                           98                    MD054605
+     C******IN98         IFEQ      '1'                                                      MD054605
+     C                   CALLB     'AOSVALR0'                                               MD054605
+     C                   PARM      *BLANKS       PRtCd             7                        MD054605
+     C                   PARM      APMSGICD      PSysVal01                                  MD054605
+     C                   PARM                    PCurSet01                                  MD054605
+     C                   PARM                    PSysVal02                                  MD054605
+     C                   PARM                    PCurSet02                                  MD054605
+     C                   PARM                    PSysVal03                                  MD054605
+     C                   PARM                    PCurSet03                                  MD054605
+     C                   PARM                    PSysVal04                                  MD054605
+     C                   PARM                    PCurSet04                                  MD054605
+     C                   PARM                    PSysVal05                                  MD054605
+     C                   PARM                    PCurSet05                                  MD054605
+     C                   PARM                    PSysVal06                                  MD054605
+     C                   PARM                    PCurSet06                                  MD054605
+     C                   PARM                    PSysVal07                                  MD054605
+     C                   PARM                    PCurSet07                                  MD054605
+     C                   PARM                    PSysVal08                                  MD054605
+     C                   PARM                    PCurSet08                                  MD054605
+     C                   PARM                    PSysVal09                                  MD054605
+     C                   PARM                    PCurSet09                                  MD054605
+     C                   PARM                    PSysVal10                                  MD054605
+     C                   PARM                    PCurSet10                                  MD054605
+                                                                                            MD054605
+     C     PRtCd         IFNE      *BLANKS                                                  MD054605
      C                   MOVEL     'SDSVALPD'    DBFILE
      C                   Z-ADD     2             DBASE
      C                   MOVEL     POptn         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Subtract the ICD Setting from the Rundate.
- 
-     C                   EVAL      MidasRefDate = BJRDNB - %INT(GIVAL)
- 
+
+     C**********         EVAL      MidasRefDate = BJRDNB - %INT(GIVAL)                      MD054605
+     C                   EVAL      MidasRefDate = BJRDNB - %INT(PCurSet01)                  MD054605
+
      C                   CALLB     'ZDATE9'                                                 MD039105
      C                   PARM                    MidasRefDate                               MD039105
      C                   PARM                    YYYYMMDD                                   MD039105
@@ -173,18 +221,18 @@
      C+ WHERE DATE(MQTMST) < :MidasConvDate AND                                             MD031737
      C+ (MQSTAT = 'C' OR MQSTAT = 'P')                                                      MD031737
      C/END-EXEC                                                                             MD031737
- 
+
      C                   ENDSR
       *****************************************************************
       * *PSSR                                                         *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   DUMP
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

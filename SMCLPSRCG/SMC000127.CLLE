@@ -9,20 +9,22 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2011                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CBF005  *CREATE    Date 04Jul11              */
+/*       Last Amend No. MD054605           Date 17Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CBF005  *CREATE    Date 04Jul11              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CBF005 - BF Infrastructure: Single Security User Maintenance*/
 /*                                               Profile             */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&GPFXSVAL)
- 
+
              DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&GSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
@@ -31,17 +33,18 @@
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) +
                           VALUE('SMC000127')
- 
-             DCLF       FILE(UPGSVALJ0)
- 
+
+/**********  DCLF       FILE(UPGSVALJ0) */                                              /*MD054605*/
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
+
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2011')
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Create and rename temporary source file for RUNSQLSTM. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -52,19 +55,19 @@
                           file for SMC000127')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 /* Create Midas Info Screen data area in QTEMP. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG MSGID(CPF2105)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           TEXT('Midas Info Screen Data Area')
- 
+
 VALIDATE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -73,9 +76,9 @@ VALIDATE:
                    CHGVAR     VAR(&GSBSID) VALUE(&GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
 CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
@@ -85,24 +88,24 @@ CHECK:
                 CALL       PGM(SCC0010) PARM(&GENPGM 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Save library list and set up global library list. */
              SAVLIBL    SAVDTL(SMC000127L)
              CALL       PGM(GPC000016) PARM(&GSBSID)
- 
+
              RTVJOBA    JOB(&JOB) USER(&USER)
- 
+
              DLTF       FILE(QTEMP/SMBFRPQT)
              MONMSG     MSGID(CPF0000)
              CRTDUPOBJ  OBJ(SMBFRPPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(SMBFRPQT)
- 
+
 /* Call program to build populate role / permissions file. */
              CALL       PGM(SM000046) PARM(&USER &JOB)
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Update roles / permission file from temporary version while  */
 /* removing duplicate records.                                  */
              CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFRPPD +
@@ -113,10 +116,10 @@ CHECK:
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /* Restore library list. */
              RSTLIBL    SAVEDLIBL(SMC000127L)
- 
+
              GOTO       CMDLBL(ENDPGM)
 ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&GENPGM) +
@@ -129,6 +132,6 @@ ERROR:
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM(&GENPGM 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

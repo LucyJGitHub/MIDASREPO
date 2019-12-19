@@ -1,0 +1,215 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Install GPSVALPD and its dependents')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000049 - Install GPSVALPD and its dependent              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD054605 *CREATE   Date 17Oct19              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD054605 - Deliverable Data Split for SDSVALPD              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRFX &LIBUPG &LIBDTA)
+
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIBUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDTA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2019')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+
+/* Create data area /MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+             CHGVAR     VAR(&TALIB) VALUE(&PRFX *TCAT 'GTALIB')
+             CHGVAR     VAR(&MLIB) VALUE(&PRFX *TCAT 'GMLIB')
+             CHGVAR     VAR(&PLIB) VALUE(&PRFX *TCAT 'GPLIB')
+             CHGVAR     VAR(&VLIB) VALUE(&PRFX *TCAT 'GVLIB')
+             CHGVAR     VAR(&OWNER) VALUE(&PRFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&PRFX *TCAT 'DATABASE')
+
+/* Delete files in case or re-run */
+             DLTF       FILE(UPGSVALJ0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVLJI0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVRJI0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVLJW1)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVLJW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVRJW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVLUW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVRUW0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVLXTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVRXTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVLBTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVRBTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVLCTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(GPSVRCTD)
+             MONMSG     MSGID(CPF2105)
+
+/* Create GPSVLCTD - core */
+             CALL       PGM(UPC000034) PARM('GPSVLCTD' 'GPSQLSRCGT' +
+                          &LIBUPG &TALIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVRCTD -core */
+             CALL       PGM(UPC000034) PARM('GPSVRCTD' 'GPSQLSRCGT' +
+                          &LIBUPG &TALIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVLBTD - bespoke */
+             CALL       PGM(UPC000034) PARM('GPSVLBTD' 'GPSQLSRCGM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVRBTD - bespoke */
+             CALL       PGM(UPC000034) PARM('GPSVRBTD' 'GPSQLSRCGM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVLXTD - extension */
+             CALL       PGM(UPC000034) PARM('GPSVLXTD' 'GPSQLSRCGM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVRXTD - extension */
+             CALL       PGM(UPC000034) PARM('GPSVRXTD' 'GPSQLSRCGM' +
+                          &LIBUPG &MLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVLUW0 - union */
+             CALL       PGM(UPC000034) PARM('GPSVLUW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVRUW0 - union */
+             CALL       PGM(UPC000034) PARM('GPSVRUW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVLJW0 - joint */
+             CALL       PGM(UPC000034) PARM('GPSVLJW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVLJW1 - joint */
+             CALL       PGM(UPC000034) PARM('GPSVLJW1' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVRJW0 - joint */
+             CALL       PGM(UPC000034) PARM('GPSVRJW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVLJI0 - index */
+             CALL       PGM(UPC000034) PARM('GPSVLJI0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create GPSVRJI0 - index */
+             CALL       PGM(UPC000034) PARM('GPSVRJI0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Create UPGSVALJ0 - view */
+             CALL       PGM(UPC000034) PARM('UPGSVALJ0' 'UPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)
+
+/* Copy delivered GPSVLCTD */
+             CPYF       FROMFILE(&LIBDTA/GPSVLCTD) +
+                          TOFILE(&TALIB/GPSVLCTD) MBROPT(*ADD)
+
+             CALL       PGM(UP000701) PARM(&RETURN 'GPSVLCTD' +
+                          &TALIB)
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+             CALL       PGM(UP000703) PARM(&RETURN 'GPSVLCTD' +
+                          &TALIB 'GPSVALPD')
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+
+/* Copy delivered GPSVRCTD */
+             CPYF       FROMFILE(&LIBDTA/GPSVRCTD) +
+                          TOFILE(&TALIB/GPSVRCTD) MBROPT(*ADD)
+
+             CALL       PGM(UP000701) PARM(&RETURN 'GPSVRCTD' +
+                          &TALIB)
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+             CALL       PGM(UP000703) PARM(&RETURN 'GPSVRCTD' +
+                          &TALIB 'GPSVRFPD')
+             IF         COND(&RETURN = '*Error   ') THEN(GOTO ABNOR)
+
+/* Generate *CONFLICT report */
+             CALL       PGM(UPC000702) PARM('GPSVLCTD' &LIBDTA)
+             CALL       PGM(UPC000702) PARM('GPSVRCTD' &LIBDTA)
+
+/* Start journalling */
+             STRJRNPF   FILE(GPSVLCTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(GPSVLBTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(GPSVLXTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(GPSVRCTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(GPSVRBTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             STRJRNPF   FILE(GPSVRXTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000049') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000029' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+
+ENDPGM:
+             ENDPGM

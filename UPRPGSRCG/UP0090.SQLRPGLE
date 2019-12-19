@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD034724             Date 11Jun15             *
-      *  Prev Amend No. CUP042 *REWRITE    Date 04May15               *
+      *  Last Amend No. MD054605             Date 17Oct19             *
+      *  Prev Amend No. MD034724             Date 11Jun15             *
+      *                 CUP042 *REWRITE    Date 04May15               *
       *                 CUP040             Date 09Aug13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD.              *
       *  MD034724 - Addition for UDF tables.                          *
       *  CUP042 - Simplify update of driving file.                    *
       *  CUP040 - Handle new convention for files to be deleted.  As  *
@@ -898,9 +900,15 @@
      C                   PARM                    ReturnCode
      C                   PARM                    ReturnData
      C                   IF        ReturnCode = *blank
+     C                             or ChkFile = 'GPWIPXTD'                                  MD054605
+     C                             or ChkFile = 'GPSVLXTD'                                  MD054605
+     C                             or ChkFile = 'GPSVRXTD'                                  MD054605
+     C                             or ChkFile = 'SDSVLXTD'                                  MD054605
+     C                             or ChkFile = 'SDSVRXTD'                                  MD054605
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
+     C                   EVAL      AUMBTP = 'DDSDATA'                                       MD054605
      C                   LEAVESR
      C                   ENDIF
       *

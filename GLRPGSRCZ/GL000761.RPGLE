@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD040875           Date 26Aug16               *
+      *  Last Amend No. MD054905           Date 04Dec19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD040875           Date 26Aug16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054905 - Change Message Ref Id format                      *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040875 - Message Ref ID for another branch with different  *
       *             Country Code (Country of Domicile) is incorrect   *
@@ -119,11 +121,13 @@
      D KKCDYR          S              4
      D KKRBRC          S              3
      D KKRCTR          S              2
-     D KKMSID          S             21
+     D***KKMSID          S             21                                                   MD054905
+     D KKMSID          S             29                                                     MD054905
      D KKSTAT          S              4
 
      D PActMode        S              1A
-     D PMsgRId         S             21A
+     D***PMsgRId         S             21A                                                  MD054905
+     D PMsgRId         S             29A                                                    MD054905
      D PDDocTp         S              7A
      D PDDocRf         S             30A
      D PDCorRf         S             30A
@@ -132,7 +136,8 @@
      D PFuncKey        S              3A
 
      D PActn           S              1A
-     D PMsId           S             21A
+     D***PMsId**         S             21A                                                  MD054905
+     D PMsId           S             29A                                                    MD054905
      D PYear           S              4A
      D PBrcd           S              3A
      D PCtry           S              2A

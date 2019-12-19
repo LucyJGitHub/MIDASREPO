@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD041618           Date 22Sep16               *
-      *  Prev Amend No. MD040841           Date 26Aug16               *
+      *  Last Amend No. MD054905           Date 04Dec19               *
+      *  Prev Amend No. MD041618           Date 22Sep16               *
+      *                 MD040841           Date 26Aug16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054905 - Change Message Ref Id format                      *
       *  MD041618 - Remark field is not updated when selecting the    *
       *             same customer to include                          *
       *  MD040841 - CRS Reports Screenflow for Actions Exclude, Cor-  *
@@ -173,7 +175,8 @@
 
       ** Parameter  entry
      D PActMode        S              1A
-     D PMsgRId         S             21A
+     D***PMsgRId         S             21A                                                  MD054905
+     D PMsgRId         S             29A                                                    MD054905
      D PDDocTp         S              7A
      D PDRtyp          S             18A
      D PDRyer          S              4A

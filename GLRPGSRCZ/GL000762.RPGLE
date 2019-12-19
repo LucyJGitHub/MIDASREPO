@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD040841           Date 26Aug16               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD054905           Date 04Dec19               *
+      *  Prev Amend No. MD040841           Date 26Aug16               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054905 - Change Message Ref Id format                      *
       *  MD040841 - CRS Reports Screenflow for Actions Exclude, Cor-  *
       *             rect and Include should be adjusted               *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -84,12 +86,14 @@
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
 
-     D KMsgRID         S             21A
+     D***KMsgRID         S             21A                                                  MD054905
+     D KMsgRID         S             29A                                                    MD054905
      D KTopElm         S             40A
 
       ** Parameter  entry
      D PActMode        S              1A
-     D PMsgRId         S             21A
+     D***PMsgRId         S             21A                                                  MD054905
+     D PMsgRId         S             29A                                                    MD054905
      D PDDocTp         S              7A
      D PDDocRf         S             30A
      D PDCorRf         S             30A
@@ -108,7 +112,8 @@
      D LeaveFI         S              1A   INZ('N')
 
       ** Parameters GL000663
-     D PMsgRIdOut      S             21A
+     D***PMsgRIdOut      S             21A                                                  MD054905
+     D PMsgRIdOut      S             29A                                                    MD054905
 
       ** Parameters AOBANKR0
      D POptn           S              7A

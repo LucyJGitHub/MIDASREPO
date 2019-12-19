@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD051055           Date 31Aug16               *
-      *  Prev Amend No. MD040953           Date 31Aug16               *
+      *  Last Amend No. MD054905           Date 04Dec19               *
+      *  Prev Amend No. MD051055           Date 31Aug16               *
+      *                 MD040953           Date 31Aug16               *
       *                 MD040841           Date 26Aug16               *
       *                 MD040832           Date 26Aug16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054905 - Change Message Ref Id format                      *
       *  MD051055 - Incorrect report when multiple account selected   *
       *  MD040953 - Same accounts excluded twice produced 2 same      *
       *             entries in the generated Draft Delete report      *
@@ -154,7 +156,8 @@
      D WsResEqTIB      S              1A
      D WTN             S              4  0
 
-     D KMsgRID         S             21A
+     D***KMsgRID         S             21A                                                  MD054905
+     D KMsgRID         S             29A                                                    MD054905
      D KTopElm         S             40A
      D KTopElmName     S             40A
      D KMGSEQU         S              5  0
@@ -198,7 +201,8 @@
 
       ** Parameter  entry
      D PActionCode     S              1A
-     D PMsgRId         S             21A
+     D***PMsgRId         S             21A                                                  MD054905
+     D PMsgRId         S             29A                                                    MD054905
      D PDRtype         S             18A
      D PDRyear         S              4A
      D PDDocTp         S              7A
@@ -240,7 +244,8 @@
      D MxCUST          S             10A
      D MxType          S              4A
      D MxScrDsp        S              1A   INZ('N')
-     D MxIEMSID        S             21A
+     D***MxIEMSID        S             21A                                                  MD054905
+     D MxIEMSID        S             29A                                                    MD054905
      D MxIEINEX        S              1A
      D MxIECREF        S             10A
      D WStr            S              3P 0 INZ(1)                                           MD040841

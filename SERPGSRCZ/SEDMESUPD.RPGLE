@@ -148,7 +148,7 @@
       *
       ** Save the Last SWIFT sequence during update.                                        MD054754
       *                                                                                     MD054754
-     C     *IN99         IFNE      *ON                                                      MD054754
+     C                   IF        *IN99 = '0'                                              MD054754
      C                   Z-ADD     DPLSWS        WLSWS             7 0                      MD054754
      C                   ENDIF                                                              MD054754
       *                                                                                     MD054754
@@ -162,7 +162,7 @@
       *
       ** Move back in the Last SWIFT Sequence during update.                                MD054754
       *                                                                                     MD054754
-     C     *IN99         IFNE      *ON                                                      MD054754
+     C                   IF        *IN99 = '0'                                              MD054754
      C                   Z-ADD     WLSWS         DPLSWS                                     MD054754
      C                   ENDIF                                                              MD054754
       *                                                                                     MD054754

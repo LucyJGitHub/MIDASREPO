@@ -4,8 +4,10 @@
       *                                                               *
       *  DL0280 - DL0280MADT                                          *
       *                                                               *
-      *  Last Amend No. MD033094           Date 28May15               *
-      *  Prev Amend No. CRE105             Date 03Mar15               *
+      *  Last Amend No. MD054576           Date 14Oct19               *
+      *  Prev Amend No. MD053762           Date 16Jun19               *
+      *                 MD033094           Date 28May15               *
+      *                 CRE105             Date 03Mar15               *
       *                 CGL165             Date 23Feb15               *
       *                 MD031215           Date 13Feb15               *
       *                 MD024874A          Date 19Aug14               *
@@ -17,6 +19,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054576 - Account keys not displayed in DKEYSDP report      *
+      *             (DL0280) and GEDLPD (DL0295) after Day 1 COBDL    *
+      *  MD053762 - Tiered Withholding Tax System Values              *
       *  MD033094 - Incorrect account key used for interest paid      *
       *             separately.                                       *
       *  CRE105 - Withholding Tax Extract Report                      *
@@ -126,7 +131,14 @@
      C*                                                                   080603
      C     IPDS          IFEQ      'Y'                                          B 002          08060
      C/COPY WNCPYSRC,DL0280C167                                           S01408
+     C     CDL013        IFEQ      '1'                                                      MD053762
+     C     W#GROSS       ANDNE     *BLANKS                                                  MD053762
+     C     *IN23         ANDEQ     *ON                                                      MD053762
+     C                   MOVE      W#GROSS       AKY(8)                                     MD053762
+     C                   Z-ADD     WORKD         KYAMT                                      MD053762
+     C                   ELSE                                                               MD053762
      C     WORKD         SUB       TAXA          KYAMT                                         08060
+     C                   ENDIF                                                              MD053762
      C/COPY WNCPYSRC,DL0280C168                                           S01408
      C                   MOVE      'R'           AKY(3)                                        08060
      C                   MOVE      'I'           AKY(10)                                       08060
@@ -160,6 +172,7 @@
      C                   EXSR      INTACC                                                     239550
       *                                                                   148100
      C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                     MD053762
       *                                                                   148100
       ** Return the previous value of settlement branch.                  148100
       *                                                                   148100
@@ -511,6 +524,11 @@
      C*                                                                   080603
      C                   MOVE      'M'           AKY(3)                                        08060
      C                   MOVE      'B'           AKY(10)                                       08060
+     C     CDL013        IFEQ      '1'                                                      MD053762
+     C     W#GROSS       ANDNE     *BLANKS                                                  MD053762
+     C     *IN23         ANDEQ     *ON                                                      MD053762
+     C                   MOVE      W#GROSS       AKY(8)                                     MD053762
+     C                   ENDIF                                                              MD053762
      C*                                                                   080603
      C     CEU015        IFEQ      'Y'                                                        250190
      C     RTFC          ANDNE     *BLANKS                                                    250190
@@ -534,7 +552,13 @@
      C*                                                                   080603
      C                   ADD       WORKD         KYAMT                          + Interest     08060
      C/COPY WNCPYSRC,DL0280C169                                           S01408
+     C* If Principal and Interest amount is to be posted Gross of tax                       MD053762
+      * then do not subtract the tax from the KYAMT field                                   MD053762
+     C     CDL013        IFEQ      '1'                                                      MD053762
+     C     W#GROSS       ANDNE     *BLANKS                                                  MD053762
+     C                   ELSE                                                               MD053762
      C                   SUB       TAXA          KYAMT                          - TAX          08060
+     C                   ENDIF                                                              MD053762
      C/COPY WNCPYSRC,DL0280C170                                           S01408
       **********                                                                       234421 234765
      C*****GL031         IFEQ      'Y'                                                 234421 234765
@@ -628,6 +652,7 @@
       *****************************************************************                235040 240667
      C*****RBDN          IFEQ      *ZERO                                               235040 240667
      C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                     MD053762
      C**********         ENDIF                                                         235040 240667
       *                                                                                       CAS009
      C                   MOVE      'MAMT'        WCFTP                                        CAS009
@@ -682,6 +707,15 @@
      C*                                                                   080603
      C                   MOVE      'M'           AKY(3)                                        08060
      C                   MOVE      'T'           AKY(10)                                       08060
+     C     CDL013        IFEQ      '1'                                                      MD053762
+     C     W#GROSS       ANDNE     *BLANKS                                                  MD053762
+     C                   MOVE      W#GROSS       AKY(8)                                     MD053762
+      **  RETAIL SETTL A/C                                                                  MD053762
+     C     IPDSX         IFEQ      'Y'                                                      MD053762
+     C                   MOVE      IMETX         KYSETL                                     MD053762
+     C                   MOVE      INSAX         KYOSTL                                     MD053762
+     C                   ENDIF                                                              MD053762
+     C                   ENDIF                                                              MD053762
      C/COPY WNCPYSRC,DL0280C171                                           S01408
      C                   Z-ADD     TAXA          KYAMT                                         08060
      C*                                                                   S01408
@@ -699,9 +733,11 @@
       * If Dual Withholding Tax feature installed set Main                                    CGL165
       * WHT amount to key amount for Main Tax key                                             CGL165
      C     CGL165        IFEQ      'Y'                                                        CGL165
+     C     TAXI          ANDEQ     'Y'                                                      MD054576
      C                   Z-ADD     PWTXA         KYAMT                                        CGL165
      C                   ENDIF                                                                CGL165
      C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                     MD053762
       *
       * If Dual Withholding Tax feature installed also output                                 CGL165
       * Secondary Tax Account key                                                             CGL165

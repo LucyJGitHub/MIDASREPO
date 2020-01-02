@@ -565,8 +565,11 @@
      D W#BSRD          S              1A                                                      CDL081
      D W#NBRD          S              1A                                                      CDL081
      D CDL081          S              1A                                                      CDL081
+     D CDL013          S              1A                                                    MD053762
+     D W#GROSS         S              1A                                                    MD053762
      D C#BASE          C                   CONST('BasCcyTaxRoundDown')                        CDL081
      D C#NBAS          C                   CONST('NBasCcyTaxRoundDown')                       CDL081
+     D C#GROSS         C                   CONST('GrossMMDepInterest')                      MD053762
      D SUPFLG          S              1A                                                      CFC006
      D PNAME           S             10A                                                      CFC006
      D PCSEQ           S              5A                                                      CFC006
@@ -3096,6 +3099,43 @@
      C                   EVAL      W#BSRD = PCurSet01                                         CDL081
      C                   EVAL      W#NBRD = PCurSet02                                         CDL081
      C                   ENDIF                                                                CDL081
+      ** Access withholding tax Gross Interest system value if CDL013 is on                 MD053762
+      *                                                                                     MD053762
+     C                   IF        CDL013 = '1'                                             MD053762
+     C                   CALL      'AOSVALR0'                                               MD053762
+     C                   PARM      *BLANKS       PRTCD                                      MD053762
+     C                   PARM      C#GROSS       PSysVal01                                  MD053762
+     C                   PARM                    PCurSet01                                  MD053762
+     C                   PARM                    PSysVal02                                  MD053762
+     C                   PARM                    PCurSet02                                  MD053762
+     C                   PARM                    PSysVal03                                  MD053762
+     C                   PARM                    PCurSet03                                  MD053762
+     C                   PARM                    PSysVal04                                  MD053762
+     C                   PARM                    PCurSet04                                  MD053762
+     C                   PARM                    PSysVal05                                  MD053762
+     C                   PARM                    PCurSet05                                  MD053762
+     C                   PARM                    PSysVal06                                  MD053762
+     C                   PARM                    PCurSet06                                  MD053762
+     C                   PARM                    PSysVal07                                  MD053762
+     C                   PARM                    PCurSet07                                  MD053762
+     C                   PARM                    PSysVal08                                  MD053762
+     C                   PARM                    PCurSet08                                  MD053762
+     C                   PARM                    PSysVal09                                  MD053762
+     C                   PARM                    PCurSet09                                  MD053762
+     C                   PARM                    PSysVal10                                  MD053762
+     C                   PARM                    PCurSet10                                  MD053762
+                                                                                            MD053762
+     C                   IF        PRTCD <> *BLANKS                                         MD053762
+     C                   EVAL      DBKEY  = PSysVal01                                       MD053762
+     C                   EVAL      DBASE  = '202'                                           MD053762
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD053762
+     C                   EXSR      *PSSR                                                    MD053762
+     C                   ENDIF                                                              MD053762
+                                                                                            MD053762
+      ** Setup Gross Interest indicator                                                     MD053762
+                                                                                            MD053762
+     C                   EVAL      W#GROSS = PCurSet01                                      MD053762
+     C                   ENDIF                                                              MD053762
      C*                                                                   S01194
 0656 C*    CHECK FOR NEGOTIABLE ASSETS ACCRUALS INDICATOR                 S01194
 0658 C     BNNAIA        COMP      'Y'                                    28                   S0119
@@ -3397,6 +3437,11 @@
 0678 C*             PROCESSING.
 0679 C*
 0680 C     BEGIN         TAG                                                    ** BEGIN TAG **LN071
+     C                   If        CDL013 = '1'                                             MD053762
+     C                   MOVE      IPDS          IPDSX             1                        MD053762
+     C                   MOVE      IMET          IMETX             2 0                      MD053762
+     C                   MOVEL     INSA          INSAX            18                        MD053762
+     C                   EndIF                                                              MD053762
      C                   EVAL      PSTXA = 0                                                MD037285
      C                   MOVE      TAXI          WTAXI             1                          CER069
      C                   IF        *IN03 = *ON AND TAXI = 'A'                                 CER069
@@ -12393,10 +12438,16 @@
      C                   ELSE                                                                 CDL013
      C                   MOVE      ' '           AKY(6)                                       CDL013
      C                   ENDIF                                                                CDL013
+     C     CDL013        IFEQ      '1'                                                      MD053762
+     C     W#GROSS       ANDNE     *BLANK                                                   MD053762
+     C     *IN23         ANDEQ     *ON                                                      MD053762
+     C                   MOVE      W#GROSS       AKY(8)                                     MD053762
+     C                   ENDIF                                                              MD053762
      C                   ENDIF                                                                CDL013
      C/COPY WNCPYSRC,DL0280C117                                           S01408
 2781 C*                                                                   080603
 2727 C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                     MD053762
       *                                                                                       237562
       ** Return the previous value of settlement branch.                                      237562
       *                                                                                       237562
@@ -12431,6 +12482,7 @@
      C     AKY(3)        ANDEQ     'I'                                                     AR992570A
      C     *IN21         ANDEQ     '0'                                                     AR992570A
      C     WINTC         ANDEQ     'N'                                                     AR992570B
+     C*****AKY(8)        ANDNE     'G'                                             MD053762 MD054576
      C                   MOVE      'B'           AKY(10)                                   AR992570A
      C                   EXSR      EXCP                                                    AR992570A
      C                   ENDIF                                                             AR992570A
@@ -12619,15 +12671,21 @@
      C                   ELSE                                                                 CDL013
      C                   MOVE      ' '           AKY(6)                                       CDL013
      C                   ENDIF                                                                CDL013
+     C     CDL013        IFEQ      '1'                                                      MD053762
+     C     W#GROSS       ANDNE     *BLANKS                                                  MD053762
+     C                   MOVE      W#GROSS       AKY(8)                                     MD053762
+     C                   ENDIF                                                              MD053762
      C                   ENDIF                                                                CDL013
      C/COPY WNCPYSRC,DL0280CP13                                           S01408
      C*                                                                   S01408
       * If Dual Withholding Tax feature installed set Main                                    CGL165
       * WHT amount to key amount for Main Tax key                                             CGL165
      C     CGL165        IFEQ      'Y'                                                        CGL165
+     C     TAXI          ANDEQ     'Y'                                                      MD054576
      C                   Z-ADD     PWTXA         KYAMT                                        CGL165
      C                   ENDIF                                                                CGL165
 2744 C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                     MD053762
       * If Dual Withholding Tax feature installed also output                                 CGL165
       * Secondary Tax Account key                                                             CGL165
      C     CGL165        IFEQ      'Y'                                                        CGL165
@@ -12751,12 +12809,19 @@
      C                   Z-ADD     WORKD         WZAMT                                        235265
 2781 C                   MOVE      'N'           AKY(10)                                       08060
      C                   MOVE      'INTP'        WCFTP                                        CAS009
+     C     CDL013        IFEQ      '1'                                                      MD053762
+     C     W#GROSS       ANDNE     *BLANKS                                                  MD053762
+     C     *IN23         ANDEQ     *ON                                                      MD053762
+     C                   MOVE      W#GROSS       AKY(8)                                     MD053762
+     C                   ENDIF                                                              MD053762
       *                                                                                     AR992570
       ** If feature CDL018=Y, use xxIxx___B. This replaces xxIxx___N                        AR992570
       ** account key.                                                                       AR992570
       *                                                                                     AR992570
      C     CDL018        IFEQ      'Y'                                                      AR992570
      C     FIXDEP        ANDEQ     'Y'                                                      AR992570
+     C*****AKY(8)        ANDNE     'G'                                             MD053762 MD054576
+     C     CDL013        ANDNE     '1'                                                      MD054576
      C                   MOVE      'B'           AKY(10)                                    AR992570
      C                   ENDIF                                                              AR992570
 2781 C                   END                                                                   08060
@@ -12807,6 +12872,7 @@
      C/COPY WNCPYSRC,DL0280C198                                           S01408
      C                   Z-ADD     KYAMT         WZAMT                                        233565
 2751 C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                     MD053762
       *                                                                                       237562
       ** Return the previous value of settlement branch.                                      237562
       *                                                                                       237562

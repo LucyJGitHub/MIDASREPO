@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 256218             Date 13Dec19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -57,6 +58,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  256218 - Ensure reversing of repo before updating, to fix    *
+      *           incorrect repo position.                            *
+      *           Applied for MD-54947.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -308,6 +312,9 @@
      C                   IF        DCHTP   = 'D'                                              CAP087
      C                   EXSR      DDELET                                                     CAP087
      C                   ELSE                                                                 CAP087
+     C                   IF        DCHTP   = 'A'                                              256218
+     C                   EVAL      ##DPNA = DDPNA                                             256218
+     C                   ENDIF                                                                256218
      C                   EXSR      DMAINT                                                     CAP087
      C                   END                                                                  CAP087
       *                                                                                       CAP087

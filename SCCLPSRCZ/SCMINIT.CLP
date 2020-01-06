@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020B            Date 06Aug12              */
+/*       Last Amend No. MD053437           Date 07Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020B            Date 06Aug12              */
 /*                      CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -78,6 +79,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD053437 - CGL013 FTP exit program                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020B - COB Restructure - Secondary COB Infrastructure    */
 /*       CSD083 - Watch List Compliance Upgrade                      */
@@ -257,7 +259,8 @@
              DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)                                 /*CCB020B*/
                                                                                          /*CCB020B*/
              DCL        VAR(&BPPARM) TYPE(*CHAR) LEN(98)                                 /*CCB020B*/
- 
+             DCL        VAR(&WFTP) TYPE(*CHAR) LEN(1)                                   /*MD053437*/
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
                                                                                           /*CSC011*/
 /** Check if 24x7 Midas Availability Feature is on */                                     /*CSC011*/
@@ -597,7 +600,7 @@ LOOP2:            CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK)                /*061601*/
                   SBMJOB     JOB(EM0101) JOBD(MBATCH) JOBQ(EMJOBQ) +
                                USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
                                EMC02') INLLIBL(*JOBD) OUTQ(*JOBD)                         /*CSC023*/
- 
+
 /**********       SBMJOB     JOB(EMCLR) JOBD(MBATCH) +
 /**********         USER(*JOBD) JOBQ(EMJOBQ) RQSDTA('CALL EMCLR') +
 /**********         RTGDTA(*JOBD)                          /*S01189*/ /*081177*/
@@ -694,7 +697,7 @@ LOOP2:            CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK)                /*061601*/
 /*    SUBMIT EDCONTROL JOB IF ED MODULE IS PRESENT AND                /*101971*/
 /*    THE JOB IS NOT ALREADY RUNNING                                  S01493*/
 /**/
- 
+
              CALL       PGM(AOMMODR0) PARM(&RTNC &OPTN &AOMMOD) +
                           /*S01493*/
              IF         COND(%SUBSTRING(&AOMMOD 99 1) *EQ 'Y') +
@@ -857,7 +860,7 @@ LOOP2:            CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK)                /*061601*/
              CALL       PGM(GLC2817) PARM(' ' ' ' '*START' ' ' ' ')   /*CGL004*/
 CGLABL:                                                               /*CGL004*/
              ENDDO                                                    /*CGL004*/
- 
+
              ENDDO
 /**/                                                                  /*CGL009*/
 /*    Check if Fontis IAT/TPP Interface (CGL009) is active            /*CGL009*/
@@ -885,8 +888,21 @@ CGLABL:                                                               /*CGL004*/
                                                                       /*CGL009*/
              CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CGL013' +
                           &FMT)                                                           /*CGL013*/
-             IF         (&RTCD *EQ '       ') +
-                 CALL       PGM(GLC001410) PARM('*START' ' ' ' ')                         /*CGL013*/
+/*********   IF         (&RTCD *EQ '       ') + */                                      /*MD053437*/
+/*********       CALL       PGM(GLC001410) PARM('*START' ' ' ' ') */             /*CGL013 MD053437*/
+             IF         (&RTCD *EQ '       ') THEN(DO)                                  /*MD053437*/
+                 CALL       PGM(GLC001410) PARM('*START' ' ' ' ')                       /*MD053437*/
+                 CALL       PGM(SD3230) PARM(&WFTP)                                     /*MD053437*/
+                 IF         (&WFTP *EQ 'Y') THEN(DO)                                    /*MD053437*/
+                 ALCOBJ     OBJ((SD_MID_FTP *DTAARA *EXCL)) WAIT(0)                     /*MD053437*/
+                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(NEXT1))                     /*MD053437*/
+                 CALL       PGM(QCLRDTAQ) PARM('SD_MID_FTP' '*LIBL ')                   /*MD053437*/
+                 MONMSG     MSGID(CPF0000)                                              /*MD053437*/
+                 SBMJOB     CMD(CALL PGM(SDC3200)) JOB(SD_MID_FTP) JOBD(MBATCH) +
+                              JOBQ(MSJOBQ) USER(*JOBD) RTGDTA(MULTILANGUAGE) +
+                              MSGQ(MOPERQ) OUTQ(*JOBD)                                  /*MD053437*/
+                 ENDDO       /*MD053437*/
+ NEXT1:      ENDDO       /*MD053437*/
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,SCMINITMPE                                   */      /*S01408*/
 /**/                                                                  /*S01408*/

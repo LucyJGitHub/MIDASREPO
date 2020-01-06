@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 05Feb18              */
-/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*       Last Amend No. MD053437           Date 07Oct19              */
+/*       Prev Amend No. MD046248           Date 05Feb18              */
+/*                      MD045731           Date 27Sep17              */
 /*                      CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -61,6 +62,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD053437 - CGL013 FTP exit program                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Restart MT94x batch job.                         */
 /*       CSD083 - Watch List Compliance Upgrade                      */
@@ -182,6 +184,7 @@
              DCL        VAR(&W1OFSR) TYPE(*CHAR) LEN(32)                                  /*CSD015*/
              DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)                                  /*CSD015*/
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CRE020*/
+             DCL        VAR(&WFTP) TYPE(*CHAR) LEN(1)                                   /*MD053437*/
 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
@@ -519,6 +522,25 @@ CGLABL:                                                               /*CGL004*/
              CALL       PGM(GLC001410) PARM('*START' '       ' +
                           '       ')                                                    /*MD045731*/
              DLCOBJ     OBJ((GLM94XDA *DTAARA *EXCL))                                   /*MD045731*/
+/** Check if CGL013 is on */                                                            /*MD053437*/
+                                                                                        /*MD053437*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD053437*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CGL013' +
+                          &FMT)                                                         /*MD053437*/
+                                                                                        /*MD053437*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD053437*/
+                 CALL       PGM(SD3230) PARM(&WFTP)                                     /*MD053437*/
+                 IF         (&WFTP *EQ 'Y') THEN(DO)                                    /*MD053437*/
+                 ALCOBJ     OBJ((SD_MID_FTP *DTAARA *EXCL)) WAIT(0)                     /*MD053437*/
+                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(NEXT1))                     /*MD053437*/
+                 CALL       PGM(QCLRDTAQ) PARM('SD_MID_FTP' '*LIBL ')                   /*MD053437*/
+                 MONMSG     MSGID(CPF0000)                                              /*MD053437*/
+                 SBMJOB     CMD(CALL PGM(SDC3200)) JOB(SD_MID_FTP) JOBD(MBATCH) +
+                              JOBQ(MSJOBQ) USER(*JOBD) RTGDTA(MULTILANGUAGE) +
+                              MSGQ(MOPERQ) OUTQ(*JOBD)                                  /*MD053437*/
+                 DLCOBJ     OBJ((SD_MID_FTP *DTAARA *EXCL))                             /*MD053437*/
+                 ENDDO       /*MD053437*/
+ NEXT1:      ENDDO       /*MD053437*/
              ENDDO                                                                      /*MD045731*/
  TP:                                                                                    /*MD045731*/
 /*/COPY WNCPYSRC,SCC0103002                                          */
@@ -785,6 +807,7 @@ SKIP2:                                                                          
                 CALL       PGM(APC0460)                                                   /*CRE020*/
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
+
 /*/COPY WNCPYSRC,SCC0103MPE                                        */ /*S01408*/
 
              GOTO       CMDLBL(END)

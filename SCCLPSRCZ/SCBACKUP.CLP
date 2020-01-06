@@ -9,10 +9,11 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD053437           Date 07Oct19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CSC033             Date 18May07              */
+/*                      CSC033             Date 18May07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      BUG2381            Date 13May04              */
@@ -61,6 +62,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD053437 - CGL013 FTP exit program                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC033 - Include global libraries in database saves.        */
 /*       BUG2381 - Batch submit of confirmations programs            */
@@ -176,6 +178,7 @@
                                                                                           /*CSC011*/
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CRE020*/
              DCL        VAR(&CGL013) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CSC033*/
+             DCL        VAR(&WFTP) TYPE(*CHAR) LEN(1)                                   /*MD053437*/
                                                                                           /*CRE020*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
 /*  Check if MT94x Message Generation is on                                               /*CSC033*/
@@ -289,8 +292,10 @@
 /*  If MT94x Message Generation is present, shut it down                                  /*CCS033*/
 /**/                                                                                      /*CSC033*/
              IF         COND(&CGL013 *EQ 'Y') THEN(DO)                                    /*CSC033*/
-                 CALL       PGM(GLC001410) PARM('*END  ' '*SYNCH ' ' ')                   /*CSC033*/
-             ENDDO                                                                        /*CSC033*/
+                CALL       PGM(GLC001410) PARM('*END  ' '*SYNCH ' ' ')                    /*CSC033*/
+                CALL       PGM(QSNDDTAQ) PARM(SD_MID_FTP *LIBL +
+                          X'00001F' T)                                                  /*MD053437*/
+             ENDDO       /*CSC033*/
 /**/                                                                  /*CDE001*/
 /* If the CCRM - Limits Drip Feed job is active, shut it down         /*CDE001*/
 /**/                                                                  /*CDE001*/
@@ -470,7 +475,7 @@ CONT:        ENDDO                                                    /*S01127*/
                                                                     /*092719*/
              DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))                 /*092719*/
              MONMSG     MSGID(CPF0000)                              /*092719*/
- 
+
 /************SBMJOB     CMD(CALL PGM(FCC0401) PARM(I)) +                               */ /*CPK014*/
 /************             JOB(RCFMONITOR) JOBD(FCJOBD) JOBQ(FCJOBQ) +                  */ /*CPK014*/
 /************             OUTQ(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD)             /*092719*/ /*CPK014*/
@@ -496,7 +501,7 @@ BYPASS:                                                             /*092719*/
 /** the support system should not be started unless the support sys */                    /*CSC011*/
 /** is ready to accept data from Meridian (i.e. API pgms in the     */                    /*CSC011*/
 /** support sys are in maintenance mode already.)                   */                    /*CSC011*/
- 
+
                          IF      COND(((&CURR *EQ &SUPP) *AND (&MMODE *EQ +
                                  'E')) *OR ((&SOVR *EQ 'S')  *AND (&CURR +
                                  *EQ &MAIN))) +
@@ -549,7 +554,7 @@ BYPASS:                                                             /*092719*/
                   ENDDO
                 DLCOBJ     OBJ((EMCHK *DTAARA *EXCL))
              ENDDO
- 
+
 /**/                                                                  /*CCM002*/
 /*    Check if Citydealer Interface feature is active.                /*CCM002*/
 /**/                                                                  /*CCM002*/
@@ -640,13 +645,13 @@ BYPASS:                                                             /*092719*/
 /**/                                                                                     /*BUG2381*/
              CALL       PGM(APC0430)                                                     /*BUG2381*/
 /**/                                                                                     /*BUG2381*/
- 
+
 /**/
 /*****RESUBMIT*EDC0040*JOB*IF*ED*MODULE*IS*PRESENT*AND**** /*S01493*/ /*101971*/
 /*    RESUBMIT EDCONTROL JOB IF ED MODULE IS PRESENT AND              /*101971*/
 /*    THE JOB IS NOT ALREADY RUNNING                           S01493*/
 /**/
- 
+
     CALL       PGM(AOMMODR0) PARM(&RTNC &OPTN &AOMMOD)         /*S01493*/
     IF         COND(%SUBSTRING(&AOMMOD 99 1) *EQ 'Y') THEN(DO) /*S01493*/
              ALCOBJ   OBJ((EDC0040 *DTAARA *EXCL))             /*S01493*/
@@ -708,7 +713,18 @@ CGLABL:                                                               /*CGL004*/
 /*******     IF         (&RTCD *EQ '       ') +                                             CSC033*/
              IF         COND(&CGL013 *EQ 'Y') THEN(DO)                                    /*CSC033*/
                  CALL       PGM(GLC001410) PARM('*START' ' ' ' ')     /*CGL013*/
-             ENDDO                                                                        /*CSC033*/
+                 CALL       PGM(SD3230) PARM(&WFTP)                                     /*MD053437*/
+                 IF         (&WFTP *EQ 'Y') THEN(DO)                                    /*MD053437*/
+                 ALCOBJ     OBJ((SD_MID_FTP *DTAARA *EXCL)) WAIT(0)                     /*MD053437*/
+                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(NEXT1))                     /*MD053437*/
+                 CALL       PGM(QCLRDTAQ) PARM('SD_MID_FTP' '*LIBL ')                   /*MD053437*/
+                 MONMSG     MSGID(CPF0000)                                              /*MD053437*/
+                 SBMJOB     CMD(CALL PGM(SDC3200)) JOB(SD_MID_FTP) JOBD(MBATCH) +
+                              JOBQ(MSJOBQ) USER(*JOBD) RTGDTA(MULTILANGUAGE) +
+                              MSGQ(MOPERQ) OUTQ(*JOBD)                                  /*MD053437*/
+ NEXT1:          ENDDO       /*MD053437*/
+                 ENDDO       /*CSC033*/
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,SCBACKUMPE                                   */      /*S01408*/
 /**/                                                                  /*S01408*/

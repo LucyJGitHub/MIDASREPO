@@ -1,0 +1,273 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD FTP automated transmission')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC3200 - FTP Automated transmission                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD053437 *CREATE   Date 07Oct19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD053437 - CGL013 FTP exit program                          */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCLF       FILE(SDNWRKPD)
+             DCL        VAR(&DELAY) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RETVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&NUM) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&TOT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MSGS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OPR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&OPRERR) TYPE(*CHAR) LEN(160)
+             DCL        VAR(&TRACE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+
+/**  Shared return code */
+             DCL        VAR(&RTNCDE)   TYPE(*CHAR) LEN(7)
+
+/**  Parameter for call to AOSARDR0 */
+             DCL        VAR(&OPTN)     TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SAR)      TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD)   TYPE(*CHAR) LEN(200)
+
+/**  Parameter for call to AOSVALR0 */
+             DCL        VAR(&SVAL1)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10)   TYPE(*CHAR) LEN(200)
+
+/**  Result fields  */
+             DCL        VAR(&CSC053)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FTPS)     TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PORT)     TYPE(*CHAR) LEN(5)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2019')
+
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Set off all switches */
+             CHGJOB     SWS(XXXXXX00)
+
+/** Start commitment control */
+      /*     STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB) */
+
+/** Access CSC053 Feature                                          */
+             CHGVAR     VAR(&SAR) VALUE('CSC053')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&CSC053) VALUE('N')
+
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE &OPTN &SAR &SCSARD)
+             IF         COND(&RTNCDE *EQ '       ') THEN(DO)
+                        CHGVAR     VAR(&CSC053) VALUE('Y')
+
+/** Get 'UseFTPSecureSWIFT' system value from file SDSVALPD  */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                           'UseFTPSecureSWIFT' &SVAL1 &SVALK2 +
+                            &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                            &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                            &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                            &SVALK0 &SVAL10)
+
+/** If the 'UseFTPSecureSWIFT' system value is missing then end abnormally */
+
+                   IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                                CMDLBL(ABNOR))
+                   ELSE       CMD(DO)
+                              CHGVAR     VAR(&FTPS) VALUE(%SST(&SVAL1 1 1))
+                   ENDDO
+             ENDDO
+
+/** Use secure sockets layer for FTP if feature CSC053 switched ON */
+/** and system value UseFTPSecureSWIFT is set to 'Y' */
+
+             IF         COND(&CSC053 *EQ 'Y' *AND &FTPS *EQ 'Y') THEN(DO)
+
+/** Retrieve the configured secure port number */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                           'FTPSecurePortNumber' &SVAL1 &SVALK2 +
+                            &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                            &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                            &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                            &SVALK0 &SVAL10)
+
+/** If the 'FTPSecurePortNumber' system value is missing then end abnormally */
+
+                   IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                                CMDLBL(ABNOR))
+                   ELSE       CMD(DO)
+                              CHGVAR     VAR(&PORT) VALUE(%SST(&SVAL1 1 5))
+                   ENDDO
+             ENDDO
+
+/** Lock data area to show job is active */
+             ALCOBJ     OBJ((SD_MID_FTP *DTAARA *EXCL)) WAIT(120)
+
+/** Check whether connection to SWIFT terminal is currently active */
+             RTVDTAARA  DTAARA(MSSTAT (21 1)) RTNVAR(&TRACE)
+
+/** Access MG/ME installation Control Data and calculate dataq delay */
+ READ:       RCVF       RCDFMT(SDNWRKD0)
+
+/** End of File */
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(DTQ_PROC))
+
+ LOOP:       CHGVAR     VAR(&DELAY) VALUE(0)
+             IF         COND(&EDPROT *EQ '*FTP') THEN(DO)
+             CHGVAR     VAR(&DELAY) VALUE(&EDPFRQ * 60)
+
+             IF         COND(&TRACE *EQ 'T') THEN(CHGJOB LOG(4 00 +
+                          *SECLVL) LOGCLPGM(*YES))
+
+             ELSE       CMD(CHGJOB LOG(0 30 *NOLIST) LOGCLPGM(*NO))
+             PING       RMTSYS(&EDTSNM) WAITTIME(10)
+             MONMSG     MSGID(CPF0000 TCP0000)
+             RCVMSG     MSGTYPE(*LAST) MSGDTA(&MSGDTA) MSGID(&MSGID)
+             IF         COND(&MSGID *EQ 'TCP3210') THEN(DO)
+             CHGVAR     VAR(&NUM) VALUE(%SST(&MSGDTA 1 4))
+             CHGVAR     VAR(&TOT) VALUE(%SST(&MSGDTA 5 4))
+             IF         COND(&NUM *EQ &TOT) THEN(GOTO CMDLBL(LINK_UP))
+             ENDDO
+             SNDPGMMSG  MSGID(MEM7000) MSGF(MIDAS) MSGDTA(&EDTSNM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(DTQ_PROC)
+
+/** If link is active compress new batch of outgoing messages and */
+/** prepare FTP script file for transmission */
+
+ LINK_UP:    CLRPFM     FILE(SDFTTIPD)
+             CLRPFM     FILE(SDFTTOPD)
+             CLRPFM     FILE(SDPCCOPD)
+
+             CALL       PGM(SD3200) PARM(&MSGS &EDRFNP &EDRPNM &EDSUID &EDM940 +
+                          &EDM941 &EDM942 &EDM950 &EDNWRK)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             ROLLBACK
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/** If any messages extracted attempt to send to SWIFT device using */
+/** TCP/IP File Transfer Protocol (FTP) */
+             IF         COND(&MSGS *EQ 'Y') THEN(DO)
+             OVRDBF     FILE(INPUT) TOFILE(SDFTTIPD)
+             OVRDBF     FILE(OUTPUT) TOFILE(SDFTTOPD)
+
+/** Use secure sockets layer for FTP if feature CSC053 switched ON */
+/** and system value UseFTPSecureSWIFT is set to 'Y' */
+
+             IF         COND(&CSC053 *EQ 'Y' *AND &FTPS *EQ 'Y') THEN(DO)
+
+/** Execute the secure FTP operation */
+
+             FTP        RMTSYS(&EDTSNM) SECCNN(*SSL) PORT(&PORT)
+             ENDDO
+             ELSE       CMD(DO)
+             FTP        RMTSYS(&EDTSNM)
+             ENDDO
+
+/** Analyse result of file transfer */
+             CALL       PGM(SD3210) PARM(&OPR &ERR)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             ROLLBACK
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/** If error reported on transfer send user message and reset batch */
+/** status to Ready-to-Send... */
+             IF         COND(&OPR *NE ' ') THEN(DO)
+
+/** If lost connection reported then send a warning message to MOPERQ */
+             IF         COND(&OPR *EQ '*NORESP') THEN(DO)
+             SNDPGMMSG  MSGID(MEM7006) MSGF(MIDAS)   +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&OPRERR) VALUE(&OPR *CAT &ERR)
+             SNDPGMMSG  MSGID(MEM7001) MSGF(MIDAS) MSGDTA(&OPRERR) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             ENDDO
+
+             CALL       PGM(SD3220) PARM('R' &EDM940 &EDM941 &EDM942 &EDM950)
+
+
+             ENDDO
+
+/** else, if no error on transfer, set status to Transmitted-to-SWIFT */
+             ELSE       CMD(DO)
+             CALL       PGM(SD3220) PARM('T' &EDM940 &EDM941 &EDM942 &EDM950)
+             ENDDO
+
+/** If trace facility is enabled or transfer failed print FTP script */
+/** and output files */
+             IF         COND((&TRACE *EQ 'T') *OR (&OPR *NE ' ')) +
+                          THEN(DO)
+             CPYF       FROMFILE(SDFTTIPD) TOFILE(*PRINT) FROMRCD(2)
+             CPYF       FROMFILE(SDFTTOPD) TOFILE(*PRINT)
+             ENDDO
+
+
+             ENDDO
+
+             GOTO       CMDLBL(DTQ_PROC)
+
+             ENDDO
+
+             GOTO       CMDLBL(READ)
+
+/** If termination requested on previous iteration, terminate now */
+ DTQ_PROC:   IF         COND(&RETVAL *EQ 'T') THEN(GOTO CMDLBL(END))
+
+/** Wait on DEQW for time specified on ICD (or until entry received) */
+             CALL       PGM(QRCVDTAQ) PARM(SD_MID_FTP *LIBL +
+                          X'00001F' &RETVAL &DELAY)
+             GOTO       CMDLBL(LOOP)
+
+/** Abnormal termination */
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC3200 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+
+
+
+ END:
+               DLCOBJ     OBJ((SD_MID_FTP *DTAARA *EXCL))
+             ENDPGM

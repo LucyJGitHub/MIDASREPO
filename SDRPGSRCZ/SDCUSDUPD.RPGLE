@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD053436           Date 21Sep19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD031234           Date 16May19               *
       *                 MD020755           Date 16May19               *
       *                 MD050212           Date 02Apr18               *
@@ -145,6 +146,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053436 - Unable to perform end to end testing for          *
+      *             Compliance KYC                                    *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD031234 - Marketing information not updated on CLINTCB      *
@@ -1817,7 +1820,23 @@
      C                   ENDIF                                                                CSD012
       *                                                                                       CSD012
      C                   ENDIF                                                                CSD012
-
+      *                                                                                     MD053436
+      ** Send an amend message to compliance watch                                          MD053436
+      *                                                                                     MD053436
+     C                   IF        CSD028 = 'Y' AND                                         MD053436
+     C                             YESUPDAT <> 'Y'                                          MD053436
+      *                                                                                     MD053436
+     C                   IF        A_CUTYLC = 'I'                                           MD053436
+     C                   CALL      'SD000051'                                               MD053436
+     C                   PARM      'I'           PAction                                    MD053436
+     C                   PARM      A_CUCUST      PCustNumber                                MD053436
+     C                   ELSE                                                               MD053436
+     C                   CALL      'SD000051'                                               MD053436
+     C                   PARM      'A'           PAction                                    MD053436
+     C                   PARM      A_CUCUST      PCustNumber                                MD053436
+     C                   ENDIF                                                              MD053436
+     C                   ENDIF                                                              MD053436
+      *                                                                                     MD053436
       ** INSERT, AMEND OR DELETE THE CUSTOMER
       ** OR CLOSE OR RELEASE THE CUSTOMER                                                     CSD007
 
@@ -3697,6 +3716,7 @@
      C     CSD028        ANDEQ     'N'                                                        CSD028
      C     CSD028        OREQ      'Y'                                                        CSD028
      C     PTransType    ANDNE     'AUTH'                                                     CSD028
+     C     AUTHRQ        ANDEQ     'Y'                                                      MD053436
      C                   MOVEL     A_CUCUST      DBKEY
      C                   MOVEL     'SDCUSTPD'    DBFILE                         ************
      C                   MOVEL     '004'         DBASE                          * DBERR 004*

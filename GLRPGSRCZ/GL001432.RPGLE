@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG009             Date 24Oct19               *
+      *  Last Amend No. CMG009             Date 24Nov19               *
       *  Prev Amend No. MD050696           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *

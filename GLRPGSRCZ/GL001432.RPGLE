@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD050696           Date 15May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG009             Date 24Oct19               *
+      *  Prev Amend No. MD050696           Date 15May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG009 - MT942 without Forward Value Postings.               *
       *  MD050696 - Multicash extended narratives from BuN interface  *
       *            postings not merged in field 86                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -238,6 +240,7 @@
      D WkField30       S             30A                                        Working Field 30
      D CRE008          S              6                                         CRE008 flag   CRE008
      D CGL152          S              1                                         CGL152 flag   CGL152
+     D CMG009          S              1                                         CMG009 flag   CMG009
      D/COPY WNCPYSRC,GLH00416
       *                                                                                     BUG25147
      D                 DS                                                                   BUG25147
@@ -310,9 +313,17 @@
      C                   WHEN      GLRECI = 'P' AND GLDRCR = 1
      C                   EVAL      MGDRCR = 'C '                                Debit/Credit Ind.
      C                   WHEN      GLRECI = 'S' AND GLDRCR = 0
+     C                   IF        CMG009 = 'Y'                                               CMG009
+     C                   EVAL      MGDRCR = 'D '                                              CMG009
+     C                   ELSE                                                                 CMG009
      C                   EVAL      MGDRCR = 'ED'                                Debit/Credit Ind.
+     C                   ENDIF                                                                CMG009
      C                   WHEN      GLRECI = 'S' AND GLDRCR = 1
+     C                   IF        CMG009 = 'Y'                                               CMG009
+     C                   EVAL      MGDRCR = 'C '                                              CMG009
+     C                   ELSE
      C                   EVAL      MGDRCR = 'EC'                                Debit/Credit Ind.
+     C                   ENDIF                                                                CMG009
      C                   ENDSL
      C/COPY WNCPYSRC,GLH00202
                                                                                             BUG26832
@@ -994,6 +1005,19 @@
      C                   IF        P@RTCD = *BLANKS                                           CRE008
      C                   EVAL      CRE008 = 'Y'                                               CRE008
      C                   ENDIF                                                                CRE008
+      ** Check if feature CMG009 (MT942 without Forward Value Postings) is installed          CMG009
+                                                                                              CMG009
+     C                   EVAL      CMG009 = 'N'                                               CMG009
+                                                                                              CMG009
+     C                   CALLB     'AOSARDR0'                                                 CMG009
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CMG009
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CMG009
+     C                   PARM      'CMG009'      P@SARD                         Feature Ref.  CMG009
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG009
+                                                                                              CMG009
+     C                   IF        P@RTCD = *BLANKS                                           CMG009
+     C                   EVAL      CMG009 = 'Y'                                               CMG009
+     C                   ENDIF                                                                CMG009
                                                                                               CGL152
       ** Key list for CHAIN to SDNTTIL0                                                       CGL152
      C     KeyNTTIL0     KLIST                                                                CGL152

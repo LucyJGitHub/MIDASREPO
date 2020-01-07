@@ -52,7 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG009 - MT942 without Forward Value Postings                *
+      *  CMG009 - MT942 without Forward Value Postings.               *
       *  MD050696 - Multicash extended narratives from BuN interface  *
       *            postings not merged in field 86                    *
       *  MD046248 - Finastra Rebranding                               *

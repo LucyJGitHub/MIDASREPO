@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. JMI111             Date 18May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. JMI111A            Date 08Jan20               *
+      *  Prev Amend No. JMI111             Date 18May18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111A - Midas-OPICS Interface. Upgrade to FBM 2.1          *
+      *            Added hook JMI111_015                              *
       *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
       *           Added hooks JMI111_006, JMI111_012, JMI111_013,     *
       *                       JMI111_014                              *
@@ -282,6 +285,7 @@
      C     *ENTRY        PLIST
      C                   PARM                    PErrorFlag
      C                   PARM                    PBTNB
+      /COPY WNCPYSRC,JMI111_015                                                              JMI111A
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

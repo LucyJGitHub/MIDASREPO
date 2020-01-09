@@ -29,6 +29,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054958 - Set *INLR ON before end of module                 *
+      *           - This fix is an addition to MD-54604               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014                                  *
@@ -48,7 +49,7 @@
       *
       ** SD Standard Reporting Information
      FSDRPIFL0  IF   E           K DISK
- 
+
       ** DL Reporting Information                                                           MD021933
      FDLRPIFL0  IF   E           K DISK                                                     MD021933
                                                                                             MD021933
@@ -70,90 +71,90 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second data structure for Access Programs, long DS
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Currencies File Format
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Customer Details Format
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Customer Extension SWIFT Details
      D SDCSSW        E DS                  EXTNAME(SDCSSWPD)
- 
+
       ** Branch Codes
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D BQQDFAC       E                     EXTFLD(QQDFAC)
- 
+
       ** Report Information Format
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for bank details
      D SDRPIFDetail  E DS                  EXTNAME(SDRPIFPD)
- 
+
       ** DL Transaction Reporting Information Link file
      D DLRILKPDIn    E DS                  EXTNAME(DLRILKPD)
- 
+
       ** Deal in Screen Format 1
      D DLRIS1Detail  E DS                  EXTNAME(DLRIS1PD)
- 
+
       ** Deal in Screen Format 2
      D DLRIS2Detail  E DS                  EXTNAME(DLRIS2PD)
- 
+
       ** Deal in Screen Format 3
      D DLRIS3Detail  E DS                  EXTNAME(DLRIS3PD)
                                                                                               CSW214
       ** Deal in Screen Format 4                                                              CSW214
      D DLRIS4Detail  E DS                  EXTNAME(DLRIS4PD)                                  CSW214
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PRetCode        S              7A
      D Timestamp       S               Z
      D WRecFound       S              1A
@@ -175,7 +176,7 @@
      D PSYTM           S              6S 0
      D PSYDT           S              5P 0
      D PSYTOF          S              4S 0
- 
+
      D FRTZ            S              1A
      D PMODL           S              2A
      D PBRCA           S              3A
@@ -185,14 +186,14 @@
      D PMKTOS          S              1A
      D PLCTOS          S              1A
      D PSYTOS          S              1A
- 
+
      D PRtCd           S              7A
      D POptn           S              7A
      D PCurr           S              3A
      D PCusn           S             10A
      D PKySt           S              6A
      D PBrCd           S              3A
- 
+
      D WSWAP           S              1A                                                    MD021933
      D WAPID           S              4A                                                    MD021933
      D WTRRF           S              6A                                                    MD021933
@@ -244,9 +245,9 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRtvRepInfo  BEGSR
- 
+
      C                   EVAL      WRecFound = 'N'
      C                   EVAL      X = 0
      C                   EVAL      RPBRCH = *BLANKS
@@ -255,14 +256,14 @@
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   DOU       WRecFound = 'Y' OR
      C                             X = 30
- 
+
      C                   EVAL      X = X + 1
- 
+
      C                   EXSR      SRMovKeyVal
- 
+
      C     RPIFKey       SETLL     SDRPIFL0
      C                   IF        %EQUAL
      C     RPIFKey       CHAIN     SDRPIFL0                           99
@@ -272,16 +273,16 @@
      C                   EXSR      SRMovRepInfo
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WRecFound = 'N' AND
      C                             X = 30
      C                   EVAL      PRetCode = '*NRF'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -292,7 +293,7 @@
       *                                                               *
       *****************************************************************
      C     SRMovKeyVal   BEGSR
- 
+
      C                   SELECT
      C                   WHEN      X = 1
      C                   EXSR      SRCombo1
@@ -355,7 +356,7 @@
      C                   WHEN      X = 30
      C                   EXSR      SRCombo30
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -367,14 +368,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo1      BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -386,14 +387,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo2      BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -405,14 +406,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo3      BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -424,14 +425,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo4      BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -443,14 +444,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo5      BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -462,14 +463,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo6      BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -481,14 +482,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo7      BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -500,14 +501,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo8      BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -519,14 +520,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo9      BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -538,14 +539,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo10     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = RLDLST
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -557,14 +558,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo11     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -576,14 +577,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo12     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -595,14 +596,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo13     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -614,14 +615,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo14     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -633,14 +634,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo15     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -652,14 +653,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo16     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -671,14 +672,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo17     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -690,14 +691,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo18     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = RLDTYP
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -709,14 +710,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo19     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -728,14 +729,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo20     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -747,14 +748,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo21     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -766,14 +767,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo22     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -785,14 +786,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo23     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -804,14 +805,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo24     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = RLCNUM
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -823,14 +824,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo25     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -842,14 +843,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo26     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -861,14 +862,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo27     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = RLSCCY
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -880,14 +881,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo28     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = A6PMRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -899,14 +900,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo29     BEGSR
- 
+
      C                   EVAL      RPBRCH = RLBRCA
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -918,14 +919,14 @@
       *                                                               *
       *****************************************************************
      C     SRCombo30     BEGSR
- 
+
      C                   EVAL      RPBRCH = 'ALL'
      C                   EVAL      RPTYPE = *BLANKS
      C                   EVAL      RPSTPE = *BLANKS
      C                   EVAL      RPCUSN = *BLANKS
      C                   EVAL      RPCURR = *BLANKS
      C                   EVAL      RPPMLI = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -939,12 +940,12 @@
       *                                                               *
       *****************************************************************
      C     SRMovRepInfo  BEGSR
- 
+
      C                   EXSR      SRDetail1
      C                   EXSR      SRDetail2
      C                   EXSR      SRDetail3
      C                   EXSR      SRDetail4                                                  CSW214
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -958,17 +959,17 @@
       *                                                               *
       *****************************************************************
      C     SRDetail1     BEGSR
- 
+
      C                   IF        RPTRID <> *BLANKS
      C                   EVAL      R1TRID = RPTRID
      C                   EVAL      WCustN = RPTRID
      C                   ENDIF
- 
+
      C                   EXSR      SRGetCust
      C                   EVAL      R1TRNM = BBCRNM
      C                   EVAL      R1TRTN = BBCRTN
      C                   EVAL      R1TRIS = BBCSID
- 
+
      C                   IF        FXOnly = 'Y'                                             MD022981
                                                                                             MD022981
      C                   EVAL      R1CCPA = RPCCPA
@@ -983,7 +984,7 @@
      C                   ENDIF
                                                                                             MD022981
      C                   ENDIF                                                              MD022981
- 
+
      C                   EVAL      R1CEPA = RPCRPA
      C                   IF        RPCCPP <> *BLANKS
      C                   EVAL      R1CEPI = RPCCPP
@@ -994,7 +995,7 @@
      C                   EVAL      R1CEPS = BBCSID
      C                   EVAL      R1CEPL = CSLEIC
      C                   ENDIF
- 
+
      C                   EVAL      R1CBIC = RPCBCL
      C                   EVAL      R1CBIH = RPCCPL
                                                                                               CSW214
@@ -1020,7 +1021,7 @@
      C                   EVAL      R1CPID = RPCPID
      C                   EVAL      R1EXVE = RPEXVE
      C                   EVAL      R1UPID = RPUPID
- 
+
      C                   EVAL      WSWAP = 'N'                                              MD021933
      C                   IF        RLDTYP = 'SW' AND RLLTRF <> *BLANKS                      MD021933
      C                             AND FXOnly = 'Y'                                         MD022981
@@ -1044,11 +1045,11 @@
       *                                                               *
       *****************************************************************
      C     SRDetail2     BEGSR
- 
+
      C                   EVAL      R2RPJ1 = RPRPJN
      C                   EVAL      R2RPP1 = RPRPPY
      C                   EVAL      R2RPA1 = RPRPAC
- 
+
      C                   IF        WSWAP = 'Y'                                              MD021933
                                                                                             MD021933
      C                   EVAL      R2UTI1 = RIUT01                                          MD021933
@@ -1057,24 +1058,24 @@
      C                   ELSE                                                               MD021933
                                                                                             MD021933
      C                   IF        RPGTID = 'Y'
- 
+
      C                   IF        RPRPPY = *BLANKS
- 
+
      C                   IF        RLBRCA  <> *BLANKS
- 
+
      C                   EVAL      WBrCd = RLBRCA
      C                   EXSR      SRGetBranch
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      WCustn = A8BICN
      C                   EXSR      SRGetCust
      C                   EVAL      R2UTI1 = CSIBEI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WBrCd = RPBRCH
      C                   EXSR      SRGetBranch
      C                   IF        PRtCd = *BLANKS
@@ -1084,7 +1085,7 @@
      C                   EVAL      R2UTI1 = CSIBEI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                             MD021933
      C                   IF        R2UTI1 <> *BLANKS                                        MD021933
@@ -1123,7 +1124,7 @@
      C                   EVAL      R2TTY1 = '0'                                             MD021933
      C                   EVAL      R2EVT1 = '0'                                             MD021933
      C                   ENDIF                                                              MD021933
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1137,10 +1138,10 @@
       *                                                               *
       *****************************************************************
      C     SRDetail3     BEGSR
- 
+
      C                   EVAL      PFRTM = 0
      C                   IF        RPEXDE = 'Y'
- 
+
      C                   EVAL      R3TSDT = RLVALD
      C                   IF        RLVALD <> *BLANKS
      C                   TIME                    WTime
@@ -1149,9 +1150,9 @@
      C**********         MOVEL     WTime         PFRTM                                      MD023731
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        RPEXTC = 'Y'
- 
+
      C**********         CALL      'ZADTMCVT'                                               MD023731
      C**********         PARM      *BLANKS       PRtCd                                      MD023731
      C**********         PARM      'S'           FRTZ                                       MD023731
@@ -1230,7 +1231,7 @@
      C                   ENDIF                                                              MD023731
       *                                                                                     MD023731
      C                   ENDIF
- 
+
      C                   IF        RPCTAM <> 0 AND                                          MD023734
      C                              RPCTCY <> *BLANKS AND                                   MD023734
      C                              PayAmount <> 0 AND                                      MD023734
@@ -1295,9 +1296,9 @@
      C**********         EVAL      R3AR18 = RPAD18                                            CSW214
      C**********         EVAL      R3AR19 = RPAD19                                            CSW214
      C**********         EVAL      R3AR20 = RPAD20                                            CSW214
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  CSW214
       *****************************************************************                       CSW214
@@ -1414,23 +1415,23 @@
       *                                                               *
       *****************************************************************
      C     SRGetCust     BEGSR
- 
+
      C                   CLEAR                   DSLDY
- 
+
      C                   CALL      'AOCSSWR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C                   PARM      WCustn        PCusn
      C                   PARM                    PKySt
      C                   PARM                    DSLDY
- 
+
      C                   IF        PRtCd  = *BLANKS
      C                   EVAL      WStr = %LEN(SDCUST) + 1
      C                   EVAL      WLen = %LEN(SDCSSW)
      C                   EVAL      SDCUST = DSLDY
      C                   EVAL      SDCSSW = %SUBST(DSLDY:WStr:WLen)
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1443,16 +1444,16 @@
       *                                                               *
       *****************************************************************
      C     SRGetBranch   BEGSR
- 
+
      C                   CLEAR                   SDBRCH
- 
+
      C**********         CALL      'AOBRCHR0'                                               MD023731
      C                   CALL      'AOBRCHR1'                                               MD023731
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      WBrCd         PBrCd
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

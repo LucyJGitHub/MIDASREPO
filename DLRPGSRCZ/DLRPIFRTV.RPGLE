@@ -20,6 +20,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054958 - Set *INLR ON before end of module                 *
+      *           - This fix is an addition to MD-54604               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *

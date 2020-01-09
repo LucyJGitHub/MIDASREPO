@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD054958           Date 09Jan20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
       *                 MD023734           Date 30Nov13               *
       *                 MD023731           Date 26Nov13               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054958 - Set *INLR ON before end of module                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014                                  *
@@ -229,6 +231,7 @@
       *
       ** Return
       *
+     C                   SETON                                        LR                    MD054958
      C                   RETURN
       *
       *****************************************************************

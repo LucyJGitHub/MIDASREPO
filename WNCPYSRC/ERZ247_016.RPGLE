@@ -1,0 +1,53 @@
+      *****************************************************************
+      *                                                               *
+      *  FT0349 - Midas FT Outgoing payments valid. S3 level 2        *
+      *                                                               *
+      *  Last Amend No. ERZ247  *CREATE    Date 22Nov19               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  ERZ247 - Field 71F in MT103 for GPI                          *
+      *                                                               *
+      *****************************************************************
+      *                                                                                       ERZ247
+     C                   If        ERZ247 = 'Y'                                               ERZ247
+     C                   If        @SENT < 5 And IDX = 0 And SDTCH = 'SHA'                    ERZ247
+     C*****                        And SADDC = 'A'                                            ERZ247
+      *                                                                                       ERZ247
+     C                   Eval      ZFIELD = '0000000000000000'                                ERZ247
+     C                   CallB     'ZEDIT'                                                    ERZ247
+     C                   Parm                    ZFIELD                                       ERZ247
+     C                   Parm                    ZADEC                                        ERZ247
+     C                   Move(P)   ZFIELD        WSCHN            12                          ERZ247
+     C                                                                                        ERZ247
+     C                   If        @SENT = 1 And SSCH1 <> WSCHN                               ERZ247
+     C                   Move(P)   ZFIELD        SSCH2                                        ERZ247
+     C                   Move      SPCCY         SSCC2                                        ERZ247
+     C                   Z-Add     0             WLAST                                        ERZ247
+     C                   Z-Add     2             @SENT                                        ERZ247
+     C                   Endif                                                                ERZ247
+      *                                                                                       ERZ247
+     C                   If        @SENT = 2 And SSCH2 <> WSCHN                               ERZ247
+     C                   Move(P)   ZFIELD        SSCH3                                        ERZ247
+     C                   Move      SPCCY         SSCC3                                        ERZ247
+     C                   Z-Add     0             WLAST                                        ERZ247
+     C                   Z-Add     3             @SENT                                        ERZ247
+     C                   Endif                                                                ERZ247
+      *                                                                                       ERZ247
+     C                   If        @SENT = 3 And SSCH3 <> WSCHN                               ERZ247
+     C                   Move(P)   ZFIELD        SSCH4                                        ERZ247
+     C                   Move      SPCCY         SSCC4                                        ERZ247
+     C                   Z-Add     0             WLAST                                        ERZ247
+     C                   Z-Add     4             @SENT                                        ERZ247
+     C                   Endif                                                                ERZ247
+      *                                                                                       ERZ247
+     C                   If        @SENT = 4 And SSCH4 <> WSCHN                               ERZ247
+     C                   Move(P)   ZFIELD        SSCH5                                        ERZ247
+     C                   Move      SPCCY         SSCC5                                        ERZ247
+     C                   Z-Add     0             WLAST                                        ERZ247
+     C                   Z-Add     5             @SENT                                        ERZ247
+     C                   Endif                                                                ERZ247
+      *                                                                                       ERZ247
+     C                   Endif                                                                ERZ247
+     C                   Endif                                                                ERZ247
+      *                                                                                       ERZ247

@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD050139           Date 23Mar18               * 
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054623           Date 14Jan20               *
+      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
       *                 CGL184             Date 07Dec16               *
       *                 CGL154             Date 13Oct14               *
@@ -166,6 +167,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD054623 - Use the format 'Transation Number/Teller ID +     *
+      *             Narrative or Transaction Title if the             *
+      *             RTSNarrFormat = 'Y'                               *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
       *            ZFREQ/ZFRQ*.                                       *
@@ -1344,11 +1348,17 @@
      I            DS                                                      CRT012
      I                                        1 200 SVAL1                 CRT012
      I                                        1   1 SVAL11                CRT012
+     I            DS                                                                        MD054623
+     I                                        1 200 RTSN1                                   MD054623
+     I                                        1   1 RTSN11                                  MD054623
       *                                                                   CRT012
       * System Value                                                      CRT012
      I            DS                                                      CRT012
      I I            'CashierMultCharge'       1  20 SVALK1                CRT012
       *                                                                   CRT012
+     I            DS                                                                        MD054623
+     I I            'RTSNarrFormat'           1  20 RTSNK1                                  MD054623
+      *                                                                                     MD054623
      I/COPY WNCPYSRC,REH00182
       *
       /COPY ZSRSRC,ZTNLU1Z1
@@ -7177,11 +7187,26 @@
      C                     MOVE *ON       *IN72                           092429
      C                     MOVELNARRI     SNARR                           092429
      C                     MOVE @@NARR    TTNARR                          092429
+     C           RTSNAR    IFEQ 'Y'                                                         MD054623
+     C           FNCD      IFEQ '0JN'                                                       MD054623
+     C                     CLEARTTNAR2                                                      MD054623
+     C                     MOVE @@NARR    TTNAR2                                            MD054623
+     C                     ENDIF                                                            MD054623
+     C                     ENDIF                                                            MD054623
      C*                                                                   092429
      C                     ELSE                                           092429
      C*                                                                   092429
      C                     MOVE *OFF      *IN72                           092429
+     C           RTSNAR    IFEQ 'Y'                                                         MD054623
+     C                     MOVELSVRTNM    SNARR                                             MD054623
+     C                     ENDIF                                                            MD054623
      C                     MOVE @@NARR    TTNARR                          092429
+     C           RTSNAR    IFEQ 'Y'                                                         MD054623
+     C           FNCD      IFEQ '0JN'                                                       MD054623
+     C                     CLEARTTNAR2                                                      MD054623
+     C                     MOVE @@NARR    TTNAR2                                            MD054623
+     C                     ENDIF                                                            MD054623
+     C                     ENDIF                                                            MD054623
      C                     ENDIF                                          092429
      C*                                                                   092429
      C                     WRITETTNARPDF                                  092429
@@ -8338,6 +8363,7 @@
      C                     MOVELA1CIND    @CSIN1  1
      C                     MOVELA1CLIN    @CLIN1  1
      C                     MOVELA1RTNM    @NRTD1 30
+     C                     MOVELA1RTNM    SVRTNM 30                                         MD054623
      C                     MOVELA1PASB    @SGPB1  2
       *
       ** If function code = '0JH' or '0JP'?
@@ -8813,6 +8839,83 @@
      C                     MOVELSVAL1     W#BSRD  1                                           CDL081
      C                     MOVELSVAL2     W#NBRD  1                                           CDL081
      C                     ENDIF                                                              CDL081
+      *                                                                                     MD054623
+      ** Check if RTSNarrFormat is set to 'Y'                                               MD054623
+      *                                                                                     MD054623
+     C                     MOVE *BLANKS   RTSNK2                                            MD054623
+     C                     MOVE *BLANKS   RTSNK3                                            MD054623
+     C                     MOVE *BLANKS   RTSNK4                                            MD054623
+     C                     MOVE *BLANKS   RTSNK5                                            MD054623
+     C                     MOVE *BLANKS   RTSNK6                                            MD054623
+     C                     MOVE *BLANKS   RTSNK7                                            MD054623
+     C                     MOVE *BLANKS   RTSNK8                                            MD054623
+     C                     MOVE *BLANKS   RTSNK7                                            MD054623
+     C                     MOVE *BLANKS   RTSNK8                                            MD054623
+      *                                                                                     MD054623
+     C                     CALL 'AOSVALR0'                                                  MD054623
+     C                     PARM *BLANKS   RTNCDE  7                                         MD054623
+     C                     PARM           RTSNK1 20                                         MD054623
+     C                     PARM           RTSN1 200                                         MD054623
+     C                     PARM           RTSNK2 20                                         MD054623
+     C                     PARM           RTSN2 200                                         MD054623
+     C                     PARM           RTSNK3 20                                         MD054623
+     C                     PARM           RTSN3 200                                         MD054623
+     C                     PARM           RTSNK4 20                                         MD054623
+     C                     PARM           RTSN4 200                                         MD054623
+     C                     PARM           RTSNK5 20                                         MD054623
+     C                     PARM           RTSN5 200                                         MD054623
+     C                     PARM           RTSNK6 20                                         MD054623
+     C                     PARM           RTSN6 200                                         MD054623
+     C                     PARM           RTSNK7 20                                         MD054623
+     C                     PARM           RTSN7 200                                         MD054623
+     C                     PARM           RTSNK8 20                                         MD054623
+     C                     PARM           RTSN8 200                                         MD054623
+     C                     PARM           RTSNK9 20                                         MD054623
+     C                     PARM           RTSN9 200                                         MD054623
+     C                     PARM           RTSNK0 20                                         MD054623
+     C                     PARM           RTSN10200                                         MD054623
+      *                                                                                     MD054623
+     C           RTNCDE    IFNE *BLANKS                                                     MD054623
+     C           RTSN10    IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK0    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN9     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK9    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN8     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK8    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN7     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK7    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN6     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK6    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN5     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK5    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN4     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK4    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN3     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK3    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN2     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK2    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN1     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK1    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           *LOCK     IN   LDA                                                         MD054623
+     C                     MOVEL'SDSVALPD'DBFILE           *************                    MD054623
+     C                     Z-ADD37        DBASE            ** DB ERR 40 **                  MD054623
+     C                     EXSR DBERR                      *************                    MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN11    IFEQ 'Y'                                                         MD054623
+     C                     MOVE 'Y'       RTSNAR  1                                         MD054623
+     C                     ELSE                                                             MD054623
+     C                     MOVE 'N'       RTSNAR                                            MD054623
+     C                     ENDIF                                                            MD054623
       *                                                                                       CRE019
      C/COPY WNCPYSRC,REH00171
      C           *LIKE     DEFN ZAMTCO    WAMTCO                                              CRE019

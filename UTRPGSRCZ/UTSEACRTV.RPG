@@ -1,0 +1,143 @@
+000100191122     H        1
+000101200114      ********************************************************************
+000102200114/*STD *  RPGBASE                                                         *
+000103200114/*EXI *  TEXT('Midas SD MD-39572 Utility program for SEACKD')            *
+000104200114      ********************************************************************
+000105200114      *                                                                  *
+000106200114      *  Midas - Standing Data Module                                    *
+000107200114      *                                                                  *
+000108200114      *    UTSEACRTV - SD MD-39572 Utility program for SEACKD            *
+000109200114      *                                                                  *
+000110200114      *  (c) Finastra International Limited 2001                         *
+000111200114      *                                                                  *
+000112200114      *                 MD039572 *CREATE   Date 14Jan20                  *
+000113200114      ********************************************************************
+000114200114      *                                                                  *
+000115200114      *  MD039572 - FAILED COMPONENT DURING COB - COMPONENT DLC0606C     *
+000116200114      ********************************************************************
+000117191122     F*FSTART                                                            *
+000118191122      ********************************************************************
+000119200110     FSEACKD  IF  E           K        DISK                           UC
+000120191203     FSEACKP1 O   E                    PRINTER
+000121191203      *
+000122191203      *
+000123191203     ISDBANK    E DSSDBANKPD
+000124191203     IDSFDY     E DSDSFDY
+000125191203     IDSRUN       DS
+000126191203      **  RUNDAT data area data structure (date format -ddmmmyy)
+000127191203     I                                        1   7 RDAT
+000128191203     I                                        1   2 @DD
+000129191203     I                                        3   5 @MMM
+000130191203     I                                        6   7 @YY
+000131191203     I                                    P   8  100RUND
+000132191203     I                                       11  11 SSF
+000133191203     I                                       12  12 DATF
+000134191203     I                                       13  13 MBIN
+000135191203      **  First data structure for access program, Short data structure
+000136191122      ************************************************************
+000137191122      *MAIN
+000138191122      *****************************************************
+000139200110     C                     Z-ADD0         TOTAL   40
+000140191122     C                     Z-ADD0         PRTLNE  20
+000141200110     C                     OPEN SEACKD
+000142191203      *
+000143191203      **  Access sdbankpd (via aobankr0)
+000144191203      *
+000145191203     C           PLIST1    PLIST
+000146191203     C                     PARM '*DBMSG  '@RTCD   7
+000147191203     C                     PARM '*FIRST  '@OPTN   7
+000148191203     C           SDBANK    PARM SDBANK    DSFDY
+000149191203     C                     CALL 'AOBANKR0'PLIST1
+000150191203      *
+000151191203      *   Retrieve rundate
+000152191203     C           *NAMVAR   DEFN RUNDAT    DSRUN
+000153191203     C                     IN   DSRUN
+000154191122     C                     Z-ADD0         LTBLK   10
+000155191122     C                     SETOF                         12
+000156200110     C           *LOVAL    SETLLSEACKD
+000157200110     C                     READ SEACKD                   01
+000158191122     C           *IN01     DOWEQ*OFF
+000159191122      *
+000160200110      ** Scan Narrative Codes fields for leading or trailing blanks
+000161191122      *
+000162191122     C           NCDA1     IFNE *BLANK
+000163191122     C           ' '       SCAN NCDA1     LTBLK
+000164191122     C           LTBLK     IFNE 0
+000165191122     C                     GOTO BLANK
+000166191122     C                     ENDIF
+000167191122     C                     ENDIF
+000168191122      *****
+000169191122     C           NCDA2     IFNE *BLANK
+000170191122     C           ' '       SCAN NCDA2     LTBLK
+000171191122     C           LTBLK     IFNE 0
+000172191122     C                     GOTO BLANK
+000173191122     C                     ENDIF
+000174191122     C                     ENDIF
+000175191122      *****
+000176191122     C           NCDA3     IFNE *BLANK
+000177191122     C           ' '       SCAN NCDA3     LTBLK
+000178191122     C           LTBLK     IFNE 0
+000179191122     C                     GOTO BLANK
+000180191122     C                     ENDIF
+000181191122     C                     ENDIF
+000182191122      *****
+000183191122     C           NCDA4     IFNE *BLANK
+000184191122     C           ' '       SCAN NCDA4     LTBLK
+000185191122     C           LTBLK     IFNE 0
+000186191122     C                     GOTO BLANK
+000187191122     C                     ENDIF
+000188191122     C                     ENDIF
+000189191122      *****
+000190191122     C           NCDA5     IFNE *BLANK
+000191191122     C           ' '       SCAN NCDA5     LTBLK
+000192191122     C           LTBLK     IFNE 0
+000193191122     C                     GOTO BLANK
+000194191122     C                     ENDIF
+000195191122     C                     ENDIF
+000196191122      *****
+000197191122     C           NCDA6     IFNE *BLANK
+000198191122     C           ' '       SCAN NCDA6     LTBLK
+000199191122     C                     ENDIF
+000200191122      *****
+000201191122     C           BLANK     TAG
+000202200110     C           LTBLK     IFNE 0
+000203191122     C           *IN12     IFNE *ON
+000204191122     C                     SETON                         12
+000205191203     C                     WRITECPY
+000206191122     C                     WRITEHEADER
+000207191122     C                     ENDIF
+000208191122      *
+000209191122      ** Write Narrative Codes
+000210191122      *
+000211191122     C                     ADD  1         TOTAL
+000212191122     C                     ADD  1         PRTLNE
+000213191122     C                     MOVE ACKE      ACKEY
+000214191122     C                     MOVE NCDA1     NCD1#
+000215191122     C                     MOVE NCDA2     NCD2#
+000216191122     C                     MOVE NCDA3     NCD3#
+000217191122     C                     MOVE NCDA4     NCD4#
+000218191122     C                     MOVE NCDA5     NCD5#
+000219191122     C                     MOVE NCDA6     NCD6#
+000220191122     C                     WRITEDETAIL
+000221200110      *****
+000222200110     C           PRTLNE    IFGE 12
+000223191122     C                     SETOF                         12
+000224191122     C                     Z-ADD0         PRTLNE
+000225191122     C                     WRITEBREAK
+000226191122     C                     ENDIF
+000227200110     C                     ENDIF
+000228191122      *****
+000229200110     C                     READ SEACKD                   01
+000247191122     C                     ENDDO
+000248191122      *
+000249191122      ** Write Footer if No Record Found
+000250191122      *
+000251191122     C           TOTAL     IFEQ 0
+000252191122     C                     WRITECPY
+000253200110     C                     WRITEHEADER
+000254191122     C                     SETON                         13
+000255191122     C                     ENDIF
+000256191122     C                     WRITEFOOTER
+000257191122     C                     SETON                     LR
+000258191122     C                     RETRN
+000259191122      *ENDMAIN

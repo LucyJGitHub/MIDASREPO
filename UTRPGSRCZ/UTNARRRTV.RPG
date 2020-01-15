@@ -1,0 +1,102 @@
+000100191116     H        1
+000101200114      ********************************************************************
+000102200114/*STD *  RPGBASE                                                         *
+000103200114/*EXI *  TEXT('Midas SD MD-39572 Utility program for SDNARRPD')          *
+000104200114      ********************************************************************
+000105200114      *                                                                  *
+000106200114      *  Midas - Standing Data Module                                    *
+000107200114      *                                                                  *
+000108200114      *    UTNARRRTV - SD MD-39572 Utility program for SDNARRPD          *
+000109200114      *                                                                  *
+000110200114      *  (c) Finastra International Limited 2020                         *
+000114200114      *                                                                  *
+000115200114      *                 MD039572 *CREATE   Date 14Jan20                  *
+000116200114      ********************************************************************
+000117200114      *                                                                  *
+000118200114      *  MD039572 - FAILED COMPONENT DURING COB - COMPONENT DLC0606C     *
+000119200114      ********************************************************************
+000155191116     F*FSTART                                                            *
+000156191116      ********************************************************************
+000157191116     FSDNARRL1IF  E           K        DISK                           UC
+000158191120     FSDNARRP1O   E                    PRINTER
+000159200110      **
+000160200110      **
+000162200110     ISDBANK    E DSSDBANKPD
+000163200110     IDSFDY     E DSDSFDY
+000164200110     IDSRUN       DS
+000165200110      **  RUNDAT data area data structure (date format -ddmmmyy)
+000166200110     I                                        1   7 RDAT
+000167200110     I                                        1   2 @DD
+000168200110     I                                        3   5 @MMM
+000169200110     I                                        6   7 @YY
+000170200110     I                                    P   8  100RUND
+000171200110     I                                       11  11 SSF
+000172200110     I                                       12  12 DATF
+000173200110     I                                       13  13 MBIN
+000174200110      **  First data structure for access program, Short data structure
+000175191116      ************************************************************
+000220191116      *MAIN
+000444191116      *****************************************************
+000445200110     C                     Z-ADD0         TOTAL   40
+000447191120     C                     Z-ADD0         PRTLNE  20
+000448191116     C                     OPEN SDNARRL1
+000449200110      *
+000450200110      **  Access sdbankpd (via aobankr0)
+000451200110      *
+000452200110     C           PLIST1    PLIST
+000453200110     C                     PARM '*DBMSG  '@RTCD   7
+000454200110     C                     PARM '*FIRST  '@OPTN   7
+000455200110     C           SDBANK    PARM SDBANK    DSFDY
+000456200110     C                     CALL 'AOBANKR0'PLIST1
+000457200110      *
+000458200110      *   Retrieve rundate
+000459200110     C           *NAMVAR   DEFN RUNDAT    DSRUN
+000460200110     C                     IN   DSRUN
+000461200110     C                     Z-ADD0         LTBLK   10
+000462200110     C                     SETOF                         12
+000463191116     C           *LOVAL    SETLLSDNARRL1
+000464200110     C                     READ SDNARRL1                 01
+000466191116     C           *IN01     DOWEQ*OFF
+000467200110      *
+000468200110      ** Scan Narrative Codes fields for leading or trailing blanks
+000469200110      *
+000470200110     C           ALNVCD    IFNE *BLANK
+000471200110     C           ' '       SCAN ALNVCD    LTBLK
+000472200110     C                     ENDIF
+000473200110      *****
+000474200110     C           LTBLK     IFNE 0
+000475191120     C           *IN12     IFNE *ON
+000476191120     C                     SETON                         12
+000477200110     C                     WRITECPY
+000478191120     C                     WRITEHEADER
+000479191120     C                     ENDIF
+000480200110      *
+000481200110      ** Write Narrative Codes
+000482200110      *
+000483191120     C                     ADD  1         TOTAL
+000484191120     C                     ADD  1         PRTLNE
+000485191120     C                     MOVE ALNVCD    NVCD
+000486200110     C                     MOVE ALDON     NCDE
+000487191120     C                     WRITEDETAIL
+000488200110      *****
+000489200110     C           PRTLNE    IFGE 12
+000490191120     C                     SETOF                         12
+000491191120     C                     Z-ADD0         PRTLNE
+000492191120     C                     WRITEBREAK
+000493191120     C                     ENDIF
+000494200110     C                     ENDIF
+000495200110      *****
+000496191120     C                     READ SDNARRL1                 01
+000497191116     C                     ENDDO
+000498200110      *
+000499200110      ** Write Footer if No Record Found
+000500200110      *
+000501191120     C           TOTAL     IFEQ 0
+000502200110     C                     WRITECPY
+000503200110     C                     WRITEHEADER
+000504191120     C                     SETON                         13
+000505191120     C                     ENDIF
+000506191120     C                     WRITEFOOTER
+000507191116     C                     SETON                     LR
+000508191116     C                     RETRN
+000509191116      *ENDMAIN

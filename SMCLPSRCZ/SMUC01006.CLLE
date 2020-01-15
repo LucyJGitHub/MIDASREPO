@@ -1,0 +1,260 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update GLCRMGPD, GLCRMDPD, GLCRMIPD')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC001006 - Midas SM Update GLCRMGPD, GLCRMDPD, GLCRMIPD   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD054905 *CREATE   Date 04Dec19              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD054905 - CRS issue: Message Header  MessageRefID         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PYEAR) TYPE(*DEC) LEN(2)
+             DCL        VAR(&PYRNO) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DALIBBK) TYPE(*CHAR) LEN(9) VALUE('  DALIBBK')
+             DCL        VAR(&DALIBX) TYPE(*CHAR) LEN(8) VALUE('  DALIBX')
+             DCL        VAR(&DALIB) TYPE(*CHAR) LEN(7) VALUE('  DALIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&GLCRMGPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMGPD  ')
+             DCL        VAR(&GLCRMDPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMDPD  ')
+             DCL        VAR(&GLCRMIPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMIPD  ')
+             DCL        VAR(&ZLCRMGPD) TYPE(*CHAR) LEN(10) VALUE('ZLCRMGPD  ')
+             DCL        VAR(&ZLCRMDPD) TYPE(*CHAR) LEN(10) VALUE('ZLCRMDPD  ')
+             DCL        VAR(&ZLCRMIPD) TYPE(*CHAR) LEN(10) VALUE('ZLCRMIPD  ')
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2019')
+
+/** Global monitor message                                         */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ERROR))
+
+             RTVJOBA    JOB(&JOBID)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             RTVDTAARA  DTAARA(RUNDAT (6 2)) RTNVAR(&PYRNO)
+
+             CHGVAR     VAR(&PYEAR) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&DALIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DALIBBK 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+
+/** Update data in zzDMLIB                                         */
+             CPYF       FROMFILE(&DMLIB/GLCRMGPD) TOFILE(&DALIB/&ZLCRMGPD) +
+                          TOMBR(GLCRMGPD) MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('SMUC01005 - Error occured in copying PF/GLCRMGPD +
+                             to zzDALIBBK. Process terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             CPYF       FROMFILE(&DMLIB/GLCRMDPD) TOFILE(&DALIB/&ZLCRMDPD) +
+                          TOMBR(GLCRMDPD) CRTFILE(*YES) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('SMUC01005 - Error occured in copying PF/GLCRMDPD +
+                             to zzDALIBBK. Process terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             CPYF       FROMFILE(&DMLIB/GLCRMIPD) TOFILE(&DALIB/&ZLCRMIPD) +
+                          TOMBR(GLCRMIPD) CRTFILE(*YES) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('SMUC01005 - Error occured in copying PF/GLCRMIPD +
+                             to zzDALIBBK. Process terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/** Update data in zzDMLIB                                         */
+             OVRDBF     FILE(GLCRMGPD) TOFILE(&DMLIB/GLCRMGPD)
+             OVRDBF     FILE(GLCRMDPD) TOFILE(&DMLIB/GLCRMDPD)
+             OVRDBF     FILE(GLCRMIPD) TOFILE(&DMLIB/GLCRMIPD)
+
+             CALL       SMU01006 PARM(&RTCD)
+             IF         COND(&RTCD *NE ' ') THEN(DO)
+                SNDUSRMSG  MSG('SMUC01006 - Error occured in calling migration +
+                             program SMU01006. Process terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(ERROR2)
+             ENDDO
+
+/** Create work library                                            */
+             CRTLIB     LIB(&DALIBBK)
+             MONMSG     MSGID(CPF2111)
+
+             CHGVAR     VAR(&RTCD) VALUE(' ')
+             CHGVAR     VAR(&PYEAR) VALUE(&PYEAR - 1)
+
+/** Update all files in zzDALIB                                    */
+ LOOP:
+             DOWHILE    COND(&PYEAR *GT 0)
+
+                CHGVAR     VAR(%SUBSTRING(&GLCRMGPD 9 2)) VALUE(&PYEAR)
+                CHGVAR     VAR(%SUBSTRING(&GLCRMDPD 9 2)) VALUE(&PYEAR)
+                CHGVAR     VAR(%SUBSTRING(&GLCRMIPD 9 2)) VALUE(&PYEAR)
+
+                CHKOBJ     OBJ(&DALIB/&GLCRMGPD) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NORMAL))
+                CHKOBJ     OBJ(&DALIB/&GLCRMDPD) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NORMAL))
+                CHKOBJ     OBJ(&DALIB/&GLCRMIPD) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NORMAL))
+
+/** For GLCRMGPD                                                   */
+                CPYF       FROMFILE(&DMLIB/GLCRMGPD) TOFILE(&DALIBBK/&GLCRMGPD) +
+                             TOMBR(GLCRMGPD) MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('SMUC01006 - Error occured in copying GLCRMGPD. +
+                                Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CPYF       FROMFILE(&DALIB/&GLCRMGPD) TOFILE(&DALIBBK/&GLCRMGPD) +
+                             TOMBR(GLCRMGPD) MBROPT(*REPLACE) CRTFILE(*YES) +
+                             FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('SMUC01006 - Error occured in copying GLCRMGPD. +
+                                Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+/** For GLCRMDPD                                                   */
+                CPYF       FROMFILE(&DMLIB/GLCRMDPD) TOFILE(&DALIBBK/&GLCRMDPD) +
+                             TOMBR(GLCRMDPD) MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('SMUC01006 - Error occured in copying GLCRMDPD. +
+                                Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CPYF       FROMFILE(&DALIB/&GLCRMDPD) TOFILE(&DALIBBK/&GLCRMDPD) +
+                             TOMBR(GLCRMDPD) MBROPT(*REPLACE) CRTFILE(*YES) +
+                             FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('SMUC01006 - Error occured in copying GLCRMDPD. +
+                                Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+/** For GLCRMIPD                                                   */
+                CPYF       FROMFILE(&DMLIB/GLCRMIPD) TOFILE(&DALIBBK/&GLCRMIPD) +
+                             TOMBR(GLCRMIPD) MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('SMUC01006 - Error occured in copying GLCRMIPD. +
+                                Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CPYF       FROMFILE(&DALIB/&GLCRMIPD) TOFILE(&DALIBBK/&GLCRMIPD) +
+                             TOMBR(GLCRMIPD) MBROPT(*REPLACE) CRTFILE(*YES) +
+                             FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('SMUC01006 - Error occured in copying GLCRMIPD. +
+                                Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+
+
+/** Override files to migrate                                      */
+                OVRDBF     FILE(GLCRMGPD) TOFILE(&DALIBBK/&GLCRMGPD)
+                OVRDBF     FILE(GLCRMDPD) TOFILE(&DALIBBK/&GLCRMDPD)
+                OVRDBF     FILE(GLCRMIPD) TOFILE(&DALIBBK/&GLCRMIPD)
+
+/** Call migration program to change Message ID Format             */
+
+                CALL       SMU01006 PARM(&RTCD)
+
+                IF         COND(&RTCD *NE ' ') THEN(DO)
+                   SNDUSRMSG  MSG('SMUC01006 - Error occured in calling migration +
+                                program SMU01006. Process terminated.') +
+                                MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ERROR1)
+                ENDDO
+
+/** Process next Reporting Year                                    */
+                CHGVAR     VAR(&PYEAR) VALUE(&PYEAR - 1)
+                GOTO       CMDLBL(LOOP)
+
+           ENDDO
+
+/* Normal ending: */
+/*================*/
+
+ NORMAL:
+
+/** Succesful update, the files needs to be moved to live library  */
+/** instead    of the backup library zzDALIBBK                     */
+
+           CHGVAR     VAR(&PYEAR) VALUE(&PYRNO)
+           CHGVAR     VAR(&PYEAR) VALUE(&PYEAR - 1)
+
+ RENAME:
+           DOWHILE    COND(&PYEAR *GT 0)
+
+
+              CHGVAR     VAR(%SUBSTRING(&GLCRMGPD 9 2)) VALUE(&PYEAR)
+              CHGVAR     VAR(%SUBSTRING(&GLCRMDPD 9 2)) VALUE(&PYEAR)
+              CHGVAR     VAR(%SUBSTRING(&GLCRMIPD 9 2)) VALUE(&PYEAR)
+              CHGVAR     VAR(%SUBSTRING(&ZLCRMGPD 9 2)) VALUE(&PYEAR)
+              CHGVAR     VAR(%SUBSTRING(&ZLCRMDPD 9 2)) VALUE(&PYEAR)
+              CHGVAR     VAR(%SUBSTRING(&ZLCRMIPD 9 2)) VALUE(&PYEAR)
+
+/** Ensure object exist to rename and move                         */
+              CHKOBJ     OBJ(&DALIB/&GLCRMGPD) OBJTYPE(*FILE)
+              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+              CHKOBJ     OBJ(&DALIB/&GLCRMDPD) OBJTYPE(*FILE)
+              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+              CHKOBJ     OBJ(&DALIB/&GLCRMIPD) OBJTYPE(*FILE)
+              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+
+              RNMOBJ     OBJ(&DALIB/&GLCRMGPD) OBJTYPE(*FILE) NEWOBJ(&ZLCRMGPD)
+              MOVOBJ     OBJ(&DALIBBK/&GLCRMGPD) OBJTYPE(*FILE) TOLIB(&DALIB)
+
+              RNMOBJ     OBJ(&DALIB/&GLCRMDPD) OBJTYPE(*FILE) NEWOBJ(&ZLCRMDPD)
+              MOVOBJ     OBJ(&DALIBBK/&GLCRMDPD) OBJTYPE(*FILE) TOLIB(&DALIB)
+
+              RNMOBJ     OBJ(&DALIB/&GLCRMIPD) OBJTYPE(*FILE) NEWOBJ(&ZLCRMIPD)
+              MOVOBJ     OBJ(&DALIBBK/&GLCRMIPD) OBJTYPE(*FILE) TOLIB(&DALIB)
+
+/** Process next Reporting Year                                    */
+              CHGVAR     VAR(&PYEAR) VALUE(&PYEAR - 1)
+              GOTO       CMDLBL(RENAME)
+
+           ENDDO
+
+/** Correct owners of copied files                                 */
+           CHGOWNAUT  OBJ(&DALIB/*ALL) OBJTYPE(*FILE) NEWOWN(C2OWNER)
+
+           GOTO       CMDLBL(END)
+
+/** Abnormal ending: */
+/**==================*/
+
+ ERROR1:
+/** Delete file undone updates due to errors                       */
+           DLTF       FILE(&DALIBBK/GLCRM*)
+ ERROR2:
+/** When error, return files from backup for DMLIB updates         */
+           DLTOVR     FILE(*ALL)
+           CPYF       FROMFILE(&DALIB/ZLCRMGPD) TOFILE(&DMLIB/GLCRMGPD) +
+                        TOMBR(GLCRMGPD) CRTFILE(*YES) MBROPT(*REPLACE)
+           DLTF       FILE(&DALIB/ZLCRMGPD)
+           CPYF       FROMFILE(&DALIB/ZLCRMDPD) TOFILE(&DMLIB/GLCRMDPD) +
+                        TOMBR(GLCRMDPD) CRTFILE(*YES) MBROPT(*REPLACE)
+           DLTF       FILE(&DALIB/ZLCRMDPD)
+           CPYF       FROMFILE(&DALIB/ZLCRMIPD) TOFILE(&DMLIB/GLCRMIPD) +
+                        TOMBR(GLCRMIPD) CRTFILE(*YES) MBROPT(*REPLACE)
+           DLTF       FILE(&DALIB/ZLCRMIPD)
+ ERROR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program SMUC01006 +
+                          ended abnormally - see joblog ') TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+
+ END:
+             ENDPGM

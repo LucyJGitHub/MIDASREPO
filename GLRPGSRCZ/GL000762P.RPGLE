@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD040961           Date 09Sep16               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD054905           Date 04Dec19               *
+      *  Prev Amend No. MD040961           Date 09Sep16               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054905 - Change Message Ref Id format                      *
       *  MD040961 - Issues in Printed Report in CRS                   *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *
@@ -181,7 +183,8 @@
       ** +--------------------------------------+
 
       ** Parameter  entry
-     D PMsgRId         S             21A
+     D***PMsgRId         S             21A                                                  MD054905
+     D PMsgRId         S             29A                                                    MD054905
      D PRepTyp         S             18A
      D PCaYear         S              4A
 
@@ -238,7 +241,8 @@
      D ElmtArr         S             25A   DIM(MaxElmt) CTDATA
 
       ** Work variables for Report Group - Pool Report
-     D KMsgRID         S             21A
+     D***KMsgRID         S             21A                                                  MD054905
+     D KMsgRID         S             29A                                                    MD054905
      D KMgElmt         S             30A
      D KMgTpEl         S             40A
      D DwCDCRF         S             35A
@@ -266,7 +270,8 @@
      D MsgDtaKey       S             26A
      D AcnoStr         S              1A
      D AcnoEnd         S             26A
-     D KPMsgID         S             21A
+     D***KPMsgID         S             21A                                                  MD054905
+     D KPMsgID         S             29A                                                    MD054905
      D KTopElm         S             40A
      D KTopDoc         S             40A
      D KElmDoc         S             30A

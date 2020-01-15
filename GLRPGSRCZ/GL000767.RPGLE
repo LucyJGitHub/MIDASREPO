@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CGL185             Date 13Mar17               *
-      *  Prev Amend No. MD041589           Date 23Sep16               *
+      *  Last Amend No. MD054905           Date 04Dec19               *
+      *  Prev Amend No. CGL185             Date 13Mar17               *
+      *                 MD041589           Date 23Sep16               *
       *                 MD040916           Date 31Aug16               *
       *                 MD040873           Date 26Aug16               *
       *                 MD039670           Date 26Jul16               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054905 - Change Message Ref Id format                      *
       *  CGL185 - FATCA XML 2.0                                       *
       *  MD041589 - Controlling person for CRS101 is not displayed    *
       *             in the Report                                     *
@@ -282,14 +284,23 @@
      D  WWMM                   6      7
      D  WWDD                   9     10
 
-      ** YYYYXXXZZ99999.001x format
-     D WMsgId          DS
-     D  WMDate                 1      9
-     D  WMsgNo                10     14
-     D  WMsgDot               15     15    INZ('.')
-     D  WMsgAcSq              16     18
-     D  WMsgDtyp              19     19
-     D  WMsgActn              20     21
+      ***YYYYXXXZZ99999.001x format***********************************                      MD054905
+     D*WMsgId***       DS                                                                   MD054905
+     D**WMDate**               1      9                                                     MD054905
+     D**WMsgNo**              10     14                                                     MD054905
+     D**WMsgDot*              15     15    INZ('.')                                         MD054905
+     D**WMsgAcSq              16     18                                                     MD054905
+     D**WMsgDtyp              19     19                                                     MD054905
+     D**WMsgActn              20     21                                                     MD054905
+                                                                                            MD054905
+      ** TTYYYYRRYYYYXXXZZ99999.001x format                                                 MD054905
+     D WMsgId          DS                                                                   MD054905
+     D  WMDate                 1     17                                                     MD054905
+     D  WMsgNo                18     22                                                     MD054905
+     D  WMsgDot               23     23    INZ('.')                                         MD054905
+     D  WMsgAcSq              24     26                                                     MD054905
+     D  WMsgDtyp              27     27                                                     MD054905
+     D  WMsgActn              28     29                                                     MD054905
 
      D WTINS           DS
      D  WCTIN1                 1     25
@@ -894,7 +905,8 @@
      C                   EXSR      SRWrite
 
      C                   EVAL      MGELMT = 'DocRefId'
-     C                   EVAL      MGDATA = %TRIM(WBRIntCust)
+     C**********         EVAL      MGDATA = %TRIM(WBRIntCust)                               MD054905
+     C                   EVAL      MGDATA = PCtry + %TRIM(WBRIntCust)                       MD054905
      C                                      + '.' + WMsgAcSq + WMsgDtyp
      C                                      + WMsgActn
      C                   EXSR      SRWrite
@@ -1395,7 +1407,8 @@
      C                   EXSR      SRWrite
       *
      C                   EVAL      MGELMT = 'DocRefId'
-     C                   EVAL      MGDATA = %TRIM(EXACNO)
+     C**********         EVAL      MGDATA = %TRIM(EXACNO)                                   MD054905
+     C                   EVAL      MGDATA = PCtry + %TRIM(EXACNO)                           MD054905
      C                                      + '.' + WMsgAcSq + WMsgDtyp
      C                                      + WMsgActn
      C                   EXSR      SRWrite
@@ -1525,7 +1538,8 @@
      C                   EXSR      SRWrite
       *
      C                   EVAL      MGELMT = 'DocRefId'
-     C                   EVAL      MGDATA = %TRIM(EXACNO)
+     C**********         EVAL      MGDATA = %TRIM(EXACNO)                                   MD054905
+     C                   EVAL      MGDATA = PCtry + %TRIM(EXACNO)                           MD054905
      C                                      + '.' + WMsgAcSq + WMsgDtyp
      C                                      + WMsgActn
      C                   EXSR      SRWrite
@@ -2503,7 +2517,9 @@
      C                   SELECT
      C                   WHEN      PActn = 'N'
 
-     C                   EVAL      WMDate   = WWY1 + WWY2 + PBrcd + PCtry
+     C**********         EVAL      WMDate   = WWY1 + WWY2 + PBrcd + PCtry                   MD054905
+     C                   EVAL      WMDate   = PCtry + PYear + PCtry                         MD054905
+     C                                        + WWY1 + WWY2 + PBrcd + PCtry                 MD054905
      C                   EVAL      KMsgNo   = *BLANKS
      C                   EVAL      KMsgNo   = WMDate + '99999' + '.'
 
@@ -2511,7 +2527,8 @@
      C                   READP     GLCRMGL1
 
      C                   IF        %EOF(GLCRMGL1)
-     C                             OR WMDate <> %SUBST(R1_GGMSID:1:9)
+     C**********                   OR WMDate <> %SUBST(R1_GGMSID:1:9)                       MD054905
+     C                             OR WMDate <> %SUBST(R1_GGMSID:1:17)                      MD054905
      C                   EVAL      WMsgSeq = 1
      C                   ELSE
      C                   MOVE      R1_GGMSID     WMsgID
@@ -2532,17 +2549,21 @@
      C                   IF        PActn <> 'X'
      C                   MOVEL     PMsId         WMsgId
      C                   ENDIF
-     C                   EVAL      KMsgNo = %SUBST(WMSgId:1:15) + '999ZZZ'
+     C**********         EVAL      KMsgNo = %SUBST(WMSgId:1:15) + '999ZZZ'                  MD054905
+     C                   EVAL      KMsgNo = %SUBST(WMSgId:1:23) + '999ZZZ'                  MD054905
 
      C     KCtrMsId      SETGT     GLCRMGL1
      C                   READP     GLCRMGL1
 
      C                   IF        %EOF(GLCRMGL1)
-     C                             OR WMDate <> %SUBST(R1_GGMSID:1:9)
-     C                             OR WMsgNo <> %SUBST(R1_GGMSID:10:5)
+     C**********                   OR WMDate <> %SUBST(R1_GGMSID:1:9)                       MD054905
+     C**********                   OR WMsgNo <> %SUBST(R1_GGMSID:10:5)                      MD054905
+     C                             OR WMDate <> %SUBST(R1_GGMSID:1:17)                      MD054905
+     C                             OR WMsgNo <> %SUBST(R1_GGMSID:18:5)                      MD054905
      C                   EVAL      WMsgSeq = 1
      C                   ELSE
-     C                   EVAL      WMsgAcSq = %SUBST(R1_GGMSID:16:3)
+     C**********         EVAL      WMsgAcSq = %SUBST(R1_GGMSID:16:3)                        MD054905
+     C                   EVAL      WMsgAcSq = %SUBST(R1_GGMSID:24:3)                        MD054905
      C                   MOVE      WMsgAcSq      WMsgSeq
      C                   EVAL      WMsgSeq  = WMsgSeq + 1
      C                   ENDIF

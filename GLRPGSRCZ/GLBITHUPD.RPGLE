@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD053119           Date 02Dec19               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD052732           Date 12Mar19               *
       *                 249405             Date 09Mar18               *
       *                 CGL148             Date 13Jul18               *
@@ -83,8 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
-      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052732 - 4-eyes principle for journal uploads not working  *
       *             Validate by Insert User if Amend User = blank     *
@@ -726,7 +728,9 @@
      C                   IF        CRE023 = 'Y' AND CAP207='N'                              MD036967
      C                             OR CRE023='Y' AND CAP207='Y'                             MD036967
      C                             AND BTDCIN = 'D'                                         MD036967
+     C                   IF        CGL016 = 'Y'                                             MD053119
      C                   EXSR      UPDPOST                                                 AR792734A
+     C                   ENDIF                                                              MD053119
      C                   ENDIF                                                             AR792734A
                                                                                            AR792734A
      C                   DELETE    @BTREAK                                                   BUG3500

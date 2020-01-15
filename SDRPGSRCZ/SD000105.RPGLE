@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD050220           Date 18Oct19               *
-      *  Prev Amend No. MD038717           Date 18Oct19               *
+      *  Last Amend No. MD050157           Date 15Nov19               *
+      *  Prev Amend No. MD050220           Date 18Oct19               *
+      *                 MD038717           Date 18Oct19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050157 - Retail Account/Authority Holders Link Maint.      *
+      *             accepts even a non-existing Non-a/c holder ref    *
       *  MD050220 - Change parameters for 'AONAHOR0' used DSLDY data  *
       *             structure in place of DSSDY.                     *
       *  MD038717 - Not able to link Non-Account Holder to Retail     *
@@ -963,9 +966,10 @@
      C                   PARM      *BLANKS       PKySt
      C     SDCUST        PARM      SDCUST        DSLDY
       *
-     C                   IF        PRtCd <> *BLANKS AND
-     C                             PRtCd <> '*NRF' AND
-     C                             PRtCd <> '*CUSCLO'
+     C**********         IF        PRtCd <> *BLANKS AND                                     MD050157
+     C**********                   PRtCd <> '*NRF' AND                                      MD050157
+     C**********                   PRtCd <> '*CUSCLO'                                       MD050157
+     C                   IF        PRtCd <> *BLANKS                                         MD050157
       *
       ** Check if it is a valid Non - Account Holder
       *

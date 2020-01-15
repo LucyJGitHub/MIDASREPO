@@ -14,11 +14,16 @@
       *                                                               *
       *  (C) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CLE159   *Create   Date  18Jul18              *
-      *  Prev Amend No. xxxxxx             Date  ddmmmyy              *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. CLE159   *Create   Date  18Jul18              *
+      *                 xxxxxx             Date  ddmmmyy              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       *  CLE159 - LE Fee Amortization Enhancement                     *
       *                                                               *
       *****************************************************************
@@ -204,7 +209,11 @@
      C/End-Exec
       *
       *---------------------------------------------------------------
-     C                   move      '1'           *INLR
+      *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       *
       * Print audit report
      C                   exsr      LASTSR
@@ -247,7 +256,11 @@
      C                   z-add     FADATE        FADAT@
       *
       *-------------------------------------------------------------------
-     C     FADATE        Doweq     FADAT@
+      *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
      C     SQLSTT        andeq     '00000'
       *
      C     FALOAN        Ifeq      *BLANKS

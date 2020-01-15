@@ -17,12 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1036834 *CREATE  Date 03Oct16               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1036834 *CREATE  Date 03Oct16               *
       *                 XXXXXXXXX          Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. Recompile.            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1036834 - Missing PDCL repayments in facility history.     *
       *              Search and add all missing PDCL repayments.      *
@@ -83,29 +86,53 @@
       ** +--------------------------------------+
       **
       **--------------------------------------------------------------------------------------------
-      ** The following /COPY line includes (among others) the LDA layout
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       **--------------------------------------------------------------------------------------------
-      ** The following /COPY includes the LE standard declares:
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       **--------------------------------------------------------------------------------------------
-      ** The following /COPY line includes all the defined fields in the
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       **--------------------------------------------------------------------------------------------
-      ** The following /COPY line includes the definitions for error and
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+      *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦

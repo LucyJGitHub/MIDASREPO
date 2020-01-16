@@ -9,43 +9,44 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. CUP002  *CREATE    Date 13Aug10              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Last Amend No. MD054209           Date 31Aug19              */
+/*       Prev Amend No. CUP002  *CREATE    Date 13Aug10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054209 - Deliverable Data Split for T_WIPCF               */
 /*       CUP002 - New utility.                                       */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&OZONE &NZONE)
- 
+
              DCL        VAR(&OZONE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NZONE) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
- 
+
              DCLF       FILE(GPGLOBFPD) OPNID(A)
              DCLF       FILE(SMGNMGPD) OPNID(B)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 GPGLOBFPD:
              RCVF       OPNID(A)
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(SMGNMGPD)
              ENDDO
- 
+
 /* If the zone field is blank then ignore. */
              IF         COND(&A_GFZONE *EQ ' ') THEN(DO)
                 GOTO       CMDLBL(GPGLOBFPD)
              ENDDO
- 
+
 /* Else build SQL statement to update all records relating to renamed zone. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update' *BCAT &A_GFGPF +
@@ -57,20 +58,20 @@ GPGLOBFPD:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
              GOTO       CMDLBL(GPGLOBFPD)
- 
+
 SMGNMGPD:
              RCVF       OPNID(B)
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(OTHER)
              ENDDO
- 
+
 /* If the extension table flag is not 'Y' then ignore. */
              IF         COND(&B_NCETBL *NE 'Y') THEN(DO)
                 GOTO       CMDLBL(SMGNMGPD)
              ENDDO
- 
+
 /* Only update if zone field has a value. */
              IF         COND(&B_NCZFLD *NE ' ') THEN(DO)
                 CHGVAR     VAR(&STM_STR) VALUE(' ')
@@ -84,9 +85,9 @@ SMGNMGPD:
                              COMMIT(*NONE)
                 MONMSG     MSGID(SQL9010)
              ENDDO
- 
+
              GOTO       CMDLBL(SMGNMGPD)
- 
+
 OTHER:
 /* Update GPGLCUSL. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
@@ -98,7 +99,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update GZFCLTLVPD. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update GZFCLTLVPD set +
@@ -109,7 +110,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update GPMLCSPD. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update GPMLCSPD set +
@@ -120,7 +121,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update T_WIPCFG. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update T_WIPCFG set +
@@ -131,7 +132,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update T_MSWIP. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update T_MSWIP set +
@@ -142,7 +143,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update T_MSWIP_H. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update T_MSWIP_H set +
@@ -153,18 +154,34 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
-/* Update T_WIPCF. */
+
+/**Update*T_WIPCF.**/                                                                   /*MD054209*/
+/* Update GPWIPBTD. */                                                                  /*MD054209*/
              CHGVAR     VAR(&STM_STR) VALUE(' ')
-             CHGVAR     VAR(&STM_STR) VALUE('update T_WIPCF set +
+/**********  CHGVAR     VAR(&STM_STR) VALUE('update T_WIPCF set +
                           WC_ZONE =' *BCAT &QUOTE *TCAT &NZONE +
                           *TCAT &QUOTE *BCAT 'where WC_ZONE =' +
-                          *BCAT &QUOTE *TCAT &OZONE *TCAT &QUOTE)
+                          *BCAT &QUOTE *TCAT &OZONE *TCAT &QUOTE) */                    /*MD054209*/
+             CHGVAR     VAR(&STM_STR) VALUE('update GPWIPBTD set +
+                          WC_ZONE =' *BCAT &QUOTE *TCAT &NZONE +
+                          *TCAT &QUOTE *BCAT 'where WC_ZONE =' +
+                          *BCAT &QUOTE *TCAT &OZONE *TCAT &QUOTE)                       /*MD054209*/
              CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
+/* Update GPWIPXTD. */                                                                  /*MD054209*/
+             CHGVAR     VAR(&STM_STR) VALUE(' ')                                        /*MD054209*/
+             CHGVAR     VAR(&STM_STR) VALUE('update GPWIPXTD set +
+                          WC_ZONE =' *BCAT &QUOTE *TCAT &NZONE +
+                          *TCAT &QUOTE *BCAT 'where WC_ZONE =' +
+                          *BCAT &QUOTE *TCAT &OZONE *TCAT &QUOTE)                       /*MD054209*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD054209*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD054209*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD054209*/
+                                                                                        /*MD054209*/
 /* Update T_GZCUSTEX. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update T_GZCUSTEX set +
@@ -175,7 +192,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update T_GZBRCHEX. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update T_GZBRCHEX set +
@@ -186,7 +203,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update T_GZCNTYEX. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update T_GZCNTYEX set +
@@ -203,7 +220,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update T_GZMIBEX. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update T_GZMIBEX set +
@@ -214,7 +231,7 @@ OTHER:
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
              GOTO       CMDLBL(ENDPGM)
 ERROR:
              CHGJOB     SWS(XXXXXX11)

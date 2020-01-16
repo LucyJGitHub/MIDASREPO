@@ -1,0 +1,72 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Process Deliverable Data Split files')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000700 - Process Deliverable Data Split Files            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD054209 *CREATE   Date 09Sep19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD054209 - Deliverable Data Split for T_WIPCF.              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &NEWLIB)
+
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+/* Parameters passed to UP008010. */
+             DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10)  VALUE('UPC000700')
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2019')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Find out where the current deliverable data file is. */
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&OLDLIB)
+
+/* Find out if file is empty. */
+             RTVMBRD    FILE(&OLDLIB/&FILE) NBRCURRCD(&NBRCURRCD)
+
+/* If no record, file needs to be migrated first.*/
+             IF         COND(&NBRCURRCD *EQ 0) THEN(DO)
+             IF         COND(&FILE *EQ 'GPWIPCTD') THEN(DO)
+             CLRPFM     FILE(GPWIPCTD)
+             RESETMAXID FILE(GPWIPCTD) RSTOPT(1)
+             CLRPFM     FILE(GPWIPBTD)
+             RESETMAXID FILE(GPWIPBTD) RSTOPT(1)
+             CLRPFM     FILE(GPWIPXTD)
+             ENDDO
+             CALL       PGM(UP000700) PARM(&ERROR &FILE &OLDLIB)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Copy deliverable data *REPLACE. */
+             CPYF       FROMFILE(&NEWLIB/&FILE) +
+                          TOFILE(&OLDLIB/&FILE) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)
+
+/* Run synchronization program. */
+             CALL       PGM(UP000701) PARM(&ERROR &FILE &OLDLIB)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+END:
+             ENDPGM

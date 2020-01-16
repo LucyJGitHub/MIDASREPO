@@ -22,8 +22,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054101           Date 08Aug19               *
-      *  Prev Amend No. MD053873           Date 10Jul19               *
+      *  Last Amend No. MD054703           Date 14Jan20               *
+      *  Prev Amend No. MD023855           Date 14Jan20               *      
+      *                 MD054101           Date 08Aug19               *
+      *                 MD053873           Date 10Jul19               *
       *                 MD052216           Date 04Apr19               *
       *                 MD047522           Date 21Nov19               *
       *                 CER050             Date 16Jun19               *
@@ -283,6 +285,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054703 - Fees with interest calculation method 6 use wrong *
+      *             divisor basis                                     *
+      *  MD023855 - Wrong accrual with calculation basis 6            *
+      *             Addapt old coding found in previous version under *
+      *             ref CI2135 and BT1960                             *
+      *          - Applied for MD054703                               *
       *  MD054101 - When loan fee and CLE141 is ON, access CLOAN to   *
       *             ensure that correct currency/location combination *
       *             was used in holiday checking.                     *
@@ -2373,6 +2381,7 @@
      C                     Z-ADD0         ADDUE                                               260472
      C**********           Z-ADD0         FEOAMT                                       243496 245803
      C                     Z-ADD0         FEOAMT                                             243496B
+     C                     Z-ADD0         FEPOST                                            MD054703
      C                     MOVE 'N'       WBFREQ  1                                        AR740063A
      C                     MOVE *BLANKS   LKPRFC                                            AR995302
      C                     Z-ADD0         WARY                                              AR753180
@@ -4952,12 +4961,12 @@
      C                     Z-ADDSTDATE    ZZBEG                           CLE013
      C                     Z-ADDFADATE    ZZEND                           CLE013
      C                     MOVE FECALC    ZZCALC                          CLE013
-     C                     EXSR ZINTDY                                    CLE013
-     C           FECALC    IFEQ 6                                                             212048
-     C                     Z-ADDINT6DY    NDAYS                                               212048
-     C                     ELSE                                                               212048
-     C                     Z-ADDZZINDY    NDAYS                           CLE013
-     C                     END                                                                212048
+     C**********           EXSR ZINTDY                                               CLE013 MD023855
+     C********** FECALC    IFEQ 6                                                    212048 MD023855
+     C**********           Z-ADDINT6DY    NDAYS                                      212048 MD023855
+     C**********           ELSE                                                      212048 MD023855
+     C**********           Z-ADDZZINDY    NDAYS                                      CLE013 MD023855
+     C**********           END                                                       212048 MD023855
      C***********                                                  090939 100525
      C***Check*Accrue*on*Last*Day*Indicator*on*SDGELRPD.**Add*1*day090939 100525
      C***fee*period*if*(i)*system*on*first*day*accruals*and*fee*sta090939 100525
@@ -5026,8 +5035,20 @@
      C           FADATE    ANDEQENDATE                                                        239961
      C           FEPEND    ANDGTCODT                                                          239961
      C           *IN18     ANDEQ'1'                                                           239961
-     C                     ADD  1         NDAYS                                               239961
+     C**********           ADD  1         NDAYS                                      239961 MD023855
+     C                     ADD  1         ZZEND                                             MD023855
      C                     ENDIF                                                              239961
+      ** IF START DATE IS EQUAL TO LAST PAYMENT DATE ADD 1 DAY.                             MD023855
+      *                                                                                     MD023855
+     C           BKALDI    IFNE 'Y'                                                         MD023855
+     C           FELPDT    ANDNE0                                                           MD023855
+     C           FELPDT    ANDEQSTRDT1                                                      MD023855
+     C           FADATE    ANDEQENDATE                                                      MD023855
+     C           FEPEND    ANDGTCODT                                                        MD023855
+     C           *IN18     ANDEQ'1'                                                         MD023855
+     C                     ADD  1         ZZEND                                             MD023855
+     C                     END                                                              MD023855
+     C*                                                                                     MD023855
      C                     ELSE                                                               239961
       *                                                                                       239961
      C           BKALDI    IFNE 'Y'                                                           239961
@@ -5035,7 +5056,8 @@
      C           FADATE    ANDEQENDATE                                                        239961
      C           FEPEND    ANDGTCODT                                                          239961
      C           *IN18     ANDEQ'1'                                                           239961
-     C                     ADD  1         NDAYS                                               239961
+     C**********           ADD  1         NDAYS                                      239961 MD023855
+     C                     ADD  1         ZZEND                                             MD023855
      C                     END                                                                239961
       *                                                                                       239961
       ** If Start date is equal to Last Payment Date add 1 day.                               239961
@@ -5046,10 +5068,19 @@
      C           FADATE    ANDEQENDATE                                                        239961
      C           FEPEND    ANDGTCODT                                                          239961
      C           *IN18     ANDEQ'1'                                                           239961
-     C                     ADD  1         NDAYS                                               239961
+     C**********           ADD  1         NDAYS                                      239961 MD023855
+     C                     ADD  1         ZZEND                                             MD023855
      C                     END                                                                239961
       *                                                                                       239961
      C                     ENDIF                                                              239961
+      *                                                                                     MD023855
+     C                     EXSR ZINTDY                                                      MD023855
+     C           FECALC    IFEQ 6                                                           MD023855
+     C                     Z-ADDINT6DY    NDAYS                                             MD023855
+     C                     ELSE                                                             MD023855
+     C                     Z-ADDZZINDY    NDAYS                                             MD023855
+     C                     END                                                              MD023855
+      *                                                                                     MD023855
      C/COPY WNCPYSRC,LER135C005
      C           NDAYS     IFGT 0                                         BH3480
      C*                                                                   BH3480
@@ -5404,12 +5435,12 @@
      C                     Z-ADDFADATE    ZZEND                                              BUG8762
      C                     Z-ADDSTDATE    ZZBEG                                              BUG8762
      C                     MOVE FECALC    ZZCALC                                             BUG8762
-     C                     EXSR ZINTDY                                                       BUG8762
-     C           FECALC    IFEQ 6                                                             212048
-     C                     Z-ADDINT6DY    NDAYS                                               212048
-     C                     ELSE                                                               212048
-     C                     Z-ADDZZINDY    NDAYS                                              BUG8762
-     C                     END                                                                212048
+     C**********           EXSR ZINTDY                                              BUG8762 MD054703
+     C********** FECALC    IFEQ 6                                                    212048 MD054703
+     C**********           Z-ADDINT6DY    NDAYS                                      212048 MD054703
+     C**********           ELSE                                                      212048 MD054703
+     C**********           Z-ADDZZINDY    NDAYS                                     BUG8762 MD054703
+     C**********           END                                                       212048 MD054703
       *                                                                                      BUG8762
       ** Add 1 day if first day accrual.                                                     BUG8762
       *                                                                                      BUG8762
@@ -5421,10 +5452,18 @@
      C           *IN18     ANDEQ'1'                                                          BUG8762
      C           CLE071    IFNE 'Y'                                                           CLE071
      C           WKADDY    OREQ 'Y'                                                           CLE071
-     C                     ADD  1         NDAYS                                              BUG8762
+     C**********           ADD  1         NDAYS                                     BUG8762 MD054703
+     C                     ADD  1         ZZEND                                             MD054703
      C                     ENDIF                                                              CLE071
      C                     ENDIF                                                             BUG8762
       *                                                                                      BUG8762
+     C                     EXSR ZINTDY                                                      MD054703
+     C           FECALC    IFEQ 6                                                           MD054703
+     C                     Z-ADDINT6DY    NDAYS                                             MD054703
+     C                     ELSE                                                             MD054703
+     C                     Z-ADDZZINDY    NDAYS                                             MD054703
+     C                     END                                                              MD054703
+      *                                                                                     MD054703
      C           NDAYS     IFGT 0                                                            BUG8762
      C           FEORED    IFEQ BJRDNB                                                       BUG8762
      C           FEPSTD    ANDLTMSTD                                                         BUG8762
@@ -11918,12 +11957,12 @@
      C                     Z-ADDSTDATE    ZZEND                                               CLE073
      C                     ENDIF                                                              CLE073
      C                     MOVE FECALC    ZZCALC                                              CLE073
-     C                     EXSR ZINTDY                                                        CLE073
-     C           FECALC    IFEQ 6                                                             CLE073
-     C                     Z-ADDINT6DY    NDAYS                                               CLE073
-     C                     ELSE                                                               CLE073
-     C                     Z-ADDZZINDY    NDAYS                                               CLE073
-     C                     ENDIF                                                              CLE073
+     C**********           EXSR ZINTDY                                               CLE073 MD054703
+     C********** FECALC    IFEQ 6                                                    CLE073 MD054703
+     C**********           Z-ADDINT6DY    NDAYS                                      CLE073 MD054703
+     C**********           ELSE                                                      CLE073 MD054703
+     C**********           Z-ADDZZINDY    NDAYS                                      CLE073 MD054703
+     C**********           ENDIF                                                     CLE073 MD054703
       *                                                                                       CLE073
       ** Check if CLE005 is on.                                                               CLE073
       *                                                                                       CLE073
@@ -11934,7 +11973,8 @@
      C           VDATP     ANDEQENDATE                                                        CLE073
      C           FEPEND    ANDGTCODT                                                          CLE073
      C           *IN18     ANDEQ'1'                                                           CLE073
-     C                     ADD  1         NDAYS                                               CLE073
+     C**********           ADD  1         NDAYS                                      CLE073 MD054703
+     C                     ADD  1         ZZEND                                             MD054703
      C                     ENDIF                                                              CLE073
      C                     ELSE                                                               CLE073
       *                                                                                       CLE073
@@ -11943,7 +11983,8 @@
      C           VDATP     ANDEQENDATE                                                        CLE073
      C           FEPEND    ANDGTCODT                                                          CLE073
      C           *IN18     ANDEQ'1'                                                           CLE073
-     C                     ADD  1         NDAYS                                               CLE073
+     C**********           ADD  1         NDAYS                                      CLE073 MD054703
+     C                     ADD  1         ZZEND                                             MD054703
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
       ** If Start date is equal to Last Payment Date add 1 day.                               CLE073
@@ -11954,11 +11995,19 @@
      C           VDATP     ANDEQENDATE                                                        CLE073
      C           FEPEND    ANDGTCODT                                                          CLE073
      C           *IN18     ANDEQ'1'                                                           CLE073
-     C                     ADD  1         NDAYS                                               CLE073
+     C**********           ADD  1         NDAYS                                      CLE073 MD054703
+     C                     ADD  1         ZZEND                                             MD054703
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
+     C                     EXSR ZINTDY                                                      MD054703
+     C           FECALC    IFEQ 6                                                           MD054703
+     C                     Z-ADDINT6DY    NDAYS                                             MD054703
+     C                     ELSE                                                             MD054703
+     C                     Z-ADDZZINDY    NDAYS                                             MD054703
+     C                     ENDIF                                                            MD054703
+      *                                                                                     MD054703
      C           NDAYS     IFGT 0                                                             CLE073
       *                                                                                       CLE073
      C           FEORED    IFEQ BJRDNB                                                        CLE073
@@ -12322,12 +12371,12 @@
      C                     Z-ADDVDATP     ZZEND                                             MD031473
      C                     Z-ADDSTDATE    ZZBEG                                             MD031473
      C                     MOVE FECALC    ZZCALC                                            MD031473
-     C                     EXSR ZINTDY                                                      MD031473
-     C           FECALC    IFEQ 6                                                           MD031473
-     C                     Z-ADDINT6DY    NDAYS                                             MD031473
-     C                     ELSE                                                             MD031473
-     C                     Z-ADDZZINDY    NDAYS                                             MD031473
-     C                     END                                                              MD031473
+     C**********           EXSR ZINTDY                                             MD031473 MD054703
+     C********** FECALC    IFEQ 6                                                  MD031473 MD054703
+     C**********           Z-ADDINT6DY    NDAYS                                    MD031473 MD054703
+     C**********           ELSE                                                    MD031473 MD054703
+     C**********           Z-ADDZZINDY    NDAYS                                    MD031473 MD054703
+     C**********           END                                                     MD031473 MD054703
       *                                                                                     MD031473
       ** Add 1 day if first day accrual.                                                    MD031473
       *                                                                                     MD031473
@@ -12337,9 +12386,17 @@
      C           CODT      ANDEQENDATE                                                      MD031473
      C           FEPEND    ANDGTCODT                                                        MD031473
      C           *IN20     ANDEQ'1'                                                         MD031473
-     C                     ADD  1         NDAYS                                             MD031473
+     C**********           ADD  1         NDAYS                                    MD031473 MD054703
+     C                     ADD  1         ZZEND                                             MD054703
      C                     ENDIF                                                            MD031473
       *                                                                                     MD031473
+     C                     EXSR ZINTDY                                                      MD054703
+     C           FECALC    IFEQ 6                                                           MD054703
+     C                     Z-ADDINT6DY    NDAYS                                             MD054703
+     C                     ELSE                                                             MD054703
+     C                     Z-ADDZZINDY    NDAYS                                             MD054703
+     C                     END                                                              MD054703
+      *                                                                                     MD054703
      C           NDAYS     IFGT 0                                                           MD031473
      C           FEORED    IFEQ BJRDNB                                                      MD031473
      C           FEPSTD    ANDLTMSTD                                                        MD031473

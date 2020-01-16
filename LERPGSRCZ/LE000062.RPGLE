@@ -17,12 +17,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CLE147  *CREATE    Date 28Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CLE147 - Aggregate Facility                                  *
@@ -70,12 +75,20 @@
       **                                    181 1830DBASE
  
       **------------------------------------------------------------------+
-      ** The following /COPY line includes all the defined fields in the  ¦
+      *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       ** Program Status Data Structures.  They have meaningful            ¦
       ** names, prefixed by 'PS'.                                         ¦
      D/COPY ZACPYSRC,PSDS                                                 ¦
       **------------------------------------------------------------------+
- 
+      *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦

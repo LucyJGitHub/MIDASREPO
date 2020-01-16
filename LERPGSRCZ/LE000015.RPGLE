@@ -11,18 +11,23 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CLE042             Date 06Sep05               *
       *                 CLE025  *CREATE    Date 20Oct03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

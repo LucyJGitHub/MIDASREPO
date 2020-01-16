@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE139             Date 06Dec10               *
@@ -42,6 +44,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -92,11 +99,19 @@
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)              POWERS OF 10
       *
       **--------------------------------------------------------------------------------------------
-      ** The following /COPY line includes (among others) the LDA layout
+      *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-      *
+      *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
      D WNOML           S                   LIKE(P#NOML)
      D WSTBAL          S                   LIKE(FAUNDR)
      D WOPNBL          S                   LIKE(FAUNDR)

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD026120           Date 13May14               *
       *                 MD024398           Date 11May14               *
       *                 MD000091           Date 09May13               *
@@ -67,6 +68,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. Rename fields for     *
+      *             LEMNFUL7. (Child: AR674227)                       *
+      *           - Applied for MD054782.                             *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026120 - Additional deps for GLC0720/740                   *
@@ -191,7 +196,8 @@
      F                                     PREFIX(CL_)
       **  Live Utilisation Retrieval Index
      FLEMNFUL6  IF   E           K DISK    INFSR(*PSSR)
-     F                                     PREFIX(L6_)
+     F**********                           PREFIX(L6_)                                      AR674226
+     F                                     PREFIX(M6_)                                      AR674226
       **  Fees Master file
      FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR)
       **  Collateral                                                                        BUG17135

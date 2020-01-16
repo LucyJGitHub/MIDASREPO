@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD020167           Date 23Apr13               *
       *                 AR1089839          Date 19Feb13               *
       *                 CCB020A            Date 06Aug12               *
       *                 CCB023             Date 06Aug12               *
@@ -32,6 +33,10 @@
       *                 CGP002  *CREATE    Date 02Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utility sequence no. (Child: AR674227)         *
+      *           - Applied for MD054782.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  AR1089839 - COBOP and 2.1 source clashes                     *
@@ -122,6 +127,9 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *
+     ILEMNFUPF                                                                              AR674226
+     I              SQNO                        MFSQNO                                      AR674226
+      *                                                                                     AR674226
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+

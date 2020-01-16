@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 AR865353           Date 16Nov11               *
       *                 AR862472           Date 10Nov11               *
@@ -27,6 +29,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - SQNO and TSEQ conflicting with other file.        *
+      *             Rename to @@FSQNO and @@FTSEQ.                    *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -170,7 +178,9 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+     I@@CHISAF                                                                              MD054782
+     I              FASQNO                      @@FSQNO                                     MD054782
+     I              FATSEQ                      @@FTSEQ                                     MD054782
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -382,7 +392,8 @@
      C                   IF        FALOAN = @@LOAN AND
      C                             FADEAL = @@DEAL AND
      C                             FAACNO = @@ACNO AND
-     C                             FASQNO = @@SQNO AND                                      AR865353
+     C**********                   FASQNO = @@SQNO AND                             AR865353 MD054782
+     C                             FASQNO = @@FSQNO AND                                     MD054782
      C                             FAACTN = @@ACTN
 
       ** Delete corresponding CA transaction of each tranche

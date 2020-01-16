@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27112           Date 01Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  BUG27112 - LEC000057 00001 (applied GEMS# 254502)            *

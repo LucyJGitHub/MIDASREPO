@@ -18,12 +18,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 BUG28033 *CREATE   Date 12Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. Recompile.            *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  BUG28033 - Add missing files in ATU                          *
@@ -34,7 +37,7 @@
       *   90          Error in AOBANKR0                               *
       *                                                               *
       *****************************************************************
- 
+
      FFACHSAL7  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(FACHISAF:FACHISF7)

@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*

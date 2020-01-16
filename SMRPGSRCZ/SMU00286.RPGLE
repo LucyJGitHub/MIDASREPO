@@ -17,7 +17,7 @@
       *                                                               *
       *  (c) Misys Banking Systems 2013                               *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
       *  Prev Amend No. AR1036834 *CREATE  Date 25Jun13               *
       *                 Xxxxxxxxx          Date ddmmmyy               *
       *                                                               *
@@ -84,53 +84,29 @@
       ** +--------------------------------------+
       **
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+ 
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY includes the LE standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+ 
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+ 
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦

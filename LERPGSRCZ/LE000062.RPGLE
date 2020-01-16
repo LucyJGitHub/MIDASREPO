@@ -9,7 +9,7 @@
       *  Midas - Customer Lending Module                              *
       *                                                               *
       *  LE000062 - Midas LE Update Aggregate Facility History files  *
-      *             based on the new structure
+      *             based on the new structure                        *
       *                                                               *
       *  Function:  This program will build the Aggregate Structure   *
       *             driving file and Update the Aggregate Facility    *
@@ -33,12 +33,12 @@
       *  CLE147 - Aggregate Facility                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FLETRGPPD  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LETRAGD0:LETRGPD0)
      F                                     PREFIX(PRV_)
@@ -52,7 +52,7 @@
      FLEAGHSX   O    E             DISK    INFSR(*PSSR)
      F                                     RENAME(LEAGHSD0:LEAGHSX0)
       ** Midas LE Agg.Fclty History by Tranche
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -60,10 +60,10 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       ** Array containing Copyright statement
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -73,57 +73,49 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       **------------------------------------------------------------------+
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+      ** The following /COPY line includes all the defined fields in the  ¦
       ** Program Status Data Structures.  They have meaningful            ¦
       ** names, prefixed by 'PS'.                                         ¦
      D/COPY ZACPYSRC,PSDS                                                 ¦
       **------------------------------------------------------------------+
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D ADPTFT
      D ADPTFN
      D DSFCTR                  1      5S 0
- 
+
      D                 DS
      D ADPAFT
      D ADPAFN
      D DSFCAG                  1      5S 0
- 
+
      D                 DS
      D ADCAFT
      D ADCAFN
      D DSACAG                  1      5S 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D ACT@            S             80A
      D WRun            S              1A
      D WFND01          S              1A
      D WACTN           S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -131,23 +123,23 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Build driving file
      C                   EXSR      BUILDDF
- 
+
       ** Read driving file
      C                   EXSR      READDF
- 
+
       ** Terminate Program
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -157,13 +149,13 @@
       *                                                               *
       *****************************************************************
      C     BUILDDF       BEGSR
- 
+
       ** Read all records from the PREVIOUS LETRAGPD
      C     *LOVAL        SETLL     LETRGPPD
      C                   READ      LETRGPPD
- 
+
      C                   DOW       NOT %EOF(LETRGPPD)
- 
+
      C     KLEDVL1       CHAIN     LEAGDVPD
      C                   IF        NOT %FOUND(LEAGDVPD)
       ** Previous Tranche
@@ -186,23 +178,23 @@
      C                   EVAL      ADCANM = *BLANKS
      C                   EVAL      ADCAFT = 0
      C                   EVAL      ADCAFN = 0
- 
+
      C                   EVAL      WACTN = *BLANKS
      C
      C                   WRITE     LEAGDVD0
- 
+
      C                   ENDIF
- 
+
      C                   READ      LETRGPPD
- 
+
      C                   ENDDO
- 
+
       ** Read all records from the CURRENT LETRAGPD
      C     *LOVAL        SETLL     LETRAGL4
      C                   READ      LETRAGL4
- 
+
      C                   DOW       NOT %EOF(LETRAGL4)
- 
+
      C     KLEDVL2       CHAIN     LEAGDVPD
      C                   IF        NOT %FOUND(LEAGDVPD)
      C     KLEDVL3       CHAIN     LEAGDVPD
@@ -228,12 +220,12 @@
      C                   EVAL      ADCANM = AGAGNM
      C                   EVAL      ADCAFT = AGAGFT
      C                   EVAL      ADCAFN = AGAGFN
- 
+
      C                   UPDATE    LEAGDVD0
      C                   EVAL      WFND01 = 'Y'
      C                   LEAVE
      C                   ENDIF
- 
+
      C     KLEDVL3       READE     LEAGDVPD
      C                   ENDDO
      C                   IF        WFND01 = 'N'
@@ -260,7 +252,7 @@
      C
      C                   WRITE     LEAGDVD0
      C                   ENDIF
- 
+
      C                   ELSE
       ** Current Tranche
      C                   EVAL      ADCTBR = AGTRBR
@@ -282,9 +274,9 @@
      C                   EVAL      ADCANM = AGAGNM
      C                   EVAL      ADCAFT = AGAGFT
      C                   EVAL      ADCAFN = AGAGFN
- 
+
      C                   WRITE     LEAGDVD0
- 
+
      C                   ENDIF
      C
      C                   ELSE
@@ -306,7 +298,7 @@
      C                   READ      LETRAGL4
      C
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -316,12 +308,12 @@
       *                                                               *
       *****************************************************************
      C     READDF        BEGSR
- 
+
      C     *LOVAL        SETLL     LEAGDVPD
      C                   READ      LEAGDVPD
- 
+
      C                   DOW       NOT %EOF(LEAGDVPD)
- 
+
       ** Insert
      C                   IF        (ADPTBR = ADCABR
      C                             AND ADPTNM = ADCTNM
@@ -336,21 +328,21 @@
      C                             AND ADCANM <> *BLANKS
      C                             AND ADCAFT <> 0
      C                             AND ADCAFN <> 0)
- 
+
      C                   EVAL      WACTN = 'I'
- 
+
      C                   EXSR      UPDHIST
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Amend
      C                   IF        (ADPTBR = ADCTBR
      C                             AND ADPTNM = ADCTNM
      C                             AND ADPTFT = ADCTFT
      C                             AND ADPTFN = ADCTFN)
- 
+
      C                   IF        (ADPABR <> *BLANKS
      C                             AND ADPANM <> *BLANKS
      C                             AND ADPAFT <> 0
@@ -365,17 +357,17 @@
      C                             OR ADPANM <> ADCANM
      C                             OR ADPAFT <> ADCAFT
      C                             OR ADPAFN <> ADCAFN)
- 
+
      C                   EVAL      WACTN = 'A'
- 
+
      C                   EXSR      UPDHIST
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C
      C                   ENDIF
- 
+
       ** Delete
      C                   IF        (ADPTBR <> *BLANKS
      C                             AND ADPTNM <> *BLANKS
@@ -386,7 +378,7 @@
      C                             AND ADPANM <> *BLANKS
      C                             AND ADPAFT <> 0
      C                             AND ADPAFN <> 0)
- 
+
      C                   IF        (ADCTBR = *BLANKS
      C                             AND ADCTNM = *BLANKS
      C                             AND ADCTFT = 0
@@ -398,17 +390,17 @@
      C                             AND ADCAFN = 0)
      C
      C                   EVAL      WACTN = 'D'
- 
+
      C                   EXSR      UPDHIST
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      LEAGDVPD
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -418,15 +410,15 @@
       *                                                               *
       *****************************************************************
      C     UPDHIST       BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WACTN = 'I'
- 
+
      C     KLEHSL2       CHAIN     LEAGHSL1
      C                   IF        %FOUND(LEAGHSL1)
      C                   DOW       NOT %EOF(LEAGHSL1)
- 
+
       ** Write history record
      C                   EVAL      AIBRCA = ADCABR
      C                   EVAL      AICNUM = ADCANM
@@ -436,38 +428,38 @@
      C     KLEHSL2       READE     LEAGHSL1
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   WHEN      WACTN = 'A'
- 
+
      C     KLEHSL1       CHAIN     LEAGHSL1
      C                   IF        %FOUND(LEAGHSL1)
      C                   DOW       NOT %EOF(LEAGHSL1)
- 
+
       ** Update history record
      C                   EVAL      AIBRCA = ADCABR
      C                   EVAL      AICNUM = ADCANM
      C                   EVAL      AIFCTY = DSFCAG
      C                   UPDATE    LEAGHSD0
- 
+
      C     KLEHSL1       READE     LEAGHSL1
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   WHEN      WACTN = 'D'
- 
+
      C     KLEHSL1       CHAIN     LEAGHSL1
      C                   IF        %FOUND(LEAGHSL1)
      C                   DOW       NOT %EOF(LEAGHSL1)
- 
+
       ** Delete history record
      C                   DELETE    LEAGHSD0
- 
+
      C     KLEHSL1       READE     LEAGHSL1
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -477,10 +469,10 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set up copyright parameter
      C                   MOVEA     CPY@          ACT@
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY = *BLANKS
@@ -488,7 +480,7 @@
      C                   EVAL      DBMOD = 'LE000062'
      C                   EVAL      DBASE = *ZEROS
      C                   OUT       LDA
- 
+
      C     KLEDVL1       KLIST
      C                   KFLD                    PRV_AGTRBR
      C                   KFLD                    PRV_AGTRNM
@@ -498,7 +490,7 @@
      C                   KFLD                    PRV_AGAGNM
      C                   KFLD                    PRV_AGAGFT
      C                   KFLD                    PRV_AGAGFN
- 
+
      C     KLEDVL2       KLIST
      C                   KFLD                    AGTRBR
      C                   KFLD                    AGTRNM
@@ -508,13 +500,13 @@
      C                   KFLD                    AGAGNM
      C                   KFLD                    AGAGFT
      C                   KFLD                    AGAGFN
- 
+
      C     KLEDVL3       KLIST
      C                   KFLD                    AGTRBR
      C                   KFLD                    AGTRNM
      C                   KFLD                    AGTRFT
      C                   KFLD                    AGTRFN
- 
+
      C     KLEHSL1       KLIST
      C                   KFLD                    ADPTBR
      C                   KFLD                    ADPTNM
@@ -522,13 +514,13 @@
      C                   KFLD                    ADPABR
      C                   KFLD                    ADPANM
      C                   KFLD                    DSFCAG
- 
+
      C     KLEHSL2       KLIST
      C                   KFLD                    ADPTBR
      C                   KFLD                    ADPTNM
      C                   KFLD                    DSFCTR
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -538,17 +530,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

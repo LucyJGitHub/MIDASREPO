@@ -18,8 +18,7 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD050457           Date 06Mar19               *
-      *                 CGL148             Date 13Jul18               *
+      *  Prev Amend No. CGL148             Date 13Jul18               *
       *                 MD045032           Date 07Apr18               *
       *                 CLE169             Date 07Apr18               *
       *                 MD046248           Date 27Oct17               *
@@ -76,8 +75,6 @@
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
       *           - Applied for MD054782.                             *
-      *  MD050457 - Do not process DBERR when customer is closed.     *
-      *             Patterned fix from 261272.                        *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD024246                               *
       *  MD045032 - No account movement for new attached facility     *
@@ -5018,7 +5015,6 @@
       ** Database error
 
      C                   IF        PRTCD <> *BLANKS
-     C                             and PRTCD <> '*CUSCLS'                                   MD050457
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBASE = 11
      C                   EVAL      DBKEY = PCNUM

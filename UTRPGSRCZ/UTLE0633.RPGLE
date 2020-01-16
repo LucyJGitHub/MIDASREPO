@@ -24,7 +24,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR806351 *CREATE   Date 03Oct16               *
       *                 XXXXXXXX           Date DDMmmYY               *
@@ -46,7 +46,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FUTLE0633PDIF   E           K DISK    INFSR(*PSSR)
      FFCLTY1    IF   E           K DISK    INFSR(*PSSR)
      FCLOANC    IF   E           K DISK    INFSR(*PSSR)
@@ -75,7 +75,7 @@
      F                                     PREFIX(F2_)
      FUTLE0633P2O    E             PRINTER OFLIND(*IN89)
      FUTLE0633P1O    E             PRINTER OFLIND(*IN84)
- 
+
       *****************************************************************
       *                                                               *
       *  F U N C T I O N  O F  I N D I C A T O R S                    *
@@ -112,138 +112,114 @@
       ** +--------------------------------------+
       **
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY includes the LE standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+      ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  MD054782 - Manual transaction reached 999. Increase the size *
-      *             of SQNO to accomodate 9999 transactions.          *
-      *             Recompile.                                        *
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** Rundate data structure.
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Data structure for Currency details.
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** General Ledger Details.
- 
+
      D DSGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Bank Details.
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Data structure for Access Program.
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** ZDate2 parameters
- 
+
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7A
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D ARRX            S              5    DIM(9999)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D RecDelete       S              1A   INZ(*blanks)
      D HPRecFound      S              1A   INZ(*blanks)
      D WFAMU           S              1A   INZ(*blanks)
      D WLTYP           S              1A   INZ(*blanks)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   WRITE     HEADER1
      C                   WRITE     HEADER2
       *

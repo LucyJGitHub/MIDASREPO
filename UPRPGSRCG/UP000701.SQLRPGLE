@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD054209   *CREATE   Date 07Sep19             *
+      *  Last Amend No. MD054605             Date 17Oct19             *
+      *  Prev Amend No. MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD054209 - Deliverable Data Split for T_WIPCF                *
       *                                                               *
       *****************************************************************
@@ -26,6 +28,7 @@
      D EXTINDEX        S             10A
      D KXINDEX         S             10A
      D KXSCHEMA        S             10A
+     D KMSCHEMA        S             10A                                                    MD054605
      D KColumn         S             10A
      D KOrdinal        S              9  0
      D KeyArr          S             10A   DIM(12)
@@ -220,6 +223,8 @@
 
      C                   If        XINDEX <> 'GPWIPCTD'
 
+     C                   eval      First = 'Y'                                              MD054605
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD054605
       ** Call program to produce file field description outfile of  file.
      C                   EVAL      OutFile = 'UDFOLD'
      C                   EXSR      BldOutFile
@@ -245,7 +250,8 @@
      C                   IF        First = 'Y'
       ** Get until the fieldadd to the end of the table.
      C                   eval      PINSERT = %trimr(PINSERT) + WHFLDI
-     C                   eval      PSELECT = %trimr(PSELECT) + WHFLDI
+     C**********         eval      PSELECT = %trimr(PSELECT) + WHFLDI                       MD054605
+     C                   eval      PSELECT = %trimr(PSELECT) + 'A.' + WHFLDI                MD054605
      C                   eval      First = 'N'
      C                   ELSE
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI
@@ -266,12 +272,15 @@
 
      C                   eval      PINSERT = %trimr(PINSERT) + ')'
 
-     C                   eval      SQLDynStmt = 'insert into ' + KXINDEX +
-     C                             %trimr(PINSERT) + ' select ' +
+     C**********         eval      SQLDynStmt = 'insert into ' + KXINDEX +                  MD054605
+     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD054605
+     C**********                   %trimr(PINSERT) + ' select ' +                           MD054605
+     C                             ' (select ' +                                            MD054605
      C                             %trimr(PSELECT) + ' from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX  +
      C                             ' A where not exists (select * from ' +
-     C                             XINDEX +  ' B ' + %trimr(WHERE) + ')'
+     C**********                   XINDEX +  ' B ' + %trimr(WHERE) + ')'                    MD054605
+     C                             EXTINDEX +  ' B ' + %trimr(WHERE) + '))'                 MD054605
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -321,7 +330,7 @@
 
      C                   IF        SQLCODE <> 0
      C                             and SQLCode <> 100
-     C                   EVAL      ERROR = '*ERROR*'
+     C                   EVAL      ERROR = '*Error'
      C                   ENDIF
 
       * Add GPWIPXTD records with zone (bespoke) in case new API
@@ -362,7 +371,7 @@
 
      C                   IF        SQLCODE <> 0
      C                             and SQLCode <> 100
-     C                   EVAL      ERROR = '*ERROR*'
+     C                   EVAL      ERROR = '*Error'
      C                   ENDIF
 
      C                   ENDIF
@@ -378,8 +387,10 @@
      C     BldOutFile    BEGSR
       *
      C                   CALL      'UTC000004'
-     C                   PARM                    KXINDEX
-     C                   PARM                    KXSCHEMA
+     C**********         PARM                    KXINDEX                                    MD054605
+     C                   PARM                    EXTINDEX                                   MD054605
+     C**********         PARM                    KXSCHEMA                                   MD054605
+     C                   PARM                    KMSCHEMA                                   MD054605
      C                   PARM                    OutFile
      C                   PARM      '*FIRST'      OFMbr
      C                   PARM      '*REPLACE'    OFMbrOpt

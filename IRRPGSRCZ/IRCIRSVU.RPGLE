@@ -106,6 +106,8 @@
       *                                                               *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
+      *           - Passed ACTRJ to IRCIRSR to ensure buffer is       *
+      *             built properly                                    *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
       *  MD053400 - Details are not correctly reverted back when the  *
@@ -2031,6 +2033,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    MsgDtaArr                                   BUG6377
      C                   PARM                    MsgFArray                                   BUG6377
      C                   PARM                    APIRetC                                     BUG6377
+     C                   PARM                    ACTRJ                                      MD054906
      C                   MOVEL     SACCD         Buffer                                      BUG6377
       *                                                                                      BUG6377
      C                   ELSE                                                                BUG6377

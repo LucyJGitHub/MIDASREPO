@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055056           Date 13Jan20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CUP040             Date 04Mar13              */
 /*                      CUP021             Date 07Feb11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055056 - Override not found at specified level.           */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP040 - New deliverable data methodology.                  */
@@ -180,7 +182,7 @@ VALIDATE:                                                                       
                           AUDTLB *EQ &LAYER))                                           /*MD054605*/
                                                                                         /*MD054605*/
              CALL       PGM(UPC008004) PARM(&MODE &BRGDTALIB)                           /*MD054605*/
-             DLTOVR     FILE(UPDLVCPD)                                                  /*MD054605*/
+/**********  DLTOVR     FILE(UPDLVCPD) */                                    /*MD054605* *MD055056*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD054605*/
                 RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA('UPC008004') MSG(&MESSAGE)                             /*MD054605*/

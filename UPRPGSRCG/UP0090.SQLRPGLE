@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054605             Date 17Oct19             *
-      *  Prev Amend No. MD034724             Date 11Jun15             *
+      *  Last Amend No. MD055081             Date 17Jan20             *
+      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *                 MD034724             Date 11Jun15             *
       *                 CUP042 *REWRITE    Date 04May15               *
       *                 CUP040             Date 09Aug13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,7 +33,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054605 - Deliverable Data Split for SDSVALPD.              *
+      *  MD055081 - New files added for Deliverable Data Split do     *
+      *             not exist yet, hence layer cannot be found.       *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD034724 - Addition for UDF tables.                          *
       *  CUP042 - Simplify update of driving file.                    *
       *  CUP040 - Handle new convention for files to be deleted.  As  *
@@ -976,11 +979,15 @@
      C                   EVAL      AUDTLB = '*ZONE'
      C                   ENDIF
      C                   ELSE
+     C                   IF        Member = 'GPWIPCTD'                                      MD055081
+     C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
+     C                   Else                                                               MD055081
      C                   EVAL      AUDTLB = '*UNKNOWN'
      C                   EVAL      Char100 = 'Deliverable data - +
      C                             Unknown layer                           : ' +
      C                             Member + ObjectType
      C                   EXSR      InsertErrMsg
+     C                   Endif                                                              MD055081
      C                   ENDIF
       *
      C     FindLayerE    ENDSR

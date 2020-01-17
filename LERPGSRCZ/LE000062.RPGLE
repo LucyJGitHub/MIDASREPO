@@ -75,20 +75,12 @@
       **                                    181 1830DBASE
  
       **------------------------------------------------------------------+
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+      ** The following /COPY line includes all the defined fields in the  ¦
       ** Program Status Data Structures.  They have meaningful            ¦
       ** names, prefixed by 'PS'.                                         ¦
      D/COPY ZACPYSRC,PSDS                                                 ¦
       **------------------------------------------------------------------+
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦

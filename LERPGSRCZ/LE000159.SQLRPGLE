@@ -14,7 +14,7 @@
       *                                                               *
       *  (C) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. AR674226           Date  04Dec19              *
       *  Prev Amend No. CLE159   *Create   Date  18Jul18              *
       *                 xxxxxx             Date  ddmmmyy              *
       *                                                               *
@@ -209,11 +209,7 @@
      C/End-Exec
       *
       *---------------------------------------------------------------
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+     C                   move      '1'           *INLR
       *
       * Print audit report
      C                   exsr      LASTSR
@@ -256,11 +252,7 @@
      C                   z-add     FADATE        FADAT@
       *
       *-------------------------------------------------------------------
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+     C     FADATE        Doweq     FADAT@
      C     SQLSTT        andeq     '00000'
       *
      C     FALOAN        Ifeq      *BLANKS

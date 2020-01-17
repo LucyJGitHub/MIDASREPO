@@ -99,19 +99,11 @@
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)              POWERS OF 10
       *
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+      ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-      *                                                               *
-      *  AR674226 - Manual transaction reached 999. Increase the size *
-      *             of utilisation sequence no. and transaction       *
-      *             sequence. Recompile. (Child: AR674227)            *
-      *           - Applied for MD054782.                             *
+      *
      D WNOML           S                   LIKE(P#NOML)
      D WSTBAL          S                   LIKE(FAUNDR)
      D WOPNBL          S                   LIKE(FAUNDR)

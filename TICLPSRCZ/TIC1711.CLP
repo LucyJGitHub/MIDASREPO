@@ -65,8 +65,18 @@
              DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(13)
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE(' ')
-/*/COPY SDCPYSRC,SDSVALDCL                                           */                 /*MD054919*/
              DCL        VAR(&DTACPRV) TYPE(*CHAR) LEN(10)                               /*MD054919*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                /*MD054919*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                               /*MD054919*/
+             DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)                              /*MD054919*/
 
 /*/COPY WNCPYSRC,TIH00018                                            */
 /**/

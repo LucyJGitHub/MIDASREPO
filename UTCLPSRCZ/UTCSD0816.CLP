@@ -1,30 +1,30 @@
-000100200110/*********************************************************************/
-000101200110/*STD    CLPBASE                                                     */
-000102200114/*EXI    TEXT('SD MD-39572 Utility program')                         */
-000103200110/*********************************************************************/
-000104200110/*                                                                   */
-000105200110/*     Midas - UTILITY                                               */
-000106200110/*                                                                   */
-000107200120/*     UTCSD0816  -  SD MD-39572 Utility program                     */
-000108200110/*                                                                   */
-000109200120/*       (c) Finastra International Limited 2020                     */
-000110200110/*                                                                   */
-000111200114/*       Last Amend No. MD039572 *CREATE   Date 14Jan20              */
-000112200110/*********************************************************************/
-000113200110/*                                                                   */
-000114200114/*  MD039572 - Failed component during COB - COMPONENT DLC0606C      */
-000115200110/*********************************************************************/
-000120191203             PGM
-000127200110
-000128200120 /* Print SDNARRPD Report */
-000129200120             CALL       PGM(UTSD0816)
-000130200120
-000131200120 /* Print ACKEYAL Report  */
-000132200120             CALL       PGM(UTSD0817)
-000133200120
-000134200120 /* Print GLCOAKPD Report  */
-000135200120             CALL       PGM(UTSD0818)
-000136200120
-000137200120 /* Print SEACKD Report  */
-000138200120             CALL       PGM(UTSD0819)
-000139200120             ENDPGM
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI    TEXT('SD MD-39572 Utility program')                         */
+/*********************************************************************/
+/*                                                                   */
+/*     Midas - UTILITY                                               */
+/*                                                                   */
+/*     UTCSD0816  -  SD MD-39572 Utility program                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD039572 *CREATE   Date 14Jan20              */
+/*********************************************************************/
+/*                                                                   */
+/*  MD039572 - Failed component during COB - COMPONENT DLC0606C      */
+/*********************************************************************/
+             PGM
+
+ /* Print SDNARRPD Report */
+             CALL       PGM(UTSD0816)
+
+ /* Print ACKEYAL Report  */
+             CALL       PGM(UTSD0817)
+
+ /* Print GLCOAKPD Report  */
+             CALL       PGM(UTSD0818)
+
+ /* Print SEACKD Report  */
+             CALL       PGM(UTSD0819)
+             ENDPGM

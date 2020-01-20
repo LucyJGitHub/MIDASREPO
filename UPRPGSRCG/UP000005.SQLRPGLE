@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Handle redundant and renamed files')
@@ -9,12 +9,15 @@
       *                                                               *
       *  UP000005 - Handle redundant, renamed or moved files          *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CUP040 *CREATE      Date 09Aug13              *
+      *  Last Amend No. MD055093            Date 20Jan20              *
+      *  Prev Amend No. CUP040 *CREATE      Date 09Aug13              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055093 - Member Type 'SQLTABLE' is not used. Type is set   *
+      *             to 'SQLTBL' by UP0090.                            *
       *  CUP040 - Enhancment to delete redundant, renamed or moved    *
       *           files.                                              *
       *                                                               *
@@ -72,6 +75,7 @@
      C                             or %SUBST(MemberType:3:8) = 'PF'
      C                             or %SUBST(MemberType:3:8) = 'SQLVIEW'
      C                             or %SUBST(MemberType:3:8) = 'SQLTABLE'
+     C                             or %SUBST(MemberType:3:8) = 'SQLTBL'                     MD055093
      C                   EVAL      ObjectType = '*FILE  '
       *
      C                   WHEN      %SUBST(MemberType:3:8) = 'TBL'

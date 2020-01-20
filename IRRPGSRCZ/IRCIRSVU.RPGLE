@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD053400           Date 03Jul19               *
+      *  Last Amend No. MD054117           Date 12Sep19               *
+      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *                 MD053400           Date 03Jul19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052876           Date 27Feb19               *
       *                 MD052154           Date 28Jan19               *
@@ -103,6 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
       *  MD053400 - Details are not correctly reverted back when the  *
@@ -1452,6 +1454,31 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D @@ERCD          S              1  0                                                    245692
       ** Action Code Reject                                                                 MD053400
      D ACTRJ           S              1                                                     MD053400
+      ** +--------------------------------------+
+      *                                                                                     MD054117
+     D PSYSVAL1        C                   CONST('DspPrinInDecInd')                         MD054117
+     D PRETURN         S              7A                                                    MD054117
+     D POP01           S             20A                                                    MD054117
+     D PVL01           S            200A                                                    MD054117
+     D POP02           S             20A                                                    MD054117
+     D PVL02           S            200A                                                    MD054117
+     D POP03           S             20A                                                    MD054117
+     D PVL03           S            200A                                                    MD054117
+     D POP04           S             20A                                                    MD054117
+     D PVL04           S            200A                                                    MD054117
+     D POP05           S             20A                                                    MD054117
+     D PVL05           S            200A                                                    MD054117
+     D POP06           S             20A                                                    MD054117
+     D PVL06           S            200A                                                    MD054117
+     D POP07           S             20A                                                    MD054117
+     D PVL07           S            200A                                                    MD054117
+     D POP08           S             20A                                                    MD054117
+     D PVL08           S            200A                                                    MD054117
+     D POP09           S             20A                                                    MD054117
+     D PVL09           S            200A                                                    MD054117
+     D POP10           S             20A                                                    MD054117
+     D PVL10           S            200A                                                    MD054117
+     D PCIDCF          S              1A                                                    MD054117
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -5403,7 +5430,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      FldNameArr(Idx) = 'SFORMAMOPC'                            BUG5449
      C                   ENDIF                                                               BUG5449
       * Increase/decrease flag must be specified                                             BUG5449
-     C                   IF        BGN2ST = 'Y'                                              BUG5449
+     C**********         IF        BGN2ST = 'Y'                                     BUG5449 MD054117
+     C                   IF        PCIDCF = 'Y'                                              BUG5449
      C                   IF        SFORMIDOPC = *BLANKS                                      BUG5449
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM1022'     MsgIDArr(Idx)                               BUG5449
@@ -5648,7 +5676,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      FldNameArr(Idx) = 'SFORMAMTPC'                            BUG5610
      C                   ENDIF                                                               BUG5449
       * Increase/decrease flag must be specified                                             BUG5449
-     C                   IF        BGN2ST = 'Y'                                              BUG5449
+     C**********         IF        BGN2ST = 'Y'                                     BUG5449 MD054117
+     C                   IF        PCIDCF = 'Y'                                             MD054117
      C*******************IF        SFORMIDOPC = *BLANKS                               BUG5449BUG5610
      C                   IF        SFORMIDTPC = *BLANKS                                      BUG5610
      C                   ADD       1             Idx                                         BUG5449
@@ -6193,7 +6222,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * CheckInDeInd - Routine to validate increase/decrease flag     *                      BUG5449
       *****************************************************************                      BUG5449
      C     CheckInDeInd  BEGSR                                                               BUG5449
-     C                   IF        BGN2ST = 'Y'                                              BUG5449
+     C**********         IF        BGN2ST = 'Y'                                     BUG5449 MD054117
+     C                   IF        PCIDCF = 'Y'                                             MD054117
      C                   IF        PCIDFLG = *BLANKS                                         BUG5449
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM2009'     MsgIDArr(Idx)                               BUG5449
@@ -7041,7 +7071,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      PAMT = OPCAMT(I)                                          BUG5449
      C                   EVAL      CAMT = 0                                                  BUG5449
      C                   EVAL      PMTP = *BLANK                                             BUG5449
-     C                   IF        BGN2ST='Y'                                                BUG5449
+     C**********         IF        BGN2ST='Y'                                       BUG5449 MD054117
+     C                   IF        PCIDCF='Y'                                               MD054117
      C                   EVAL      WPAMT = PAMT                                              BUG5449
                                                                                              BUG5449
       ** Calculate for the new principal amount                                              BUG5449
@@ -7082,7 +7113,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** Update records with processing dates greater than the processing                    BUG5449
       ** date of the inserted record                                                         BUG5449
                                                                                              BUG5449
-     C                   IF        BGN2ST = 'Y'                                              BUG5449
+     C**********         IF        BGN2ST = 'Y'                                     BUG5449 MD054117
+     C                   IF        PCIDCF = 'Y'                                             MD054117
      C                   EXSR      SRUpdPCSC                                                 BUG5449
      C                   ENDIF                                                               BUG5449
                                                                                              BUG5449
@@ -7107,7 +7139,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      PAMT = TPCAMT(I)                                          BUG5449
      C                   EVAL      CAMT = 0                                                  BUG5449
      C                   EVAL      PMTP = *BLANK                                             BUG5449
-     C                   IF        BGN2ST='Y'                                                BUG5449
+     C**********         IF        BGN2ST='Y'                                       BUG5449 MD054117
+     C                   IF        PCIDCF='Y'                                               MD054117
      C                   EVAL      WPAMT = PAMT                                              BUG5449
                                                                                              BUG5449
       ** Calculate for the new principal amount                                              BUG5449
@@ -7147,7 +7180,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** Update records with processing dates greater than the processing                    BUG5449
       ** date of the inserted record                                                         BUG5449
                                                                                              BUG5449
-     C                   IF        BGN2ST = 'Y'                                              BUG5449
+     C**********         IF        BGN2ST = 'Y'                                     BUG5449 MD054117
+     C                   IF        PCIDCF = 'Y'                                             MD054117
      C                   EXSR      SRUpdPCSC                                                 BUG5449
      C                   ENDIF                                                               BUG5449
                                                                                              BUG5449
@@ -8847,6 +8881,41 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                                                       CSW213
      C                   ENDIF                                                                CSW213
       *                                                                                       CSW213
+                                                                                            MD054117
+     C                   CALL      'AOSVALR0'                                               MD054117
+     C                   PARM      *BLANKS       PRETURN                                    MD054117
+     C                   PARM      PSYSVAL1      POP01                                      MD054117
+     C                   PARM      *BLANKS       PVL01                                      MD054117
+     C                   PARM      *BLANKS       POP02                                      MD054117
+     C                   PARM      *BLANKS       PVL02                                      MD054117
+     C                   PARM      *BLANKS       POP03                                      MD054117
+     C                   PARM      *BLANKS       PVL03                                      MD054117
+     C                   PARM      *BLANKS       POP04                                      MD054117
+     C                   PARM      *BLANKS       PVL04                                      MD054117
+     C                   PARM      *BLANKS       POP05                                      MD054117
+     C                   PARM      *BLANKS       PVL05                                      MD054117
+     C                   PARM      *BLANKS       POP06                                      MD054117
+     C                   PARM      *BLANKS       PVL06                                      MD054117
+     C                   PARM      *BLANKS       POP07                                      MD054117
+     C                   PARM      *BLANKS       PVL07                                      MD054117
+     C                   PARM      *BLANKS       POP08                                      MD054117
+     C                   PARM      *BLANKS       PVL08                                      MD054117
+     C                   PARM      *BLANKS       POP09                                      MD054117
+     C                   PARM      *BLANKS       PVL09                                      MD054117
+     C                   PARM      *BLANKS       POP10                                      MD054117
+     C                   PARM      *BLANKS       PVL10                                      MD054117
+      *                                                                                     MD054117
+     C                   EVAL      PCIDCF = 'N'                                             MD054117
+     C                   IF        PRETURN <> *BLANKS                                       MD054117
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      MD054117
+     C                   EVAL      DBKEY = PSYSVAL1                                         MD054117
+     C                   EVAL      DBASE = 917                                              MD054117
+     C                   OUT       LDA                                                      MD054117
+     C                   EXSR      *PSSR                                                    MD054117
+     C                   ENDIF                                                              MD054117
+      *                                                                                     MD054117
+     C                   MOVEL     PVL01         PCIDCF                                     MD054117
+      *                                                                                     MD054117
      C                   ENDSR
       *****************************************************************
 **  CPY@

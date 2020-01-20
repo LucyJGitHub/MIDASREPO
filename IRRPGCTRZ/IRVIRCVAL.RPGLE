@@ -36,12 +36,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054117           Date 12Sep19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 222373             Date 31Oct03               *
+      *                 222373             Date 31Oct03               *
       *                 CAP043             Date 02May02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD046248 - Finastra Rebranding                               *
       *  222373 - CAP043 source missed from Midasplus1 collection     *
       *  CAP043 - Additional APIs for IRS Schedules                   *
@@ -260,6 +262,30 @@
      D WSAmount1       S             14A                                                      CAP043
      D WSAmount2       S             16A                                                      CAP043
      D WSIncDec        S              1A                                                      CAP043
+      *                                                                                     MD054117
+     D PSYSVAL1        C                   CONST('DspPrinInDecInd')                         MD054117
+     D PRETURN         S              7A                                                    MD054117
+     D POP01           S             20A                                                    MD054117
+     D PVL01           S            200A                                                    MD054117
+     D POP02           S             20A                                                    MD054117
+     D PVL02           S            200A                                                    MD054117
+     D POP03           S             20A                                                    MD054117
+     D PVL03           S            200A                                                    MD054117
+     D POP04           S             20A                                                    MD054117
+     D PVL04           S            200A                                                    MD054117
+     D POP05           S             20A                                                    MD054117
+     D PVL05           S            200A                                                    MD054117
+     D POP06           S             20A                                                    MD054117
+     D PVL06           S            200A                                                    MD054117
+     D POP07           S             20A                                                    MD054117
+     D PVL07           S            200A                                                    MD054117
+     D POP08           S             20A                                                    MD054117
+     D PVL08           S            200A                                                    MD054117
+     D POP09           S             20A                                                    MD054117
+     D PVL09           S            200A                                                    MD054117
+     D POP10           S             20A                                                    MD054117
+     D PVL10           S            200A                                                    MD054117
+     D PCIDCF          S              1A                                                    MD054117
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -375,7 +401,8 @@
      C                   IF        (PValType = 'C') OR (PValType = 'P')                       CAP043
      C                   CALLB     'IRVIRCAMT'                                                CAP043
      C                   PARM      *BLANK        RetCodeOut                                   CAP043
-     C                   PARM      BGN2ST        PBGN2ST                                      CAP043
+     C**********         PARM      BGN2ST        PBGN2ST                             CAP043 MD054117
+     C                   PARM      PCIDCF        PBGN2ST                                    MD054117
      C                   PARM                    PValType                                     CAP043
      C                   PARM                    PCurrency                                    CAP043
      C                   PARM                    PAmount1                                     CAP043
@@ -609,7 +636,8 @@
      C                   IF        (PIDInd(X) = *BLANK) AND                                   CAP043
      C                             (WAmount2A(X) <> *BLANK) AND                               CAP043
      C                             (PValType = 'P') AND                                       CAP043
-     C                             (BGN2ST = 'Y')                                             CAP043
+     C**********                   (BGN2ST = 'Y')                                    CAP043 MD054117
+     C                             (PCIDCF = 'Y')                                           MD054117
      C                   ADD       1             Idx                                          CAP043
      C                   MOVE      'Y'           Errorfound                                   CAP043
      C                   MOVEL     'DLM1022'     MsgIDArr(Idx)                                CAP043
@@ -896,6 +924,41 @@
      C                   ENDIF                                                                CAP043
                                                                                               CAP043
      C                   ENDIF                                                                CAP043
+                                                                                            MD054117
+     C                   CALL      'AOSVALR0'                                               MD054117
+     C                   PARM      *BLANKS       PRETURN                                    MD054117
+     C                   PARM      PSYSVAL1      POP01                                      MD054117
+     C                   PARM      *BLANKS       PVL01                                      MD054117
+     C                   PARM      *BLANKS       POP02                                      MD054117
+     C                   PARM      *BLANKS       PVL02                                      MD054117
+     C                   PARM      *BLANKS       POP03                                      MD054117
+     C                   PARM      *BLANKS       PVL03                                      MD054117
+     C                   PARM      *BLANKS       POP04                                      MD054117
+     C                   PARM      *BLANKS       PVL04                                      MD054117
+     C                   PARM      *BLANKS       POP05                                      MD054117
+     C                   PARM      *BLANKS       PVL05                                      MD054117
+     C                   PARM      *BLANKS       POP06                                      MD054117
+     C                   PARM      *BLANKS       PVL06                                      MD054117
+     C                   PARM      *BLANKS       POP07                                      MD054117
+     C                   PARM      *BLANKS       PVL07                                      MD054117
+     C                   PARM      *BLANKS       POP08                                      MD054117
+     C                   PARM      *BLANKS       PVL08                                      MD054117
+     C                   PARM      *BLANKS       POP09                                      MD054117
+     C                   PARM      *BLANKS       PVL09                                      MD054117
+     C                   PARM      *BLANKS       POP10                                      MD054117
+     C                   PARM      *BLANKS       PVL10                                      MD054117
+      *                                                                                     MD054117
+     C                   EVAL      PCIDCF = 'N'                                             MD054117
+     C                   IF        PRETURN <> *BLANKS                                       MD054117
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      MD054117
+     C                   EVAL      DBKEY = PSYSVAL1                                         MD054117
+     C                   EVAL      DBASE = 3                                                MD054117
+     C                   OUT       LDA                                                      MD054117
+     C                   EXSR      *PSSR                                                    MD054117
+     C                   ENDIF                                                              MD054117
+      *                                                                                     MD054117
+     C                   MOVEL     PVL01         PCIDCF                                     MD054117
+      *                                                                                     MD054117
  
      C                   ENDSR
  

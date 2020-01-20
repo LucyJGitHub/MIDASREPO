@@ -4,7 +4,7 @@
 000400200114/*EXI *  TEXT('Midas SD MD-39572 Utility program for GLCOAKPD')          *
 000500200114      ********************************************************************
 000600200114      *                                                                  *
-000700200114      *  Midas - Standing Data Module                                    *
+000700200120      *  Midas - Standing Data Module                                    *
 000800200114      *                                                                  *
 000900200120      *   UTSD0818  - SD MD-39572 Utility program for GLCOAKPD           *
 001000200114      *                                                                  *

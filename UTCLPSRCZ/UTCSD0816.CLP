@@ -5,9 +5,9 @@
 000104200110/*                                                                   */
 000105200110/*     Midas - UTILITY                                               */
 000106200110/*                                                                   */
-000107200114/*     UTNARRPRT -  SD MD-39572 Utility program                      */
+000107200120/*     UTSD0816  -  SD MD-39572 Utility program                      */
 000108200110/*                                                                   */
-000109200110/*       (c) Finastra International Limited 2001                     */
+000109200120/*       (c) Finastra International Limited 2020                     */
 000110200110/*                                                                   */
 000111200114/*       Last Amend No. MD039572 *CREATE   Date 14Jan20              */
 000112200110/*********************************************************************/
@@ -16,8 +16,15 @@
 000115200110/*********************************************************************/
 000120191203             PGM
 000127200110
-000128191203             CALL       PGM(UTNARRRTV)
-000129191203             CALL       PGM(UTAKEYRTV)
-000130191203             CALL       PGM(UTGLCORTV)
-000131191203             CALL       PGM(UTSEACRTV)
-000132191203             ENDPGM
+000128200120 /* Print SDNARRPD Report */
+000129200120             CALL       PGM(UTSD0816)
+000130200120
+000131200120 /* Print ACKEYAL Report  */
+000132200120             CALL       PGM(UTSD0817)
+000133200120
+000134200120 /* Print GLCOAKPD Report  */
+000135200120             CALL       PGM(UTSD0818)
+000136200120
+000137200120 /* Print SEACKD Report  */
+000138200120             CALL       PGM(UTSD0819)
+000139200120             ENDPGM

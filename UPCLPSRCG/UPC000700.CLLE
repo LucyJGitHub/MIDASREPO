@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD054209 *CREATE   Date 09Sep19              */
+/*       Last Amend No. MD055093           Date 20Sep20              */
+/*       Prev Amend No. MD054209 *CREATE   Date 09Sep19              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055093 - Copy first old T_WIPCF into QTEMP as library     */
+/*                  name '#.ggMLIB' cannot be used in SQL statement  */
 /*       MD054209 - Deliverable Data Split for T_WIPCF.              */
 /*                                                                   */
 /*********************************************************************/
@@ -21,6 +24,7 @@
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVLIB) TYPE(*CHAR) LEN(10)                                /*MD055093*/
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
 
@@ -49,6 +53,13 @@
              RESETMAXID FILE(GPWIPBTD) RSTOPT(1)
              CLRPFM     FILE(GPWIPXTD)
              ENDDO
+             CHGVAR     VAR(&SAVLIB) VALUE('#.' *TCAT +
+                          %SUBSTRING(&OLDLIB 1 2) *TCAT 'GMLIB')                        /*MD055093*/
+             DLTF       FILE(QTEMP/T_WIPCF)                                             /*MD055093*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055093*/
+             CPYF       FROMFILE(&SAVLIB/T_WIPCF) +
+                          TOFILE(QTEMP/T_WIPCF) CRTFILE(*YES)                           /*MD055093*/
+                                                                                        /*MD055093*/
              CALL       PGM(UP000700) PARM(&ERROR &FILE &OLDLIB)
              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
              ENDDO

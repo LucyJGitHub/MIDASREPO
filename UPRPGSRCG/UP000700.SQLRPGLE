@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD054209   *CREATE   Date 07Sep19             *
+      *  Last Amend No. MD055093             Date 20Jan20             *
+      *  Prev Amend No. MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055093 - 'Old' file T_WIPCF has been cpoied to QTEMP       *
       *  MD054209 - Deliverable Data Split for T_WIPCF                *
       *                                                               *
       *****************************************************************
@@ -43,7 +45,8 @@
       ***************************************************************************
      C     GPWIP_Sr      BEGSR
 
-     C                   EVAL      GTALIB = %SUBST(OLDLIB:1:2) + 'GTALIB'
+     C**********         EVAL      GTALIB = %SUBST(OLDLIB:1:2) + 'GTALIB'                   MD055093
+     C                   EVAL      GTALIB = 'QTEMP'                                         MD055093
      C/exec SQL
      C+ ALTER TABLE GPWIPBTD ALTER COLUMN
      C+ WC_ID restart with 10500

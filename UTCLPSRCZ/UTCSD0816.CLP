@@ -5,7 +5,7 @@
 000104200110/*                                                                   */
 000105200110/*     Midas - UTILITY                                               */
 000106200110/*                                                                   */
-000107200120/*     UTSD0816  -  SD MD-39572 Utility program                      */
+000107200120/*     UTCSD0816  -  SD MD-39572 Utility program                     */
 000108200110/*                                                                   */
 000109200120/*       (c) Finastra International Limited 2020                     */
 000110200110/*                                                                   */

@@ -8,7 +8,7 @@
 000800200114      *                                                                  *
 000900200120      *    UTSD0817  - SD MD-39572 Utility program for ACKEYAL           *
 001000200114      *                                                                  *
-001100200114      *  (c) Finastra International Limited 2020                         *
+001100200120      *  (c) Finastra International Limited 2020                         *
 001200200114      *                                                                  *
 001300200114      *                 MD039572 *CREATE   Date 14Jan20                  *
 001400200114      ********************************************************************

@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050134           Date 21Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053553           Date 21Jan20               *
+      *  Prev Amend No. MD050134           Date 21Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD045094           Date 10May17               *
       *                 MD030406           Date 27Oct14               *
       *                 258369             Date 06Jun13               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053553 - FT Incoming EUR-USD: Invalid Pay Amount           *
       *  MD050134 - A serious midas error encountered when exchange   *
       *             rate exceeds tolerance level                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -150,44 +152,44 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-Specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
       ** +--- The converted ZPOWERZ1 starts here --------------------------+
- 
+
      D Power           S              7  3 DIM(7) CTDATA PERRCD(1)
       ** Array containing powers for Ccy conversion
- 
+
       ** +--- The converted ZPOWERZ1 ends here ----------------------------+
       *
       *
@@ -221,6 +223,8 @@
       ** Array containing Currency number of d.p.'s
       *
      D WINVER          S              1A                                                    MD045094
+     D NRATE           S             14  9                                                  MD053553
+     D D9              S              1  0                                                  MD053553
       /SPACE 3
       *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -248,7 +252,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C/TITLE Main Processing
       *================================================================
       *  P R O G R A M   S T A R T                                    *
@@ -1724,6 +1728,12 @@
      C                   EXSR      SrVAmtInvR                                                 258369
      C                   ENDIF                                                                258369
       *                                                                                       258369
+      ** If amounts still don't agree, try the rate with 9 decimal places                   MD053553
+      *                                                                                     MD053553
+     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
+     C                   EXSR      SrVAmtNR9D                                               MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
      C                   IF        CRE072 = 'Y'                                               CRE072
      C                   EXSR      SETHILO                                                    CRE072
      C                   ENDIF                                                                CRE072
@@ -1960,7 +1970,105 @@
      C                   ENDIF                                                                258369
       *                                                                                       258369
      C                   ENDSR                                                                258369
-      *****************************************************************                       258369
+      *                                                                                     MD053553
+      *****************************************************************                     MD053553
+      *                                                               *                     MD053553
+      *  SrVAmtNR9D - Validate amounts using rate with 9 decimal      *                     MD053553
+      *           places                                              *                     MD053553
+      *                                                               *                     MD053553
+      *  Called By:TRNAMT                                             *                     MD053553
+      *  Calls: SrCalcAmnt                                            *                     MD053553
+      *                                                               *                     MD053553
+      *****************************************************************                     MD053553
+     C     SrVAmtNR9D    BEGSR                                                              MD053553
+      *                                                                                     MD053553
+      ** Get 9th decimal place from the input amounts                                       MD053553
+      *                                                                                     MD053553
+     C                   EVAL      NRATE = AMNT(T) / AMNT(F)                                MD053553
+     C                   MOVE      NRATE         D9                                         MD053553
+     C                   MOVEL     P#RATE        NRATE                                      MD053553
+      *                                                                                     MD053553
+      ** Adjustment if original exchange rate was rounded up.                               MD053553
+      *                                                                                     MD053553
+     C                   IF        D9 > 4                                                   MD053553
+     C                   EVAL      NRATE -= 0.00000001                                      MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+     C                   EXSR      SrCalcAmnt                                               MD053553
+      *                                                                                     MD053553
+     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
+      *                                                                                     MD053553
+     C                   IF        ZCRSMD = 'M'                                             MD053553
+     C                   EVAL      ZCRSMD = 'D'                                             MD053553
+     C                   ELSE                                                               MD053553
+     C                   EVAL      ZCRSMD = 'M'                                             MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+     C                   EXSR      SrCalcAmnt                                               MD053553
+     C                   ELSE                                                               MD053553
+     C                   LEAVESR                                                            MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+      ** Input amounts may have been reversed.                                              MD053553
+      *                                                                                     MD053553
+     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
+      *                                                                                     MD053553
+     C                   IF        F = 2                                                    MD053553
+     C                   EVAL      F = 3                                                    MD053553
+     C                   EVAL      T = 2                                                    MD053553
+     C                   ELSE                                                               MD053553
+     C                   EVAL      F = 2                                                    MD053553
+     C                   EVAL      T = 3                                                    MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+      ** Get 9th decimal place from the input amounts                                       MD053553
+      *                                                                                     MD053553
+     C                   EVAL      NRATE = AMNT(T) / AMNT(F)                                MD053553
+     C                   MOVE      NRATE         D9                                         MD053553
+     C                   MOVEL     P#RATE        NRATE                                      MD053553
+      *                                                                                     MD053553
+      ** Adjustment if original exchange rate was rounded up.                               MD053553
+      *                                                                                     MD053553
+     C                   IF        D9 > 4                                                   MD053553
+     C                   EVAL      NRATE -= 0.00000001                                      MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+     C                   EXSR      SrCalcAmnt                                               MD053553
+     C                   ELSE                                                               MD053553
+     C                   LEAVESR                                                            MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
+      *                                                                                     MD053553
+     C                   IF        ZCRSMD = 'M'                                             MD053553
+     C                   EVAL      ZCRSMD = 'D'                                             MD053553
+     C                   ELSE                                                               MD053553
+     C                   EVAL      ZCRSMD = 'M'                                             MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+     C                   EXSR      SrCalcAmnt                                               MD053553
+     C                   ENDIF                                                              MD053553
+     C                   ENDSR                                                              MD053553
+      *                                                                                     MD053553
+      *****************************************************************                     MD053553
+      *                                                               *                     MD053553
+      *  SrCalcAmnt - Calculates amount based M/D Indicator           *                     MD053553
+      *                                                               *                     MD053553
+      *  Called By: SrVAmtNR9D                                        *                     MD053553
+      *  Calls: None                                                  *                     MD053553
+      *                                                               *                     MD053553
+      *****************************************************************                     MD053553
+     C     SrCalcAmnt    BEGSR                                                              MD053553
+     C                   IF        ZCRSMD = 'M'                                             MD053553
+     C                   Z-ADD     AMNT(F)       ZAMTT                                      MD053553
+     C                   EVAL(H)   ZAMTT *= NRATE                                           MD053553
+     C                   ENDIF                                                              MD053553
+      *                                                                                     MD053553
+     C                   IF        ZCRSMD = 'D'                                             MD053553
+     C                   Z-ADD     AMNT(F)       ZAMTT                                      MD053553
+     C                   EVAL(H)   ZAMTT /= NRATE                                           MD053553
+     C                   ENDIF                                                              MD053553
+     C                   ENDSR                                                              MD053553
       /EJECT
       *****************************************************************
       *                                                               *

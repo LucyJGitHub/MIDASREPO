@@ -12,7 +12,7 @@
 /*       Last Amend No. MD039572 *CREATE   Date 14Jan20              */
 /*********************************************************************/
 /*                                                                   */
-/*  MD039572 - Failed component during COB - COMPONENT DLC0606C      */
+/*  MD039572 - Failed component during COB - Component DLC0606C      */
 /*********************************************************************/
              PGM
 

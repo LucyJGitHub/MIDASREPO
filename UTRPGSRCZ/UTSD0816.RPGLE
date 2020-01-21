@@ -10,10 +10,10 @@
       *                                                                  *
       *  (c) Finastra International Limited 2020                         *
       *                                                                  *
-      *                 MD039572 *CREATE   Date 14Jan20                  *
+      *  Last Amend No. MD039572 *CREATE   Date 14Jan20                  *
       ********************************************************************
       *                                                                  *
-      *  MD039572 - FAILED COMPONENT DURING COB - COMPONENT DLC0606C     *
+      *  MD039572 - Failed Component during COB - Component DLC0606C     *
       ********************************************************************
      F*FSTART                                                            *
       ********************************************************************

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD054826           Date 20Jan20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 AR1095876          Date 30Sep13               *
       *                 AR1089939          Date 22Feb13               *
       *                 AR1005261          Date 30Jul12               *
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054826 - After processing all the retail accounts, call    *
+      *             again access object AOFCLTR0 with *FREE parameter *
+      *             to close FCLTY file.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  AR1095876 - ABC - Forward Days 1 should = DNWD-1, not just   *
@@ -436,7 +440,18 @@
  
      C                   READ      ACCNTABF
      C                   ENDDO
- 
+
+     C                   CALL      'AOFCLTR0'                                               MD054826
+     C                   PARM      *BLANKS       P@RTCD                                     MD054826
+     C                   PARM      '*FREE  '     P@OPTN                                     MD054826
+     C                   PARM                    P@CNUM                                     MD054826
+     C                   PARM                    P@FCTY                                     MD054826
+     C                   PARM                    P@FCNO                                     MD054826
+     C                   PARM      *BLANKS       P@RCDT                                     MD054826
+     C                   PARM      *BLANKS       P@STAT                                     MD054826
+     C                   PARM      *BLANKS       P@FMT                                      MD054826
+     C                   PARM      *BLANKS       Q@FMT                                      MD054826
+                                                                                            MD054826
      C                   ENDSR
  
       **********************************************************************

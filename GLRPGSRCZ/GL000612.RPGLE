@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD052581           Date 23Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054989           Date 16Jan20               *
+      *  Prev Amend No. MD052581           Date 23Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044378           Date 03Mar17               *
       *                 MD043672           Date 19Jan17               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054989 - Interest Capitalisation not included in report    *
       *  MD052581 - Missing Credit capitalized interests of Retail    *
       *             A/Cs in file GLCAPAPD                             *
       *  MD046248 - Finastra Rebranding                               *
@@ -227,6 +229,7 @@
      C                             AND ACTRAT = '91060'                                     MD052581
      C                             AND ACSPOS = '  GE-IC'                                   MD052581
      C                             AND ACDRCR = '1'                                         MD052581
+     C                   EVAL      WFTPT = 'I'                                              MD054989
      C                   EXSR      SRWrite                                                  MD052581
      C                   ENDIF                                                              MD052581
      C                   ENDIF
@@ -327,7 +330,8 @@
      C                   IF        CPTYPE = *Blanks
      C                   EVAL      CPTYPE = 'RECAP'
      C                   ENDIF
-     C                   EVAL      CPPAYT = A1FTPT
+     C**********         EVAL      CPPAYT = A1FTPT                                          MD054989
+     C                   EVAL      CPPAYT = WFTPT                                           MD054989
      C                   EVAL      CPBRCH = ACBRCA
  
      C                   EVAL      CPJANO = *BLANKS

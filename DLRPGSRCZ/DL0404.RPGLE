@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR936320           Date 10Jan20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR936320 - Carry over 1 to integer part of hash total if     *
+      *             decimal part is 1000 or more. (Child: AR936321)   *
+      *             Applied for MD-51930.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -105,7 +109,7 @@
       *
       ** CLS Schedule Events file creation - audit
      FDL0404AU  O    E             PRINTER
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -126,12 +130,12 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -140,7 +144,7 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -241,7 +245,7 @@
       *
       ** Pointer for the indicator array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -268,7 +272,7 @@
       ** Repeat while valid record.
       *
      C                   DOW       EndOfFile = False
- 
+
      C                   IF        PYVALD > WControlDat AND PYRECI = 'D'
      C                             AND (PYTOTP <> *ZERO OR PYTOTR <> *ZERO)                   CAP084
       *
@@ -375,12 +379,12 @@
       ** Write record to Events file for dummy nostro
       *
      C                   EXSR      SRWrite
- 
+
      C                   ENDIF
       *
       ** Read next pay schedule header record.
      C                   READ      FXCLSPSHL1                             01
- 
+
      C                   ENDDO
       *
       ** Update Events creation trailer file.
@@ -394,7 +398,7 @@
       ** Terminate program
       *
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -574,7 +578,7 @@
      C                   PARM                    PAcSn
      C                   PARM      A7BRCD        PBrCd
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PBrCd + PCust + PCyCd + PAccn + PAcSn
@@ -589,9 +593,9 @@
      C                   ELSE
      C                   EVAL      PRFC = PYPRFC
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -610,22 +614,22 @@
      C                   EVAL      WAmt = 0
      C                   EVAL      WAmt = EAMT / 1000
      C                   EVAL      WWAmt = WAmt
- 
+
      C                   Z-ADD     WInteger      WWTotI
      C                   Z-ADD     WDecimal      WWTotD
- 
+
      C                   IF        WWAmt < 0
      C                   Z-SUB     WWAmt         WWAmt
      C                   ENDIF
- 
+
      C                   Z-ADD     WWAmt         WWAmtI
      C                   MOVE      WWAmt         WWAmtD
      C                   ADD       WWAmtD        WWTotD
- 
+
      C                   IF        WWTotD < WWAmtD
      C                   ADD       1             WWTotI
      C                   ENDIF
- 
+
      C                   ADD       WWAmtI        WWTotI
      C                   Z-ADD     WWTotI        WInteger
      C                   Z-ADD     WWTotD        WDecimal
@@ -633,9 +637,9 @@
       ** Write record to Events creation detail file.
       *
      C                   WRITE     EVNTXEDF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -648,16 +652,18 @@
       ** Update trailer record if found, otherwise write record.
       *
      C     1             CHAIN     EVNTXZZ                            02
- 
+
      C                   IF        NoRecFnd = False
      C                   EVAL      NORE = NORE + WGenRec
      C                   EVAL      HRWN  = HRWN  + WInteger
      C                   EVAL      WDecSum = HRDC + WDecimal
       *
-      ** If decimal exceeds 1000, carry 1 to integer. Amount in
+      ***If*decimal*exceeds*1000,*carry*1*to*integer.*Amount*in********                     AR936320
+      ** If decimal is 1000 or more, carry 1 to integer. Amount in                          AR936320
       ** excess of 1000 is moved back on decimal.
       *
-     C                   IF        WDecSum > 1000
+     C**********         IF        WDecSum > 1000                                           AR936320
+     C                   IF        WDecSum >= 1000                                          AR936320
      C                   EVAL      HRDC = WDecSum - 1000
      C                   EVAL      HRWN = HRWN + 1
      C                   ELSE
@@ -675,9 +681,9 @@
      C                   EVAL      RECI = 'A'
      C                   WRITE     EVNTXECF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -699,19 +705,19 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd + PNoNb
      C                   EVAL      DBFILE = 'SDNOSTPD'
      C                   EVAL      DBASE = 005
      C                   OUT       LDA
      C                   EXSR      SRDBErr
- 
+
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -726,19 +732,19 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCyCd
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd
      C                   EVAL      DBFILE = 'SDCURRPD'
      C                   EVAL      DBASE = 006
      C                   OUT       LDA
      C                   EXSR      SRDBErr
- 
+
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -753,19 +759,19 @@
      C                   PARM                    PCnum
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCnum
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBASE = 007
      C                   OUT       LDA
      C                   EXSR      SRDBErr
- 
+
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -780,19 +786,19 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM      A7BRCD        PBrch
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PBrch
      C                   EVAL      DBFILE = 'SDBRCHPD'
      C                   EVAL      DBASE = 008
      C                   OUT       LDA
      C                   EXSR      SRDBErr
- 
+
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -806,19 +812,19 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM      BBCNCZ        PCnCd
      C     SDCTRY        PARM      SDCTRY        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCnCd
      C                   EVAL      DBFILE = 'SDCTRYPD'
      C                   EVAL      DBASE = 009
      C                   OUT       LDA
      C                   EXSR      SRDBErr
- 
+
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -827,7 +833,7 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
      C                   IF        WGenRec <> 0
      C                   Z-ADD     WGenRec       RCOUNT
      C                   Z-ADD     WInteger      RINTEGER
@@ -838,9 +844,9 @@
      C                   WRITE     HEADAU
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -852,9 +858,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
@@ -943,9 +949,9 @@
      C                   Z-ADD     BJRDNB        WControlDat
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -954,17 +960,17 @@
       *                                                               *
       *****************************************************************
      C     SRDBErr       BEGSR
- 
+
      C                   WRITE     HEADAU
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   WRITE     DBERROR
- 
+
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -976,17 +982,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************
 **  CPY@

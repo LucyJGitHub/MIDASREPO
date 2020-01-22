@@ -20,8 +20,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054057           Date 05Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD050865           Date 05Jun18               *
+      *  Prev Amend No. MD046354           Date 03Oct17               *
+      *                 MD054057           Date 05Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
@@ -168,6 +170,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD050865 - Include window processing for Retail Teller System*
+      *             transaction screens.                              *
+      *           - Recompiled over changes in RE4115GDTA and         *
+      *             RE4115MOV1.                                       *
+      *  MD046354 - Add window processing for Retail Teller System    *
+      *             transaction screens.                              *
       *  MD054057 - Failure to close an account.  Check correct       *
       *             network files during account closure.             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -1280,6 +1288,9 @@
      ISDBNCD    E DSSDBNCDPD
      I** Bank Code Details
      I*
+     ISDMMOD    E DSSDMMODPD                                                                MD046354
+     I* Modules Details                                                                     MD046354
+     I*                                                                                     MD046354
      IDSMEMS    E DSMEMOS                                                 CCB002
      I** External data structure for MEMOS Details                        CCB002
      I** Renamed fields in PF/MEMOS                                       CCB002
@@ -1412,6 +1423,8 @@
      I*                                                                   S01408
      I/COPY WNCPYSRC,RE4115IIP2                                           S01408
      I*                                                                   S01408
+     I/COPY QWINDSRC,RE4115GDTA                                                             MD046354
+     I*                                                                                     MD046354
      IMUSER     E DSMUSERDD                                                                   CRT026
      I** External data structure for User Details                                             CRT026
      I** Renamed fields in PF/MUSERDD                                                         CRT026
@@ -2747,6 +2760,25 @@
      C           *IN40     IFEQ '1'
      C                     EXSR VACCLO
      C                     END
+      *                                                                                     MD046354
+     C           BGWDPR    IFEQ 'Y'                                                         MD046354
+     C/COPY QWINDSRC,RE4115MOV1                                                             MD046354
+     C                     CALL 'WN0010'                                                    MD046354
+     C                     PARM 'RE4115'  PPGM   10                                         MD046354
+     C                     PARM *BLANKS   PKEY    2                                         MD046354
+     C                     PARM 'I'       PACTN   1                                         MD046354
+     C                     PARM           PDATA                                             MD046354
+     C                     PARM *BLANKS   PRTRN   7                                         MD046354
+     C                     PARM *BLANKS   PSPAR 256                                         MD046354
+     C                     ENDIF                                                            MD046354
+      *                                                                                     MD046354
+     C           PRTRN     IFEQ 'Y2U9999'                                                   MD046354
+     C                     MOVE '1'       *INKC                                             MD046354
+     C                     EXSR LAST                                                        MD046354
+     C                     ENDIF                                                            MD046354
+      *                                                                                     MD046354
+     C           PRTRN     IFNE 'USR0790'                                                   MD046354
+      *                                                                                     MD046354
       ** Proceed to update? (i.e. no Outstanding Held Items, Stopped                          249968
       **                          Cheques, Standing Orders, SWEEPS  )                         249968
      C           @SKIP     IFEQ 'N'                                                           249968
@@ -2823,6 +2855,7 @@
      C                     Z-ADD*ZERO     @TI                                                 225747
      C                     Z-ADD*ZERO     Z                                                   225747
      C                     ENDIF                                                             BUG2849
+     C                     ENDIF                                                            MD046354
       *
      C                     ENDSR
       *****************************************************************
@@ -8896,6 +8929,11 @@
      C                     MOVELSVAL2     W#NBRD  1                                           CDL081
      C                     ENDIF                                                              CDL081
       *                                                                                       CRE019
+     C                     CALL 'AOMMODR0'                                                  MD046354
+     C                     PARM '*MSG    '@RTCD                                             MD046354
+     C                     PARM '*FIRST  '@OPTN                                             MD046354
+     C           SDMMOD    PARM SDMMOD    DSFDY                                             MD046354
+      *                                                                                     MD046354
      C/COPY WNCPYSRC,REH00171
      C           *LIKE     DEFN ZAMTCO    WAMTCO                                              CRE019
      C           *LIKE     DEFN ACCY      WCCY                                                CRE019

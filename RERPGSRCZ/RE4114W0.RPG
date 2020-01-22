@@ -1,0 +1,306 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Cash/cheque deposits in A/C currency')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Windows                                              *
+      *                                                               *
+      *  RE4114W0 - Midas RE Cash/cheque deposits in A/C currency     *
+      *                                                               *
+      *  Function:  This program processes the extended narrative     *
+      *             field for EPM004.                                 *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 2000           *
+      *                                                               *
+      *  Last Amend No. MD046354           Date 13Oct17               *
+      *  Prev Amend No. EPM004  *CREATE    Date 08May00               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046354 - Recompile due to changes in RE4114#0 display file.*
+      *  EPM004 - Addition of extended narrative field to the Retail  *
+      *           teller transaction details                          *
+      *                                                               *
+      *****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       03      F3 PRESSED EXIT PROGRAM
+      *       05      F5 PRESSED REDISPLAY THE SCREEN
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *       30      REDISPLAY THE SCREEN
+      *
+     FTTRANX0 O   E           K        DISK
+      ** EXTENSION FILE (UNDER COMMITMENT CONTROL)
+      *
+     F                                              KCOMIT
+     FRE4114#0CF  E                    WORKSTN
+      ** DISPLAY FILE FOR WINDOW
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I/COPY QWINDSRC,RE4114GDTA
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISCSARD    E DSSCSARDPD
+      ** SAR details
+      *
+     IDSFDY     E DSDSFDY
+      ** DS for access programs, short data structure
+      *
+      * DATA MEMBER FOR MAIN PROGRAM
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           PDATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR INIT
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ'1'
+      *
+      ** If error write messages
+      *
+      * MAIN FORMAT OF THE DISPLAY FILE
+     C                     EXFMTWINDOWF
+     C                     EXSR CLEAR
+      *
+     C           *IN03     CASEQ'1'       EXIT
+     C           *IN05     CASEQ'1'       RESET
+     C           *IN12     CASEQ'1'       PREV
+     C                     CAS            UPDAT
+     C                     ENDCS
+     C                     ENDDO
+      *
+      ** Exit from program
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Only do first time through
+      *
+     C           *IN01     IFEQ '0'
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define window position
+      *
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      *
+      ** Retrieve title for window
+      *
+     C                     MOVEL'XXUSRMSG'ZAMSGF 10
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'RE4114W0'DBPGM
+     C                     MOVE '001'     DBASE            ***************
+     C                     MOVEL'FIRST'   DBKEY     P      *  DBERR 001  *
+     C                     MOVEL'SDBANKPD'DBFILE    P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     SETON                     01
+     C                     ENDIF
+      *----------------------------------------------------------------
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+      ** Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      ** Clear the program message queue and call SR/INIT to retrieve
+      ** the last committed data from the extension file.
+      *
+     C                     EXSR CLEAR
+     C                     WRITE#MSGCTL
+     C                     MOVE *BLANKS   SEXNA
+      *
+      ** Reset all error indicators
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+      ** If a value has been entered in the extended narrative field
+      ** then write a record to the extension file.
+      *
+     C           SEXNA     IFNE *BLANKS
+      *
+      ** Format TTRANX0 fields
+      *
+     C                     CLEARTTRAND0
+     C                     MOVE 'D'       ERECI
+     C                     MOVE PTBID     ETBID
+     C                     Z-ADDPTBTN     ETBTN
+     C                     Z-ADDBJRDNB    EVLDT
+     C                     MOVELSEXNA     EEXNA
+     C                     MOVE PITLB     EITLB
+     C                     MOVE PFCOD     EFNCD
+      *
+     C                     WRITETTRAND0
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN30
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+** CPY@
+(C) Copyright Midas-Kapiti International Ltd. 2000

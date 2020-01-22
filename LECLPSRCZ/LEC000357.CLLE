@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('MIDAS LE Forward Manual Diary Prompt')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Customer Lending Module                         */
+/*                                                                   */
+/*       LEC000357 - On Request COB Manual Diary Forward             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. CLE070  *CREATE    Date 19Jun19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE070 - Manual Diary                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM &RACT &RCMD)
+
+/*  Declare Variables                                                         */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Finastra International Limited +
+                          2019')
+
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&RACT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RCMD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&VARN) TYPE(*DEC) LEN(2 0)
+
+             DCLF       FILE(LEC0357DF) RCDFMT(LEC0357F1)
+
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&SRUNA)
+             RTVJOBA    JOB(&SWSID) USER(&SUSER)
+
+/*  Display Screen To Input Number of Days Forward                            */
+ READ:
+             SNDRCVF
+
+/* If F3, Return to RCF with action code = End                                */
+             IF         COND(&IN03 *EQ '1') THEN(DO)
+             CHGVAR     VAR(&RCMD) VALUE('E')
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* Forward Entry Mandatory                                                    */
+             IF         COND(&DSDAFR *EQ '  ') THEN(DO)
+             CHGVAR     VAR(&IN16) VALUE('1')
+             CHGVAR     VAR(&MSG) VALUE('Blank not a valid entry')
+             GOTO       CMDLBL(READ)
+             ENDDO
+
+/* Forward Entry Mandatory But Cannot Be Blank                                */
+             IF         COND(&DSDAFR *EQ '00') THEN(DO)
+             CHGVAR     VAR(&IN16) VALUE('1')
+             CHGVAR     VAR(&MSG) VALUE('Zeros not a valid entry')
+             GOTO       CMDLBL(READ)
+             ENDDO
+
+/* Forward Entry Mandatory But Must be in range 01 to 99                      */
+             IF         COND(&DSDAFR *EQ '1 ' *OR &DSDAFR *EQ '2 ' +
+                          *OR &DSDAFR *EQ '3 ' *OR &DSDAFR *EQ '4 ' +
+                          *OR &DSDAFR *EQ '5 ' *OR &DSDAFR *EQ '6 ' +
+                          *OR &DSDAFR *EQ '7 ' *OR &DSDAFR *EQ '8 ' +
+                          *OR &DSDAFR *EQ '9 ') THEN(DO)
+             CHGVAR     VAR(&IN16) VALUE('1')
+             CHGVAR     VAR(&MSG) VALUE('Valid entry is in range +
+                          ''01'' to ''99''')
+             GOTO       CMDLBL(READ)
+             ENDDO
+
+/* Forward Entry Mandatory But Must be in range 01 to 99                      */
+             CHGVAR     VAR(&VARN) VALUE(&DSDAFR)
+             MONMSG     MSGID(CPF0818) EXEC(DO)
+             CHGVAR     VAR(&IN16) VALUE('1')
+             CHGVAR     VAR(&MSG) VALUE('Valid entry is in range +
+                          ''01'' to ''99''')
+             GOTO       CMDLBL(READ)
+             ENDDO
+             IF         COND(&VARN *LT 1 *OR &VARN *GT 99) +
+                          THEN(DO)
+             CHGVAR     VAR(&IN16) VALUE('1')
+             CHGVAR     VAR(&MSG) VALUE('Valid entry is in range +
+                          ''01'' to ''99''')
+             GOTO       CMDLBL(READ)
+             ENDDO
+
+/* Forward Entry OK                                                           */
+             CHGVAR     VAR(&RPARM) VALUE(&DSDAFR)
+
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                         2019')
+             ENDPGM

@@ -16,16 +16,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG006             Date 15Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CGL029             Date 01Sep03               *
       *                 CGL013  *CREATE    Date 14May02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
+      *           Identification.                                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  CGL013 - MT94x Message Generation.                           *
@@ -39,6 +42,11 @@
       ** Data Structure to retrieve the next message sequence.
  
      D StartDate       S               D   DATFMT(*ISO) INZ(D'1971-12-31')
+                                                                                              CMG006
+      ** Declared variables                                                                   CMG006
+      ** ------------------                                                                   CMG006
+     D WCCY            S              3A                                                      CMG006
+     D WACNO           S             10A                                                      CMG006
  
       **  MG Common Functions - Declaration
      D/COPY MGCPYSRC,MGCMNFCTDC
@@ -193,11 +201,22 @@
      D   ACNO                        10S 0 VALUE                                Retail Account
      D   IBAN                        34A   VALUE                                IBAN
      D   MT920                       35A   VALUE                                MT920 Account Id
+     D   PgmName                     10A   VALUE                                Program Name  CMG006
  
      D  WkAccIdent     S             35A                                        Account Identifier
  
      C                   SELECT
  
+     C                   WHEN      PgmName <> *BLANKS                                         CMG006
+     C                                                                                        CMG006
+     C                   EVAL      WCCY   = %SUBST(ACCNT:10:3)                                CMG006
+     C                   Movel     ACNO          WACNO                                        CMG006
+ 
+     C                   Call      PgmName                                                    CMG006
+     C                   Parm      WCCY          PCCY              3                          CMG006
+     C                   Parm      WACNO         PACNO            10                          CMG006
+     C                   Parm                    PACCID           35                          CMG006
+     C                   EVAL      WkAccIdent = PACCID                                        CMG006
      C                   WHEN      MT920 <> *BLANKS                             MT920 Accnt Identif
      C                   EVAL      WkAccIdent = MT920
  

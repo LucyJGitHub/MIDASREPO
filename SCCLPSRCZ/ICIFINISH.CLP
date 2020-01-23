@@ -89,6 +89,7 @@
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                         /*CSW025*/
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSW025*/
              DCL        VAR(&COMRTN) TYPE(*CHAR) LEN(1)                                   /*CSC058*/
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)                            /*MD054423*/
 
 /*/COPY WNCPYSRC,ICIFINIS04                                          */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
@@ -278,14 +279,22 @@ SKIP:                                                                           
                           TRGUPDCND(*CHANGE)                          /*CPB002*/
              ENDDO                                                    /*CPB002*/
                                                                                         /*MD054423*/
-/** Clear physical file GPGDRPPD                                   **/                  /*MD054423*/
+/** Housekeep physical file GPGDRPPD                               **/                  /*MD054423*/
                                                                                         /*MD054423*/
              ALCOBJ     OBJ((GPGDRPPD *FILE *EXCL)) WAIT(0)                             /*MD054423*/
              MONMSG     MSGID(CPF1002) EXEC(DO)                                         /*MD054423*/
              GOTO       CMDLBL(TAGC)                                                    /*MD054423*/
              ENDDO                                                                      /*MD054423*/
                                                                                         /*MD054423*/
-             CLRPFM     FILE(GPGDRPPD)                                                  /*MD054423*/
+             RTVMBRD    FILE(GPZONEPD) NBRCURRCD(&NBRCURRCD)                            /*MD054423*/
+             IF         COND(&NBRCURRCD *EQ 1) THEN(DO)                                 /*MD054423*/
+               CLRPFM     FILE(GPGDRPPD)                                                /*MD054423*/
+             ENDDO                                                                      /*MD054423*/
+                                                                                        /*MD054423*/
+             ELSE       CMD(DO)                                                         /*MD054423*/
+               CALL       PGM(GPGLOBREPU)                                               /*MD054423*/
+             ENDDO                                                                      /*MD054423*/
+                                                                                        /*MD054423*/
              DLCOBJ     OBJ((GPGDRPPD *FILE *EXCL))                                     /*MD054423*/
              MONMSG     MSGID(CPF0000)                                                  /*MD054423*/
                                                                                         /*MD054423*/

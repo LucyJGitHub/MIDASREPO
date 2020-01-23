@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD054754           Date 20Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054754 - SEC0304 and SEC05 failed on SE1876 with database  *
+      *             error 015 in file MGOREFPD.                       *
+      *           - Ensure swift last sequence number (field LSWS) is *
+      *             not reset to zero when depot movement is amended. *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  222727 - Release 5.0 errors  (Recompile)                     *
@@ -141,6 +146,12 @@
       *
      C     KDPTMVDXn     CHAIN     DPTMVDD1                           99
       *
+      ** Save the Last SWIFT sequence during update.                                        MD054754
+      *                                                                                     MD054754
+     C                   IF        *IN99 = '0'                                              MD054754
+     C                   Z-ADD     DPLSWS        WLSWS             7 0                      MD054754
+     C                   ENDIF                                                              MD054754
+      *                                                                                     MD054754
       ** Initialize the record
       *
      C                   MOVE      ValidDMX1     SEDMX1
@@ -149,6 +160,12 @@
       ** Last Change Date
      C                   EVAL      DPLCD = BJRDNB
       *
+      ** Move back in the Last SWIFT Sequence during update.                                MD054754
+      *                                                                                     MD054754
+     C                   IF        *IN99 = '0'                                              MD054754
+     C                   Z-ADD     WLSWS         DPLSWS                                     MD054754
+     C                   ENDIF                                                              MD054754
+      *                                                                                     MD054754
       ** Write/Update the record
       *
      C   99              WRITE     DPTMVDD1

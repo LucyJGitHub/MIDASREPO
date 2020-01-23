@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052075           Date 07Jun19               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. MD053869           Date 07Jan20               *
+      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 CGL135A            Date 10Jul13               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053869 - Do not validate batch item on delete.             *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CGL148 - Automatic Opening of GL accounts                    *
@@ -398,7 +400,9 @@
 
       /COPY WNCPYSRC,GLBITPV004
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRACID
+     C                   ENDIF                                                              MD053869
      C**********         If        CGL037 = 'Y'                                        BG9009 237621
      C**********         ExSr      ChkRetAc                                            BG9009 237621
      C**********         EndIf                                                         BG9009 237621
@@ -409,7 +413,9 @@
 
       /COPY WNCPYSRC,GLBITPV006
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRPTAM
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV007
 
@@ -417,7 +423,9 @@
 
       /COPY WNCPYSRC,GLBITPV008
       *
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRDRCR
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV009
                                                                                               CGL014
@@ -433,7 +441,9 @@
                                                                                               CGL014
       /COPY WNCPYSRC,GLBITPV040                                                               CGL014
                                                                                               CGL014
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRBLCK                                                     CGL014
+     C                   ENDIF                                                              MD053869
                                                                                               CGL014
       /COPY WNCPYSRC,GLBITPV041                                                               CGL014
                                                                                               CGL014
@@ -443,7 +453,9 @@
 
       /COPY WNCPYSRC,GLBITPV010
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRNARR
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV011
 
@@ -451,7 +463,9 @@
 
       /COPY WNCPYSRC,GLBITPV012
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRTTYP
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV013
 
@@ -459,7 +473,9 @@
 
       /COPY WNCPYSRC,GLBITPV014
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRVDAT
+     C                   ENDIF                                                              MD053869
      C/COPY OFCPYSRCZ,CGL135_068                                                             CGL135A
 
       /COPY WNCPYSRC,GLBITPV015
@@ -468,7 +484,9 @@
 
       /COPY WNCPYSRC,GLBITPV016
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRCQNB
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV017
 
@@ -487,11 +505,13 @@
 
       /COPY WNCPYSRC,GLBITPV020
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C     BKPRCU        IFEQ      'Y'
      C                   EXSR      SRPRCN
      C                   ELSE
      C                   MOVEL     *BLANKS       DDPRCN
      C                   ENDIF
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV021
 
@@ -499,7 +519,9 @@
 
       /COPY WNCPYSRC,GLBITPV022
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SREROV
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV023
 
@@ -546,7 +568,9 @@
       *                                                                                      LLN022A
      C                   ENDIF                                                               LLN022A
       *                                                                                      LLN022A
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRACUS
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV025
 
@@ -554,7 +578,9 @@
 
       /COPY WNCPYSRC,GLBITPV026
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRBKCD
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV027
 
@@ -562,7 +588,9 @@
 
       /COPY WNCPYSRC,GLBITPV028
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   EXSR      SRRVIN
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV029
 
@@ -570,12 +598,14 @@
 
       /COPY WNCPYSRC,GLBITPV030
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C     PCMTR         IFEQ      'Y'
      C                   EXSR      SRNITM
      C                   ELSE
      C                   MOVEL     *BLANKS       DDNITM
      C                   Z-ADD     1             B2NITM
      C                   ENDIF
+     C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV031
 
@@ -583,12 +613,14 @@
 
       /COPY WNCPYSRC,GLBITPV032
 
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C     CEU013        IFEQ      'Y'
      C                   EXSR      SRORCA
      C                   ELSE
      C                   MOVEL     *BLANKS       DDOCCY
      C                   MOVEL     *BLANKS       DDOAMT
      C                   ENDIF
+     C                   ENDIF                                                              MD053869
 
       ** If MidasPlus user then it's possible to edit or delete a batch item                  CAP084
       ** therefore need to set up the batch item number                                       CAP084
@@ -675,6 +707,7 @@
       *                                                                                       CRE023
       ** Call Two O'clock validation if CRE023 is on.                                         CRE023
       *                                                                                       CRE023
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   IF        CRE023 =  'Y'                                              CRE023
       *                                                                                       CRE023
      C                   CALLB     'GLVTWOCLK'                                                CRE023
@@ -693,9 +726,11 @@
      C                   PARM                    WIdx                                         CRE023
       *                                                                                       CRE023
      C                   ENDIF                                                                CRE023
+     C                   ENDIF                                                              MD053869
       *                                                                                       CRE023
       ** MT94x Messages Generation                                                            246418
       *                                                                                       246418
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   IF        CGL013 =  'Y'                                              246418
       *                                                                                       246418
       ** Checking if Additional Information and Extended Narratives                         BUG25438
@@ -745,9 +780,11 @@
                                                                                               246418
      C                   EXSR      SRUPDERR                                                   246418
      C                   ENDIF                                                                246418
+     C                   ENDIF                                                              MD053869
       *                                                                                     BUG23742
       ** Set up parameters for call to GLVEXTNARR                                           BUG23742
       *                                                                                     BUG23742
+     C                   IF        DDACTN <> 'D'                                            MD053869
      C                   IF        CER030 =  'Y'                                            BUG23742
       *                                                                                     BUG23742
      C                   EVAL      PBrca = B2IBCA                                           BUG23742
@@ -773,6 +810,7 @@
      C                   EXSR      SRUPDERR                                                 BUG23742
       *                                                                                     BUG23742
      C                   ENDIF                                                              BUG23742
+     C                   ENDIF                                                              MD053869
      C/COPY OFCPYSRCZ,CGL135_069                                                             CGL135A
 
      C                   RETURN

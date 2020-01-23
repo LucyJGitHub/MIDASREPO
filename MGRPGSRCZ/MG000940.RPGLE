@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052633           Date 08Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG006             Date 15Oct19               *
+      *  Prev Amend No. MD052633           Date 08Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042371           Date 11Nov16               *
       *                 MD042041           Date 21Oct16               *
       *                 MD031691           Date 30Jul15               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
+      *           Identification.                                     *
       *  MD052633 - MT940's closing balance figures is 1 digit short -*
       *             Increase the length of ZAMNT and ZSAMNT to handle *
       *             numeric size of (15,0).                           *
@@ -393,6 +396,8 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
+     D ACFMTPGM        S             10A                                                      CMG006
+     D FldDstn         S             20    INZ('MT94xFld25Dstn')                              CMG006
 
 
       ** Work variables
@@ -863,7 +868,17 @@
      C                   Movel     MGACSQ        PAcctSeq
 
      C*  Output IBAN, RE or GL account.
+      *                                                                                       CMG006
+     C                   Exsr      SrGetDs                                                    CMG006
+      *                                                                                       CMG006
+     C                   If        CMG006 = 'Y'                                               CMG006
+     C                   CLEAR                   ACFMTPGM                                     CMG006
+     C                   Endif                                                                CMG006
      C                   Select
+     C                   When      CMG006 = 'Y' and KNwrk = 'SWIFT'                           CMG006
+     C                                          and WDstn =  NWDS                             CMG006
+     C                   Eval      ACFMTPGM =  'MGFLD25'                                      CMG006
+     C                   Exsr      ACNTFMT                                                    CMG006
      C                   When      MGIBAN <> *Blank
      C                   Movel     MGIBAN        WAccount
      C                   When      MGACNO <> 0
@@ -1061,6 +1076,7 @@
      C                   Eval      MFLD = WAccount
      C/COPY WNCPYSRC,MGH00021
       *                                                                                       CER030
+     C                   IF        ACFMTPGM = *BLANKS                                         CMG006
      C                   IF        CER030 = 'Y' AND EDMCNW = 'Y'                              CER030
      C                             AND MGX940 = 'FOUND'                                     BUG22882
      C                   EVAL      MFLD = X_MGFD25                                            CER030
@@ -1130,6 +1146,7 @@
       *                                                                                     BUG26075
      C                   ENDSL                                                             BUG23172A
      C                   ENDIF                                                                CER030
+     C                   ENDIF                                                                CMG006
       *                                                                                       CER030
      C/COPY WNCPYSRC,MGH00089
      C                   Eval      CTRC    = WCrLf
@@ -2357,6 +2374,56 @@
       *****************************************************************
       /EJECT
       *****************************************************************                       CER030
+      *                                                               *                       CMG006
+      * ACNTFMT     - Format Account                                  *                       CMG006
+      *                                                               *                       CMG006
+      *****************************************************************                       CMG006
+      *                                                                                       CMG006
+     C     ACNTFMT       BEGSR                                                                CMG006
+      *                                                                                       CMG006
+     C                   Movel     MGCCY         PCCY              3                          CMG006
+     C                   Movel     MGACNO        PACNOX           10                          CMG006
+      *                                                                                       CMG006
+     C                   Call      ACFMTPGM                                                   CMG006
+     C                   Parm                    PCCY              3                          CMG006
+     C                   Parm                    PACNOX                                       CMG006
+     C                   Parm                    PACCID           35                          CMG006
+      *                                                                                       CMG006
+     C                   EVAL      WAccount = PACCID                                          CMG006
+      *                                                                                       CMG006
+     C                   ENDSR                                                                CMG006
+      *****************************************************************                       CMG006
+      /EJECT                                                                                  CMG006
+      *****************************************************************                       CMG006
+      *                                                               *                       CMG006
+      * SrGetDS - Get SWIFT Destination                               *                       CMG006
+      *                                                               *                       CMG006
+      *****************************************************************                       CMG006
+     C     SrGetDs       BEGSR                                                                CMG006
+      **    Default Destination.                                                              CMG006
+     C                   Eval      NWDS    =     MGDSTN                                       CMG006
+                                                                                              CMG006
+      *   If the destination is a SWIFT address, retrieves the customer number of             CMG006
+      *   destination.                                                                        CMG006
+     C                   IF        %Subst(MGDSTN : 7 : 4) =  *Blanks                          CMG006
+      *   If the destination is a customer number, retrieve the SWIFT address of dest.        CMG006
+     C                                                                                        CMG006
+     C                   CALLB     'AOCUSTR0'                                                 CMG006
+     C                   PARM      *BLANKS       P@RTCD            7                          CMG006
+     C                   PARM      '*KEY'        P@OPTN            7                          CMG006
+     C                   PARM      MGDSTN        P@KEY1           10                          CMG006
+     C                   PARM                    P@KYST            7                          CMG006
+     C     SDCUST        PARM      SDCUST        DSSDY                                        CMG006
+      *                                                                                       CMG006
+     C                   If        P@RTCD = *BLANKS   and  BBCSID <> *BLANKS                  CMG006
+     C                   Movel     BBCSID        NWDS                                         CMG006
+     C                   Endif                                                                CMG006
+     C                   Endif                                                                CMG006
+      *                                                                                       CMG006
+     C                   ENDSR                                                                CMG006
+      *****************************************************************                       CMG006
+      /EJECT                                                                                  CMG006
+      *****************************************************************                       CMG006
       *                                                               *                       CER030
       *  SRMTCash - Process Extended Narratives for Multicash         *                       CER030
       *                                                               *                       CER030
@@ -3093,6 +3160,59 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                       CMG006
+      ** Check if CMG006 is switched on.                                                      CMG006
+      *                                                                                       CMG006
+     C                   CALL      'AOSARDR0'                                                 CMG006
+     C                   PARM      *BLANKS       P@RTCD                                       CMG006
+     C                   PARM      '*KEY   '     P@OPTN                                       CMG006
+     C                   PARM      'CMG006'      PSard                                        CMG006
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG006
+      *                                                                                       CMG006
+     C     P@RTCD        IFEQ      *BLANKS                                                    CMG006
+     C                   MOVE      'Y'           CMG006            1                          CMG006
+     C                   ELSE                                                                 CMG006
+     C                   MOVE      'N'           CMG006                                       CMG006
+     C                   ENDIF                                                                CMG006
+      *                                                                                       CMG006
+      **Check system values                                                                   CMG006
+      *                                                                                       CMG006
+     C                   CALL      'AOSVALR0'                                                 CMG006
+     C                   PARM                    @RTCD             7                          CMG006
+     C                   PARM      FldDstn       PSVALK1                                      CMG006
+     C                   PARM                    SVAL1           200                          CMG006
+     C                   PARM      SValK1        PSVALK2                                      CMG006
+     C                   PARM                    SVAL2           200                          CMG006
+     C                   PARM      *BLANK        PSVALK3                                      CMG006
+     C                   PARM                    SVAL3           200                          CMG006
+     C                   PARM      *BLANK        SVALK4           20                          CMG006
+     C                   PARM                    SVAL4           200                          CMG006
+     C                   PARM      *BLANK        SVALK5           20                          CMG006
+     C                   PARM                    SVAL5           200                          CMG006
+     C                   PARM      *BLANK        SVALK6           20                          CMG006
+     C                   PARM                    SVAL6           200                          CMG006
+     C                   PARM      *BLANK        SVALK7           20                          CMG006
+     C                   PARM                    SVAL7           200                          CMG006
+     C                   PARM      *BLANK        SVALK8           20                          CMG006
+     C                   PARM                    SVAL8           200                          CMG006
+     C                   PARM      *BLANK        SVALK9           20                          CMG006
+     C                   PARM                    SVAL9           200                          CMG006
+     C                   PARM      *BLANK        SVALK0           20                          CMG006
+     C                   PARM                    SVAL10          200                          CMG006
+      *                                                                                       CMG006
+     C     @RTCD         IFNE      *BLANK                                                     CMG006
+     C                   MOVEL     FldDstn       DBKEY                                        CMG006
+     C                   MOVEL     'SDSVALPD'    DBFILE                                       CMG006
+     C                   MOVEL     '001'         DBASE                                        CMG006
+     C                   SETON                                        U7U8                    CMG006
+     C                   EXSR      *PSSR                                                      CMG006
+      *                                                                                       CMG006
+     C                   ELSE                                                                 CMG006
+      *                                                                                       CMG006
+     C                   MOVEL     SVAL1         WDstn            10            Dstn Destn    CMG006
+     C                   MOVEL     SVAL2         WFld21                                       CMG006
+      *                                                                                       CMG006
+     C                   ENDIF                                                                CMG006
       *
       **  Convert history retention date to YYMMDD
       *

@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL146             Date 10Jul13               *
+      *  Last Amend No. CMG006             Date 15Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL146             Date 10Jul13               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
+      *           Identification.                                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL146 - MT940/MT950 Production in Input Cycle               *
       *           Added hooks: CGL146_001, CGL146_059, CGL146_060     *
@@ -245,12 +248,16 @@
      D SavMULT         S             57A                                        Save MULT
  
      D CSW020          S              1    INZ('N')                             SWIFT Decimal Places
+     D CMG006          S              1    INZ('N')                                           CMG006
  
      D  X              S              5U 0                                      Working index
      D  WkMGDE         S              6A                                        Working MGDE
      D  WkDRCR         S              1A                                        Working DR/CR sign
      D  WkCnum         S              7
      D  WSwiftId       S             12
+     D ACFMTPGM        S             10A                                                      CMG006
+     D FldDstn         S             20    INZ('MT94xFld25Dstn')                              CMG006
+     D KDstn           S             10A                                                      CMG006
  
      D/COPY MGCPYSRC,MGCMNFCTDC
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
@@ -618,6 +625,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+     C                   Exsr      SrGetDs                                                    CMG006
  
       *    --------      -----
      C     @RtvNwAc      ENDSR
@@ -781,6 +789,14 @@
       **   - else, the Retail Account if exist,
       **   - else, the Full Account with the branch if multi-branching environment,
  
+     C                   If        CMG006 = 'Y'                                               CMG006
+     C                   CLEAR                   ACFMTPGM                                     CMG006
+     C                   Endif                                                                CMG006
+ 
+     C                   IF        CMG006  = 'Y' and P@NWRK = 'SWIFT'                         CMG006
+     C                                           and WDstn =  KDstn                           CMG006
+     C                   EVAL      ACFMTPGM = 'MGFLD25'                                       CMG006
+     C                   Endif                                                                CMG006
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
  
@@ -789,7 +805,9 @@
      C                   EVAL      MFLD = #RtvACID(MGAccnt:                     Full Account
      C                                             MGACNO:                      Retail Account
      C                                             MGIBAN:                      IBAN
-     C                                             MGFL25)                      MT920 Acc. Ident.
+     C**********                                   MGFL25)                      MT920 Acc. IdeCMG006
+     C                                             MGFL25:                      MT920 Acc. IdeCMG006
+     C                                             ACFMTPGM)                    Format Pgm    CMG006
      C
      C                   EVAL      CTRC = CRLF                                  CR/LF field
  
@@ -1489,7 +1507,53 @@
      C                   MOVE      'Y'           CSW020
      C                   ENDIF
      C/COPY OFCPYSRCZ,CGL146_060                                                              CGL146
+      ** Check if feature CMG006 is switched on.                                              CMG006
  
+     C                   CALL      'AOSARDR0'                                                 CMG006
+     C                   PARM      *BLANKS       P@RTCD                                       CMG006
+     C                   PARM      '*KEY   '     P@OPTN                                       CMG006
+     C                   PARM      'CMG006'      P@SARD                                       CMG006
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG006
+      *
+     C     P@RTCD        IFEQ      *BLANKS                                                    CMG006
+     C                   MOVE      'Y'           CMG006                                       CMG006
+     C                   ENDIF                                                                CMG006
+      * Check system values                                                                   CMG006
+     C                   CALL      'AOSVALR0'                                                 CMG006
+     C                   PARM                    @RTCD             7                          CMG006
+     C                   PARM      FldDstn       SVALK1           20                          CMG006
+     C                   PARM                    SVAL1           200                          CMG006
+     C                   PARM      *BLANK        SVALK2           20                          CMG006
+     C                   PARM                    SVAL2           200                          CMG006
+     C                   PARM      *BLANK        SVALK3           20                          CMG006
+     C                   PARM                    SVAL3           200                          CMG006
+     C                   PARM      *BLANK        SVALK4           20                          CMG006
+     C                   PARM                    SVAL4           200                          CMG006
+     C                   PARM      *BLANK        SVALK5           20                          CMG006
+     C                   PARM                    SVAL5           200                          CMG006
+     C                   PARM      *BLANK        SVALK6           20                          CMG006
+     C                   PARM                    SVAL6           200                          CMG006
+     C                   PARM      *BLANK        SVALK7           20                          CMG006
+     C                   PARM                    SVAL7           200                          CMG006
+     C                   PARM      *BLANK        SVALK8           20                          CMG006
+     C                   PARM                    SVAL8           200                          CMG006
+     C                   PARM      *BLANK        SVALK9           20                          CMG006
+     C                   PARM                    SVAL9           200                          CMG006
+     C                   PARM      *BLANK        SVALK0           20                          CMG006
+     C                   PARM                    SVAL10          200                          CMG006
+      *                                                                                       CMG006
+     C     @RTCD         IFNE      *BLANK                                                     CMG006
+     C                   MOVEL     FldDstn       DBKEY                                        CMG006
+     C                   MOVEL     'SDSVALPD'    DBFILE                                       CMG006
+     C                   MOVEL     '001'         DBASE                                        CMG006
+     C                   SETON                                        U7U8                    CMG006
+     C                   EXSR      *PSSR                                                      CMG006
+ 
+     C                   ELSE                                                                 CMG006
+ 
+     C                   MOVEL     SVAL1         WDstn            10            Dstn Destn    CMG006
+ 
+     C                   ENDIF                                                                CMG006
       ** Key to access Network Account or Posting details.
  
      C     Key           KLIST
@@ -1505,6 +1569,31 @@
       *    ------        -----
      C     @INZSR        ENDSR
  
+      *****************************************************************                       CMG006
+      * SrGetDS - Get SWIFT Destination                               *                       CMG006
+      *****************************************************************                       CMG006
+     C     SrGetDs       BEGSR                                                                CMG006
+      **    Default Destination.                                                              CMG006
+     C                   Eval      Kdstn   =     MGDSTN                                       CMG006
+                                                                                              CMG006
+      *   If the destination is a SWIFT address, retrieves the customer number of             CMG006
+      *   destination.                                                                        CMG006
+     C                   IF        %Subst(MGDSTN : 7 : 4) =  *Blanks                          CMG006
+      *   If the destination is a customer number, retrieve the SWIFT address of dest.        CMG006
+     C                                                                                        CMG006
+     C                   CALLB     'AOCUSTR0'                                                 CMG006
+     C                   PARM      *BLANKS       P@RTCD            7                          CMG006
+     C                   PARM      '*KEY'        P@OPTN            7                          CMG006
+     C                   PARM      MGDSTN        P@KEY1           10                          CMG006
+     C                   PARM                    P@KYST            7                          CMG006
+     C     SDCUST        PARM      SDCUST        DSSDY                                        CMG006
+                                                                                              CMG006
+     C                   If        P@RTCD = *BLANKS   and  BBCSID <> *BLANKS                  CMG006
+     C                   Movel     BBCSID        Kdstn                                        CMG006
+     C                   Endif                                                                CMG006
+     C                   Endif                                                                CMG006
+      *                                                                                       CMG006
+     C                   ENDSR                                                                CMG006
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*

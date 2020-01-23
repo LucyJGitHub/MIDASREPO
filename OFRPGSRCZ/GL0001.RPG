@@ -10,11 +10,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL140   *CREATE   Date 12Dec12               *
+      *  Last Amend No. MD054856           Date 06Jan20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL140   *CREATE   Date 12Dec12               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD054856 - Customer Account Balance Enquiry option 6 does not*
+      *             show movements for Account                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL140 - Online Statement (GIB015)                           *
       *                                                               *
@@ -25,9 +28,10 @@
      F                                              KINFSR *PSSR
       ** DSP: Midas GL Customer Account Balances Subfile
       *
-     FAPOST   IF  E           K        DISK
-     F            APOSTRAF                          KIGNORE
-     F                                              KINFDS INFDS1
+     F*APOST***IF  E           K        DISK                                                MD054856
+     F**********  APOSTRAF                          KIGNORE                                 MD054856
+     F**********                                    KINFDS INFDS1                           MD054856
+     FGLSTMTP2IF  E           K        DISK                                                 MD054856
      F                                              KINFSR *PSSR
       ** RTV : Midas GL Accounts Postings
       *
@@ -35,6 +39,7 @@
      F            STMTHHF                           KIGNORE
      F            STMTZXF                           KIGNORE
       ** RTV : Midas GL Accounts for Balance Statements
+     FCGSTMTL1IF  E           K        DISK                           UC                    MD054856
       *
      FACCNT   IF  E           K        DISK
      F            ACCNTAAF                          KIGNORE
@@ -238,6 +243,7 @@
       ** Setup KLIST for STMTS File
       *
      C                     OPEN STMTS
+     C                     OPEN CGSTMTL1                                                   MD054856
      C           STKY      KLIST
      C                     KFLD           WBRCH
      C                     KFLD           WCNUM
@@ -245,9 +251,29 @@
      C                     KFLD           WACOD
      C                     KFLD           WACSQ
      C                     KFLD           WATYP
+     C           STKY1     KLIST                                                           MD054856
+     C                     KFLD           WBRCH                                            MD054856
+     C                     KFLD           WCNUM                                            MD054856
+     C                     KFLD           WCURR                                            MD054856
+     C                     KFLD           WACOD                                            MD054856
+     C                     KFLD           WACSQ                                            MD054856
      C           STKY      SETLLSTMTAHF              92
      C           STKY      CHAINSTMTAHF              92
       *
+     C                     MOVEL'N'       UDC     1                                        MD054856
+     C           *IN92     IFEQ '1'                                                        MD054856
+     C           STKY1     SETLL@STMTL1              92                                    MD054856
+     C           STKY1     CHAIN@STMTL1              92                                    MD054856
+     C           *IN92     IFEQ '0'                                                        MD054856
+     C                     MOVELSDBRCA    BRCA                                             MD054856
+     C                     MOVELSDCNUM    CNUM                                             MD054856
+     C                     MOVELSDCCY     CCY                                              MD054856
+     C                     Z-ADDSDACOD    ACOD                                             MD054856
+     C                     Z-ADDSDACSQ    ACSQ                                             MD054856
+     C                     MOVEL'Y'       UDC                                              MD054856
+     C                     ENDIF                                                           MD054856
+     C                     ENDIF                                                           MD054856
+      *                                                                                    MD054856
       ** Clear subfile
       *
      C                     SETON                     80
@@ -276,12 +302,18 @@
       *
       ** Read Postings
       *
-     C           APKY      SETLLAPOSTPDF
-     C           APKY      READEAPOSTPDF               8782*82=EOF
+     C*********  APKY      SETLLAPOSTPDF                                                   MD054856
+     C*********  APKY      READEAPOSTPDF               8782*82=EOF                         MD054856
+     C           APKY      SETLLGLSTMTP2                                                   MD054856
+     C           APKY      READEGLSTMTP2               8782*82=EOF                         MD054856
       *
       ** Get B/F (convert to credit)
       *
+     C           UDC       IFEQ 'N'                                                        MD054856
      C           CFSB      MULT -1        WBAL   150
+     C                     ELSE                                                            MD054856
+     C           SDUCFB    MULT -1        WBAL   150                                       MD054856
+     C                     ENDIF                                                           MD054856
       *
       ** Load subfile page
       *
@@ -299,8 +331,10 @@
       ** Re-establish fields in read-ahead record
       *
      C   27                DO
-     C  N82      APKY      REDPEAPOSTPDF                 90*
-     C  N82      APKY      READEAPOSTPDF                 90*
+     C**N82***** APKY      REDPEAPOSTPDF                 90*                               MD054856
+     C**N82***** APKY      READEAPOSTPDF                 90*                               MD054856
+     C  N82      APKY      REDPEGLSTMTP2                 90*                               MD054856
+     C  N82      APKY      READEGLSTMTP2                 90*                               MD054856
      C                     END
       *
       ** Start at previous highest record in SFL
@@ -374,7 +408,8 @@
       *
      C                     ENDIF
       *
-     C           APKY      READEAPOSTPDF                 82*82=EOF
+     C********** APKY      READEAPOSTPDF                 82*82=EOF                         MD054856
+     C           APKY      READEGLSTMTP2                 82*82=EOF                         MD054856
      C                     END                             OD 1 - ##SFPG
       *
       ** If no DBF records found
@@ -675,10 +710,15 @@
      C           PSTD      IFGE SDATE
      C           PSTD      ANDLEEDATE
       *
-     C           PSTD      IFGT LSTD
-     C           DACO      OREQ LSTD
-     C           LSTP      ANDEQ0
-     C           PSTD      ANDGELSTD
+     C********** PSTD      IFGT LSTD                                                        MD054856
+     C********** DACO      OREQ LSTD                                                        MD054856
+     C********** LSTP      ANDEQ0                                                           MD054856
+     C********** PSTD      ANDGELSTD                                                        MD054856
+     C********** UDC       ANDEQ'N'                                                         MD054856
+     C********** DACO      OREQ LSTD                                                        MD054856
+     C********** SDULSP    ANDEQ0                                                           MD054856
+     C********** PSTD      ANDGELSTD                                                        MD054856
+     C********** UDC       ANDEQ'Y'                                                         MD054856
       *
      C                     MOVE 'Y'       WRTFLG  1
       *
@@ -765,7 +805,7 @@
       *
      C                     ENDIF
       *
-     C                     ENDIF
+     C**********           ENDIF                                                           MD054856
      C                     ENDIF
       *
      CSR         MBEXIT    ENDSR

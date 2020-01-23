@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('MIDAS LE Manual Diary Notice Days Report')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Customer Lending Module                         */
+/*                                                                   */
+/*       LEC000358 - Manual Diary Notice Days Report                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. CLE070  *CREATE    Date 19Jun19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE070 - Manual Diary                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT)
+
+/*  Declare Variables                                                         */
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                      Finastra International Limited. 2019')
+
+/*  Global Trapp                                                              */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Call Report pgm                                                           */
+
+             CALL       PGM(LE000358P)  PARM(&RSEQ &RENT)
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)
+             SNDPGMMSG  MSG('Transaction failed. Re-input necessary. +
+                          Enter to continue.') TOPGMQ(*EXT)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/*  Error occured                                                             */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('JOB TERMINATED - DATABASE +
+                          IN ERROR')
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ) MSGTYPE(*INFO)
+             SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Transaction failed. Re-input necessary. +
+                          Enter to continue.') TOPGMQ(*EXT)
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                         Limited. 2019')
+             ENDPGM

@@ -1,0 +1,61 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('MIDAS LE Daily Manual Diary Extract & Report')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Customer Lending Module                         */
+/*                                                                   */
+/*       LEC000354 - Daily Manual Diary                              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. CLE070  *CREATE    Date 19Jun19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE070 - Manual Diary                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+/*  Declare Variables                                                         */
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Finastra International Limited +
+                          2019')
+             DCL        VAR(&PARM1) TYPE(*CHAR) LEN(2) VALUE('  ')
+
+/*  Global Trap                                                               */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('Daily Manual Diary') TOMSGQ(MRUNQ)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+
+/*  Setup Switches                                                            */
+
+             CHGJOB     SWS(XXXXXX00)
+
+/*  Call update program                                                      */
+
+             CALL       PGM(LE000354)
+
+/*  Error occured                                                             */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000354 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                         Limited 2019')
+             ENDPGM

@@ -1,0 +1,81 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('MIDAS LE On Request Forward Diary Report')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Customer Lending Module                         */
+/*                                                                   */
+/*       LEC000355 - On Request Forward Manual Diary Report         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. CLE070  *CREATE    Date 19Jun19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE070 - Manual Diary                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
+
+/*  Declare Variables                                                         */
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+
+             DCL        VAR(&PARM1) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Finastra International Limited +
+                          2019')
+
+/*  Global Trap                                                               */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+
+/*  Extract Parameter - Number of Days Forward                                */
+             CHGVAR     VAR(&PARM1) VALUE(%SST(&RPARM 1 2))
+
+/*  Call Extract pgm                                                          */
+             CLRPFM     FILE(LEMDEXPD)
+             CLRPFM     FILE(LEMDETPD) MBR(LEMDETPD)
+
+             OVRDBF     FILE(LEMDETPD) MBR(LEMDETPD)
+             CALL       PGM(LE000355) PARM(&PARM1)
+
+/*  Error Occured                                                             */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/*  Call pgm Report Forward                                                   */
+             CALL       PGM(LE000356) PARM(&PARM1)
+
+/*  Error Occured                                                             */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000355 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                         2019')
+             ENDPGM

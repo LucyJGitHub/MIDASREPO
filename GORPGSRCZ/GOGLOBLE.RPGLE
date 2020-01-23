@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CLE070             Date 19Jun19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER073B            Date 25Sep17               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE070 - Manual Diary                                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
@@ -189,6 +191,8 @@
      C     PFLNAME       CASEQ     'LEFEEZTD'    GLOB_LEFEEZTD                                CLE164
      C     PFLNAME       CASEQ     'LELEMRWPD'   GLOB_LELEMRWPD                               CLE068
      C     PFLNAME       CASEQ     'LEANACQD'    GLOB_LEANACQD                                CER073
+     C     PFLNAME       CASEQ     'LEDIAMPD'    GLOB_LEDIAMPD                                CLE070
+     C     PFLNAME       CASEQ     'LEDIAMQD'    GLOB_LEDIAMQD                                CLE070
      C                   ENDCS
      C*****CLE025        IFEQ      'Y'                                                CLE025 BUG3286
      C*****PFLNAME       ANDEQ     'LEFCLTQD'                                         CLE025 BUG3286
@@ -529,6 +533,21 @@
       /COPY GPCPYSRCG,GPLEFEEZTD                                                              CLE164
      C                   EVAL      FILE = PFLNAME                                             CLE164
      C                   ENDSR                                                                CLE164
+      *****************************************************************                       CLE070
+      * Global Updates - Manual Diary File                                                    CLE070
+      *****************************************************************                       CLE070
+     C     GLOB_LEDIAMPD BEGSR                                                                CLE070
+      /COPY GPCPYSRCG,GPLEDIAMPD                                                              CLE070
+     C                   EVAL      FILE = PFLNAME                                             CLE070
+     C                   ENDSR                                                                CLE070
+      *****************************************************************                       CER049
+      *****************************************************************                       CLE070
+      * Global Updates - Manual Diary File                                                    CLE070
+      *****************************************************************                       CLE070
+     C     GLOB_LEDIAMQD BEGSR                                                                CLE070
+      /COPY GPCPYSRCG,GPLEDIAMQD                                                              CLE070
+     C                   EVAL      FILE = PFLNAME                                             CLE070
+     C                   ENDSR                                                                CLE070
       *****************************************************************                       CER049
      C/SPACE 5                                                                                CER049
       ********************************************************************

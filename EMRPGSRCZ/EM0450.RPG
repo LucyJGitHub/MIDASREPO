@@ -47,8 +47,9 @@
 0006 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD049545           Date 14Jan20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE141             Date 08Feb16               *
       *                 AR1083699          Date 24Aug14               *
       *                 MD020182           Date 24Aug14               *
       *                 MD020256           Date 24Aug14               *
@@ -114,6 +115,8 @@
 0009 F*                                                                  *EM0450
 0011 F********************************************************************EM0450
      F*                                                                  *
+      *  MD049545 - Changes on TABD and TABE to include the processing*
+      *             68, 71 and 69, 72 respectively.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -334,8 +337,10 @@
 0089 E                    TABA   10  10  2               FX SELECTIONS    CDL002
 0090 E                    TABB   20  20  2               MM/LOAN SELECTIONEM0450
 0091 E***********         TABC    3   3  2               LOANS SELECTION  S01339
-0092 E                    TABD    6   6  2 0             LENDING SELECTIONEM0450
-0093 E                    TABE    2   2  2 0             LENDING SELECTIONEM0450
+0092 E**********          TABD    6   6  2 0             LENDING SELECTION           EM0450 MD049545
+     E                    TABD    8   8  2 0             LENDING SELECTION                  MD049545
+0093 E**********          TABE    2   2  2 0             LENDING SELECTION           EM0450 MD049545
+     E                    TABE    4   4  2 0             LENDING SELECTION                  MD049545
      E****                TABF    6   6  2               LOANS/MM         S01128
      E                    TABF    5   5  2               LOANS/MM         S01128
      E****                TABG    2   2  2               LOANS/MM         S01128
@@ -951,6 +956,35 @@
      C                     GOTO ENDFC                                     CSD007
      C                     ENDIF                                          CSD007
      C                     ENDIF                                          CSD007
+      *                                                                                     MD049545
+      ** Check if SAR CLE005 is present                                                     MD049545
+      *                                                                                     MD049545
+     C                     CALL 'AOSARDR0'                                                  MD049545
+     C                     PARM *BLANKS   P@RTCD  7                                         MD049545
+     C                     PARM '*KEY   ' P@OPTN  7                                         MD049545
+     C                     PARM 'CLE005'  P@SARD  6                                         MD049545
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD049545
+      *                                                                                     MD049545
+     C           P@RTCD    IFEQ *BLANKS                                                     MD049545
+     C                     MOVE 'Y'       CLE005  1                                         MD049545
+     C                     ELSE                                                             MD049545
+      *                                                                                     MD049545
+      ** Handle Database Error                                                              MD049545
+      *                                                                                     MD049545
+     C           P@RTCD    IFNE '*NRF    '                                                  MD049545
+     C           *LOCK     IN   LDA                                                         MD049545
+     C                     MOVEL'SCSARDPD'DBFILE           ************                     MD049545
+     C                     Z-ADD19        DBASE            * DBERR 19 *                     MD049545
+     C                     MOVEL'CLE005'  DBKEY            ************                     MD049545
+     C                     DUMP                                                             MD049545
+     C                     OUT  LDA                                                         MD049545
+     C                     MOVE *ON       *INU7                                             MD049545
+     C                     MOVE *ON       *INU8                                             MD049545
+     C                     MOVE *ON       *INLR                                             MD049545
+     C                     GOTO ENDFC                                                       MD049545
+     C                     ENDIF                                                            MD049545
+     C                     ENDIF                                                            MD049545
+      *                                                                                     MD049545
 0431 C**                                                                  EM0450
 0432 C** CALCULATE EVENT CONTROL DATE                                     EM0450
 0433 C**                                                                  EM0450
@@ -1489,6 +1523,10 @@
      C****                 MOVE CNUML     CNUMB                           E10836
      C           PTYP      IFEQ 64                                        E10836
      C           PTYP      OREQ 65                                        E10836
+     C           PTYP      OREQ 68                                                          MD049545
+     C           CLE005    ANDEQ'Y'                                                         MD049545
+     C           PTYP      OREQ 71                                                          MD049545
+     C           CLE005    ANDEQ'Y'                                                         MD049545
      C           RCSIC     IFEQ 'Y'                                       E10836
      C                     MOVE CNUML     CNUMB                           E10836
      C                     ELSE                                           E10836
@@ -2281,9 +2319,9 @@ FPFSCXSWOPOTPISINPNS
 ** MM DEAL TYPES        TABB
 IPITTILNCLDLTDCDC1C2BDTBBPDATACSBRTSRATR
 ** LENDING PROCESSING TYPES       TABD
-616263646570
+6162636465706871
 ** LENDING PROCESSING TYPES (TAKING ACCOUNT OF RECOURSE)   TABE
-6667
+66676972
 ** LOANS/MM DEAL TYPES       TABF
 IPTICLDLLN
 ** LOANS/MM DEAL TYPES       TABG

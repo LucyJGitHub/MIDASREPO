@@ -551,6 +551,7 @@
      D WPARML          C                   CONST('LECalcBasis6LeapYear')                    MD035545
      D UseDealCust     C                   Const('UseDealCustforEuTax')                     MD026788
      D UseHistRate     C                   Const('UseHistRateforBVDeal')                    MD031283
+     D DSPPRIN         C                   Const('DspPrinInDecInd')                         MD054117
      D/COPY ZSRSRC,ZHOLILE                                                                   BUG6293
      D/COPY ZSRSRC,ZINTDYZ1LE                                                                BUG6293
      D/COPY ZSRSRC,ZDATE9Z2LE                                                                BUG6293
@@ -586,6 +587,7 @@
      D WBRCH           S              3A                                                      CRE105
      D WACCD           S             10A                                                      CRE105
      D WASEQ           S              2A                                                      CRE105
+     D PCIDCF          S              1A                                                    MD054117
       *                                                                   066550
      IDEALSL1   NS  01    1 CH                                                  S01117
 0123 I*    DEALS FILE - HEADER RECORD.

@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. CLE070  *CREATE    Date 19Jun19               *
+      *  Last Amend No. MD055155           Date 27Jan20               *
+      *  Prev Amend No. CLE070  *CREATE    Date 19Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055155 - LE000356  compilation failed (Recompile)          *
       *  CLE070 - Manual Diary                                        *
       *                                                               *
       *****************************************************************

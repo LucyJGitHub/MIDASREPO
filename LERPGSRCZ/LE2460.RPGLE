@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054105           Date 27Jan20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 260183             Date 29Oct15               *
       *                 CLE141             Date 01Mar16               *
       *                 CLE141             Date 08Feb16               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054105 - Rate fixing of loans at rollover is incorrect.    *
+      *             Correct the data type of parameter PZDaysFwd from *
+      *             packed to zoned by using PZDaysFwdS instead.      *
+      *             Likewise, use PDaysBckS instead of PDaysBck.      *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  260183 - LEC2460 failed because LF/LELOANL2 can't find       *
@@ -249,6 +254,8 @@
       ** Parameter definition of standard modules
      D PZInpDay        S              5P 0
      D PZDaysFwd       S              2P 0
+     D PZDaysFwdS      S              2S 0                                                  MD054105
+     D PDaysBckS       S              2S 0                                                  MD054105
      D PZOutDay        S              5P 0
      D PZCcy           S              3
      D PZLocation      S              3
@@ -386,10 +393,12 @@
       ** Working day which is the loan rollover rate fixing days
       ** forward from the run date.
      C                   MOVE      L0RFDY        PZDaysFwd
+     C                   Z-add     PZDaysFwd     PZDaysFwdS                                 MD054105
      C                   IF        CLE141 = 'Y'                                               CLE141
      C                   CALL      'LEZBDYRF'                                                 CLE141
      C                   PARM      BJRDNB        PZInpDay                                     CLE141
-     C                   PARM                    PZDaysFwd                                    CLE141
+     C**********         PARM                    PZDaysFwd                           CLE141 MD054105
+     C                   PARM                    PZDaysFwdS                                 MD054105
      C                   PARM      DSCCYPR       PZCurr                                       CLE141
      C                   PARM      DSLOCPR       PZLocn                                       CLE141
      C                   PARM      'F'           PZMode                                       CLE141
@@ -442,10 +451,12 @@
       ** Working day which is the loan rollover rate fixing days
       ** back from the rollover date
      C                   MOVE      L0RFDY        PDaysBck
+     C                   Z-add     PDaysBck      PDaysBckS                                  MD054105
      C                   IF        CLE141 = 'Y'                                               CLE141
      C                   CALL      'LEZBDYRF'                                                 CLE141
      C                   PARM      L0RLDT        PInpOutDay                                   CLE141
-     C                   PARM                    PDaysBck                                     CLE141
+     C**********         PARM                    PDaysBck                            CLE141 MD054105
+     C                   PARM                    PDaysBckS                                  MD054105
      C                   PARM      DSCCYPR       PZCurr                                       CLE141
      C                   PARM      DSLOCPR       PZLocn                                       CLE141
      C                   PARM      'B'           PZMode                                       CLE141

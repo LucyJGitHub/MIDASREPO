@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054986           Date 27Jan20               *
-      *  Prev Amend No. MD054905           Date 04Dec19               *
-      *                 CGL185             Date 13Mar17               *
+      *  Last Amend No. MD054905           Date 04Dec19               *
+      *  Prev Amend No. CGL185             Date 13Mar17               *
       *                 MD041589           Date 23Sep16               *
       *                 MD040916           Date 31Aug16               *
       *                 MD040873           Date 26Aug16               *
@@ -25,7 +24,6 @@
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
       *  MD054986 - CRS Issue: Account Holder/Organisation            *
       *  MD054905 - Change Message Ref Id format                      *
       *  CGL185 - FATCA XML 2.0                                       *
@@ -1782,25 +1780,22 @@
      C                   EVAL      SVTPMT = MGTPMT
       *
      C                   IF        MGTPMT = 'Organisation'
-     C**********         EVAL      MGELMT = 'ResCountryCode'                                MD054986
-     C**********         EVAL      MGDATA = BBCOLC                                          MD054986
-     C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
-     C**********         EVAL      KElemNm  = MGELMT                                        MD054986
-     C**********         EXSR      SRGetGrpLevl                                             MD054986
-     C**********         EXSR      SRWrite                                                  MD054986
-     
+     C                   EVAL      MGELMT = 'ResCountryCode'
+     C                   EVAL      MGDATA = BBCOLC
+     C                   EVAL      KGroupNm = MGTPMT
+     C                   EVAL      KElemNm  = MGELMT
+     C                   EXSR      SRGetGrpLevl
+     C                   EXSR      SRWrite
+
      C                   EVAL      MGELMT = 'IN'
-     C                   EVAL      DCust =  CRCUST                                          MD054986
-     C                   EXSR      SRCusCtryLst                                             MD054986
-     C**********         EVAL      MGDATA = E5TINO                                          MD054986
-     C**********         EVAL      MGDAT2 = E5ISCT                                          MD054986
-     C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
-     C**********         EVAL      KElemNm  = MGELMT                                        MD054986
-     C**********         EXSR      SRGetGrpLevl                                             MD054986
-     C**********         EXSR      SRWrite                                                  MD054986
-     C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
+     C                   EVAL      MGDATA = E5TINO
+     C                   EVAL      MGDAT2 = E5ISCT
+     C                   EVAL      KGroupNm = MGTPMT
+     C                   EVAL      KElemNm  = MGELMT
+     C                   EXSR      SRGetGrpLevl
+     C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS
      C                   ELSE
-     C                   EVAL      MGELMT = 'TIN'                                           MD054986
      C                   EVAL      DCust =  CRCUST
      C                   EXSR      SRCusCtryLst
      C                   ENDIF
@@ -1870,24 +1865,21 @@
      C                   EVAL      SVTPMT = MGTPMT
 
      C                   IF        MGTPMT = 'Organisation'
-     C**********         EVAL      MGELMT = 'ResCountryCode'                                MD054986
-     C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
-     C**********         EVAL      KElemNm  = MGELMT                                        MD054986
-     C**********         EXSR      SRGetGrpLevl                                             MD054986
-     C**********         EVAL      MGDATA = NHCOLC                                          MD054986
-     C**********         EXSR      SRWrite                                                  MD054986
+     C                   EVAL      MGELMT = 'ResCountryCode'
+     C                   EVAL      KGroupNm = MGTPMT
+     C                   EVAL      KElemNm  = MGELMT
+     C                   EXSR      SRGetGrpLevl
+     C                   EVAL      MGDATA = NHCOLC
+     C                   EXSR      SRWrite
      C                   EVAL      MGELMT = 'IN'
-     C                   EVAL      DNaho =  NRNAHO                                          MD054986
-     C                   EXSR      SRNahCtryLst                                             MD054986
-     C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
-     C**********         EVAL      KElemNm  = MGELMT                                        MD054986
-     C**********         EXSR      SRGetGrpLevl                                             MD054986
-     C**********         EVAL      MGDATA = NHTINO                                          MD054986
-     C**********         EVAL      MGDAT2 = NHISCT                                          MD054986
-     C**********         EXSR      SRWrite                                                  MD054986
-     C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
+     C                   EVAL      KGroupNm = MGTPMT
+     C                   EVAL      KElemNm  = MGELMT
+     C                   EXSR      SRGetGrpLevl
+     C                   EVAL      MGDATA = NHTINO
+     C                   EVAL      MGDAT2 = NHISCT
+     C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS
      C                   ELSE
-     C                   EVAL      MGELMT = 'TIN'                                           MD054986
      C                   EVAL      DNaho =  NRNAHO
      C                   EXSR      SRNahCtryLst
      C                   ENDIF
@@ -1980,25 +1972,22 @@
      C                   EXSR      SRWrite
 
      C                   IF        MGTPMT = 'Organisation'
-     C**********         EVAL      MGELMT = 'ResCountryCode'                                MD054986
-     C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
-     C**********         EVAL      KElemNm  = MGELMT                                        MD054986
-     C**********         EXSR      SRGetGrpLevl                                             MD054986
-     C**********         EVAL      MGDATA = EXCOLC                                          MD054986
-     C**********         EXSR      SRWrite                                                  MD054986
-      
+     C                   EVAL      MGELMT = 'ResCountryCode'
+     C                   EVAL      KGroupNm = MGTPMT
+     C                   EVAL      KElemNm  = MGELMT
+     C                   EXSR      SRGetGrpLevl
+     C                   EVAL      MGDATA = EXCOLC
+     C                   EXSR      SRWrite
+
      C                   EVAL      MGELMT = 'IN'
-     C                   EVAL      DCust =  EXCUSD                                          MD054986
-     C                   EXSR      SRCusCtryLst                                             MD054986
-     C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
-     C**********         EVAL      KElemNm  = MGELMT                                        MD054986
-     C**********         EXSR      SRGetGrpLevl                                             MD054986
-     C**********         EVAL      MGDATA = EXTINO                                          MD054986
-     C**********         EVAL      MGDAT2 = EXISCT                                          MD054986
-     C**********         EXSR      SRWrite                                                  MD054986
-     C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
+     C                   EVAL      KGroupNm = MGTPMT
+     C                   EVAL      KElemNm  = MGELMT
+     C                   EXSR      SRGetGrpLevl
+     C                   EVAL      MGDATA = EXTINO
+     C                   EVAL      MGDAT2 = EXISCT
+     C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS
      C                   ELSE
-     C                   EVAL      MGELMT = 'TIN'                                           MD054986
      C                   EVAL      DCust =  EXCUSD
      C                   EXSR      SRCusCtryLst
      C                   ENDIF
@@ -2325,7 +2314,7 @@
      C                   EVAL      ACtryTinn(WTINCnt) = CDTINN
      C                   EVAL      ACtryIsBy(WTINCnt) = CDCTRY
      C                   IF        WTINCnt > 7
-     C**********         EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      MGELMT = 'TIN'                                                   
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2432,7 +2421,7 @@
      C                   EVAL      ACtryTinn(WTINCnt) = CNTINN
      C                   EVAL      ACtryIsBy(WTINCnt) = CNCTRY
      C                   IF        WTINCnt > 7
-     C**********         EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      MGELMT = 'TIN'                                                   
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -3789,8 +3778,7 @@
      C                   EVAL      WCtryRprtng = 'N'
 
       ** For Individual
-      ** and for Organisation
-     C**********         IF        WkTYPE = 'P'                                             MD054986
+     C                   IF        WkTYPE = 'P'                                                        
      C     DCust         SETLL     SDCRSDL2
      C     DCust         READE     SDCRSDL2
      C                   DOW       NOT %EOF(SDCRSDL2)
@@ -3833,53 +3821,50 @@
      C     DCust         READE     SDCRSDL2
      C                   ENDDO
 
-     C**********         ELSE                                                               MD054986
-      **********                                                                            MD054986
-     C**********         IF        WkTYPE <> *BLANKS                                        MD054986
-      ***For*Organisation                                                                   MD054986
-      **********                                                                            MD054986
-     C*****KCusCtry      CHAIN     SDCRSDL0                                                 MD054986
-     C**********         IF        %FOUND(SDCRSDL0)                                         MD054986
-      **********                                                                            MD054986
-      ***Check*Country Tax Codes if Country is for Reporting                                MD054986
-     C**********         EVAL      KDCus = DCust                                            MD054986
-     C**********         EVAL      KCTRR = CDCTRY                                           MD054986
-     C**********         EVAL      WCttxRpt = 'N'                                           MD054986
-     C**********         EXSR      SRDetAgrTyp                                              MD054986
-      **********                                                                            MD054986
-      ***Get*Year number of Effective Date                                                  MD054986
-     C**********         IF        CDEFFD <> 0                                              MD054986
-     C**********         EVAL      DateIn5 = CDEFFD                                         MD054986
-     C**********         EXSR      SRCvtDate                                                MD054986
-     C**********         MOVEL     DayOut8       WkEFFYr                                    MD054986
-     C**********         ELSE                                                               MD054986
-     C**********         EVAL      WkEFFYr = 0                                              MD054986
-     C**********         ENDIF                                                              MD054986
-      **********                                                                            MD054986
-      ***Get*Year number of Expiry Date                                                     MD054986
-     C**********         IF        CDEXPD <> 0                                              MD054986
-     C**********         EVAL      DateIn5 = CDEXPD                                         MD054986
-     C**********         EXSR      SRCvtDate                                                MD054986
-     C**********         MOVEL     DayOut8       WkEXPYr                                    MD054986
-     C**********         ELSE                                                               MD054986
-     C**********         EVAL      WkEXPYr = 0                                              MD054986
-     C**********         ENDIF                                                              MD054986
-      **********                                                                            MD054986
-     C**********         IF        WCttxRpt = 'Y'                                           MD054986
-     C**********                   AND ((WkEFFYr <= WRepYear                                MD054986
-     C**********                   AND WkEFFYr <> 0)                                        MD054986
-     C**********                   OR  WkEFFYr = 0)                                         MD054986
-     C**********                   AND ((WkEXPYr >= WRepYear                                MD054986
-     C**********                   AND WkEXPYr <> 0)                                        MD054986
-     C**********                   OR  WkEXPYr = 0)                                         MD054986
-     C**********                   AND CDREPT = 'Y'                                         MD054986
-     C**********         EVAL      WCtryRprtng = 'Y'                                        MD054986
-     C**********         ENDIF                                                              MD054986
+     C                   ELSE
 
-     C**********         ENDIF                                                              MD054986
+     C                   IF        WkTYPE <> *BLANKS
+      ** For Organisation
+     C                   EVAL      KDCus = DCust
+     C     KCusCtry      CHAIN     SDCRSDL0
+     C                   IF        %FOUND(SDCRSDL0)
+      ** Check Country Tax Codes if Country is for Reporting
+     C                   EVAL      KCTRR = CDCTRY
+     C                   EVAL      WCttxRpt = 'N'
+     C                   EXSR      SRDetAgrTyp
 
-     C**********         ENDIF                                                              MD054986
-     C**********         ENDIF                                                              MD054986
+      ** Get Year number of Effective Date
+     C                   IF        CDEFFD <> 0
+     C                   EVAL      DateIn5 = CDEFFD
+     C                   EXSR      SRCvtDate
+     C                   MOVEL     DayOut8       WkEFFYr
+     C                   ELSE
+     C                   EVAL      WkEFFYr = 0
+     C                   ENDIF
+
+      ** Get Year number of Expiry Date
+     C                   IF        CDEXPD <> 0
+     C                   EVAL      DateIn5 = CDEXPD
+     C                   EXSR      SRCvtDate
+     C                   MOVEL     DayOut8       WkEXPYr
+     C                   ELSE
+     C                   EVAL      WkEXPYr = 0
+     C                   ENDIF
+
+     C                   IF        WCttxRpt = 'Y'
+     C                             AND ((WkEFFYr <= WRepYear
+     C                             AND WkEFFYr <> 0)
+     C                             OR  WkEFFYr = 0)
+     C                             AND ((WkEXPYr >= WRepYear
+     C                             AND WkEXPYr <> 0)
+     C                             OR  WkEXPYr = 0)
+     C                             AND CDREPT = 'Y'
+     C                   EVAL      WCtryRprtng = 'Y'
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   ENDIF
+     C                   ENDIF
 
      C                   ENDSR
       *****************************************************************

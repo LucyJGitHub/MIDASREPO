@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054244           Date 09Sep19               *
-      *  Prev Amend No. MD052008           Date 05Oct18               *
+      *  Last Amend No. MD053565           Date 01Oct19               *
+      *  Prev Amend No. MD054244           Date 09Sep19               *
+      *                 MD052008           Date 05Oct18               *
       *                 MD051940           Date 21Sep18               *
       *                 MD049363           Date 19Sep18               *
       *                 MD049745A          Date 16Mar18               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053565 - Seperate Posting Narrative for PDCL - CLE031      *
       *  MD054244 - Generation of additional B-repayment key will     *
       *             only apply to same currency even if CLE031 is on. *
       *  MD052008 - Rounding off issue on PDCL amount using           *
@@ -224,6 +226,7 @@
       ** Data Structure for Account Details                                                MD021423E
      D ACCNTB        E DS                  EXTNAME(ACCNTAB)                                MD021423E
      D  QRECI        E                     EXTFLD(RECI)                                     MD023378
+     D  QZZ002       E                     EXTFLD(ZZ002)                                    MD053565
       *
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Currency Details

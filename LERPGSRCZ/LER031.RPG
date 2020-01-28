@@ -2,23 +2,26 @@
       *****************************************************************
 /*STD *  RPGBASE                                                      *
 /*EXI *  TEXT('Midas LE Extract actions upd. loan/fclty hist')        *
-      ******************************************************************
-      *                                                                *
+      *****************************************************************
+      *                                                               *
       *  Midas - Customer Lending Module                              *
-      *                                                                *
-      *  LER031 - EXTRACT OF ACTIONS FOR UPDATE OF LOAN/FACILITY       *
-      *           HISTORY                                              *
-      *                                                                *
-      *  Function: This program extracts details from the account      *
-      *  (COB)     keys file relating to changes in principal actioned *
-      *            today                                               *
-      *                                                                *
-      *  Called By:LERC31                                              *
-      *                                                                *
+      *                                                               *
+      *  LER031 - EXTRACT OF ACTIONS FOR UPDATE OF LOAN/FACILITY      *
+      *           HISTORY                                             *
+      *                                                               *
+      *  Function: This program extracts details from the account     *
+      *  (COB)     keys file relating to changes in principal actioned*
+      *            today                                              *
+      *                                                               *
+      *  Called By:LERC31                                             *
+      *                                                               *
       *  (c) Finastra International Limited 2001                      *
-      *                                                                *
-      *  Last Amend No. MD052433           Date 11Feb19               *
-      *  Prev Amend No. MD050278           Date 08May18               *
+      *                                                               *
+      *  Last Amend No. MD055115           Date 23Jan20               *
+      *  Prev Amend No. MD054869           Date 21Nov19               *
+      *                 MD053565           Date 01Oct19               *
+      *                 MD052433           Date 11Feb19               *
+      *                 MD050278           Date 08May18               *
       *                 AR1036834          Date 24Jun13               *
       *                 MD047950           Date 16Nov17               *
       *                 MD046248           Date 27Oct17               *
@@ -95,20 +98,25 @@
       *                 112588             Date 21Nov97               *
       *                 127747             Date 07Nov97               *
       *                 CLE005             Date 22May97               *
-      *                 125188             Date 07NOV97                *
+      *                 125188             Date 07NOV97               *
       *                 CLE004             Date 02Dec96               *
       *                 CAC001             Date 13AUG96               *
       *                 BH3483             Date 19AUG92               *
-      *                                                                *
-      *----------------------------------------------------------------*
-      *                                                                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD055115 - Scenario 1.30 Discrepancy on LE3180P1 and         *
+      *             PDCL double entries                               *
+      *  MD054869 - Freq based repayment amount on auto settle C loan *
+      *             is reported on LE3180P1                           *
+      *  MD053565 - Seperate Posting Narrative for PDCL - CLE031      *
       *  MD052433 - LE: Manual Rapyment was for principal has two     *
       *             record in the facility history.                   *
       *  MD050278 - LE: Manual Repayment Missing from Facility        *
-      *             History                                           *      
+      *             History                                           *
       *  AR1036834 - Missing fclty history record for PDCL repayments.*
       *              Output repayments of PDCL to HISACT on first run *
-      *              of LER031 - under LERC30A. (Child: AR1036835)    *      
+      *              of LER031 - under LERC30A. (Child: AR1036835)    *
       *  MD047950 - Reinstate AR720106 to have the processing for -MR *
       *             to be written to FACHISA to occur in the 1st COB. *
       *  MD046248 - Finastra Rebranding                               *
@@ -160,7 +168,7 @@
       *  246032 - Directly divide/multiply the facility exchange rate *
       *           against the action amount. Apply R3.5 fix 207064.   *
       *  240803 - Align conversion of amount with PGM/LE0491. Apply   *
-      *           part of fix 224036.                                 **
+      *           part of fix 224036.                                 *
       *  224974 - MCCY facility at maturity does not close exposure   *
       *           (rounding). Applied fix 147460.                     *
       *  233551 - When loan is no longer in the live loans file, a    *
@@ -244,8 +252,8 @@
       *           records for loan sub-type change A/C keys            *
       *           (RECI = 'S').                                        *
       *                                                                *
-      ******************************************************************
-      ******************************************************************
+      *****************************************************************
+      *****************************************************************
       *
      FLKEY1DP IP  E                    DISK
       * Lending Keys
@@ -277,6 +285,10 @@
      FLEACT5L2IF  E           K        DISK                               CLE014
       ** Action file details                                              CLE014
       *                                                                   CLE014
+     FLEACT5L6IF  E           K        DISK                                                 MD055115
+     F            LOAMSDKF                          KRENAMELOAMSDK1                         MD055115
+      ** Action file details                                                                MD055115
+      *                                                                                     MD055115
      FFACHISH UF  E           K        DISK                                                   CLE023
      F***SDCURRPDIF**E                    DISK                                         162343 199588
      FSDCURRPDIF  E                    DISK                           UC                      CSC042
@@ -429,6 +441,9 @@
      ISCSARD    E DSSCSARDPD                                              CLE004
       ** Switchable Features File                                         CLE004
       *                                                                   CLE004
+     IZZ002       DS                                                                        MD053565
+     I                                        1   1 RUNDFL                                  MD053565
+     I                                        2   2 INTRFL                                  MD053565
       ****************************************************************
      C/EJECT
       *
@@ -541,7 +556,10 @@
      C           AK10      IFEQ 'B'                                                         AR567487
      C           AK10      OREQ 'A'                                                         AR567487
      C           AUTO      ANDEQ'C'                                                         AR567487
+     C                     TESTB'12'      RUNDFL       88                                   MD054869
+     C           *IN88     IFNE *ON                                                         MD054869
      C                     MOVE 'N'       WFAMU                                             AR567487
+     C                     ENDIF                                                            MD054869
      C                     ENDIF                                                            AR567487
      C                     ENDIF                                                            AR567487
       *                                                                                     AR567487
@@ -629,8 +647,10 @@
      C           WFEIN     ANDEQ'N'                                                         MD050278
      C           PDCIN     ANDEQ'N'                                                         MD052433
       *                                                                                     MD040535
-     C           KACTN5    SETLLLEACT5L2                                                    MD040535
-     C           KACTN5    READELEACT5L2                 40                                 MD040535
+     C********** KACTN5    SETLLLEACT5L2                                           MD040535 MD055115
+     C********** KACTN5    READELEACT5L2                 40                        MD040535 MD055115
+     C           KACTN5    SETLLLEACT5L6                                                    MD055115
+     C           KACTN5    READELEACT5L6                 40                                 MD055115
      C           *IN40     DOWEQ'0'                                                         MD040535
      C           PRAM      IFEQ EAMT                                                        MD040535
      C********** TAMT      ANDEQEAMT                                               MD040535 MD047950
@@ -647,6 +667,8 @@
      C           AK3       ANDEQ'R'                                                         MD052433
      C           AK10      ANDEQ'B'                                                         MD052433
      C           PDCIN     ANDEQ'N'                                                         MD052433
+     C           CLE031    OREQ 'Y'                                                         MD053565
+     C           INTRFL    ANDEQ' '                                                         MD053565
       *                                                                                     MD052433
       ** Suppress 'B' account key related to interest payment.                              MD052433
       *                                                                                     MD052433
@@ -664,13 +686,20 @@
      C           AUTO      OREQ 'Y'                                                         MD052433
      C           AK3       ANDEQ'R'                                                         MD052433
      C           AK10      ANDEQ'B'                                                         MD052433
+     C                     Z-ADDF1FPCT    LLASN   30                                        MD055115
+     C           LLASN     IFEQ LASN                                                        MD055115
      C                     Z-ADDPRAM      EAMT                                              MD050278
+     C                     ELSE                                                             MD055115
+     C           KACTN5    READELEACT5L6                 40                                 MD055115
+     C                     ITER                                                             MD055115
+     C                     ENDIF                                                            MD055115
      C                     ENDIF                                                            MD050278
       *                                                                                     MD050278
      C                     MOVE 'Y'       WFAMU                                             MD040535
      C                     LEAVE                                                            MD040535
      C                     ENDIF                                                            MD040535
-     C           KACTN5    READELEACT5L2                 40                                 MD040535
+     C********** KACTN5    READELEACT5L2                 40                        MD040535 MD055115
+     C           KACTN5    READELEACT5L6                 40                                 MD055115
      C                     ENDDO                                                            MD040535
       *                                                                                     MD040535
      C                     ENDIF                                                            MD040535
@@ -1065,6 +1094,29 @@
      C           WPNAM     ANDEQ'NEWCOB'                                                      263413
      C                     MOVE 'Y'       NEWCOB  1                                           263413
      C                     ENDIF                                                              263413
+      *                                                                                     MD053565
+      *                                                                                     MD053565
+      ** Check if 'CLE031' is switched 'ON'                                                 MD053565
+      *                                                                                     MD053565
+     C                     CALL 'AOSARDR0'                                                  MD053565
+     C                     PARM *BLANKS   @RTCD                                             MD053565
+     C                     PARM '*VERIFY' @OPTN                                             MD053565
+     C                     PARM 'CLE031'  @SARD                                             MD053565
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD053565
+      *                                                                                     MD053565
+     C           @RTCD     IFNE *BLANKS                                                     MD053565
+     C           @RTCD     ANDNE'*NRF   '                                                   MD053565
+     C                     MOVEL'LER031'  DBPGM                                             MD053565
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD053565
+     C                     MOVEL'CLE031'  DBKEY                                             MD053565
+     C                     Z-ADD120       DBASE                                             MD053565
+     C                     ENDIF                                                            MD053565
+      *                                                                                     MD053565
+     C           @RTCD     IFEQ *BLANKS                                                     MD053565
+     C                     MOVE 'Y'       CLE031  1                                         MD053565
+     C                     ELSE                                                             MD053565
+     C                     MOVE 'N'       CLE031                                            MD053565
+     C                     ENDIF                                                            MD053565
       *                                                                                       263413
       **********                                                                       162343 199588
       ***Set*up*currency*array*****************************************                162343 199588
@@ -1139,6 +1191,8 @@
      C           AK910     OREQ ' B'                                                        MD050278
      C           NEWCOB    ANDEQ'N'                                                         MD050278
      C           CLE134    ANDEQ'Y'                                                         MD050278
+     C           AK3       OREQ 'S'                                                         MD053565
+     C           AK10      ANDEQ'C'                                                         MD053565
       *                                                                                       211953
      C           CLE014    IFEQ 'Y'                                       CLE014
      C           KACTN5    KLIST                                          CLE014

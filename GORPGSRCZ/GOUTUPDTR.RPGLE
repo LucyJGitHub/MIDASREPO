@@ -832,10 +832,8 @@
      C                   DOW       NOT %EOF(FACHSAL1)                                       MD054870
      C                   IF        F_FARECI = 'D'                                           MD054870
      C                             AND F_BRCA   = T_BRCA                                    MD054870
-     C                   IF        F_FAACTN = 'FI'                                          MD054870
-     C                             OR  F_FAACTN = 'FD'                                      MD054870
      C                   EVAL      UPD_ML = 'Y'                                             MD054870
-     C                   ENDIF                                                              MD054870
+     C                   LEAVE                                                              MD054870
      C                   ENDIF                                                              MD054870
      C     Key_FAC1      READE     FACHSAL1                                                 MD054870
      C                   ENDDO                                                              MD054870

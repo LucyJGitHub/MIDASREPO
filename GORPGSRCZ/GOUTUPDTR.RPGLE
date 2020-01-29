@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052663           Date 04Feb19               *
-      *  Prev Amend No. MD051197           Date 05Jun18               *
+      *  Last Amend No. MD054870           Date 17Jan20               *
+      *  Prev Amend No. MD052663           Date 04Feb19               *
+      *                 MD051197           Date 05Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
       *                 AR1082904          Date 09Feb14               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054870 - Management Limit Exposure for contingent account  *
+      *             is incorrect                                      *
       *  MD052663 - Database error: Not authorized to object CREABCQ  *
       *  MD051197 - Facility Drawn Amounts in FCLTYFN are overwritten *
       *             on Next Day COB Setup. Add missing line of        *
@@ -113,6 +116,7 @@
      F**********                            RENAME(GOTRAPD0:GPTRAPD1)                 CLE024 BUG3391
                                                                                               CLE024
      FGPZONEL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE024
+     FFACHSAL1  IF   E           K DISK    INFSR(*PSSR) PREFIX(F_)                          MD054870
 
      D/COPY ZACPYSRC,PSDS
 
@@ -142,6 +146,7 @@
      D Key_LSTU_ML     C                   'MLCommitId          '                          AR1082904
      D Key_LSTU_CL     C                   'CLCommitId          '                          AR1082904
      D Key_LSTU_ABC    C                   'ABCCommitId         '                          AR1082904
+     D UPD_ML          S              1                                                     MD054870
                                                                                               CAP205
      D ABCDATA         DS                                                                     CAP205
       ** Event Type                                                                           CAP205
@@ -228,8 +233,16 @@
       *  Update management limits indicator to 'ready to update'
       *  Send message to Management Limits
 
+     C                   EVAL      UPD_ML = 'N'                                             MD054870
+     C     COB_Generated IFEQ      'Y'                                                      MD054870
+     C     CGP003        ANDEQ     'Y'                                                      MD054870
+     C     T_MOD         ANDEQ     'GL'                                                     MD054870
+     C     T_SMOD        ANDEQ     'ACCT'                                                   MD054870
+     C                   EXSR      CHK_FAC                                                  MD054870
+     C                   ENDIF                                                              MD054870
      C     COB_Generated IFNE      'Y'
      C     CGP003        ANDEQ     'Y'                                                        254264
+     C     UPD_ML        OREQ      'Y'                                                      MD054870
      C                   MOVEL     'R'           CIEXML
      C                   IF        FirstCycle = 'N' OR                                     AR1082904
      C                             (FirstCycle = 'Y' AND                                   AR1082904
@@ -809,6 +822,27 @@
      C                   ENDSR                                                             AR1082904
       *********************************************************************                AR1082904
       /SPACE 5                                                                             AR1082904
+      *********************************************************************                 MD054870
+      * Check if GPWTRAPPD record is from Facility Increase                                 MD054870
+      *********************************************************************                 MD054870
+     C     CHK_FAC       BEGSR                                                              MD054870
+      *                                                                                     MD054870
+     C     Key_FAC1      CHAIN     FACHSAL1                                                 MD054870
+      *                                                                                     MD054870
+     C                   DOW       NOT %EOF(FACHSAL1)                                       MD054870
+     C                   IF        F_FARECI = 'D'                                           MD054870
+     C                             AND F_BRCA   = T_BRCA                                    MD054870
+     C                   IF        F_FAACTN = 'FI'                                          MD054870
+     C                             OR  F_FAACTN = 'FD'                                      MD054870
+     C                   EVAL      UPD_ML = 'Y'                                             MD054870
+     C                   ENDIF                                                              MD054870
+     C                   ENDIF                                                              MD054870
+     C     Key_FAC1      READE     FACHSAL1                                                 MD054870
+     C                   ENDDO                                                              MD054870
+      *                                                                                     MD054870
+     C                   ENDSR                                                              MD054870
+      *********************************************************************                 MD054870
+      /SPACE 5                                                                              MD054870
       ********************************************************************
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
@@ -991,6 +1025,8 @@
      C                   KFLD                    T_MOD
      C                   KFLD                    T_SMOD
      C                   KFLD                    T_TREF
+     C     Key_FAC1      KLIST                                                              MD054870
+     C                   KFLD                    T_CNUM                                     MD054870
 
      C                   ENDSR
       *******************************************************************

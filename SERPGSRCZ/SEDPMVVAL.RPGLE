@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037824           Date 09Mar16               *
+      *  Last Amend No. MD054698           Date 02Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037824           Date 09Mar16               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
@@ -85,6 +86,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054689 - System allows to REPO more than the actual        *
+      *             Security Position Without any warning             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037824 - Mismatch in value date between repo deal and depot*
       *             movement. Remove checking of DDDRID to always do  *
@@ -170,15 +173,15 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SEDPMVV035
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -198,37 +201,37 @@
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the SE standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ***The*fields*below*are*not*related*to*a*Walk-In*or************************************ CAP087
       ***Walk-Out*transaction*and*are*appropriately*set*to*Blanks.*************************** CAP087
       *                                                                                       CAP087
@@ -238,12 +241,12 @@
      D*DDRPIN******************7      7A                                                      CAP087
      D*DDSWRF******************8     10A                                                      CAP087
      D*DDSIOI*****************11     11A                                                      CAP087
- 
+
       ** This include member declares the arrays for overall error
       ** message handling in Midas APIs
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** The maximum size of the appended error arrays
       ** Array of Fields in error.
       ** Array of error message IDs
@@ -251,7 +254,7 @@
       ** Array of Fields with warnings.
       ** Array of warning message IDs
       ** Array of warning message data.
- 
+
      D/COPY ZACPYSRC,ERR_XARRYS                                                               222321
      D*XArrayMax*******C                   CONST(20)                                          222321
      D*FldNamXAr*******S             10A   DIM(XArrayMax)                                     222321
@@ -260,26 +263,26 @@
      D*WFldNmXAr*******S             10A   DIM(XArrayMax)                                     222321
      D*WMsgIDXAr*******S                   DIM(XArrayMax) LIKE(#MsgId)                        222321
      D*WMsgDtXAr*******S                   DIM(XArrayMax) LIKE(#MsgData)                      222321
- 
+
       ** The following /COPY includes the customer details data structure                     207006
      D/COPY SECPYSRC,SE_CUSTDT                                                                207006
- 
+
       ** Transaction Details
       ** Transaction Details Ok indicator
       ** Valid Transaction Details File Format
- 
+
      D SETransDtl    E DS                  EXTNAME(SEDMWIPD)
      D DDDEPOT       E                     EXTFLD(DDDPID)
      D DDDATE        E                     EXTFLD(DDDPMD)
      D ChargeDtls            136    171
- 
+
      D SEErFldF      E DS                  EXTNAME(SEEDMWIPD)
      D DDDepotOk     E                     EXTFLD(DDDPIDOK)
      D DDDateOk      E                     EXTFLD(DDDPMDOK)
- 
+
      D SEValidF      E DS                  EXTNAME(DPTMVD)
- 
- 
+
+
       ** Branch Details
       ** External DS for Bank Details
       ** Securities Trading Data
@@ -292,7 +295,7 @@
       ** Security ICD Details
       ** Security Details
       ** Investment Type Details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
@@ -309,13 +312,13 @@
                                                                                               CGL035
      D SECTY         E DS                  EXTNAME(SECTYD)
      D                                     PREFIX(SEC_)
- 
+
      D INVTPDts      E DS                  EXTNAME(INVTPD)
      D INV_RECI      E                     EXTFLD(RECI)
      D INV_LCD       E                     EXTFLD(LCD)
      D INV_CHTP      E                     EXTFLD(CHTP)
      D INV_TNLU      E                     EXTFLD(TNLU)
- 
+
       ** DS for Access programs, short DS
       ** DS for Access Programs, long DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -343,7 +346,7 @@
      D  O#BICN                 7     12                                                       234552
      D  O#CRNM                13     22                                                       234552
      D  O#ACOF                23     24                                                       234552
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -358,13 +361,13 @@
      D RUNDAT          DS
      D  RunDate                8     10P 0
      D  MBIN                  13     13
- 
+
       ** Data Area of Menu User
      D ZMUSER          DS            17
      D  USRBCH                11     13
- 
+
       ** Nominal Currency Details
- 
+
      D NomCcyDts       DS
      D  NomCcySPRT             1     13  8
      D  NomCcyDec             14     14P 0
@@ -376,7 +379,7 @@
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(SEDMEXPD)                    CAP004
       * SE Depot Movements Extra Data - File (D/B) format                       CAP004
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -384,18 +387,18 @@
                                                                                 CPB001
       ** Purchased Interest save field                                          CPB001
      D DDPINTSAVE      S             13P 0                                      CPB001
- 
+
       ** Charge Currency no. of Decimal Places
      D ChrCurDP        S              1S 0
- 
+
       ** Index for arrays of error message ids etc
       ** Index for arrays of of warning message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
       ** Index for arrays
      D I               S              3P 0
- 
+
      D CSC011          S              1A                                                      CSC011
      D WRunDay         S                   LIKE(BJRDNB)                                       CSC011
      D Dpmv_Date       S                   LIKE(BJRDNB)                                       234440
@@ -431,18 +434,20 @@
      D*WCust****       S              6S 0                                            234440 CSD027A
      D WCust           S              6A                                                     CSD027A
                                                                                               CGL031
+     D CSE013          S              1A                                                    MD054689
+     D ShortFlag       S              1A                                                    MD054689
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SEDPMVV036
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -453,7 +458,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       /COPY WNCPYSRC,SEDPMVV001
       *
@@ -509,10 +514,10 @@
       ** Return
       *
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SEDPMVV037
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -529,7 +534,7 @@
       *        SRCumEx       SRTradeDte     SRMktCnt     SRCtrpty     *                       207006
       *                                                               *
       *****************************************************************
- 
+
      C     SRDetVal      BEGSR
       *****************************************************************              234691 BUG10520
       ***Block*back*value*depot*movement*******************************              234691 BUG10520
@@ -552,7 +557,7 @@
      C                   EXSR      SRTaxDate                                                BUG10520
      C                   GOTO      EDetVal                                                  BUG10520
      C                   ENDIF                                                              BUG10520
- 
+
      C     DPMVType      IFEQ      'WI'
       *
       ** In Depot
@@ -565,7 +570,7 @@
      C                   EXSR      SRInDate
       /COPY WNCPYSRC,SEDPMVV006
      C                   END
- 
+
      C     DPMVType      IFEQ      'WO'
       *
       ** Out Depot
@@ -757,7 +762,7 @@
      C****************   END                                                           CSE017 234916
       *
       ** Charge and Settlement Details
- 
+
       /COPY WNCPYSRC,SEDPMVV033
      C                   IF        ChargeDtls <> *BLANKS
      C                   EXSR      SRChrgSet
@@ -803,7 +808,7 @@
      C                   MOVE      *BLANKS       DDACIN                         CPB001
      C**************     MOVE      *BLANKS       DDMSTP                   CPB001187544
      C                   ENDIF                                                  CPB001
- 
+
       ** Counterparty and Market Centre                                                       207006
                                                                                               207006
      C     CSE029        IFEQ      'Y'                                                        207006
@@ -885,10 +890,19 @@
      C                   ENDIF                                                                234552
                                                                                               234552
      C                   END
- 
+      *                                                                                     MD054689
+      ** Validate Depot Movement Security Position                                          MD054689
+      *                                                                                     MD054689
+     C                   IF        CSE013 = 'Y' AND                                         MD054689
+     C                             (DPMVType = 'RP'                                         MD054689
+     C                             OR DPMVType = 'BL'                                       MD054689
+     C                             OR DPMVType = 'PL')                                      MD054689
+     C                   EXSR      SRDPMVSecPos                                             MD054689
+     C                   ENDIF                                                              MD054689
+
      C***************    ENDSR                                                                234691
      C     EDetVal       ENDSR                                                                234691
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -901,17 +915,17 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSecurity    BEGSR
- 
+
      C                   EXSR      SRReset
       *
       ** Save Security Details
       *
- 
+
      C                   MOVE      DPSS          OldDPSS          10
      C                   MOVE      SEC_SESN      OldSESN          10                          236702
- 
+
      C                   CALLB     'SEVDSECSN'
       ** Return Code
      C                   PARM                    RetCodeIn
@@ -974,10 +988,10 @@
      C                   EVAL      DDOPIN = *BLANKS                                           236702
      C                   EVAL      DDFSPR = *BLANKS                                           236702
      C                   END                                                                  236702
- 
- 
+
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -991,11 +1005,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInDepot     BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDINDP'
      C                   PARM                    RetCodeIn
      C     DDDepot       PARM                    DDDPID
@@ -1007,15 +1021,15 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDDepotOk
      C                   PARM                    DPID
- 
+
      C                   MOVE      BFCLAS        BFCLASInDp        1
      C                   MOVE      *BLANKS       DDDPID
      C                   MOVEL     DDDepot       DDDPID
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1028,11 +1042,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInDate      BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDDATEIN'
      C                   PARM                    RetCodeIn
      C     DDDate        PARM                    DDDPMD
@@ -1054,12 +1068,12 @@
      C                   PARM                    WMsgDtXAr
      C                   PARM                    DDDateOk
      C                   PARM                    DPMD
- 
+
      C                   MOVE      *BLANKS       DDDPMD
      C                   MOVEL     DDDate        DDDPMD
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1073,11 +1087,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SROutDepot    BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDOUTDP'
      C                   PARM                    RetCodeIn
      C     DDDepot       PARM                    DDDPOD
@@ -1088,13 +1102,13 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDDepotOk
      C                   PARM                    DPOD
- 
+
      C                   MOVE      BFCLAS        BFClasOtDp        1
      C                   MOVE      *BLANKS       DDDPOD
      C                   MOVEL     DDDepot       DDDPOD
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1108,11 +1122,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SROutDate     BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDDATEOT'
      C                   PARM                    RetCodeIn
      C     DDDate        PARM                    DDDPDO
@@ -1135,12 +1149,12 @@
      C                   PARM                    WMsgDtXAr
      C                   PARM                    DDDateOk
      C                   PARM                    DPDO
- 
+
      C                   MOVE      *BLANKS       DDDPDO
      C                   MOVEL     DDDate        DDDPDO
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT                                                                                  CAP087
@@ -1324,11 +1338,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBBranch     BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDBKGBRH'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDPBA
@@ -1341,9 +1355,9 @@
      C                   PARM                    SDBRCH
      C                   PARM                    DDDPBAOk
      C                   PARM                    DPBA
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1357,11 +1371,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SROrBranch    BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDORBRCH'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDORBR
@@ -1375,9 +1389,9 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDORBROk
      C                   PARM                    ORBR
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1391,11 +1405,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBookCde     BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDBOOK'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDPBK
@@ -1416,9 +1430,9 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDDPBKOk
      C                   PARM                    DPBK
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1432,11 +1446,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCustomer    BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDBFCUST'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDPBN
@@ -1463,11 +1477,11 @@
       * Branch code                                                                           CAP087
      C                   PARM                    DDDPBA                                       CAP087
      C                   PARM                    DPMVType                                     CAP087
- 
+
      C                   MOVE      BFCLAS        BFCLASCust        1
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1481,11 +1495,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNominal     BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDNMLAMT'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDPNA
@@ -1511,9 +1525,9 @@
      C                   PARM                    DDDPNAOk
      C                   PARM                    DPNA
      C                   PARM                    CGL011                                       CGL011
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1527,15 +1541,15 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPrice       BEGSR
- 
+
      C                   Z-ADD     0             WRKPI            15 9
      C                   MOVE      'C'           SCUMEX            1
      C                   Z-ADD     DPNA          ZNOML            15 0
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDPRICE'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDMKTP
@@ -1559,11 +1573,11 @@
      C                   PARM                    WMsgDtXAr
      C                   PARM                    DDMKTPOk
      C                   PARM                    MKTP
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1576,11 +1590,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPortRef     BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDPRTREF'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDPID
@@ -1609,9 +1623,9 @@
      C                   PARM                    DDPTFROk
      C                   PARM                    DDDPNAOk
      C                   PARM                    PTFR
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1625,11 +1639,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCustMDIn    BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDCDWIND'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDCWDI
@@ -1641,9 +1655,9 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDCWDIOk
      C                   PARM                    CWDI
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1657,11 +1671,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAveYield    BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDAVEYLD'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDCYLD
@@ -1676,9 +1690,9 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDCYLDOk
      C                   PARM                    CYLD
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1692,11 +1706,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFXRate      BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDRATEMD'
      C                   PARM                    DDPTFR
      C                   PARM                    DDPTFROk
@@ -1717,9 +1731,9 @@
      C                   PARM                    DDSPMD
      C                   PARM                    SPXR
      C                   PARM                    SPMD
- 
+
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1733,11 +1747,11 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProfCtr     BEGSR
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDPFTCNT'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDPPC
@@ -1756,7 +1770,7 @@
      C                   PARM                    DDDPPCOk
      C                   PARM                    DPPC
      C                   EXSR      SRUpdate
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT                                                                                  CSE017
@@ -1828,21 +1842,21 @@
       *        SRUpdate                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChrgSet     BEGSR
- 
+
      C     BVACOP        IFEQ      'Y'
      C     S01445        ANDEQ     'Y'
       *                                                                                     BUG10469
       * Validate charges for Bond Borrowing and Bond Lending                                BUG10469
      C     DPMVType      OREQ      'BB'                                                     BUG10469
      C     DPMVType      OREQ      'BL'                                                     BUG10469
- 
+
      C                   EXSR      SRReset
- 
+
       ** Charge Currency
       ** ---------------
- 
+
      C                   CALLB     'SEVDCHGCUR'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDCHC
@@ -1860,16 +1874,16 @@
      C                   PARM                    SDCURR
      C                   PARM                    DCCE
      C                   PARM                    DDDCCEOk
- 
+
      C                   Z-ADD     A6NBDP        ChrCurDP
- 
+
      C                   EXSR      SRUpdate
- 
+
       ** Charge Code
       ** -----------
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDCHGCDE'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDCHC
@@ -1887,14 +1901,14 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDDCHCOk
      C                   PARM                    DCHC
- 
+
      C                   EXSR      SRUpdate
- 
+
       ** Charge Amount
       ** -------------
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDCHGAMT'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDCHC
@@ -1913,14 +1927,14 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDDCHAOk
      C                   PARM                    DCHA
- 
+
      C                   EXSR      SRUpdate
- 
+
       ** Charg Settlement Method
       ** -----------------------
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDSETMTH'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDCHC
@@ -1938,15 +1952,15 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDDCSEOk
      C                   PARM                    DCSE
- 
+
      C                   EXSR      SRUpdate
- 
- 
+
+
       ** Charge Settlement Account
       ** -------------------------
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDSETACC'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDCHC
@@ -1970,14 +1984,14 @@
      C                   PARM                    RBranch
      C                   PARM                    DDDCATOk
      C                   PARM                    DCAT
- 
+
      C                   EXSR      SRUpdate
- 
+
       ** Charge Settlement Branch
       ** ------------------------
- 
+
      C                   EXSR      SRReset
- 
+
      C                   CALLB     'SEVDSETBRH'
      C                   PARM                    RetCodeIn
      C                   PARM                    DDDCHC
@@ -1997,13 +2011,13 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    DDDCABOk
      C                   PARM                    DCAB
- 
+
      C                   EXSR      SRUpdate
      C                   END
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************         CPB001
      C/EJECT                                                                    CPB001
       *****************************************************************         CPB001
@@ -2651,6 +2665,51 @@
                                                                                               CAP087
       *****************************************************************                       CAP087
       /EJECT                                                                                  207006
+      *****************************************************************                     MD054689
+      *                                                               *                     MD054689
+      * SRDPMVSecPos - Validate Depot Movement Security Position      *                     MD054689
+      *                                                               *                     MD054689
+      * Calls:                                                        *                     MD054689
+      *                                                               *                     MD054689
+      *****************************************************************                     MD054689
+      *                                                                                     MD054689
+     C     SRDPMVSecPos  BEGSR                                                              MD054689
+      *                                                                                     MD054689
+     C                   CALLB     'SESHPOSWN2'                                             MD054689
+      *                                                                                     MD054689
+      ** INPUTS                                                                             MD054689
+      *                                                                                     MD054689
+      ** Return Code                                                                        MD054689
+     C                   PARM                    ReturnCode                                 MD054689
+      ** Branch Code (3A)                                                                   MD054689
+      ** Customer number (6A)                                                               MD054689
+      ** Security Shortname (10A)                                                           MD054689
+      ** Nominal Amount (11P 0)                                                             MD054689
+      ** Deliver From (6 0)                                                                 MD054689
+      ** Trade/Value Date Valuation (1A)                                                    MD054689
+     C                   PARM                    DDDPBA                                     MD054689
+     C                   PARM                    DDDPBN                                     MD054689
+     C                   PARM                    DDDPSS                                     MD054689
+     C                   PARM                    DPNA                                       MD054689
+     C                   PARM                    DDDEPOT                                    MD054689
+     C                   PARM                    BVTVDV                                     MD054689
+      *                                                                                     MD054689
+      ** OUTPUT                                                                             MD054689
+      *                                                                                     MD054689
+     C                   PARM      ' '           ShortFlag                                  MD054689
+      *                                                                                     MD054689
+      ** Setup Warning message                                                              MD054689
+     C     ShortFlag     IFEQ      '1'                                                      MD054689
+     C                   ADD       1             WIdx                                       MD054689
+     C                   EVAL      WMsgIDArr(WIdx) = 'MMA0663'                              MD054689
+     C                   EVAL      WFldNamArr(WIdx) = 'DDDPID'                              MD054689
+     C*                  EVAL      DDDPIDOK = 'W'                                           MD054689
+     C                   ENDIF                                                              MD054689
+      *                                                                                     MD054689
+     C                   ENDSR                                                              MD054689
+      *                                                                                     MD054689
+      *****************************************************************                     MD054689
+      /EJECT                                                                                MD054689
       *****************************************************************
       *                                                               *
       * SRRESET- Reset Error information that is received Back        *
@@ -2665,9 +2724,9 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRReset       BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -2677,7 +2736,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2695,7 +2754,7 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SrUpdate      BEGSR
       *
       * Update error fields/message IDs/message data (arrays)
@@ -2740,7 +2799,7 @@
       * Calls:  None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInit        BEGSR
       *
       ***Set-up*unnecessary data                                                              CAP087
@@ -2781,7 +2840,7 @@
      C                   Z-ADD     0             DPMD
      C                   MOVE      'WO'          DPMV
      C                   END
- 
+
       ** As In Depot (DDDPID) has been renamed to DDDEPOT and In Date (DDDPMD) to             CAP087
       ** DDDATE, set up the fields accordingly for Repo and Depot Transfers as DDDPID         CAP087
       ** and DDDPMD are currently effectively NULL.  Also set Movement Type (DPMV)            CAP087
@@ -2802,7 +2861,7 @@
      C                   END                                                                  CAP087
                                                                                               CAP087
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2823,7 +2882,7 @@
       **  Terminte the program
       *
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2836,18 +2895,18 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Received Parameters
       ** -------------------
- 
+
       ** Depot Movement Screen Input Details
      C                   PARM                    SETransDtl
      C                   PARM                    ExtData                        CAP004
- 
+
       ** Security Details
       ** Depot Movement Type (2A)
       ** Response Mode (1A)
@@ -2855,10 +2914,10 @@
      C                   PARM                    DPMVType          2
      C                   PARM                    DDDRID            1                          244007
      C                   PARM                    RespMode          1
- 
+
       ** Returned Parameters
       ** -------------------
- 
+
       ** Screen Output
       ** FX Rate
       ** M/D Indicator
@@ -2870,22 +2929,22 @@
      C                   PARM                    WWPLCS            1
      C                   PARM                    WWPBCS            1            CPB001
      C                   PARM                    PBFieldInd        1            CPB001
- 
+
       ** Valid Transaction fields Details
       ** Trade Primary Details OK inds
      C                   PARM                    SEValidF
      C                   PARM                    SEErFldF
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
@@ -2893,12 +2952,12 @@
                                                                                               CGL031
       ** Switchable Feature CGL031                                                            CGL031
      C                   PARM                    CGL031                                       CGL031
- 
+
      C                   MOVEL     'SEDPMVVAL'   DBPGM
- 
+
       ** ICD Info Retrieval Processing
       ** -----------------------------
- 
+
       *
       ** Read data area - RUNDAT
       *
@@ -2963,7 +3022,7 @@
       ** Check if switchable feature S01401 is switched on.
       *
      C                   MOVE      'N'           S01401            1
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -2986,7 +3045,7 @@
       ** Check if switchable feature S01496 is switched on.
       *
      C                   MOVE      'N'           S01496            1
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -3105,13 +3164,13 @@
      C                   MOVEL     '906'         DBASE                          * DBERR 906*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
      C                   END
       *
       ** Check if switchable feature S01445 is switched on.
       *
      C                   MOVE      'N'           S01445            1
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -3134,7 +3193,7 @@
       **  Access SAR details file to see if ? allowed for security
       *
      C                   MOVE      'N'           CSE003            1
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -3157,7 +3216,7 @@
       ** Check if switchable feature S01511 is switched on.
       *
      C                   MOVE      'N'           S01511            1
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -3266,7 +3325,7 @@
      C     @RTCD         IfEq      *BLANKS                                                    CGL011
      C                   Move      'Y'           CGL011                                       CGL011
      C                   EndIf                                                                CGL011
- 
+
       ** Check if CSC011 is installed                                                         CSC011
                                                                                               CSC011
      C                   EVAL      WRunDay = BJRDNB                                           CSC011
@@ -3318,16 +3377,38 @@
      C                   Move      'Y'           CSE029                                       207006
      C                   EndIf                                                                207006
                                                                                               CSC011
+      *                                                                                     MD054689
+      ** Access Switchable Features file to check if CSE013                                 MD054689
+      ** is installed.                                                                      MD054689
+      *                                                                                     MD054689
+     C                   EVAL      CSE013 = 'N'                                             MD054689
+     C                   CALLB     'AOSARDR0'                                               MD054689
+     C                   PARM      *BLANKS       @RTCD                                      MD054689
+     C                   PARM      '*VERIFY'     @OPTN                                      MD054689
+     C                   PARM      'CSE013'      @SARD                                      MD054689
+      *                                                                                     MD054689
+     C     @RTCD         IFNE      *BLANKS                                                  MD054689
+     C     @RTCD         ANDNE     '*NRF   '                                                MD054689
+     C                   MOVEL     '917'         DBASE                                      MD054689
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD054689
+     C                   MOVEL     'CSE013'      DBKEY                                      MD054689
+     C                   EXSR      *PSSR                                                    MD054689
+     C                   ENDIF                                                              MD054689
+      *                                                                                     MD054689
+     C     @RTCD         IFEQ      *BLANKS                                                  MD054689
+     C                   EVAL      CSE013 = 'Y'                                             MD054689
+     C                   ENDIF                                                              MD054689
+                                                                                            MD054689
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SEDPMVV038
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

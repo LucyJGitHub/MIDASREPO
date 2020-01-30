@@ -30,7 +30,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054879 - Failed when do facility enquiry from TI to Fusion *
-      *             Midas                                             *
+      *             Midas.                                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR796237 - GOC0050 00001 (Recompile)                         *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

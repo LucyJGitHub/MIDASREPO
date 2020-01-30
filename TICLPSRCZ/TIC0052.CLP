@@ -154,26 +154,15 @@
 
 
 /* Retrieve the journal entry that reflects the date change made by */
-<<<<<<< HEAD
 /**SCC0411.**/                                                                          /*MD054507*/
 /* SCC041101. */                                                                        /*MD054507*/
 
-=======
-/* SCC0411. */
-
->>>>>>> refs/remotes/origin/bugfix/MDSC-30487
  PROCEED2:   RTVJRNE    JRN(ICJRN) FILE((SDBANKPD)) JRNCDE((R)) +
-<<<<<<< HEAD
                            ENTTYP(UP) JOB(SCC041101) PGM(SD1030) +
                            RTNSEQNBR(&RTNSEQNBR)                                        /*MD054507*/
 /**********                ENTTYP(UP) JOB(SCC0411) PGM(SD1030) +    */                  /*MD054507*/
 /**********                RTNSEQNBR(&RTNSEQNBR)                    */                  /*MD054507*/
 
-=======
-                           ENTTYP(UP) JOB(SCC0411) PGM(SD1030) +
-                           RTNSEQNBR(&RTNSEQNBR)
-
->>>>>>> refs/remotes/origin/bugfix/MDSC-30487
 /* If no journal entry found then rundate is not updated in Midas */
 /* we have an error. */
 

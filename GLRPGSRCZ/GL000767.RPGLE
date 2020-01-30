@@ -24,7 +24,6 @@
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
-      *  MD054986 - CRS Issue: Account Holder/Organisation            *
       *  MD054905 - Change Message Ref Id format                      *
       *  CGL185 - FATCA XML 2.0                                       *
       *  MD041589 - Controlling person for CRS101 is not displayed    *
@@ -2314,7 +2313,7 @@
      C                   EVAL      ACtryTinn(WTINCnt) = CDTINN
      C                   EVAL      ACtryIsBy(WTINCnt) = CDCTRY
      C                   IF        WTINCnt > 7
-     C                   EVAL      MGELMT = 'TIN'                                                   
+     C                   EVAL      MGELMT = 'TIN'
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2421,7 +2420,7 @@
      C                   EVAL      ACtryTinn(WTINCnt) = CNTINN
      C                   EVAL      ACtryIsBy(WTINCnt) = CNCTRY
      C                   IF        WTINCnt > 7
-     C                   EVAL      MGELMT = 'TIN'                                                   
+     C                   EVAL      MGELMT = 'TIN'
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -3778,7 +3777,7 @@
      C                   EVAL      WCtryRprtng = 'N'
 
       ** For Individual
-     C                   IF        WkTYPE = 'P'                                                        
+     C                   IF        WkTYPE = 'P'
      C     DCust         SETLL     SDCRSDL2
      C     DCust         READE     SDCRSDL2
      C                   DOW       NOT %EOF(SDCRSDL2)

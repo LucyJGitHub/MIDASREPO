@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. CLE070  *CREATE    Date 19Jun19               *
+      *  Last Amend No. MD055140           Date 30Jan20               *
+      *  Prev Amend No. CLE070  *CREATE    Date 19Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055140 - Fix Header Alignment of Forward Diary Report      *
       *  CLE070 - Manual Diary                                        *
       *                                                               *
       *****************************************************************
@@ -311,6 +313,10 @@
       **   COMPARE RUN CONTROLS.
       *
      C     NORE          COMP      RECRDS                             1515
+      *                                                                                     MD055140
+     C     *IN15         IFEQ      *ON                                                      MD055140
+     C                   MOVE      *ON           *INU7                                      MD055140
+     C                   ENDIF                                                              MD055140
       *
       **   CALCULATE NUMBER OF LIVE RECORDS AFTER RUN.
       *

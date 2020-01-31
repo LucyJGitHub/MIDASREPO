@@ -315,13 +315,14 @@
      C     NORE          COMP      RECRDS                             1515
       *                                                                                     MD055140
      C     *IN15         IFEQ      *ON                                                      MD055140
-     C                   MOVE      *ON           *INU7                                      MD055140
+     C                   MOVE      *ON           *INU8                                      MD055140
      C                   ENDIF                                                              MD055140
       *
       **   CALCULATE NUMBER OF LIVE RECORDS AFTER RUN.
       *
      C                   MOVE      RECRDS        NLIVE             5 0
      C     *INU7         IFEQ      *ON
+     C     *INU8         OREQ      *ON                                                      MD055140
      C                   DUMP
      C                   ENDIF
       *

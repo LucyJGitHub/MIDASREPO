@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD048346           Date 20Dec17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054655           Date 06Dec19               *
+      *  Prev Amend No. MD048346           Date 20Dec17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046325           Date 26Jul17               *
       *                 MD045382           Date 20Apr17               *
       *                 MD036589A          Date 22Feb17               *
@@ -25,6 +26,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054655 - GLC0802C seq.00001 fails. DBCE length too small   *
+      *           - Introduced WDBCE 15,0 to hold result before move  *
+      *             to DBCE                                           *
+      *           - Retrieve event currency details before subroutine *
+      *             SRNetICD                                          *
       *  MD048346 - FX netting ICD against FX nets will not prioritize*
       *             customer branch of the FX nets, instead, it will  *
       *             prioritize (1) system value branch code; if blank,*
@@ -273,7 +279,8 @@
      D SVALK0          S             20                                                     MD048346
      D SVAL10          S            200                                                     MD048346
      D SVBRCA          S              3                                                     MD048346
-                                                                                            MD048346
+      * Variable to move to DBCE
+     D WDBCE           S             15P 0                                                  MD054655
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -347,8 +354,10 @@
      C                   EXSR      SRWrite
      C                   ENDIF                                                              MD046325
       *                                                                                    MD036589A
-      ** Generate also for neeting ICD account.                                            MD036589A
+      ** Generate also for netting ICD account.                                            MD036589A
       *                                                                                    MD036589A
+     C                   EVAL      PCyCd = AMCCYD                                           MD054655
+     C                   EXSR      SRCyCd                                                   MD054655
      C                   EXSR      SRNetICD                                                MD036589A
       *
      C                   ENDIF
@@ -374,7 +383,7 @@
       /EJECT
       *****************************************************************
       *                                                               *
-      *  SRMapFld - Map fields to CLS Events file                     *
+      *  SRMapFld - Map fields to Events file                         *
       *                                                               *
       *****************************************************************
      C     SRMapFld      BEGSR
@@ -456,15 +465,23 @@
      C                   EVAL      N = N + 4
      C                   IF        WMDI = 'M'
      C                   EVAL      WRK159 = WBCXR/POWER(N)
-     C                   EVAL      DBCE = EAMT * WRK159
+     C**********         EVAL      DBCE = EAMT * WRK159                                     MD054655
+     C                   EVAL      WDBCE = EAMT * WRK159                                    MD054655
+     C                   MOVE      WDBCE         DBCE                                       MD054655
+
      C                   ELSE
      C                   EVAL      WRK159 = WBCXR * POWER(N)
-     C                   EVAL      DBCE = EAMT/WRK159
+     C**********         EVAL      DBCE = EAMT/WRK159                                       MD054655
+     C                   EVAL      WDBCE = EAMT / WRK159                                    MD054655
+     C                   MOVE      WDBCE         DBCE                                       MD054655
      C                   ENDIF
      C                   EVAL      BCEQ = DBCE
      C                   ELSE
-     C                   Z-ADD     EAMT          DBCE
-     C                   Z-ADD     EAMT          BCEQ
+     C**********         Z-ADD     EAMT          DBCE                                       MD054655
+     C                   Z-ADD     EAMT          WDBCE                                      MD054655
+     C                   MOVE      WDBCE         DBCE                                       MD054655
+     C**********         Z-ADD     EAMT          BCEQ                                       MD054655
+     C                   MOVE      WDBCE         BCEQ                                       MD054655
      C                   ENDIF
      C                   EVAL      DBCR = WBCXR
       *
@@ -1021,16 +1038,24 @@
       *                                                                                     MD046325
      C                   IF        WMDI = 'M'                                               MD046325
      C                   EVAL      WRK159 = WBCXR/POWER(N)                                  MD046325
-     C                   EVAL      DBCE = EAMT * WRK159                                     MD046325
+     C**********         EVAL      DBCE = EAMT * WRK159                            MD046325 MD054655
+     C                   EVAL      WDBCE = EAMT * WRK159                                    MD054655
+     C                   MOVE      WDBCE         DBCE                                       MD054655
      C                   ELSE                                                               MD046325
      C                   EVAL      WRK159 = WBCXR * POWER(N)                                MD046325
-     C                   EVAL      DBCE = EAMT/WRK159                                       MD046325
+     C**********         EVAL      DBCE = EAMT/WRK159                              MD046325 MD054655
+     C                   EVAL      WDBCE = EAMT / WRK159                                    MD054655
+     C                   MOVE      WDBCE         DBCE                                       MD054655
      C                   ENDIF                                                              MD046325
       *                                                                                     MD046325
      C                   EVAL      BCEQ = DBCE                                              MD046325
      C                   ELSE                                                               MD046325
-     C                   Z-ADD     EAMT          DBCE                                       MD046325
-     C                   Z-ADD     EAMT          BCEQ                                       MD046325
+     C**********         Z-ADD     EAMT          DBCE                              MD046325 MD054655
+     C                   Z-ADD     EAMT          WDBCE                                      MD054655
+     C                   MOVE      WDBCE         DBCE                                       MD054655
+     C**********         Z-ADD     EAMT          BCEQ                              MD046325 MD054655
+     C                   MOVE      WDBCE         BCEQ                                       MD054655
+
      C                   ENDIF                                                              MD046325
       *                                                                                     MD046325
      C                   EVAL      DBCR = WBCXR                                             MD046325

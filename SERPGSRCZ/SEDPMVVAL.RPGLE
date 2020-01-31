@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054698           Date 02Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DevOpsFix          Date 31Jan20               *
+      *  Prev Amend No. MD054698           Date 02Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037824           Date 09Mar16               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DevOpsFix - DevOps fix                                       *
       *  MD054689 - System allows to REPO more than the actual        *
       *             Security Position Without any warning             *
       *  MD046248 - Finastra Rebranding                               *
@@ -175,8 +177,8 @@
       *****************************************************************
 
       ** +--------------------------------------+
-      ** ¦ F-specs                              ¦
-      ** ¦ =======                              ¦
+      ** ï¿½ F-specs                              ï¿½
+      ** ï¿½ =======                              ï¿½
       ** +--------------------------------------+
 
       * Hook to enable non-core files to be included
@@ -184,8 +186,8 @@
 
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      ** ï¿½ Automatically included D-specs       ï¿½
+      ** ï¿½ ==============================       ï¿½
       ** +--------------------------------------+
       **
       ** Standard D-specs
@@ -213,8 +215,8 @@
      D/COPY ZACPYSRC,PSDS
 
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      ** ï¿½ End of automatically included D-specsï¿½
+      ** ï¿½ =====================================ï¿½
       ** +--------------------------------------+
 
       *****************************************************************
@@ -222,14 +224,14 @@
       *****************************************************************
 
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      ** ï¿½ Manually included D-specs            ï¿½
+      ** ï¿½ =========================            ï¿½
       ** +--------------------------------------+
 
 
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      ** ï¿½ Arrays and Data Structures           ï¿½
+      ** ï¿½ ==========================           ï¿½
       ** +--------------------------------------+
 
       ***The*fields*below*are*not*related*to*a*Walk-In*or************************************ CAP087
@@ -381,8 +383,8 @@
       * SE Depot Movements Extra Data - File (D/B) format                       CAP004
 
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      ** ï¿½ Declared variables                   ï¿½
+      ** ï¿½ ==================                   ï¿½
       ** +--------------------------------------+
                                                                                 CPB001
       ** Purchased Interest save field                                          CPB001
@@ -436,15 +438,16 @@
                                                                                               CGL031
      D CSE013          S              1A                                                    MD054689
      D ShortFlag       S              1A                                                    MD054689
+     D #DevOps         S               N
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      ** ï¿½ End of D-specs                       ï¿½
+      ** ï¿½ ==============                       ï¿½
       ** +--------------------------------------+
 
       ** +----------------------------------------+
-      ** ¦ Hook for non-core D-specs (all types)  ¦
-      ** ¦ also any I-specs (if necessary)        ¦
-      ** ¦ =====================================  ¦
+      ** ï¿½ Hook for non-core D-specs (all types)  ï¿½
+      ** ï¿½ also any I-specs (if necessary)        ï¿½
+      ** ï¿½ =====================================  ï¿½
       ** +----------------------------------------+
       /COPY WNCPYSRC,SEDPMVV036
 
@@ -453,10 +456,10 @@
       *****************************************************************
      C
       ** +--- Start of Main processing -----------------------------------+
-      ** ¦                                                                ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-      ** ¦ executed at program activation.                                ¦
-      ** ¦                                                                ¦
+      ** ï¿½                                                                ï¿½
+      ** ï¿½ Initial processing is performed automatically: the *INZSR is   ï¿½
+      ** ï¿½ executed at program activation.                                ï¿½
+      ** ï¿½                                                                ï¿½
       ** +----------------------------------------------------------------+
 
       *
@@ -890,6 +893,7 @@
      C                   ENDIF                                                                234552
                                                                                               234552
      C                   END
+<<<<<<< HEAD
       *                                                                                     MD054689
       ** Validate Depot Movement Security Position                                          MD054689
       *                                                                                     MD054689
@@ -899,6 +903,8 @@
      C                             OR DPMVType = 'PL')                                      MD054689
      C                   EXSR      SRDPMVSecPos                                             MD054689
      C                   ENDIF                                                              MD054689
+=======
+>>>>>>> [RBDO-2216] DevOps test commit
 
      C***************    ENDSR                                                                234691
      C     EDetVal       ENDSR                                                                234691

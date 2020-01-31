@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD055079           Date 29Jan20               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 CGL177             Date 11Jan16               *
       *                 CGL157   *CREATE   Date 17Aug15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055079 - CRS issue: Customer/Non-account Holders          *
+      *             Mailing country/Phone country                     *
       *   MD040876 - CRS MQ (Recompile)                               *
       *   CGL177 - CRS Reporting Phase 2                              *
       *   CGL157 - CRS Reporting                                      *
@@ -103,6 +106,8 @@
       ** Access the System Value
      D SVAL01          C                   CONST('CRSForTINMandatory')
      D SVAL02          C                   CONST('CRSLocalTINMandatory')
+     D SVAL03          C                   CONST('CRSInfoCompMailCtry')                     MD055079
+     D SVAL04          C                   CONST('CRSInfoCompPhoneCtry')                    MD055079
 
       ** Data Structure for AOSVALR0 string
      DSVAL1            DS           200
@@ -122,6 +127,8 @@
      D Idx             S              3P 0
      D WIx             S              3P 0
      D WUSRQ           S              1A
+     D WMailMndtry     S              1A                                                    MD055079
+     D WPhneMndtry     S              1A                                                    MD055079
 
      D PCRSDT          DS
      D  DDCTRY                 1      2
@@ -281,7 +288,9 @@
 
       ** CRS Mailing Country is BLANK (check the first Mailing Country)
       ** to replace NACTIN2 of the official field for 1st phone country
+      ** and System Value Mailing Country Mandatory = 'Y'                                   MD055079
      C                   IF        NAMCT1 = *BLANKS
+     C                             AND WMailMndtry = 'Y'                                    MD055079
 
      C                   MOVE      'N'           DDINFOOK
      C                   ADD       1             Idx
@@ -292,7 +301,9 @@
 
       ** CRS Phone Country is BLANK (check the first Phone Country)
       ** to replace NACTIN3 of the official field for 1st phone country
+      ** and System Value Phone Number Country Mandatory = 'Y'                              MD055079
      C                   IF        NAPCT1 = *BLANKS
+     C                             AND WPhneMndtry = 'Y'                                    MD055079
 
      C                   MOVE      'N'           DDINFOOK
      C                   ADD       1             Idx
@@ -406,9 +417,11 @@
      C                   PARM                    SVAL1           200
      C                   PARM      SVAL02        SVALK2           20
      C                   PARM                    SVAL2           200
-     C                   PARM                    SVALK3           20
+     C**********         PARM                    SVALK3           20                        MD055079
+     C                   PARM      SVAL03        SVALK3           20                        MD055079
      C                   PARM                    SVAL3           200
-     C                   PARM                    SVALK4           20
+     C**********         PARM                    SVALK4           20                        MD055079
+     C                   PARM      SVAL04        SVALK4           20                        MD055079
      C                   PARM                    SVAL4           200
      C                   PARM                    SVALK5           20
      C                   PARM                    SVAL5           200
@@ -434,6 +447,9 @@
 
      C                   OUT       LDA
      C                   EXSR      *PSSR
+     C                   ELSE                                                               MD055079
+     C                   EVAL      WMailMndtry = SVAL3                                      MD055079
+     C                   EVAL      WPhneMndtry = SVAL4                                      MD055079
      C                   ENDIF
 
       ** Access Bank Details

@@ -20,8 +20,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD054947           Date 13Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054947 - REPO Subsitution and Margin Call events Rejected  *
+      *             in Midas.                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -51,7 +54,7 @@
       *  CAP087 - Depot Movement - Java Wrapper in MidasPlus.         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -61,7 +64,7 @@
      F                                     IGNORE(MMDENSP0)
      F                                     IGNORE(MMDENBP0)
      FINVTP     IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -73,83 +76,83 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D INFDS           DS
       **  Data structure for file status of MM deals file.
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields in Warning
      D WFldNamXA       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D WMsgIDXA        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D WMsgDtXA        S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Input fields
       ** ------------
- 
+
      ** Screen fields
      D DDDPAD          S              6A
      D DDSWRF          S              3A
      D DDRPIN          S              1A
      D DDDPRN          S              6A
- 
+
       ** System Info and other inputs parms
- 
+
      D DealPreInd      S              1A
      D NomCcy          S              3A
      D InvTyp          S              3A
@@ -159,26 +162,26 @@
      D DepBrch         S              3A
      D*DepBene**       S              6S 0                                                   CSD027A
      D DepBene         S              6A                                                     CSD027A
- 
+
       ** Output fields
       ** -------------
- 
+
      D DDDPADOk        S              1A
      D DPAD            S              6S 0
      D DealCcy         S              3A
- 
+
       ** Work fields
       ** -----------
- 
+
      D WORK6A          S              6A
      D LaterDate       S              5P 0
      D EarlyDate       S              5P 0
      D LateDate        S              5P 0
- 
+
       ** Index for arrays of Error and Warning message IDs
      D Idx             S              3P 0
      D WIx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -186,8 +189,8 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
- 
+
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -198,7 +201,7 @@
       ** Initialization
       *
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -207,7 +210,7 @@
      C                   MOVE      *BLANK        WMsgIDXA                                    BUG8769
      C                   MOVE      *BLANK        WMsgDtXA                                    BUG8769
      C                   Z-ADD     0             WIx                                         BUG8769
- 
+
      C                   Z-ADD     0             DPAD
       *
       ** Validation
@@ -234,9 +237,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SDPAD         BEGSR
- 
+
       *
       ** Dealing Module should be present
       *
@@ -256,9 +259,9 @@
      C                   MOVEL     'MMA0208'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPADOK
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** Deal number must be blank if the Repo/Pledge Indicator is blank
      C     DDDPAD        IFNE      *BLANKS
      C                   ADD       1             Idx
@@ -266,15 +269,15 @@
      C                   MOVEL     'MMA0209'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPADOK
      C                   END
- 
+
      C                   END
- 
+
       ** If entered, it must reference an active deal on PF/MMDELDPP
       ** with R/P Indicator = R/P Indicator on this depot movement &
       ** if R/P number on deal is non-zero it must equal Depot
       ** Movement Reference on this depot movement when the Switch
       ** Reference is blank.
- 
+
      C     DDDPAD        IFNE      *BLANKS
      C                   MOVE      DDDPAD        DPAD
      C                   MOVE      *BLANKS       DealCcy
@@ -297,7 +300,7 @@
      C                   MOVEL     'MMA2042'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPADOK
      C                   ELSE
- 
+
       * Error if Deal is deleted.
      C     HKDDLT        IFNE      *BLANK
      C                   ADD       1             Idx
@@ -308,21 +311,21 @@
       * If Depot Movement Reference and Switch Reference are both non-blanks,
       * Depot Movement Ref of the deal must be same as Depot Movement Ref of this
       * transaction, otherwise error.
-     C     HKDDMR        IFNE      *BLANKS
-     C     DDSWRF        ANDEQ     *BLANKS
-     C                   MOVE      HKDDMR        WORK6A
-     C     WORK6A        IFNE      DDDPRN
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDDPAD'      FldNamXAr(Idx)
-     C                   MOVEL     'MMA2043'     MsgIdXAr(Idx)
-     C                   MOVE      'N'           DDDPADOK
+     C*****HKDDMR        IFNE      *BLANKS                                                  MD054947
+     C*****DDSWRF        ANDEQ     *BLANKS                                                  MD054947
+     C**********         MOVE      HKDDMR        WORK6A                                     MD054947
+     C*****WORK6A        IFNE      DDDPRN                                                   MD054947
+     C**********         ADD       1             Idx                                        MD054947
+     C**********         MOVEL     'DDDPAD'      FldNamXAr(Idx)                             MD054947
+     C**********         MOVEL     'MMA2043'     MsgIdXAr(Idx)                              MD054947
+     C**********         MOVE      'N'           DDDPADOK                                   MD054947
+     C**********         END                                                                MD054947
+     C**********         END                                                                MD054947
+
      C                   END
-     C                   END
- 
-     C                   END
- 
+
       * If DATE IN is less than DATE OUT, deal type must be IP, TI or CL.
- 
+
      C     InDate        IFLT      OutDate
      C     HKMTYP        ANDNE     'IP'
      C     HKMTYP        ANDNE     'TI'
@@ -332,9 +335,9 @@
      C                   MOVEL     'MMA0211'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPADOK
      C                   END
- 
+
       * If DATE IN is greater than DATE OUT, deal type must be IT, TD or CD.
- 
+
      C     InDate        IFGT      OutDate
      C     HKMTYP        ANDNE     'IT'
      C     HKMTYP        ANDNE     'TD'
@@ -344,23 +347,23 @@
      C                   MOVEL     'MMA0212'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPADOK
      C                   END
- 
+
       * Branch Code must be same as deal's branch.
- 
+
      C     DepBrch       IFNE      HKBRCA
      C                   ADD       1             Idx
      C                   MOVEL     'DDDPAD'      FldNamXAr(Idx)
      C                   MOVEL     'MMA0213'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPADOK
      C                   END
- 
+
       * The later of DATE IN or DATE OUT must not be after maturity date of the Security.
- 
+
      C                   Z-ADD     InDate        LaterDate
      C     OutDate       IFGT      LaterDate
      C                   Z-ADD     OutDate       LaterDate
      C                   END
- 
+
      C     LaterDate     IFGT      SecMatD
      C     LaterDate     ANDNE     99999
      C     SecMatD       ANDNE     0
@@ -369,39 +372,39 @@
      C                   MOVEL     'MMA0214'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPADOK
      C                   END
- 
+
       * Beneficiary customer must be equal to the customer of the associated deal.
- 
+
      C     DepBene       IFNE      HKCNUM
      C                   ADD       1             WIx
      C                   MOVEL     'DDDPAD'      WFldNamXA(WIx)
      C                   MOVEL     'MMA0215'     WMsgIDXA(WIx)
      C                   MOVE      'W'           DDDPADOK
      C                   END
- 
+
       * DATE IN and DATE OUT must match value and maturity dates (if present)
       * i.e. Earlier = Value Date / Later = Maturity Date
- 
+
       * Fetch earlier
- 
+
      C                   Z-ADD     InDate        EarlyDate
      C     OutDate       IFLT      EarlyDate
      C                   Z-ADD     OutDate       EarlyDate
      C                   END
       * Fetch later
- 
+
      C                   Z-ADD     InDate        LateDate
      C     OutDate       IFGT      LateDate
      C                   Z-ADD     OutDate       LateDate
      C                   END
- 
+
      C     EarlyDate     IFNE      HKDVSD
      C                   ADD       1             WIx
      C                   MOVEL     'DDDPAD'      WFldNamXA(WIx)
      C                   MOVEL     'MMA0216'     WMsgIDXA(WIx)
      C                   MOVE      'W'           DDDPADOK
      C                   END
- 
+
      C     HKMATD        IFNE      0
      C     LateDate      ANDNE     HKMATD
      C     LateDate      ANDNE     99999
@@ -410,18 +413,18 @@
      C                   MOVEL     'MMA0218'     WMsgIDXA(WIx)
      C                   MOVE      'W'           DDDPADOK
      C                   END
- 
+
       * Collateral value must not be less than the deal's principal.
       * Access investment type file for collateral margin.
      C     INVKey        CHAIN     INVTPDF                            65
- 
+
       ***** ADD COLLATERAL PROCESSING HERE *******************************************************
- 
+
      C                   END
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -433,17 +436,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       ** Return Code Error Indicator
      C                   PARM                    RetCodeIn
- 
+
       ** Received parameters
       ** -------------------
- 
+
       ** Screen Fields **
       ** Switch Reference Screen field (3A)
       ** Repo/Pledge Indicator (1A)
@@ -456,7 +459,7 @@
      C                   PARM                    InDate
      C                   PARM                    DepBrch
      C                   PARM                    DepBene
- 
+
       ** System Details
       ** Dealing module indicator (1A)
      C                   PARM                    DealPreInd
@@ -466,39 +469,39 @@
      C                   PARM                    InvTyp
       ** Security Maturity Date
      C                   PARM                    SecMatD
- 
+
       ** Returned parameters
       ** -------------------
- 
+
      ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamXA
      C                   PARM                    WMsgIDXA
      C                   PARM                    WMsgDtXA
- 
+
       ** Associated Deal Ok Indicator (1A)
       ** Associated Deal (6N)
       ** Associated Deal Currency Code (3A)
      C                   PARM                    DDDPADOk
      C                   PARM                    DPAD
      C                   PARM                    DealCcy
- 
+
      C     INVKey        KLIST
      C                   KFLD                    NomCcy
      C                   KFLD                    InvTyp
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -22,7 +22,8 @@
      C                   EVAL      P#NRF = PRTCD                                              JMI111
      C                   EVAL      DATAF1 = SDACCT                                            JMI111
       *                                                                                       JMI111
-     C                   CALL      'XXVIMAC'                                                  JMI111
+     C**********         CALL      'XXVIMAC'                                                  JMI111
+     C                   CALL      'XX000350'                                                 JMI111
      C                   PARM      'I'           @ACTN             1                          JMI111
      C                   PARM                    DATA2                                        JMI111
      C                   PARM                    DATAI                                        JMI111

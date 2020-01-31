@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054986           Date 27Jan20               *
-      *  Prev Amend No. MD054905           Date 04Dec19               *
+      *  Last Amend No. MD055071           Date 29Jan20               *
+      *  Prev Amend No. MD054986           Date 27Jan20               *
+      *                 MD054905           Date 04Dec19               *
       *                 CGL185             Date 13Mar17               *
       *                 MD041589           Date 23Sep16               *
       *                 MD040916           Date 31Aug16               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055071- Correct A/C Holder Type for N/PA. With ContPerson  *
+      *            = CRS101, Wihtout ContPerson = CRS103              *
       *  MD054986 - CRS Issue: Account Holder/Organisation            *
       *  MD054905 - Change Message Ref Id format                      *
       *  CGL185 - FATCA XML 2.0                                       *
@@ -3528,6 +3531,7 @@
 
      C                   WHEN      WkTYPE = 'N'
      C                             AND WkSTYP = 'PA'
+     C                             AND WkCONS = 'N'                                         MD055071
      C                             AND WkREPT = 'Y'
      C                             AND (WkHVAL = 'H' OR WkHVAL = 'M')
      C                             AND (WkINFO = 'Y' OR WkINFO = 'A')
@@ -4329,8 +4333,9 @@
 
      C                   DOW       NOT %EOF(SDCUAHL0)
      C                   IF        CAPCNT <> *Blanks
-     C                   MOVE      CAPCNT        WNUM3
-     C                   IF        WNUM3 <> *ZERO
+     C                             OR CACINT = 'Y'                                          MD055071
+     C**********         MOVE      CAPCNT        WNUM3                                      MD055071
+     C**********         IF        WNUM3 <> *ZERO                                           MD055071
      C                   EVAL      PCuah = CAAUTH
      C                   EVAL      WCuahFlg = ' '
      C                   CALL      'AOCUSTR0'
@@ -4361,7 +4366,7 @@
      C                   LEAVESR
      C                   ENDIF
 
-     C                   ENDIF
+     C**********         ENDIF                                                              MD055071
      C                   ENDIF
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
@@ -4422,6 +4427,14 @@
      C                             AND (WkINFO = 'Y' OR WkINFO = 'A')
      C                             AND WkEXMP <> 'Y'
      C                   EVAL      WHasContPer = 'Y'
+
+     C                   WHEN      WkTYPE = 'N'                                             MD055071
+     C                             AND WkSTYP = 'PA'                                        MD055071
+     C                             AND WkREPT = 'Y'                                         MD055071
+     C                             AND (WkHVAL = 'H' OR WkHVAL = 'M')                       MD055071
+     C                             AND (WkINFO = 'Y' OR WkINFO = 'A')                       MD055071
+     C                             AND WkEXMP <> 'Y'                                        MD055071
+     C                   EVAL      WHasContPer = 'Y'                                        MD055071
 
      C                   WHEN      WkTYPE = 'P'
      C                             AND WkREPT = 'Y'

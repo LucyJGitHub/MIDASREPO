@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *  Last Amend No. MD055002           Date 31Jan20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042042           Date 14Feb17               *
       *                 MD034973           Date 16Jul15               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055002 - No validation for Related Payment reference field *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *
@@ -106,7 +108,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -125,77 +127,77 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
      D/COPY WNCPYSRC,FTH00563
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
- 
- 
+
+
       * Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       * Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D TranInSecA    E DS                  EXTNAME(FTOPY2PD)
@@ -205,10 +207,10 @@
       ** Payment Extension Details layout                                       CFT014
      D TranInPrmB    E DS                  EXTNAME(FTOPY1APD)                   CFT014
      D TranInThiB    E DS                  EXTNAME(FTOPY5PD)                    CFT014
- 
+
      D ExtData       E DS                  EXTNAME(FTOPEXPD)
       * FT (OPAY) Extra Data - File (D/B) format
- 
+
       * Valid Payments layout
      D ValidPmnt     E DS                  EXTNAME(FTVOPAYPD)
      D QQCDROX       E                     EXTFLD(QQCDRO)                                     CGL029
@@ -218,58 +220,58 @@
                                                                                               219131
       ** Dummy DS so that parameter passed to FTVXVXV will not contain garbage                219131
      D OKFlagsDS1    E DS                  EXTNAME(FTEOPY2PD) PREFIX(DMY:3)                   219131
- 
+
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY3PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       * Switchable Features File
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
      D ZMUSER          DS            17                                                       CAP084
      D  WUSRID                 1     10                                                       CAP084
                                                                                               CAP084
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D TCNTRL          DS           256
      D  WPDTI                  1      1
      D  WGLUI                  4      4
      D  WVATF                  6      6
- 
+
       **Data*structure*to*retrieve*VAT*rate****************************         CFT014
      D***VATDS***         DS                                                    CFT014
      D*WVATR*****             10     12P 4                                      CFT014
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
- 
+
+
       * A code to indicate the calling function to the lower level modules
      D OPAY            S              4A   INZ('OPAY')
- 
+
       * Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
      D I               S              3  0
                                                                                 CFT014
       ** Program message queue                                                  CFT014
@@ -277,7 +279,7 @@
                                                                                               CSW201
       ** SWIFT 2001 switchable feature                                                        CSW201
      D Csw201          S              1A                                                      CSW201
- 
+
      D InputUser       S             10A                                                    MD042042
      D/COPY WNCPYSRC,FTH00564
       ** +--------------------------------------+
@@ -292,12 +294,12 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Initial Processing
      C                   EXSR      INIT
- 
+
       * Call Validation Modules in Sequence
- 
+
       ** Details of Payment                                                     CFT014
                                                                                 CFT014
      C                   ExSr      SrDetPay                                     CFT014
@@ -309,48 +311,51 @@
       ***Validate*Intermediary*Bank************************************         CFT014
      C/COPY WNCPYSRC,FTH00317
      C***********        Exsr      VINTBNK                                      CFT014
- 
+
       * Validate Central Bank Reference
      C                   Exsr      VCBKREF
                                                                                 CFT014
       ** Transfer Commission Tariff                                             CFT014
                                                                                 CFT014
      C                   ExSr      SrTrfCmT                                     CFT014
- 
+
       ***Validate*Details*of*Charges***********************************         CFT014
      C***********        Exsr      VDETCHG                                      CFT014
- 
+
       ***Validate*Transfer*Commission*Charges**************************         CFT014
      C***********        Exsr      VTRFCOM                                      CFT014
- 
+
       ***Validate*Telex*Charges****************************************         CFT014
      C***********        Exsr      VTLXCHG                                      CFT014
- 
+
       ***Validate*Cheque*Charges***************************************
      C***********        Exsr      VCHQCHG
- 
+
       ***Validate*Costs*Abroad*****************************************         CFT014
      C***********        Exsr      VCSTABR                                      CFT014
- 
+
       ***Validate*Swift*Priority*Charges*******************************         CFT014
      C***********        Exsr      VSWPCHG                                      CFT014
- 
+
      C***Validate*Miscellaneous*ChargesCHG*****************************         CFT014
      C***********        Exsr      VMSCCHG                                      CFT014
- 
+
       ***Validate*F/Xchange*Commission*Charges*************************         CFT014
      C***********        If        @01494 = 'Y'                                 CFT014
      C***********        Exsr      VCOMCHG                                      CFT014
      C***********        End                                                    CFT014
- 
+
       ***Validate*VAT*Flags*and*Calculate*charges**********************         CFT014
      C***********        If        @VATP = 'Y'                                  CFT014
      C***********        Exsr      VVATFLG                                      CFT014
      C***********        End                                                    CFT014
- 
+
       ***Validate*Total*Charges*<=*Pay*Amount**************************         CFT014
      C***********        Exsr      VTOTCHG                                      CFT014
- 
+
+      *  Validate Related pay ref                                                           MD055002
+     C                   Exsr      VRLPR                                                    MD055002
+	  *                                                                                    MD055002
       *  Validate CHAPS Payment Code
      C                   Exsr      VCHAPS
                                                                                 CFT014
@@ -363,7 +368,7 @@
                                                                                 CFT014
      C                   ExSr      SrRgtRep                                     CFT014
      C                   EndIf                                                  CFT014
- 
+
       ***If*Analytical*Accounting*on*in*system*validate*margin*fields**         CFT014
      C*****BGN0ST        IFEQ      'Y'                                          CFT014
      C***********        EXSR      VMGNINFO                                     CFT014
@@ -374,18 +379,18 @@
      C                   If        Idx = *Zero                                  CFT014
      C                   ExSr      SrXVal                                       CFT014
      C                   EndIf                                                  CFT014
- 
+
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
- 
+
       * RETURN
      C                   RETURN
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************         CFT014
@@ -523,35 +528,35 @@
       ** VCBKREF  - Validate Central Bank Reference
       *****************************************************************
      C     VCBKREF       BEGSR
- 
+
       * Reset variables updated by each module
      C                   Exsr      RESETERRS
- 
+
       ** Validate
      C                   CALLB     'FTVBARF'
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeOut
- 
+
       *  Screen fields
      C                   Parm                    TranInThir
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
- 
+
+
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -957,39 +962,68 @@
      C***********        ENDSR                                                  CFT014
       *****************************************************************         CFT014
       */EJECTT***                                                               CFT014
+      *****************************************************************                     MD055002
+      *                                                               *                     MD055002
+      *  VRLPR      -  Validate Related Pay Ref                       *                     MD055002
+      *                                                               *                     MD055002
+      *  Called By: Main Processing                                   *                     MD055002
+      *                                                               *                     MD055002
+      *  Calls:                                                       *                     MD055002
+      *  RESETERRS  - Resets variables updated by each modules        *                     MD055002
+      *  FTVRLPR    - Related Pay Ref Validation Module               *                     MD055002
+      *  UPDATERRS  - Updates error information                       *                     MD055002
+      *                                                               *                     MD055002
+      *****************************************************************                     MD055002
+     C     VRLPR         BEGSR                                                              MD055002
+      * Reset variables updated by each module                                              MD055002
+     C                   Exsr      RESETERRS                                                MD055002
+      * Validate                                                                            MD055002
+     C                   CALLB     'FTVRLPR'                                                MD055002
+     C                   Parm                    RetCodeOut                                 MD055002
+     C                   Parm                    TranInThir                                 MD055002
+     C                   Parm                    FldNamXAr                                  MD055002
+     C                   Parm                    MsgIDXAr                                   MD055002
+     C                   Parm                    MsgDtaXAr                                  MD055002
+     C                   Parm                    OKFlagsDS                                  MD055002
+     C                   Parm                    Val@Fields                                 MD055002
+      * Update error info with that returned from the validation module                     MD055002
+     C                   Exsr      UPDATERRS                                                MD055002
+      *                                                                                     MD055002
+     C                   ENDSR                                                              MD055002
+      *                                                                                     MD055002
       *****************************************************************
       ** VCHAPS  - Validate CHAPS Payment Code
       *****************************************************************
      C     VCHAPS        BEGSR
- 
+
       * Reset variables updated by each module
      C                   Exsr      RESETERRS
- 
+
       * Validate
      C                   CALLB     'FTVSECD'
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeOut
- 
+
       *  Screen fields
      C                   Parm                    TranInThir
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
      C/COPY WNCPYSRC,FTH00515
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1170,9 +1204,9 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       **  Details of Payment                                                    CFT014
                                                                                 CFT014
      C                   Eval      OTDTP1 = SDTP1                               CFT014
@@ -1196,23 +1230,23 @@
      C***********        Eval      OTINB3 = SINB3                               CFT014
      C***********        Eval      OTINB4 = SINB4                               CFT014
      C***********        Eval      OTINB5 = SINB5                               CFT014
- 
+
       *  Central Bank Reference
      C                   Eval      OTDNBC = @DNBC
                                                                                 CFT014
       ** Transfer Commission Tariff                                             CFT014
                                                                                 CFT014
      C                   Eval      OTTRCT = STRCT                               CFT014
- 
+
       ***Details*of*Charges********************************************         CFT014
      C***********        Eval      OTDTCH = SDTCH                               CFT014
- 
+
       *  Chaps code
      C                   Eval      OTCHAP = @CHAP
- 
+
       *  Related Reference
      C                   Eval      OTRLPR = SRLPR
- 
+
       ** Instruction Code                                                       CFT014
                                                                                 CFT014
      C                   If        @CFT014 = 'Y'                                CFT014
@@ -1232,27 +1266,27 @@
       ***Charges*******************************************************         CFT014
      C***********        Eval      OTDUMA1 = @TRCD                              CFT014
      C***********        Eval      OTTRCM = @TRCM                               CFT014
- 
+
      C***********        Eval      OTDUMA2 = @TXCD                              CFT014
      C***********        Eval      OTTXCH = @TXCH                               CFT014
- 
+
      C***********        Eval      OTDUMA3 = @CQCD                              CFT014
      C***********        Eval      OTCQCH = @CQCH                               CFT014
- 
+
      C***********        Eval      OTDUMA4 = @CSTD                              CFT014
      C***********        Eval      OTCSTA = @CSTA                               CFT014
- 
+
      C***********        Eval      OTDUMA5 = @SPCD                              CFT014
      C***********        Eval      OTSPCH = @SPCH                               CFT014
- 
+
      C***********        Eval      OTDUMA6 = @MSCD                              CFT014
      C***********        Eval      OTMSCH = @MSCH                               CFT014
- 
+
      C***********        If        @01494 = 'Y'                                 CFT014
      C***********        Eval      OTOPDUM7 = @CHCD                             CFT014
      C***********        Eval      OTOPCHCM = @CHCM                             CFT014
      C***********        End                                                    CFT014
- 
+
       **If*switchable*feature*S01499*is*switched*ON,*set*up*V.A.T.*details      CFT014
      C***********        If        @01499 = 'Y'                                 CFT014
      C***********        Eval      OTOPDUM8 = @VATD                             CFT014
@@ -1264,15 +1298,15 @@
      C***********        Eval      OTOPVAT5 = SVAT5                             CFT014
      C***********        Eval      OTOPVAT6 = SVAT6                             CFT014
      C***********        Eval      OTOPVAT7 = SVAT7                             CFT014
- 
+
       **Store*V.A.T.*rate*if*used**************************************         CFT014
      C***********        If        @VATD <> 0 or                                CFT014
      C***********                  @VATT <> 0                                   CFT014
      C***********        Eval      OTOPVATR = @VATR                             CFT014
      C***********        End                                                    CFT014
- 
+
      C***********        End                                                    CFT014
- 
+
       **If*Analytical*Accounting*installed,*set*up*margin*info*fields.*         CFT014
      C***********        If        BGN0ST = 'Y'                                 CFT014
      C***********        Eval      OTFXMP = @FXMP                               CFT014
@@ -1286,7 +1320,7 @@
      C***********        Eval      OTMBSI = 'S'                                 CFT014
      C***********        End                                                    CFT014
      C***********        End                                                    CFT014
- 
+
       * If insert set up audit information
      C                   If        SACTION = 'I'
      C                   Time                    OTLCHT
@@ -1315,7 +1349,7 @@
      C                   EVAL      OTINUSR2 = InputUser                                     MD042042
      C                   ENDIF                                                              MD042042
      C                   End
- 
+
       * If delete set up audit information
      C                   If        SACTION = 'D'
      C                   Eval      OTRECI = 'C'
@@ -1332,20 +1366,20 @@
       *****************************************************************
      C     SETUP_OTH     BEGSR
       *
- 
+
      C                   ENDSR
      C*******************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
- 
+
       * Transaction information (DS) from source system
      C                   PARM                    TranInPrim
      C                   PARM                    TranInSecA
@@ -1353,40 +1387,40 @@
      C                   PARM                    TranInThir
      C                   PARM                    TranInPrmB                     CFT014
      C                   PARM                    TranInThiB                     CFT014
- 
+
       * Custom Extra Data file data
      C                   PARM                    ExtData
- 
+
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Deals layout (DS) from/to caller
      C                   PARM                    ValidPmnt
      C                   PARM                    ValidPmtX                      CFT014
- 
+
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
      C                   PARM                    InputUser                                  MD042042
- 
+
       *  Move program name into *LDA field.
      C     *LOCK         In        LDA
      C                   Movel     'FTPYOTVAL'   DBPGM
      C                   Out       LDA
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -1426,7 +1460,7 @@
       ** which the message handler will get the messages                        CFT007
      C                   EVAL      #MsgFile     = 'FTUSRMSG'                    CFT007
      C                   EVAL      MsgFArray(1) = 'DRSMM'                       CFT007
- 
+
       *                                                                                       CSW201
       ** Check if enhancement CSW201 is on                                                    CSW201
       *                                                                                       CSW201
@@ -1456,9 +1490,9 @@
       *****************************************************************
       * *INIT - Initial Processing                                    *
       *****************************************************************
- 
+
      C     INIT          BEGSR
- 
+
       ** Retrieve ZMUSER details.                                                            BUG7029
       *                                                                                      BUG7029
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
@@ -1477,7 +1511,7 @@
      C                   Movel     '*CALL'       DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        WGLUI = 'I'
      C                   Eval      @FTOV = 'Y'
      C                   Else
@@ -1485,14 +1519,14 @@
      C                   End
      C                   Eval      @PDTI =WPDTI
      C                   Eval      @VATF =WVATF
- 
+
       ** Access SAR details file to determine if CEU006 is on.
      C                   CALLB     'AOSARDR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CEU006'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Move      'FTOPAY3VL'   DBPGM
@@ -1501,7 +1535,7 @@
      C                   Movel     '*CALL'       DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Eval      @CEU006 = 'Y'
      C                   Else
@@ -1530,7 +1564,7 @@
      C***********        End                                                    CFT014
      C***********        End                                                    CFT014
      C/COPY WNCPYSRC,FTH00516
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1538,9 +1572,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   Eval      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1550,7 +1584,7 @@
      C                   Eval      WFldNmXAr = *BlankS
      C                   Eval      WMsgIDXAr = *BlankS
      C                   Eval      WMsgDtXAr = *BlankS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1558,7 +1592,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)

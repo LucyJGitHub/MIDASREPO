@@ -94,13 +94,13 @@
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
 
-      * Incoming Transaction
+      ** Incoming Transaction
      D TranInThir    E DS                  EXTNAME(FTOPY4PD)
 
-      * Flags to indicate whether transaction fields are valid
+      ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY3PD)
 
-      * Validation Work Fields
+      ** Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
 
       ** +--------------------------------------+
@@ -142,7 +142,7 @@
      C                   Eval      MsgIDXAr  = *BlankS
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
-      * Validate
+      ** Validate
       *
      C                   Exsr      VRLPR
       ** If an error was found, set the return code appropriately
@@ -151,7 +151,7 @@
      C                   Eval      RetCodeIn = 'Error'
      C                   End
 
-      * RETURN
+      ** RETURN
       *
      C                   RETURN
       **********************************************************************
@@ -170,25 +170,14 @@
      C                   MOVEL     'MMA1433'     MsgIdXAr(Idx)
      C                   End
       *
-      ** If related pay ref starts with '/'
+      ** If related pay ref starts or ends with '/'
       *
-     C                   IF        %SCAN('/' : SRLPR) = 1
+     C                   IF        %SCAN('/' : SRLPR) = 1  OR
+     C                             Length = %LEN(%TRIM(SRLPR))
      C                   MOVE      'N'           OKRLPR
      C                   ADD       1             Idx
      C                   MOVEL     'SRLPR'       FldNamXAr(Idx)
      C                   MOVEL     'MMA1432'     MsgIdXAr(Idx)
-      *
-     C                   ELSE
-      *
-      ** If related pay ref ends with '/'
-      *
-     C                   EVAL      Length = %LEN(%TRIM(SRLPR))
-     C                   IF        %SUBST(SRLPR:Length:1) = '/'
-     C                   MOVE      'N'           OKRLPR
-     C                   ADD       1             Idx
-     C                   MOVEL     'SRLPR'       FldNamXAr(Idx)
-     C                   MOVEL     'MMA1432'     MsgIdXAr(Idx)
-     C                   ENDIF
       *
      C                   ENDIF
       *
@@ -204,23 +193,23 @@
 
      C     *ENTRY        PLIST
       *
-      * INPUTS
-      *  Return Code
+      ** INPUTS
+      **  Return Code
      C                   Parm                    RetCodeIn
 
-      *  Screen fields
+      **  Screen fields
      C                   Parm                    TranInThir
 
-      * OUTPUTS
-      *  Error fields/message IDs/message data (arrays) from/to caller
+      ** OUTPUTS
+      **  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
 
-      *  OK Flags
+      **  OK Flags
      C                   Parm                    OKFlagsDS
 
-      *  Validation Work Fields
+      **  Validation Work Fields
      C                   Parm                    Val@Fields
 
       ** ===================================================================

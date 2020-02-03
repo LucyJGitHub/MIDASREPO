@@ -353,9 +353,9 @@
       ***Validate*Total*Charges*<=*Pay*Amount**************************         CFT014
      C***********        Exsr      VTOTCHG                                      CFT014
 
-      *  Validate Related pay ref                                                           MD055002
+      **  Validate Related pay ref                                                          MD055002
      C                   Exsr      VRLPR                                                    MD055002
-	  *                                                                                    MD055002
+	 *                                                                                     MD055002
       *  Validate CHAPS Payment Code
      C                   Exsr      VCHAPS
                                                                                 CFT014
@@ -975,9 +975,9 @@
       *                                                               *                     MD055002
       *****************************************************************                     MD055002
      C     VRLPR         BEGSR                                                              MD055002
-      * Reset variables updated by each module                                              MD055002
+      ** Reset variables updated by each module                                             MD055002
      C                   Exsr      RESETERRS                                                MD055002
-      * Validate                                                                            MD055002
+      ** Validate                                                                           MD055002
      C                   CALLB     'FTVRLPR'                                                MD055002
      C                   Parm                    RetCodeOut                                 MD055002
      C                   Parm                    TranInThir                                 MD055002
@@ -986,7 +986,7 @@
      C                   Parm                    MsgDtaXAr                                  MD055002
      C                   Parm                    OKFlagsDS                                  MD055002
      C                   Parm                    Val@Fields                                 MD055002
-      * Update error info with that returned from the validation module                     MD055002
+      ** Update error info with that returned from the validation module                    MD055002
      C                   Exsr      UPDATERRS                                                MD055002
       *                                                                                     MD055002
      C                   ENDSR                                                              MD055002

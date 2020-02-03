@@ -1,7 +1,8 @@
      H DEBUG DATEDIT(*YMD)
       *****************************************************************
 /**** *  RPGBASEMOD                                                   *                     MD054605
-/*STD *  RPGSQLBND                                                    *                     MD054605
+/**** *  RPGSQLBND                                                    *           MD054605 MD055056A
+/*STD *  RPGSQLMOD                                                    *                    MD055056A
 /*EXI *  TEXT('Midas SD Midas system values maintenance/enquiry')     *
       *****************************************************************
       *                                                               *
@@ -14,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055056A          Date 30Jan20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042517           Date 18Nov16               *
       *                 AR994044           Date 26Jun12               *
       *                 AR796650           Date 27Jun11               *
@@ -36,6 +38,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055056A - Change to RPGSQLMOD since PGM was delivered      *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042517 - Unknown error message displayed.  Display error   *

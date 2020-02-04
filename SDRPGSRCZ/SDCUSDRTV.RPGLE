@@ -3521,19 +3521,6 @@
      C     *IN44         IFEQ      '0'                                                      MD048748
      C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
      C                   ENDIF                                                              MD048748
-<<<<<<< HEAD
-<<<<<<< Upstream, based on branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
-     C                   ENDIF                                                                246639
-      ** If parent customer defined and found, re access SDCUSTLR using the                 MD048748
-      ** customer number to ensure it is these customer details returned to                 MD048748
-      ** SDCUSDUPD                                                                          MD048748
-     C     *IN44         IFEQ      '0'                                                      MD048748
-     C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
-     C                   ENDIF                                                              MD048748
-=======
->>>>>>> 85995fd [MDSC-30637] Fix Merge of MD-48748
-=======
->>>>>>> refs/remotes/origin/bugfix/MDSC-30637
       *                                                                                       CSD007
      C                   ENDSR                                                                CSD007
       *****************************************************************                       CSD031

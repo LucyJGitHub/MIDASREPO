@@ -86,21 +86,27 @@
       ** +--------------------------------------+
 
       ** Array of Fields in error.
+
      D FldNamXAr       S             10A   DIM(XArrayMax)
 
       ** Array of error message IDs
+
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
 
       ** Array of error message data.
+
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
 
       ** Incoming Transaction
+
      D TranInThir    E DS                  EXTNAME(FTOPY4PD)
 
       ** Flags to indicate whether transaction fields are valid
+
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY3PD)
 
       ** Validation Work Fields
+
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
 
       ** +--------------------------------------+
@@ -116,6 +122,7 @@
       ** +--------------------------------------+
 
       ** Index for arrays of error message ids etc
+
      D Idx             S              3P 0
 
      D Length          S              2S 0
@@ -134,25 +141,27 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-      *
+
       ** Initialization
-      *
+
      C                   Eval      RetCodeIn = *BlankS
      C                   Eval      FldNamXAr = *BlankS
      C                   Eval      MsgIDXAr  = *BlankS
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
+
       ** Validate
-      *
+
      C                   Exsr      VRLPR
+
       ** If an error was found, set the return code appropriately
-      *
+
      C                   If        OKRLPR = 'N'
      C                   Eval      RetCodeIn = 'Error'
      C                   End
 
       ** RETURN
-      *
+
      C                   RETURN
       **********************************************************************
       /EJECT
@@ -160,27 +169,28 @@
      C* VRLPR   -  Validation of Related Payment Reference                 *
      C**********************************************************************
      C     VRLPR         BEGSR
-      *
+
       ** If related pay ref contains double slashes '//'
-      *
+
      C                   IF        %SCAN('//' : SRLPR) > 0
      C                   MOVE      'N'           OKRLPR
      C                   ADD       1             Idx
      C                   MOVEL     'SRLPR'       FldNamXAr(Idx)
      C                   MOVEL     'MMA1433'     MsgIdXAr(Idx)
      C                   End
-      *
+
       ** If related pay ref starts or ends with '/'
-      *
+
+     C                   EVAL      Length = %LEN(%TRIM(SRLPR))
      C                   IF        %SCAN('/' : SRLPR) = 1  OR
-     C                             Length = %LEN(%TRIM(SRLPR))
+     C                             %SUBST(SRLPR:Length:1) = '/'
      C                   MOVE      'N'           OKRLPR
      C                   ADD       1             Idx
      C                   MOVEL     'SRLPR'       FldNamXAr(Idx)
      C                   MOVEL     'MMA1432'     MsgIdXAr(Idx)
-      *
+
      C                   ENDIF
-      *
+
      C                   ENDSR
      C**********************************************************************
      C* END OF VALIDATION                                                  *
@@ -192,24 +202,30 @@
      C     *INZSR        BEGSR
 
      C     *ENTRY        PLIST
-      *
+
       ** INPUTS
+
       **  Return Code
      C                   Parm                    RetCodeIn
 
       **  Screen fields
+
      C                   Parm                    TranInThir
 
       ** OUTPUTS
+
       **  Error fields/message IDs/message data (arrays) from/to caller
+
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
 
       **  OK Flags
+
      C                   Parm                    OKFlagsDS
 
       **  Validation Work Fields
+
      C                   Parm                    Val@Fields
 
       ** ===================================================================

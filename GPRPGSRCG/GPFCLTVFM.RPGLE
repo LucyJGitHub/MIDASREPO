@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023531           Date 30Apr14               *
+      *  Last Amend No. MD054859           Date 21Jan20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023531           Date 30Apr14               *
       *                 CGP017             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 AR819939           Date 30Aug11               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054859 - Populate Global Customer ID                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023531 - Use GZSDCUSTL0 instead of GZSDCUSTL1              *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
@@ -48,6 +50,9 @@
      F                                     USROPN
      F*GZSDCUSTL1IF   E           K DISK    INFSR(*PSSR)                             CSF011 MD023531
      FGZSDCUSTL0IF   E           K DISK    INFSR(*PSSR)                                     MD023531
+     FGPGLCUSL  IF   E           K DISK    INFSR(*PSSR)                                     MD054859
+     F                                     RENAME(GPGLCUSL:GPGLCUSLD0)                      MD054859
+     F                                     PREFIX(GC_)                                      MD054859
      D G_GPCUSTPD    E DS                  EXTNAME(GPCUSTPD)                                  CSF011
  
       ** Data structure for *ISO date                                                       AR819939
@@ -351,6 +356,12 @@
                                                                                               CSF011
      C                   ENDIF                                                                CSF011
                                                                                               CSF011
+      **Setup Global Customer ID                                                            MD054859
+     C     KEY_GPGLCUSL  CHAIN     GPGLCUSL                                                 MD054859
+     C                   IF        %FOUND(GPGLCUSL)                                         MD054859
+     C                   EVAL      G_CGGLOB = GC_CGGLOB                                     MD054859
+     C                   ENDIF                                                              MD054859
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -378,6 +389,10 @@
      C**********         KFld                    G_BRCA                                     MD023531
      C                   KFld                    G_CNUM
  
+     C     KEY_GPGLCUSL  KLIST                                                              MD054859
+     C                   KFLD                    G_CNUM                                     MD054859
+     C                   KFLD                    G_CUSTZONE                                 MD054859
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

@@ -177,7 +177,7 @@
      C                   ADD       1             Idx
      C                   MOVEL     'SRLPR'       FldNamXAr(Idx)
      C                   MOVEL     'MMA1433'     MsgIdXAr(Idx)
-     C                   End
+     C                   ENDIF
 
       ** If related pay ref starts or ends with '/'
 

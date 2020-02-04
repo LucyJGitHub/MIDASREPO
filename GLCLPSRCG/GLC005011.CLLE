@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1015290          Date 20Oct12              */
+/*       Last Amend No. AR1079064          Date 14Jan20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1015290          Date 20Oct12              */
 /*                      AR918665           Date 20Oct12              */
 /*                      BUG27747A          Date 25Jun10              */
 /*                      BUG27747           Date 22Jun10              */
@@ -24,6 +25,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR1079064 - MSGW due to Printer file reaching limit         */
+/*                   (Child: AR1079066)                              */
+/*                 - Applied for MD054867                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1015290 - Classpath cannot be set using a wildcard.       */
 /*                Retrieved Jar list from SDJARFPD.                  */
@@ -39,7 +43,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PREFIX &EXTN01)
- 
+
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&EXTN01) TYPE(*CHAR) LEN(6)
              DCL        VAR(&JAVAPATH) TYPE(*CHAR) LEN(200)
@@ -79,70 +83,71 @@
              DCL        VAR(&LIBEXT) TYPE(*CHAR) LEN(200)                              /*AR1015290*/
 /**********  DCLF       FILE(GLMLJARS) */                                               /*AR918665*/
              DCLF       FILE(GPSDJARFPD)                                               /*AR1015290*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
- 
+
+
 /* If a CALMANML call check if the CALMANML job is running */
- 
+
              IF         COND(&EXTN01 *EQ 'calcml') THEN(DO)
                 ALCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL)) WAIT(0)
                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
              ENDDO
- 
+
 /* If a EODMON call check if the MLEODMON job is running */
- 
+
              IF         COND(&EXTN01 *EQ 'eodmon') THEN(DO)
                 ALCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL)) WAIT(0)
                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
              ENDDO
- 
+
 /* If a EMAIL call check if the MLEMAILER job is running */
- 
+
              IF         COND(&EXTN01 *EQ 'email ') THEN(DO)
                 ALCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL)) WAIT(0)
                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
              ENDDO
- 
+
 /* Log job details */
- 
+
              RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNBR)
- 
+
 /* Log the CALMANML job details */
- 
+
              IF         COND(&EXTN01 *EQ 'calcml') THEN(DO)
                 CHGVAR     VAR(&GLMLCALMAN) VALUE(&JOBNAME *CAT &JOBUSER +
                              *CAT &JOBNBR)
                 CHGDTAARA  DTAARA(GLMLCALMAN (1 26)) VALUE(&GLMLCALMAN)
              ENDDO
- 
- 
+
+
 /* Log the EODMON job details */
- 
+
              IF         COND(&EXTN01 *EQ 'eodmon') THEN(DO)
                 CHGVAR     VAR(&GLEODMON) VALUE(&JOBNAME *CAT &JOBUSER +
                              *CAT &JOBNBR)
                 CHGDTAARA  DTAARA(GLEODMON (1 26)) VALUE(&GLEODMON)
              ENDDO
- 
- 
+
+
 /* Log the CALCMGR_xx job details */
- 
+
              IF         COND(&EXTN01 *EQ 'email ') THEN(DO)
                 CHGVAR     VAR(&GLEMAILER) VALUE(&JOBNAME *CAT &JOBUSER +
                              *CAT &JOBNBR)
                 CHGDTAARA  DTAARA(GLEMAILER (1 26)) VALUE(&GLEMAILER)
              ENDDO
- 
- 
+
+             OVRPRTF    FILE(QPRINT) MAXRCDS(*NOMAX) OVRSCOPE(*JOB)                    /*AR1079064*/
+
 /* Get 'JavaPath' system value from file GPSVALPD  */
- 
+
 /**********  CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +              */                    /*BG4147*/
 /**********               'JavaPathStem' &JAVAPATH &SVALK2 +        */                    /*BG4147*/
 /**********               &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +    */                    /*BG4147*/
@@ -167,9 +172,9 @@
                           &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
                           &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
                           &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                       /*BUG27747A*/
- 
+
 /* If the 'GlobalJavaPathStem' system value is missing then end abnormally */
- 
+
              IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
                           CMDLBL(ABNOR))
                                                                                         /*BUG27747*/
@@ -208,11 +213,11 @@
                                                                                         /*BUG27747*/
              ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JAVA_HOME)                             /*BUG27747*/
              MONMSG     MSGID(CPFA0A0)                                                  /*BUG27747*/
- 
+
              ALCOBJ     OBJ((GLMLCLJLCK *DTAARA *EXCL)) WAIT(30)
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
              CHGVAR     VAR(&GPLIB) VALUE(&PREFIX *CAT 'GPLIB')
- 
+
 /**********  CHGVAR     VAR(&LNKNAME) VALUE(&PREFIX *cat +
                           'EXT')                                                       /*AR1015290*/
              CHGVAR     VAR(&LNKNAME) VALUE('A')                                       /*AR1015290*/
@@ -221,7 +226,7 @@
 /**********  MONMSG     MSGID(CPF0000)                                          /*BG4147 AR1015290*/
 /**********  ADDLNK     OBJ(&JAVAPATH) NEWLNK(&LNKNAME)                                /*AR1015290*/
 /**********  MONMSG     MSGID(CPFA0A0)                                                 /*AR1015290*/
- 
+
 /**********  CLRPFM     FILE(&GPLIB/GLMLJARS)                         */                  /*242243*/
 /**********  MONMSG     MSGID(CPF0000)                                */                  /*242243*/
 /**********                                                           */                  /*242243*/
@@ -231,7 +236,7 @@
 /**********               '.LIB/GLMLJARS.FILE/GLMLJARS.MBR')          */                  /*242243*/
 /**********                                                           */                  /*242243*/
 /**********  QSH        CMD(&LSCOMMAND)                               */                  /*242243*/
- 
+
 /**********  CHGVAR     VAR(&CLASSPATH) VALUE(&JAVAPATH *TCAT ':')*/                   /*AR1015290*/
 /**********READNEXT: */                                                                 /*AR918665*/
 /**********  RCVF */                                                                    /*AR918665*/
@@ -245,7 +250,7 @@
 /**********ENDFILE: */                                                                  /*AR918665*/
 /**********  DLCOBJ     OBJ((GLMLCLJLCK *DTAARA *EXCL))              */                   /*242243*/
              DLCOBJ     OBJ((GLMLCLJLCK *DTAARA *EXCL))                                 /*BUG13068*/
- 
+
              CHGVAR     VAR(&CLASSPATH) VALUE('A')                                     /*AR1015290*/
                                                                                        /*AR1015290*/
  SETUP_PATH: RCVF       RCDFMT(GPSDJARFD0)                                             /*AR1015290*/
@@ -262,7 +267,7 @@
  END_PATH:                                                                             /*AR1015290*/
                                                                                        /*AR1015290*/
 /* If a CALMANML call check if the CALMANML job is running */
- 
+
              IF         COND(&EXTN01 *EQ 'calcml') THEN(DO)
                 CHGVAR     VAR(&CLASSPATH) VALUE(&LNKNAME *TCAT +
                              '/calmanml:' *TCAT &CLASSPATH)
@@ -271,9 +276,9 @@
                              nmanager.CalcManager -s ' *CAT +
                              'MLIMITSLOCAL')
              ENDDO
- 
+
 /* If a EODMON call check if the MLEODMON job is running */
- 
+
              IF         COND(&EXTN01 *EQ 'eodmon') THEN(DO)
                 CHGVAR     VAR(&CLASSPATH) VALUE(&LNKNAME *TCAT +
                              '/eodmonitor:' *TCAT &CLASSPATH)
@@ -284,9 +289,9 @@
                              VALUE(' com.misys.midas.midasplus.eod+
                              .EODMonitor')                                                /*242243*/
              ENDDO
- 
+
 /* If a EMAIL call check if the MLEMAILER job is running */
- 
+
              IF         COND(&EXTN01 *EQ 'email ') THEN(DO)
                 CHGVAR     VAR(&CLASSPATH) VALUE(&LNKNAME *TCAT +
                              '/ml_emailer:' *TCAT &CLASSPATH)
@@ -295,49 +300,49 @@
                           ailer.MLimitsEMailer -s MLIMITSLOCAL') +
                           /*BG1726*/
              ENDDO
- 
+
              CHGVAR     VAR(&EXECUTE) VALUE('java -cp ' *CAT +
                           &CLASSPATH *TCAT &COMMAND)
- 
+
 /* Execute the QSH command string */
- 
+
              QSH        CMD(&EXECUTE)
- 
+
 /* For a normal end set the abnormal termination indicator off */
- 
+
              CHGVAR     VAR(&ABNOR) VALUE('N')
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC005011 ended abnormally - see job +
                           log') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  ENDPGM:
- 
+
 /* Only clear the job information for an abnormal end */
- 
+
              IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +
                           'calcml')) THEN(DO)
 /**********     CHGDTAARA  DTAARA(GLCLCALMAN (1 26)) VALUE(' ')    */                     /*BG4147*/
                 CHGDTAARA  DTAARA(GLMLCALMAN (1 26)) VALUE(' ')                           /*BG4147*/
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +
                           'eodmon')) THEN(DO)
                 CHGDTAARA  DTAARA(GLEODMON (1 26)) VALUE(' ')
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +
                           'email ')) THEN(DO)
                 CHGDTAARA  DTAARA(GLEMAILER (1 26)) VALUE(' ')
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              ENDPGM

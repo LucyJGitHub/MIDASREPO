@@ -10,11 +10,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053552           Date 14Jan20               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
-      *                 MD035545           Date 11Sep15               *      
+      *                 MD035545           Date 11Sep15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053552 - DLC1645 on MSGW due to lock on PRONO by GO_ONL_OLP*
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -67,7 +69,7 @@
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -141,9 +143,10 @@
      F            OLPOSHHF                          KIGNORE
      F            OLPOSOBF                          KIGNORE
      F                                              KCOMIT
-     FPRONO   UF  E           K        DISK
+     F***PRONO   UF  E           K        DISK                                              MD053552
+     FPRONO   IF  E           K        DISK                                                 MD053552
      F            PRONOHHF                          KIGNORE
-     F                                              KCOMIT
+     F**********                                    KCOMIT                                  MD053552
      FDLOEVTL2UF  E           K        DISK         KCOMIT
      FDLOISRL0UF  E           K        DISK                      A
      F                                              KCOMIT
@@ -1449,9 +1452,9 @@
       *
       ** Release PF/PRONOPN record if record found, but not live
       *
-     C           *IN86     IFEQ '0'
-     C                     UNLCKPRONO
-     C                     ENDIF
+     C********** *IN86     IFEQ '0'                                                         MD053552
+     C**********           UNLCKPRONO                                                       MD053552
+     C**********           ENDIF                                                            MD053552
       *
      C                     Z-ADD0         PRNNO
      C           PRKEY     CHAINPRONO                86
@@ -3701,7 +3704,7 @@
       ** Release PF/PRONOPN record if record found, but not live
       *
      C           *IN86     IFEQ '0'
-     C                     UNLCKPRONO
+     C**********           UNLCKPRONO                                                       MD053552
      C                     MOVE 'N'       WUPRO   1
      C                     ENDIF
       *
@@ -3711,7 +3714,7 @@
      C           WJUMP     IFEQ 'N'
       *
      C                     MOVE 'Y'       WUPRO
-     C                     UNLCKPRONO
+     C**********           UNLCKPRONO                                                       MD053552
       *
       ** ( PAY )
       *
@@ -3824,7 +3827,7 @@
       ** Release PF/PRONOPN record if record found, but not live
       *
      C           *IN86     IFEQ '0'
-     C                     UNLCKPRONO
+     C**********           UNLCKPRONO                                                       MD053552
      C                     MOVE 'N'       WTPRO   1
      C                     ENDIF
       *
@@ -3834,7 +3837,7 @@
      C           WJUMP2    IFEQ 'N'
       *
      C                     MOVE 'Y'       WTPRO
-     C                     UNLCKPRONO
+     C**********           UNLCKPRONO                                                       MD053552
       *
       ** Process if programme is being re-run, the base rate code is not
       ** zero and bit '0' UDNSI = '1' and rate has been previously set.
@@ -4013,17 +4016,39 @@
      C                     Z-ADDP@OUTA    WUINOT
       *
      C                     ENDIF
+      *                                                                                     MD053552
+     C                     MOVE *BLANKS   PPRKEY                                            MD053552
+     C                     MOVE *BLANKS   NOSKEY  5                                         MD053552
+     C                     MOVE *BLANKS   CHARNO  2                                         MD053552
+      *                                                                                     MD053552
+     C                     MOVELPRNNO     CHARNO                                            MD053552
+     C                     MOVELPRCCY     NOSKEY                                            MD053552
+     C                     MOVE CHARNO    NOSKEY                                            MD053552
+     C                     MOVELNOSKEY    PPRKEY                                            MD053552
       *
       ** Adjust Balances for Entries X to 5
       *
-     C           X         DOWLE5
+     C********** X         DOWLE5                                                           MD053552
       *
       ** Update PF/PRONO file
       *
-     C                     ADD  WUINOT    PBAL,X
-     C                     ADD  1         X
-     C                     ENDDO
-     C                     UPDATPRONOPNF
+     C**********           ADD  WUINOT    PBAL,X                                            MD053552
+     C**********           ADD  1         X                                                 MD053552
+     C**********           ENDDO                                                            MD053552
+     C**********           UPDATPRONOPNF                                                    MD053552
+      *                                                                                     MD053552
+     C           WUINOT    IFNE *ZEROS                                                      MD053552
+      *                                                                                     MD053552
+     C                     Z-ADDWUINOT    PAMT                                              MD053552
+     C                     Z-ADDPDAT,1    PVDAT                                             MD053552
+      *                                                                                     MD053552
+     C                     CALL 'AOPRONU0'                                                  MD053552
+     C                     PARM *BLANKS   PRTCD   7                                         MD053552
+     C                     PARM           PPRKEY  8                                         MD053552
+     C                     PARM           PVDAT   50                                        MD053552
+     C                     PARM           PAMT   150                                        MD053552
+      *                                                                                     MD053552
+     C                     ENDIF                                                            MD053552
       *
       ** Output posting details to RSACMTPD
       *
@@ -4089,17 +4114,39 @@
      C                     Z-ADDP@OUTA    WTINOT
       *
      C                     ENDIF
+      *                                                                                     MD053552
+     C                     MOVE *BLANKS   PPRKEY                                            MD053552
+     C                     MOVE *BLANKS   NOSKEY                                            MD053552
+     C                     MOVE *BLANKS   CHARNO                                            MD053552
+      *                                                                                     MD053552
+     C                     MOVELPRNNO     CHARNO                                            MD053552
+     C                     MOVELPRCCY     NOSKEY                                            MD053552
+     C                     MOVE CHARNO    NOSKEY                                            MD053552
+     C                     MOVELNOSKEY    PPRKEY                                            MD053552
       *
       ** Adjust Balances for Entries X to 5
       *
-     C           X         DOWLE5
+     C********** X         DOWLE5                                                           MD053552
       *
       ** Update PF/PRONO file
       *
-     C                     SUB  WTINOT    PBAL,X
-     C                     ADD  1         X
-     C                     ENDDO
-     C                     UPDATPRONOPNF
+     C**********           SUB  WTINOT    PBAL,X                                            MD053552
+     C**********           ADD  1         X                                                 MD053552
+     C**********           ENDDO                                                            MD053552
+     C**********           UPDATPRONOPNF                                                    MD053552
+      *                                                                                     MD053552
+     C           WTINOT    IFNE *ZEROS                                                      MD053552
+      *                                                                                     MD053552
+     C                     Z-SUBWTINOT    PAMT                                              MD053552
+     C                     Z-ADDPDAT,1    PVDAT                                             MD053552
+      *                                                                                     MD053552
+     C                     CALL 'AOPRONU0'                                                  MD053552
+     C                     PARM *BLANKS   PRTCD                                             MD053552
+     C                     PARM           PPRKEY                                            MD053552
+     C                     PARM           PVDAT                                             MD053552
+     C                     PARM           PAMT                                              MD053552
+      *                                                                                     MD053552
+     C                     ENDIF                                                            MD053552
       *
       ** Output posting details to RSACMTPD
       *
@@ -4239,17 +4286,39 @@
      C                     Z-ADDP@OUTA    WUINOT
       *
      C                     ENDIF
+      *                                                                                     MD053552
+     C                     MOVE *BLANKS   PPRKEY                                            MD053552
+     C                     MOVE *BLANKS   NOSKEY                                            MD053552
+     C                     MOVE *BLANKS   CHARNO                                            MD053552
+      *                                                                                     MD053552
+     C                     MOVELPRNNO     CHARNO                                            MD053552
+     C                     MOVELPRCCY     NOSKEY                                            MD053552
+     C                     MOVE CHARNO    NOSKEY                                            MD053552
+     C                     MOVELNOSKEY    PPRKEY                                            MD053552
       *
       ** Adjust Balances for Entries X to 5
       *
-     C           X         DOWLE5
+     C********** X         DOWLE5                                                           MD053552
       *
       ** Update PF/PRONO file
       *
-     C                     SUB  WUINOT    PBAL,X
-     C                     ADD  1         X
-     C                     ENDDO
-     C                     UPDATPRONOPNF
+     C**********           SUB  WUINOT    PBAL,X                                            MD053552
+     C**********           ADD  1         X                                                 MD053552
+     C**********           ENDDO                                                            MD053552
+     C**********           UPDATPRONOPNF                                                    MD053552
+      *                                                                                     MD053552
+     C           WUINOT    IFNE *ZEROS                                                      MD053552
+      *                                                                                     MD053552
+     C                     Z-SUBWUINOT    PAMT                                              MD053552
+     C                     Z-ADDPDAT,1    PVDAT                                             MD053552
+      *                                                                                     MD053552
+     C                     CALL 'AOPRONU0'                                                  MD053552
+     C                     PARM *BLANKS   PRTCD                                             MD053552
+     C                     PARM           PPRKEY                                            MD053552
+     C                     PARM           PVDAT                                             MD053552
+     C                     PARM           PAMT                                              MD053552
+      *                                                                                     MD053552
+     C                     ENDIF                                                            MD053552
       *
       ** Output posting details to RSACMTPD
       *
@@ -4332,17 +4401,39 @@
      C                     Z-ADDP@OUTA    WTINOT
       *
      C                     ENDIF
+      *                                                                                     MD053552
+     C                     MOVE *BLANKS   PPRKEY                                            MD053552
+     C                     MOVE *BLANKS   NOSKEY                                            MD053552
+     C                     MOVE *BLANKS   CHARNO                                            MD053552
+      *                                                                                     MD053552
+     C                     MOVELPRNNO     CHARNO                                            MD053552
+     C                     MOVELPRCCY     NOSKEY                                            MD053552
+     C                     MOVE CHARNO    NOSKEY                                            MD053552
+     C                     MOVELNOSKEY    PPRKEY                                            MD053552
       *
       ** Adjust Balances for Entries X to 5
       *
-     C           X         DOWLE5
+     C********** X         DOWLE5                                                           MD053552
       *
       ** Update PF/PRONO file
       *
-     C                     ADD  WTINOT    PBAL,X
-     C                     ADD  1         X
-     C                     ENDDO
-     C                     UPDATPRONOPNF
+     C**********           ADD  WTINOT    PBAL,X                                            MD053552
+     C**********           ADD  1         X                                                 MD053552
+     C**********           ENDDO                                                            MD053552
+     C**********           UPDATPRONOPNF                                                    MD053552
+      *                                                                                     MD053552
+     C           WTINOT    IFNE *ZEROS                                                      MD053552
+      *                                                                                     MD053552
+     C                     Z-ADDWTINOT    PAMT                                              MD053552
+     C                     Z-ADDPDAT,1    PVDAT                                             MD053552
+      *                                                                                     MD053552
+     C                     CALL 'AOPRONU0'                                                  MD053552
+     C                     PARM *BLANKS   PRTCD                                             MD053552
+     C                     PARM           PPRKEY                                            MD053552
+     C                     PARM           PVDAT                                             MD053552
+     C                     PARM           PAMT                                              MD053552
+      *                                                                                     MD053552
+     C                     ENDIF                                                            MD053552
       *
       ** Output posting details to RSACMTPD
       *

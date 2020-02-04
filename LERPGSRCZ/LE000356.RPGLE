@@ -13,11 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD055155           Date 27Jan20               *
-      *  Prev Amend No. CLE070  *CREATE    Date 19Jun19               *
+      *  Last Amend No. MD055140           Date 30Jan20               *
+      *  Prev Amend No. MD055155           Date 27Jan20               *
+      *                 CLE070  *CREATE    Date 19Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055140 - Fix Header Alignment of Forward Diary Report      *
+      *             (Recompile)                                       *
       *  MD055155 - LE000356  compilation failed (Recompile)          *
       *  CLE070 - Manual Diary                                        *
       *                                                               *

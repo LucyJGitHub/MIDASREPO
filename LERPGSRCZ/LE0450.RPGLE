@@ -12,14 +12,20 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054326           Date 18Sep19               *
+      *  Last Amend No. MD055115           Date 23Jan20               *
+      *  Prev Amend No. MD055067           Date 17Jan20               *
+      *                 MD055009           Date 23Dec19               *
+      *                 MD054960           Date 13Dec19               *
+      *                 MD054869           Date 21Nov19               *
+      *                 MD053565           Date 01Oct19               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD054326           Date 18Sep19               *
       *                 MD054335           Date 11Sep19               *
       *                 MD054132           Date 16Aug19               *
       *                 MD054108           Date 14Aug19               *
       *                 MD053947           Date 17Jul19               *
       *                 MD051883           Date 04Apr19               *
-      *                 MD054008           Date 20Aug19               *      
+      *                 MD054008           Date 20Aug19               *
       *                 MD053295           Date 13Apr19               *
       *                 AR1097303          Date 16May19               *
       *                 MD047693           Date 30Jan18               *
@@ -412,6 +418,17 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055115 - Scenario 1.30 Discrepancy on LE3180P1 and         *
+      *             PDCL double entries                               *
+      *  MD055067 - Adhoc - Narrative for Interest payment on         *
+      *             Maturity is reflected as Principal repayment on   *
+      *             Maturity after Day3 COB                           *
+      *  MD055009 - Scenario 1.24  Discrepancy on LE3180P1 for drawn  *
+      *             and facility amounts                              *
+      *  MD054960 - Wrong Narrative for Interest Payment              *
+      *  MD054869 - Freq based repayment amount on auto settle C loan *
+      *             is reported on LE3180P1                           *
+      *  MD053565 - Separate Posting Narrative for PDCL - CLE031      *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD054326 - Repayment amount debited from settlement account  *
       *             showed discrepancy against balance check          *
@@ -429,7 +446,7 @@
       *             on principal and discount amount.                 *
       *  MD051883 - CLE031: Changes to Value Date Account Keys        *
       *  MD054008 - ABLN for past due loans should be up to the next  *
-      *             working date.                                     *      
+      *             working date.                                     *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -1953,6 +1970,16 @@
      D*                                                                   S01408
      D                 DS                                                                     263411
      D  DSPDST                 1     10                                                       263411
+                                                                                            MD053565
+     D                 DS                                                                   MD053565
+     D  WPOST                  1      2                                                     MD053565
+     D   RUNDFL                1      1                                                     MD053565
+     D   INTRFL                2      2                                                     MD053565
+                                                                                            MD053565
+     D                 DS                                                                   MD053565
+     D  KZZ002                 1      2                                                     MD053565
+     D   RUNDF1                1      1                                                     MD053565
+     D   INTRF1                2      2                                                     MD053565
       *                                                                                       263411
       *                                                                                       CLE134
       ** Moved the data structure copysource from I to D specs                                CLE134
@@ -1991,6 +2018,7 @@
      D  wFeeSeqn       S              2S 0 INZ(*ZEROS)                                        CLE164
      D  wCategory      S              5A   INZ(*BLANKS)                                       CLE164
      D  wBranch        S              3A   INZ(*BLANKS)                                       CLE164
+     D  FirstRun       S              1A   INZ(*BLANKS)                                     MD054869
                                                                                               CLE164
      D  aCAT           S              5A   DIM(4)                                             CLE164
      D  aORIGLN        S              5A   DIM(4)                                             CLE164
@@ -2037,9 +2065,11 @@
      D tmpPRAM         S             13P 0 INZ(*ZEROS)                                      MD054335
      D tmpINTA         S             13P 0 INZ(*ZEROS)                                      MD054335
      D isPDCLMR        S              1A   INZ(*OFF)                                        MD054326
+     D LEPK1FL         S              1A   INZ(*OFF)                                        MD055009
      D wRepPrin        S             13P 0 INZ(*ZEROS)                                      MD054326
      D wRepIntr        S             13P 0 INZ(*ZEROS)                                      MD054326
      D wAvail          S             13P 0 INZ(*ZEROS)                                      MD054326
+     D isInterest      S              1A   INZ(*On)                                         MD053565
      I*                                                                   S01408
       *                                                                                       CLE134
      ILKEYF1DF                                                                                CLE134
@@ -6704,6 +6734,9 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEL     STLNS2        STLNS1
      C                   EXSR      SRAMPR
      C                   ENDIF
+      **
+     C                   MOVE      *BLANKS       INTRFL                                     MD054869
+     C                   BITOFF    '01234567'    RUNDFL                                     MD054869
 0956 C**
 0957 C**   ACCUMULATE NUMBER OF RECORDS READ
 0958 C**
@@ -7906,10 +7939,14 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      tmpPRAM = 0                                              MD054335
      C                   EVAL      tmpINTA = 0                                              MD054335
      C                   EVAL      isPDCLMR = *OFF                                          MD054326
+     C                   EVAL      LEPK1FL  = *OFF                                          MD055009
      C                   EVAL      wRepPrin = 0                                             MD054326
      C                   EVAL      wRepIntr = 0                                             MD054326
      C                   EVAL      KSELNRF  = *BLANKS                                       MD054326
      C                   EVAL      KSECATC  = *BLANKS                                       MD054326
+     C                   MOVEL     *BLANKS       AKORP            10                        MD053565
+     C                   MOVEL     *BLANKS       AKORI            10                        MD053565
+     C                   EVAL      FirstRun = 'Y'                                           MD054869
       *                                                                                     MD054335
      C     *IN15         IFEQ      '0'                                                         18004
      C                   SETON                                        83
@@ -8114,6 +8151,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                              MD054326
      C                   EVAL      tmpPRAM = ACAMNT                                         MD054335
      C                   MOVEA     AKY           KACCK                                      MD054132
+     C                   MOVEA     AKY           AKORP                                      MD053565
      C                   EXSR      ACCESS_AK                                                MD054132
      C                   EXSR      SETSETTLE                                                MD051695
      C                   ENDIF
@@ -8492,8 +8530,9 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C     CLE031        IFEQ      'Y'                                                      MD054335
      C     tmpPRAM       ANDNE     0                                                        MD054335
-     C     tmpINTA       ANDNE     0                                                        MD054335
-     C                   EVAL      ACAMNT  = tmpPRAM + tmpINTA                              MD054335
+     C*****tmpINTA       ANDNE     0                                               MD054335 MD053565
+     C**********         EVAL      ACAMNT  = tmpPRAM + tmpINTA                     MD054335 MD053565
+     C                   EVAL      ACAMNT  = tmpPRAM                                        MD053565
      C                   ENDIF                                                              MD054335
       *                                                                                     MD054326
       ** Overwrite the ACAMNT from wRepPrin or wRepIntr                                     MD054326
@@ -8510,11 +8549,37 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE031
       ** WORIGA = Y: Original Loan Repayment must generate a/c key DP                         CLE134
       *                                                                                       CLE134
+     C                   EVAL      isInterest = *Off                                        MD053565
      C     WORIGA        IFNE      'Y'                                                        CLE134
      C     WMRAUT        ORNE      'Y'                                                      AR217244
      C  N89
 1280 CANN85              EXSR      AKYOUT
      C                   ENDIF                                                                CLE134
+                                                                                            MD053565
+     C                   TESTB     '1'           RUNDFL                   88                MD054869
+     C     WORIGA        IFNE      'Y'                                                      MD053565
+     C     isPDCLMR      ANDNE     *ON                                                      MD053565
+     C     tmpPRAM       ANDNE     0                                                        MD053565
+     C     tmpINTA       ANDNE     0                                                        MD053565
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055009
+     C     WMRAUT        ORNE      'Y'                                                      MD053565
+     C     isPDCLMR      ANDNE     *ON                                                      MD053565
+     C     tmpPRAM       ANDNE     0                                                        MD053565
+     C     tmpINTA       ANDNE     0                                                        MD053565
+     C     AUTO          ANDEQ     'Y'                                                      MD053565
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055009
+     C     WMRAUT        ORNE      'Y'                                                      MD054869
+     C     isPDCLMR      ANDNE     *ON                                                      MD054869
+     C     tmpPRAM       ANDNE     0                                                        MD054869
+     C     tmpINTA       ANDNE     0                                                        MD054869
+     C     *IN88         ANDEQ     *ON                                                      MD054869
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055009
+     C                   EVAL      isInterest = *On                                         MD053565
+     C                   EVAL      ACAMNT  = tmpINTA                                        MD053565
+     C  N89                                                                                 MD053565
+1280 CANN85              EXSR      AKYOUT                                                   MD053565
+     C                   EVAL      isInterest = *Off                                        MD053565
+     C                   ENDIF                                                              MD053565
       *                                                                                       CLE031
       ** If feature CLE031 is on and indicator 89 and indicator 85                            CLE031
       ** are both off then call SR/SETRST                                                     CLE031
@@ -8667,6 +8732,8 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     0             PDIN                                       AR628773
      C                   ENDIF                                                              AR628773
      C                   ENDIF                                                                263427
+     C                   MOVEL     *BLANKS       AKORP                                      MD053565
+     C                   MOVEL     *BLANKS       AKORI                                      MD053565
 1287 C**
      C/COPY WNCPYSRC,LE0450CP19                                           S01408
 1288 C                   ENDSR
@@ -8693,6 +8760,9 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      'N'           WORIGL                                       CLE134
      C                   MOVE      'N'           WORIGA                                       263416
      C                   MOVE      'N'           WMRAUT                                       CLE134
+     C                   MOVEL     *BLANKS       AKORP                                      MD053565
+     C                   MOVEL     *BLANKS       AKORI                                      MD053565
+     C                   EVAL      FirstRun = 'Y'                                           MD054869
       *                                                                                       CLE134
       ** If AUTO = 'C', check whether the processed loan is a PDCL or                         CLE134
       ** an original loan by checking the 1st character of the loan                           CLE134
@@ -8804,7 +8874,9 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE031
      C     WORIGA        IFNE      'Y'                                                        CLE134
      C     isSettle      ANDEQ     *ON                                                      MD054132
+     C                   EVAL      isInterest = *On                                         MD053565
 1313 C  N89              EXSR      AKYOUT
+     C                   EVAL      isInterest = *Off                                        MD053565
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE031
       ** If feature CLE031 is on and indicator 89 is off call SR/SETRST                       CLE031
@@ -8845,6 +8917,8 @@ L118 I                             P   72   77 7RTSPL
 1319 C                   Z-ADD     SLID          SLIDL
 1320 C**
      C/COPY WNCPYSRC,LE0450CP23                                           S01408
+     C                   MOVEL     *BLANKS       AKORP                                      MD053565
+     C                   MOVEL     *BLANKS       AKORI                                      MD053565
 1321 C                   ENDSR
 1322 C**
 1323 C**
@@ -8863,14 +8937,18 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
       ** CLE134 - Past Due Call Loans process                                                 CLE134
       *                                                                                       CLE134
+     C                   EVAL      LEPK1FL  = *OFF                                          MD055009
      C                   MOVE      'N'           WPDCLL                                       CLE134
      C                   MOVE      'N'           WPDCLA                                       CLE134
      C                   MOVE      'N'           WPDCLR                                       CLE134
      C                   MOVE      'N'           WORIGL                                       CLE134
      C                   MOVE      'N'           WORIGA                                       CLE134
      C                   MOVE      'N'           WMRAUT                                       263416
+     C                   MOVEL     *BLANKS       AKORP                                      MD053565
+     C                   MOVEL     *BLANKS       AKORI                                      MD053565
      C                   EVAL      tmpPRAM = 0                                              MD054335
      C                   EVAL      tmpINTA = 0                                              MD054335
+     C                   EVAL      FirstRun = 'Y'                                           MD054869
      C     PTYP          IFNE      70                                                       MD054132
      C     PTYP          ANDNE     71                                                       MD054132
      C                   EVAL      wGenNewKey = *OFF                                        MD054132
@@ -9033,6 +9111,7 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      'E'           WTYPE
      C                   EXSR      SETLOAN                                                  MD051695
      C                   MOVEA     AKY           KACCK                                      MD054132
+     C                   MOVEA     AKY           AKORP                                      MD053565
      C                   MOVE      *BLANKS       SAV10                                      MD054132
      C                   EXSR      ACCESS_AK                                                MD054132
      C                   EXSR      SETCCY
@@ -9416,11 +9495,31 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C     CLE031        IFEQ      'Y'                                                      MD054335
      C     tmpPRAM       ANDNE     0                                                        MD054335
-     C     tmpINTA       ANDNE     0                                                        MD054335
-     C                   EVAL      ACAMNT  = tmpPRAM + tmpINTA                              MD054335
+     C*****tmpINTA       ANDNE     0                                               MD054335 MD053565
+     C**********         EVAL      ACAMNT  = tmpPRAM + tmpINTA                     MD054335 MD053565
+     C                   EVAL      ACAMNT  = tmpPRAM                                        MD053565
      C                   ENDIF                                                              MD054335
       *                                                                                       CLE031
+     C                   EVAL      isInterest = *Off                                        MD053565
 1359 C  N89              EXSR      AKYOUT
+      *                                                                                     MD053565
+     C                   TESTB     '1'           RUNDFL                   88                MD054869
+     C     CLE031        IFEQ      'Y'                                                      MD053565
+     C     tmpINTA       ANDNE     0                                                        MD053565
+     C     tmpPRAM       ANDNE     0                                                        MD053565
+     C     AUTO          ANDEQ     'Y'                                                      MD053565
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055009
+     C     CLE031        OREQ      'Y'                                                      MD054869
+     C     tmpINTA       ANDNE     0                                                        MD054869
+     C     tmpPRAM       ANDNE     0                                                        MD054869
+     C     *IN88         ANDEQ     *ON                                                      MD054869
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055009
+     C                   EVAL      ACAMNT  = tmpINTA                                        MD053565
+     C                   EVAL      isInterest = *On                                         MD053565
+1359 C  N89              EXSR      AKYOUT                                                   MD053565
+     C                   EVAL      isInterest = *Off                                        MD053565
+     C                   ENDIF                                                              MD053565
+      *                                                                                     MD053565
       *                                                                                       CLE031
       ** If feature CLE031 is on goto SR/SETRST                                               CLE031
       *                                                                                       CLE031
@@ -9484,6 +9583,8 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     REPT          WWREPT                                       CLE154
      C                   END                                                                  CLE154
      C                   EVAL      wGenNewKey = *OFF                                        MD054132
+     C                   MOVEL     *BLANKS       AKORP                                      MD053565
+     C                   MOVEL     *BLANKS       AKORI                                      MD053565
       *                                                                                       CLE154
 1370 C                   ENDSR
 1371 C**
@@ -10060,14 +10161,18 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
       ** CLE134 - Past Due Call Loans process                                                 CLE134
       *                                                                                       CLE134
+     C                   EVAL      LEPK1FL  = *OFF                                          MD055009
      C                   MOVE      'N'           WPDCLL                                       CLE134
      C                   MOVE      'N'           WPDCLA                                       CLE134
      C                   MOVE      'N'           WPDCLR                                       CLE134
      C                   MOVE      'N'           WORIGL                                       CLE134
      C                   MOVE      'N'           WORIGA                                       CLE134
      C                   MOVE      'N'           WMRAUT                                       263416
+     C                   MOVEL     *BLANKS       AKORP                                      MD053565
+     C                   MOVEL     *BLANKS       AKORI                                      MD053565
      C                   EVAL      tmpPRAM = 0                                              MD054335
      C                   EVAL      tmpINTA = 0                                              MD054335
+     C                   EVAL      FirstRun = 'Y'                                           MD054869
 1519 C**
       ** If AUTO = 'C', check whether the processed loan is a PDCL or                       AR700107
       ** an original loan by checking the 1st character of the loan                         AR700107
@@ -10470,6 +10575,7 @@ L118 I                             P   72   77 7RTSPL
      C                   EXSR      SETCCY
      C                   EVAL      tmpPRAM = ACAMNT                                         MD054335
      C                   MOVEA     AKY           KACCK                                      MD054132
+     C                   MOVEA     AKY           AKORP                                      MD053565
      C                   EXSR      ACCESS_AK                                                MD054132
      C                   EXSR      SETSETTLE                                                MD051695
      C                   ENDIF
@@ -10584,12 +10690,40 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C     CLE031        IFEQ      'Y'                                                      MD054335
      C     tmpPRAM       ANDNE     0                                                        MD054335
-     C     tmpINTA       ANDNE     0                                                        MD054335
-     C                   EVAL      ACAMNT  = tmpPRAM + tmpINTA                              MD054335
+     C*****tmpINTA       ANDNE     0                                               MD054335 MD053565
+     C**********         EVAL      ACAMNT  = tmpPRAM + tmpINTA                     MD054335 MD053565
+     C                   EVAL      ACAMNT  = tmpPRAM                                        MD053565
      C                   ENDIF                                                              MD054335
       *                                                                                       CLE031
 1592 C**N89*****           EXSR AKYOUT                                                      AR317587
+     C                   EVAL      isInterest = *Off                                        MD053565
+     C     CLE031        IFEQ      'Y'                                                      MD055067
+     C     tmpINTA       ANDNE     0                                                        MD055067
+     C     tmpPRAM       ANDEQ     0                                                        MD055067
+     C     AUTO          ANDEQ     'Y'                                                      MD055067
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055067
+     C                   EVAL      isInterest = *ON                                         MD055067
+     C                   ENDIF                                                              MD055067
+                                                                                            MD055067
      C                   EXSR      AKYOUT
+
+     C                   TESTB     '1'           RUNDFL                   88                MD054869
+     C     CLE031        IFEQ      'Y'                                                      MD053565
+     C     tmpINTA       ANDNE     0                                                        MD053565
+     C     tmpPRAM       ANDNE     0                                                        MD053565
+     C     AUTO          ANDEQ     'Y'                                                      MD053565
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055009
+     C     CLE031        OREQ      'Y'                                                      MD054869
+     C     tmpINTA       ANDNE     0                                                        MD054869
+     C     tmpPRAM       ANDNE     0                                                        MD054869
+     C     *IN88         ANDEQ     *ON                                                      MD054869
+     C     LEPK1FL       ANDEQ     *OFF                                                     MD055009
+     C                   EVAL      isInterest = *On                                         MD053565
+     C                   EVAL      ACAMNT  = tmpINTA                                        MD053565
+     C**********         EVAL      isInterest = *Off                               MD053565 MD054960
+     C                   EXSR      AKYOUT                                                   MD053565
+     C                   EVAL      isInterest = *Off                                        MD054960
+     C                   ENDIF                                                              MD053565
       *                                                                                       CLE031
       ** If feature CLE031 is on and indicator 89 is off goto SR/SETRST                       CLE031
       *                                                                                       CLE031
@@ -10779,6 +10913,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   CPB001
      C                   ENDIF                                                  End WUREPL     CPB00
      C/COPY WNCPYSRC,LE0450CP21                                           S01408
+     C                   MOVEL     *BLANKS       AKORP                                      MD053565
+     C                   MOVEL     *BLANKS       AKORI                                      MD053565
 1617 C**
 1618 C                   ENDSR
 1619 C**
@@ -12441,6 +12577,7 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
      C                   MOVE      'N'           WNEWF             1                          CLE134
      C                   MOVE      *OFF          *IN30                                        CLE134
+     C                   EVAL      LEPK1FL         = *Off                                   MD055009
      C                   EVAL      isCheckNostro   = *Off                                   MD054108
       *                                                                                       CLE134
      C     CLE134        IFEQ      'Y'                                                        CLE134
@@ -12581,14 +12718,15 @@ L118 I                             P   72   77 7RTSPL
      C                   SETOFF                                       67                       15658
 1672 C                   ENDIF                                                                 15658
       *
-     C     CLE031        IFEQ      'Y'                                                      MD054108
-     C     CLE134        ANDEQ     'Y'                                                      MD054108
+     C*****CLE031        IFEQ      'Y'                                             MD054108 MD054869
+     C*****CLE134        ANDEQ     'Y'                                             MD054108 MD054869
+     C     CLE134        IFEQ      'Y'                                                      MD054869
      C     AUTO          ANDEQ     'C'                                                      MD054108
      C     AKY(3)        IFEQ      'R'                                                      MD054108
      C     AKY(10)       ANDEQ     'A'                                                      MD054108
      C     AKY(3)        OREQ      'R'                                                      MD054108
      C     AKY(10)       ANDEQ     'I'                                                      MD054108
-     C                   EVAL      OATYP = ' '                                              MD054108
+     C**********         EVAL      OATYP = ' '                                     MD054108 MD054869
      C                   EVAL      isCheckNostro   = *On                                    MD054108
      C                   ENDIF                                                              MD054108
      C                   ENDIF                                                              MD054108
@@ -12596,7 +12734,9 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                    MD020134A
       ** Set here value of ZZ002(filler) to be used in LE0470.                             MD020134A
       *                                                                                    MD020134A
-     C                   MOVE      *BLANKS       WPOST             2                       MD020134A
+     C**********         MOVE      *BLANKS       WPOST             2              MD020134A MD053565
+     C**********         MOVE      *BLANKS       WPOST                             MD053565 MD054869
+     C                   MOVE      *BLANKS       INTRFL                                     MD054869
      C     AKY(3)        IFEQ      'R'                                                     MD020134A
      C     AMTP          IFEQ      'RE'                                                    MD020134A
      C     LASN          ANDEQ     999                                                     MD020134A
@@ -12609,25 +12749,52 @@ L118 I                             P   72   77 7RTSPL
      C     AMTP          OREQ      'MA'                                                    MD020134A
      C     ACDATE        ANDGT     PRUN                                                     MD021302
      C     ACDATE        ANDLT     RUND                                                     MD021302
-     C                   MOVE      AMTP          WPOST                                     MD020134A
+     C**********         MOVE      AMTP          WPOST                            MD020134A MD053565
+     C**********         MOVE      'Y'           RUNDFL                            MD053565 MD054869
+     C                   BITON     '0'           RUNDFL                                     MD054869
      C                   ENDIF                                                             MD020134A
      C                   ENDIF                                                             MD020134A
                                                                                             MD051695
-     C     NEWCOB        IFEQ      'Y'                                                      MD051695
-     C     AKY(3)        ANDEQ     'R'                                                      MD051695
+     C*****NEWCOB        IFEQ      'Y'                                             MD051695 MD053565
+     C*****AKY(3)        ANDEQ     'R'                                             MD051695 MD053565
+     C     AKY(3)        IFEQ      'R'                                                      MD053565
      C     AKY(10)       ANDEQ     'B'                                                      MD051695
      C     AMTP          ANDEQ     'MR'                                                     MD051695
-     C     INTA          ANDEQ     TAMT                                                     MD051695
+     C     INTA          ANDEQ     TAMT                                                     MD051965
+     C     AKY(3)        OREQ      'R'                                                      MD053565
+     C     AKY(10)       ANDEQ     'B'                                                      MD053565
+     C     AMTP          ANDEQ     'MR'                                                     MD053565
+     C     isInterest    ANDEQ     *On                                                      MD053565
      C     AKY(1)        IFEQ      'X'                                                      MD051695
      C     AKY(1)        OREQ      'Y'                                                      MD051695
      C     AKY(1)        OREQ      'Z'                                                      MD051695
-     C                   EVAL      WPOST = 'IP'                                             MD051695
+     C**********         EVAL      WPOST = 'IP'                                    MD051695 MD053565
+     C                   EVAL      INTRFL= 'Y'                                              MD053565
      C                   ENDIF                                                              MD051695
      C                   ENDIF                                                              MD051695
+
+     C                   EXSR      SetWPOST                                                 MD053565
+     C                   BITOFF    '2'           RUNDFL                                     MD055115
+     C     *IN04         IFEQ      *ON                                                      MD054869
+     C     AKY(3)        ANDEQ     'R'                                                      MD055115
+     C     AKY(10)       ANDEQ     'B'                                                      MD055115
+     C     NEWCOB        IFEQ      'N'                                                      MD054869
+     C     AMTP          IFEQ      'RE'                                                     MD054869
+     C     AUTOL         ANDEQ     'C'                                                      MD054869
+     C     AUTO          ANDEQ     'Y'                                                      MD054869
+     C     AMTP          OREQ      'MR'                                                     MD054869
+     C     AUTOL         ANDEQ     'C'                                                      MD054869
+     C     AUTO          ANDEQ     'Y'                                                      MD054869
+     C                   BITON     '2'           RUNDFL                                     MD054869
+     C                   ENDIF                                                              MD054869
+     C                   ENDIF                                                              MD054869
+     C                   ENDIF                                                              MD054869
+     C                   Z-ADD     LASN          F1FPCT                                     MD055115
                                                                                             MD051695
       *                                                                                       CLE134
       ** set LEPK1DP fields                                                                   CLE134
       *                                                                                       CLE134
+     C                   EVAL      KZZ002 = *BLANKS                                         MD053565
      C     *IN30         IFEQ      *ON                                                        CLE134
      C     isCheckNostro OREQ      *ON                                                      MD054108
       *                                                                                       CLE134
@@ -12751,6 +12918,8 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     PRSQ          KAPRSQ                                       CLE134
      C                   Z-ADD     LASN          KALASN                                       CLE134
      C                   MOVE      *BLANKS       KIPFL                                        CLE134
+     C                   MOVE      AKORI         KOKEY                                      MD053565
+     C                   EVAL      INTRF1 = *BLANKS                                         MD053565
       *                                                                                       CLE134
       ** retrieve sett account and priority                                                   CLE134
       *                                                                                       CLE134
@@ -12770,6 +12939,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                              MD054108
      C                   ENDIF                                                              MD054108
       *                                                                                     MD054108
+     C     FirstRun      IFEQ      'Y'                                                      MD054869
      C                   CALL      'LE000458'                                                 CLE134
      C                   PARM      *BLANKS       RETCOD            7                          CLE134
      C                   PARM                    AKEY                                         CLE134
@@ -12803,10 +12973,18 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      *ON           *INLR                                        CLE134
      C                   EXSR      *PSSR                                                      CLE134
      C                   ENDIF                                                                CLE134
+     C                   EVAL      FirstRun = 'N'                                           MD054869
+     C                   ENDIF                                                              MD054869
      C     CLE031        IFEQ      'Y'                                                      MD054108
      C     isCheckNostro ANDEQ     *ON                                                      MD054108
      C                   MOVEL     SAVCCYL       CCYL                                       MD054108
      C                   ENDIF                                                              MD054108
+     C                   BITOFF    '1'           RUNDFL                                     MD055115
+     C     OATYP         IFEQ      'N'                                                      MD054869
+     C     AKY(3)        ANDEQ     'R'                                                      MD055115
+     C     AKY(10)       ANDEQ     'B'                                                      MD055115
+     C                   BITON     '1'           RUNDFL                                     MD054869
+     C                   ENDIF                                                              MD054869
       *                                                                                     AR741212
       ** Proceed in writing to LEPK1DP only if settlement account is                        AR741212
       ** Retail. Or if Settlement account is GL (this one is as per                         AR741212
@@ -12934,6 +13112,8 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      SEPAMT = KEAMT                                             CLE164
      C                   EVAL      SETRID = SETRID + 1                                        CLE164
      C                   EVAL      SEOVRD = 0                                                 CLE164
+     C                   EVAL      INTRF1 = 'Y'                                             MD053565
+     C                   EVAL      LEPK1FL         = *ON                                    MD055009
      C                   WRITE     LKEYF1DF                                                   CLE134
      C                   CLEAR                   KOTHA                                     MD049745B
      C                   CLEAR                   KEXRT                                     MD049745B
@@ -13056,6 +13236,9 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      SEPAMT = KEAMT                                             CLE164
      C                   EVAL      SETRID = SETRID + 1                                        CLE164
      C                   EVAL      SEOVRD = 0                                                 CLE164
+     C                   MOVE      AKORP         KOKEY                                      MD053565
+     C                   EVAL      INTRF1 = *BLANKS                                         MD053565
+     C                   EVAL      LEPK1FL         = *ON                                    MD055009
      C                   WRITE     LKEYF1DF                                                   263074
      C                   CLEAR                   KOTHA                                     MD049745B
      C                   CLEAR                   KEXRT                                     MD049745B
@@ -13387,6 +13570,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                              MD054326
      C                   EVAL      tmpINTA = ACAMNT                                         MD054335
      C                   MOVEA     AKY           KACCK                                      MD054132
+     C                   MOVEA     AKY           AKORI                                      MD053565
      C                   MOVE      *BLANKS       SAV10                                      MD054132
      C                   EXSR      ACCESS_AK                                                MD054132
      C     WPROC         IFEQ      'Y'                                                      MD051883
@@ -18559,6 +18743,8 @@ C    C                   ENDIF                                                  
      C     WCLE134       IFEQ      ' '                                                      MD049745
      C     WCLE134       OREQ      'Y'                                                      MD054108
      C     OATYP         ANDEQ     'N'                                                      MD054108
+     C     WCLE134       OREQ      'Y'                                                      MD055009
+     C     AUTO          ANDEQ     'Y'                                                      MD055009
       *                                                                                       CLE031
      C                   MOVEA     AKY           OKEY
      C                   MOVE      'S'           AKY(3)
@@ -20230,6 +20416,23 @@ C    C                   ENDIF                                                  
 
       /end-free
      C                   ENDSR                                                              MD054326
+      *****************************************************************                     MD053565
+     C/EJECT                                                                                MD053565
+      *****************************************************************                     MD053565
+     C     setWPOST      BEGSR                                                              MD053565
+      /free
+                    if CLE031 = 'Y'
+                       and NEWCOB <> 'Y'
+                       and AKY(3) = 'R'
+                       and AKY(10) = 'B'
+                       and isInterest = *On
+                       and AKY(1) <> 'X'
+                       and AKY(1) <> 'Y'
+                       and AKY(1) <> 'Z';
+                       INTRFL = 'Y';
+                    endif;
+      /end-free
+     C                   ENDSR                                                              MD053565
       *****************************************************************                     MD051695
      C/EJECT                                                                                MD051695
       *****************************************************************                     MD051695

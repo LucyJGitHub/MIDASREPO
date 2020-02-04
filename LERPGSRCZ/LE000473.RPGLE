@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD054851           Date 20Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD052296           Date 26Nov18               *
       *                 MD048443           Date 08Dec17               *
       *                 MD050228           Date 31May18               *
@@ -109,6 +110,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054851 - PDCL Y is reflected as difference on LE3180P1     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD052296 - Problems caused by use of special characters      *
@@ -1094,6 +1096,7 @@
                                                                                             MD050026
      D wPC             S              4                                                     MD050026
      D wDftPCfromOL    S              1                                                     MD050026
+     D wFAMU           S              1A   INZ(*BLANKS)                                     MD054851
 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -1789,6 +1792,7 @@
      C                   ENDIF                                                             MD049745A
      C                   Z-ADD     0             YPDINT
      C                   MOVE      AUFAMU        YPFAMU
+     C                   MOVE      AUFAMU        wFAMU                                      MD054851
      C                   MOVE      'N'           YPSIIN
      C                   MOVE      'N'           YPCIIN
      C                   MOVE      E_FEBRCA      YBRCA
@@ -1858,6 +1862,7 @@
      C                   EVAL      YPDINT = WOUTAMT                                        MD049745A
      C                   ENDIF                                                             MD049745A
      C                   MOVE      AYFAMU        YPFAMU
+     C                   MOVE      AYFAMU        wFAMU                                      MD054851
      C                   MOVE      'N'           YDECRE
      C                   MOVE      AYSIIN        YPSIIN
      C                   MOVE      AYCAPI        YPCIIN
@@ -4308,6 +4313,14 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
+      *                                                                                     MD054851
+      ** Facility amount utilisation                                                        MD054851
+      *                                                                                     MD054851
+     C                   EVAL      PFldTag  = 'DDFAMU'                                      MD054851
+     C                   MOVEL     wFAMU         PFldData                                   MD054851
+     C                   EVAL      PFldType = *BLANK                                        MD054851
+     C                   EVAL      PFldAttr = *BLANK                                        MD054851
+     C                   EXSR      SRFmtWMsg                                                MD054851
       *
       ** Branch
      C                   EVAL      PFldTag  = 'DDBRCA'

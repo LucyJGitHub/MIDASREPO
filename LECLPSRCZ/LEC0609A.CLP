@@ -1,7 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI    TEXT('Midas LE Events File Creation')                       */
-/********************************************************************/
+/*********************************************************************/
 /*                                                                  */
 /*        Midas     - Customer Lending Module                   */
 /*                                                                  */
@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021351           Date 06May14              */
+/*       Last Amend No. MD054799           Date 14Nov19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021351           Date 06May14              */
 /*                      MD021605           Date 22Aug13              */
 /*                      MD020954           Date 02Aug13              */
 /*                      AR1097204          Date 06Apr13              */
@@ -60,6 +61,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD054799 - LVNTXEL contains two P1 events for a single     */
+/*                  PDCL                                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021351 - Design for Kill object locks                    */
 /*       MD021605 - Process only non-PDCL on the first run and only */
@@ -429,7 +432,8 @@
 /**/                                                                                    /*MD021605*/
 /** Restore back up if LE0480 failed in the rerun.                                      /*MD021605*/
 /**/                                                                                    /*MD021605*/
-             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD021605*/
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)                                /*MD054799*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)            */         /*MD021605 MD054799*/
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                              /*MD021605*/
               CPYF       FROMFILE(&DPLIB/XLVNTXHH) +
                            TOFILE(&DPLIB/LVNTXHH) MBROPT(*REPLACE)                      /*MD021605*/

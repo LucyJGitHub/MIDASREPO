@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052297           Date 14Nov19               *
-      *  Prev Amend No. MD053634           Date 21Oct19               *
+      *  Last Amend No. MD048748           Date 16Dec19               *
+      *  Prev Amend No. MD052297           Date 14Nov19               *
+      *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052425           Date 22Aug19               *
       *                 MD050457           Date 06Mar19               *
@@ -149,6 +150,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048748 - Error Authorising Release of a Closed Customer    *
+      *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
@@ -3512,6 +3515,12 @@
      C                   MOVEL     'USR9474'     MsgIdArr(Ix)                                 246639
      C                   ENDIF                                                                246639
      C                   ENDIF                                                                246639
+      ** If parent customer defined and found, re access SDCUSTLR using the                 MD048748
+      ** customer number to ensure it is these customer details returned to                 MD048748
+      ** SDCUSDUPD                                                                          MD048748
+     C     *IN44         IFEQ      '0'                                                      MD048748
+     C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
+     C                   ENDIF                                                              MD048748
       *                                                                                       CSD007
      C                   ENDSR                                                                CSD007
       *****************************************************************                       CSD031

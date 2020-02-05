@@ -150,9 +150,11 @@
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
 
-      ** Validate
+      ** Validate only if pay ref is not empty
 
+     C                   IF        SRLPR <> *BLANKS
      C                   Exsr      VRLPR
+     C                   ENDIF
 
       ** If an error was found, set the return code appropriately
 

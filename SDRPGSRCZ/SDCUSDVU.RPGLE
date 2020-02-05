@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053634           Date 21Oct19               *
-      *  Prev Amend No. MD054610           Date 18Oct10               *
+      *  Last Amend No. MD052432           Date 18Dec18               *
+      *  Prev Amend No. MD053634           Date 21Oct19               *
+      *                 MD054610           Date 18Oct10               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052465           Date 10Jan19               *
@@ -151,6 +152,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052432 - System does not recognise the defined authority   *
+      *              holders (i.e. controlling persons for CRS)       *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
       *             for KWG$24c” not generated.                       *
       *  MD054610 - Added the parameter TranInCRDD to SDFTCS5VL call  *
@@ -6023,6 +6026,7 @@
      C                   PARM                    ValidCuad                                    CGL157
       ** CRS Country Transaction Details                                                      CGL157
      C                   PARM                    PCrsdS                                       CGL157
+     C                   PARM                    V_CUAHArr                                  MD052432
                                                                                               CGL157
       ** Outputs                                                                              CGL157
       ** Transaction Details OK inds                                                          CGL157

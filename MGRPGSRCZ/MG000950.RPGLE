@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG006             Date 15Oct19               *
-      *  Prev Amend No. MD052633           Date 08Oct19               *
+      *  Last Amend No. MD021108A          Date 16Jul13               *
+      *  Prev Amend No. CMG006             Date 15Oct19               *
+      *                 MD052633           Date 08Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
       *                 MD042041           Date 21Oct16               *
@@ -52,6 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021108A - Problem in generating MT950. Use rundate for tags*
+      *              60M and 62M.                                     *
+      *            - Applied for MD-53366                             *
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
       *           Identification.                                     *
       *  MD052633 - MT940's closing balance figures is 1 digit short -*
@@ -808,7 +812,8 @@
      C                   Else
      C                   Eval      MTAG = ':60M:'
      C                   Z-add     WPrvCBAL      ZAMT
-     C                   Z-add     WPrvCDate     ZMDAY
+     C**********         Z-add     WPrvCDate     ZMDAY                                     MD021108A
+     C                   Z-add     BJRDNB        ZMDAY                                     MD021108A
       /COPY OFCPYSRCZ,CGL146_097                                                             CGL146A
      C                   Endif
       *
@@ -1052,7 +1057,8 @@
       *
      C                   Eval      MTAG = ':62M:'
      C                   Z-add     PageClBal     ZAMT
-     C                   Z-add     PageClDate    ZMDAY
+     C**********         Z-add     PageClDate    ZMDAY                                     MD021108A
+     C                   Z-add     BJRDNB        ZMDAY                                     MD021108A
       /COPY OFCPYSRCZ,CGL146_097                                                             CGL146A
       *
       *  Record occurence number for later update if last page
@@ -1525,19 +1531,19 @@
       * ACNTFMT     - Format Account                                  *                       CMG006
       *                                                               *                       CMG006
       *****************************************************************                       CMG006
- 
+
      C     ACNTFMT       BEGSR                                                                CMG006
- 
+
      C                   Movel     MGCCY         PCCY              3                          CMG006
      C                   Movel     MGACNO        PACNO            10                          CMG006
- 
+
      C                   Call      ACFMTPGM                                                   CMG006
      C                   Parm                    PCCY              3                          CMG006
      C                   Parm                    PACNO            10                          CMG006
      C                   Parm                    PACCID           35                          CMG006
- 
+
      C                   EVAL      WAccount = PACCID                                          CMG006
- 
+
      C                   ENDSR                                                                CMG006
       /EJECT
      C/COPY OFCPYSRCZ,CGL146_095                                                             CGL146A
@@ -1618,9 +1624,9 @@
      C                   ELSE                                                               BUG25800
      C                   EVAL      CER030 = 'N'                                             BUG25800
      C                   ENDIF                                                              BUG25800
- 
+
       ** Check if CMG006 is switched on.                                                      CMG006
- 
+
      C                   CALL      'AOSARDR0'                                                 CMG006
      C                   PARM      *BLANKS       P@RTCD                                       CMG006
      C                   PARM      '*KEY   '     P@OPTN                                       CMG006
@@ -1662,13 +1668,13 @@
      C                   MOVEL     '001'         DBASE                                        CMG006
      C                   SETON                                        U7U8                    CMG006
      C                   EXSR      *PSSR                                                      CMG006
- 
+
      C                   ELSE                                                                 CMG006
- 
+
      C                   MOVEL     SVAL1         WDstn            10            Dstn Destn    CMG006
- 
+
      C                   ENDIF                                                                CMG006
- 
+
      C/COPY WNCPYSRC,MGH00094
      C/COPY OFCPYSRCZ,CGL146_064                                                              CGL146
      C/COPY OFCPYSRCZ,CGL146_094                                                             CGL146A

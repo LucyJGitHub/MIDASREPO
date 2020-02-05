@@ -261,13 +261,10 @@
       ** +--------------------------------------+
 
 
-<<<<<<< Upstream, based on branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
      D P@SARD          S              6A                                        Feature       CMG006
      D ACFMTPGM        S             10A                                                      CMG006
      D FldDstn         S             20    INZ('MT94xFld25Dstn')                              CMG006
      D Kdstn1          S             10A                                                      CMG006
-=======
->>>>>>> 02a2983  [MDSC-30431] Fix Merge of MD-53366
 
       ** Work variables
 
@@ -611,7 +608,6 @@
      C                   Movel     MGACCD        PAcctCde
      C                   Movel     MGACSQ        PAcctSeq
      C/COPY WNCPYSRC,MGH00048
-<<<<<<< Upstream, based on branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
      C                   If        CMG006 = 'Y' and KNwrk = 'SWIFT'                           CMG006
      C                   Exsr      SrGetDs                                                    CMG006
      C                   Endif                                                                CMG006
@@ -626,9 +622,6 @@
      C                   Eval      ACFMTPGM =  'MGFLD25'                                      CMG006
      C                   Exsr      ACNTFMT                                                    CMG006
      C                   ELSE                                                                 CMG006
-=======
-
->>>>>>> 02a2983  [MDSC-30431] Fix Merge of MD-53366
      C                   If        CER030 = 'Y'                                             BUG25799
       *                                                                                     BUG25799
      C*  Output IBAN, RE or GL account.
@@ -678,10 +671,7 @@
      C/COPY WNCPYSRC,MGH00049
       *                                                                                     BUG25799
      C                   EndIf                                                              BUG25799
-<<<<<<< Upstream, based on branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
      C                   ENDIF                                                                CMG006
-=======
->>>>>>> 02a2983  [MDSC-30431] Fix Merge of MD-53366
 
      C                   ENDSR
       *****************************************************************

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD052550           Date 07Jan19               *
+      *  Last Amend No. MD054906           Date 15Jan20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD052550           Date 07Jan19               *
       *                 MD044880           Date 15Jan18               *
       *               . MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
@@ -80,6 +81,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
+      *             Schedule                                          *
+      *           - Passed ACTRJ to IRSIRSR and IRCIRSR to match      *
+      *             receiving parameters.                             *
       *  CSD102 - Password Length Extension                           *
       *  MD052550 - Missed out line of code during reversal of        *
       *             fix MD-51830.                                     *
@@ -925,6 +930,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
+     C                   PARM                    ACTRJ                                      MD054906
 
       ** Cross Currency IRS (CIRS)
 
@@ -951,6 +957,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
+     C                   PARM                    ACTRJ                                      MD054906
 
       * SE Securities Details
      C     TransTYPE     WHENEQ    'SECS'

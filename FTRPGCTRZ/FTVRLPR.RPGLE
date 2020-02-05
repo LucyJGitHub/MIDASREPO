@@ -172,7 +172,6 @@
      C**********************************************************************
      C     VRLPR         BEGSR
 
-
       ** If related pay ref contains double slashes '//'
 
      C                   IF        %SCAN('//' : SRLPR) > 0
